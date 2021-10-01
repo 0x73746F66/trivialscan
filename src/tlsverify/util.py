@@ -1,22 +1,14 @@
-import errno
-import ssl
-import random
-import string
-from ssl import create_default_context, Purpose, CertificateError
+from dataclasses import dataclass
 from binascii import hexlify
-from os import path
 from datetime import datetime
-from pathlib import Path
-from socket import socket, error as SocketError, getaddrinfo, AF_INET6, AF_INET, SOCK_STREAM
+from socket import socket, AF_INET, SOCK_STREAM
 from cryptography import x509
 from cryptography.x509 import Certificate, extensions
-from OpenSSL.crypto import load_certificate, dump_certificate, X509, X509Name, TYPE_RSA, TYPE_DSA, TYPE_DH, TYPE_EC, FILETYPE_ASN1, FILETYPE_PEM
+from OpenSSL.crypto import X509, X509Name, TYPE_RSA, TYPE_DSA, TYPE_DH, TYPE_EC
 from OpenSSL import SSL
 from certvalidator import CertificateValidator, ValidationContext
-from certvalidator.errors import PathValidationError, RevokedError, InvalidCertificateError, PathBuildingError
 import certifi
 import validators
-from dataclasses import dataclass
 
 __module__ = 'tlsverify.util'
 
@@ -101,12 +93,9 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None) -> tuple[
 
     return der, certificate_chain, metadata
 
-def extract_metadata(cert :X509, metadata :Metadata = None, temp_file_path :str = '/tmp') -> Metadata:
+def extract_metadata(cert :X509, metadata :Metadata = None) -> Metadata:
     if metadata is None or not isinstance(metadata, Metadata):
         metadata = Metadata()
-    tmp_name = ''.join(random.choice(string.ascii_letters) for _ in range(16))
-    pem_filepath = path.join(temp_file_path, f'tlsverify-{tmp_name}.pem')
-    Path(pem_filepath).write_bytes(dump_certificate(FILETYPE_PEM, cert))
     public_key = cert.get_pubkey()
     if public_key.type() == TYPE_RSA:
         metadata.certificate_public_key_type = 'RSA'

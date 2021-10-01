@@ -2,60 +2,85 @@
 
 Because, no one wants to write several hundred lines of code for every project that uses micro-services, internal APIs, zero-trust, etc. where you probably should be doing more then just the basic built-in OpenSSL hostname and root trust store checks.
 
-## Goals
+## Usage
+
+Basic usage
+
+```py
+from tlsverify import Validator
+host = 'expired.badssl.com'
+validator = Validator(host)
+if not validator.verify():
+  print(validator.certificate_verify_messages)
+  print(validator.certificate_chain_validation_result)
+
+# Or inspect each result separately
+print(validator.certificate_valid is True)
+print(validator.certificate_chain_valid is True)
+# dict of normalized metadata
+print(validator.get_metadata())
+# Access DER/ASN1
+print(validator.der)
+# Access cryptography.x509.Certificate
+print(type(validator.certificate))
+# Access OpenSSL.crypto.X509
+print(type(validator.x509))
+```
+
+## Project Goals
 
 1. ensure default and expected standard validation mechanism:
-- Hostname match
-  - common name
-  - subjectAltName
-  - properly handle wildcard names
-- Root Certificate is a CA and in a trust store
-- Expiry date is future dated compared to the computer time (not the actual time in reality)
+- ✓ Hostname match
+  - ✓ common name
+  - ✓ subjectAltName
+  - ✓ properly handle wildcard names
+- ✓ Root Certificate is a CA and in a trust store
+- ✓ Expiry date is future dated compared to the computer time (not the actual time in reality)
 
-2. Enumerate the TLS extensions to ensure all validations are performed (excluding non-standard or any custom extensions that may exist)
+2. ⌛ Enumerate the TLS extensions to ensure all validations are performed (excluding non-standard or any custom extensions that may exist)
 
 3. Validate the complete chain (a requirement for zero-trust)
-- build the chain for the user
-- optionally; allow the user to include additional cacert bundle
-- optionally; cert chain is exactly 3 (Root CA, signer/issuer, server cert)
+- ✓ build the chain for the user
+- ✓ optionally; allow the user to include additional cacert bundle
+- ⌛ optionally; cert chain is exactly 3 (Root CA, signer/issuer, server cert)
 
-4. All certs in the chain are not revoked
-- OCSP, must resolve if not stapled, if must-staple (rfc6066) is present the CA provides a valid response, i.e. validate not revoked
-- CRL, must resolve and not be revoked
+4. ✓ All certs in the chain are not revoked
+- ✓ OCSP, must resolve if not stapled, if must-staple (rfc6066) is present the CA provides a valid response, i.e. validate not revoked
+- ⌛ CRL, must resolve and not be revoked
 
-5. Key usages for all certs in the chain are verified for correctness
+5. ✓ Key usages for all certs in the chain are verified for correctness
 
-6. Timestamps are valid
-- optionally: use NTP
-- all certs Expiry date is future dated compared to the real time (NTP)
-- all certs Issued date is past dated compared to the real time (NTP)
+6. ✓ Timestamps are valid
+- ⌛ optionally: use NTP
+- ✓ all certs Expiry date is future dated compared to the real time (NTP)
+- ✓ all certs Issued date is past dated compared to the real time (NTP)
 
-7. Not using known weak "x"
-- keys
-- protocol
-- signature algorithm
-- cipher
+7. ✓ Not using known weak "x"
+- ✓ keys
+- ⌛ protocol
+- ✓ signature algorithm
+- ⌛ cipher
 
-8. Not using a known vulnerable "x"
-- compromised private keys (pwnedkeys.com to start)
-- compromised intermediate certs;
-  - Lenovo Superfish
-  - Dell eDellRoot
-  - Dell DSD Test Provider
-- certs bundled with development tools; 
-  - burp
-  - wireshark
-  - webpack
-  - preact-cli
-  - charles
+8. ⌛ Not using a known vulnerable "x"
+- ⌛ compromised private keys (pwnedkeys.com to start)
+- ⌛ compromised intermediate certs;
+  - ⌛ Lenovo Superfish
+  - ⌛ Dell eDellRoot
+  - ⌛ Dell DSD Test Provider
+- ⌛ certs bundled with development tools; 
+  - ⌛ burp
+  - ⌛ wireshark
+  - ⌛ webpack
+  - ⌛ preact-cli
+  - ⌛ charles
 
 all have known certs and should be rejected in production environments.
 
-9. Provide a simple set of methods that can verify the following:
-- Issuer match
-  - If the server is owned or operated by you (Zero-trust requirement)
-- if CT expected (Zero-trust requirement), Certificate Transparency resolves
-- if HPKP is still present and expected, validate per the policy
+9. ⌛ Provide a simple set of methods that can verify the following:
+- ⌛ Issuer match
+  - ⌛ If the server is owned or operated by you (Zero-trust requirement)
+- ⌛ if CT expected (Zero-trust requirement), Certificate Transparency resolves
+- ⌛ if HPKP is still present and expected, validate per the policy
 
 ### Rationale
 

@@ -1,6 +1,7 @@
-from logging import logging
+import logging
 from datetime import datetime
 from socket import socket
+from dataclasses import asdict
 from ssl import create_default_context, SSLCertVerificationError, Purpose
 from OpenSSL.crypto import X509, load_certificate, dump_certificate, FILETYPE_ASN1, FILETYPE_PEM
 from cryptography.x509 import Certificate
@@ -92,3 +93,9 @@ class Validator:
 
         self.certificate_valid = all(list(self.validation_checks.values()))
         return self.certificate_valid and self.certificate_chain_valid
+
+    def get_metadata(self) -> dict:
+        return asdict(self._metadata)
+
+    def __repr__(self):
+        return "<Validator({}:{})>".format(self.host, self.port)

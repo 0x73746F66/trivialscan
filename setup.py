@@ -1,10 +1,10 @@
 import os
 import pathlib
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.0.3",
+    version="0.0.6",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Because; of course it is",
@@ -30,6 +30,7 @@ setup(
         'pyOpenSSL==21.0.0',
         'validators==0.18.2',
     ],
+    packages=find_packages(where="src"),
     package_dir={"": "src"},
     python_requires=">=3.8",
     options={"bdist_wheel": {"universal": "1"}},
