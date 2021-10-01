@@ -31,27 +31,27 @@ KNOWN_WEAK_SIGNATURE_ALGORITHMS = {
 
 @dataclass
 class Metadata:
-    certificate_public_key_type :str
-    certificate_key_size :int
-    certificate_serial_number :str
-    certificate_subject :str
-    certificate_issuer :str
-    certificate_issuer_country :str
-    certificate_signature_algorithm :str
-    certificate_sha1_fingerprint :str
-    certificate_md5_fingerprint :str
-    certificate_not_before :str
-    certificate_not_after :str
-    certificate_common_name :str
-    certificate_san :list
-    certificate_extensions :list
-    certificate_is_self_signed : bool
-    negotiated_cipher :str
-    negotiated_protocol :str
-    negotiated_protocol_version :str
-    revocation_ocsp_stapling :bool
-    revocation_ocsp_must_staple :bool
     host :str
+    certificate_public_key_type :str = ''
+    certificate_key_size :int = 0
+    certificate_serial_number :str = ''
+    certificate_subject :str = ''
+    certificate_issuer :str = ''
+    certificate_issuer_country :str = ''
+    certificate_signature_algorithm :str = ''
+    certificate_sha1_fingerprint :str = ''
+    certificate_md5_fingerprint :str = ''
+    certificate_not_before :str = ''
+    certificate_not_after :str = ''
+    certificate_common_name :str = ''
+    certificate_san :list = []
+    certificate_extensions :list = []
+    certificate_is_self_signed : bool = False
+    negotiated_cipher :str = ''
+    negotiated_protocol :str = ''
+    negotiated_protocol_version :str = ''
+    revocation_ocsp_stapling :bool = False
+    revocation_ocsp_must_staple :bool = False
     port :int = 443
 
 def get_certificates(host :str, port :int = 443, cafiles :list = None) -> tuple[bytes,list,Metadata]:
