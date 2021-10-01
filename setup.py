@@ -1,22 +1,14 @@
+import os
 import pathlib
-from setuptools import setup, find_packages
-
-long_description = pathlib.Path('README.md').read_text()
-requirements = pathlib.Path('requirements.txt')
-install_requires = []
-for line in requirements.read_text().splitlines():
-    req = line.strip()
-    if req.startswith('#'):
-        continue
-    install_requires.append(req)
+from setuptools import setup
 
 setup(
     name="tls-verify",
-    version="0.0.1",
+    version="0.0.3",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Because; of course it is",
-    long_description=long_description,
+    long_description=pathlib.Path(os.path.join(os.path.dirname(__file__), "README.md")).read_text(),
     long_description_content_type="text/markdown",
     url="https://gitlab.com/chrislangton/py-tls-veryify",
     project_urls={
@@ -26,12 +18,19 @@ setup(
         "Operating System :: OS Independent",
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     ],
     include_package_data=True,
-    install_requires=install_requires,
+    install_requires=[
+        'certifi==2021.5.30',
+        'cryptography==35.0.0',
+        'asn1crypto==1.4.0',
+        'certvalidator==0.11.1',
+        'oscrypto==1.2.1',
+        'pyOpenSSL==21.0.0',
+        'validators==0.18.2',
+    ],
     package_dir={"": "src"},
-    packages=find_packages(where="src"),
     python_requires=">=3.8",
     options={"bdist_wheel": {"universal": "1"}},
 )

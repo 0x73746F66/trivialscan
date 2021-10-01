@@ -1,0 +1,70 @@
+before_script:
+  - pylint --version
+  - echo semgrep $(semgrep --version)
+
+stages:
+  - tests
+  - build
+  - deploy
+
+test:sast:
+  tags:
+    - linode
+  stage: tests
+  script:
+    - make semgrep-sast-ci
+  only:
+    refs:
+      - merge_request
+      - main
+  artifacts:
+    name: sast-results
+    paths:
+      - semgrep-ci.json
+
+test:lint:
+  tags:
+    - linode
+  stage: tests
+  script:
+    - make pylint-ci
+  only:
+    refs:
+      - merge_request
+      - main
+  artifacts:
+    name: lint-results
+    paths:
+      - pylint.json
+
+test:wheel:
+  tags:
+    - linode
+  stage: tests
+  script:
+    - make check
+  only:
+    refs:
+      - merge_request
+      - main
+
+build:wheel:
+  tags:
+    - linode
+  stage: build
+  script:
+    - make build
+  only:
+    refs:
+      - merge_request
+      - main
+
+publish:pypi:
+  tags:
+    - linode
+  stage: deploy
+  script:
+    - make publish
+  only:
+    refs:
+      - main
