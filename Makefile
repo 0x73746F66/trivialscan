@@ -11,8 +11,8 @@ help: ## This help.
 .DEFAULT_GOAL := help
 
 
-install-deps: prep ## setup for development of this project
-	pip install -q -U pip setuptools wheel semgrep pylint
+install-deps: ## setup for development of this project
+	pip install -q -U pip setuptools wheel semgrep pylint pytest build
 
 install: build ## Install the package
 	pip install -q -U --no-cache-dir --force-reinstall dist/tls_verify-*-py2.py3-none-any.whl

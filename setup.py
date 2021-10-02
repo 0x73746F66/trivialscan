@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.0.8",
+    version="0.0.10",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Because; of course it is",
@@ -29,6 +29,8 @@ setup(
         'oscrypto==1.2.1',
         'pyOpenSSL==21.0.0',
         'validators==0.18.2',
+        'idna==3.2',
+        'tabulate==0.8.9'
     ],
     packages=find_packages(where="src"),
     package_dir={"": "src"},
