@@ -1,10 +1,9 @@
 from dataclasses import dataclass, field
 from binascii import hexlify
-from datetime import datetime
+from ssl import create_default_context, SSLCertVerificationError, Purpose
 from socket import socket, AF_INET, SOCK_STREAM
 from cryptography import x509
 from cryptography.x509 import Certificate, extensions
-from OpenSSL.crypto import X509, X509Name, TYPE_RSA, TYPE_DSA, TYPE_DH, TYPE_EC, dump_certificate, FILETYPE_PEM
 from OpenSSL import SSL
 from certvalidator import CertificateValidator, ValidationContext
 import validators
@@ -40,6 +39,7 @@ class Metadata:
     certificate_issuer :str = field(default_factory=str)
     certificate_issuer_country :str = field(default_factory=str)
     certificate_signature_algorithm :str = field(default_factory=str)
+    certificate_pin_sha256 :str = field(default_factory=str)
     certificate_sha256_fingerprint :str = field(default_factory=str)
     certificate_sha1_fingerprint :str = field(default_factory=str)
     certificate_md5_fingerprint :str = field(default_factory=str)
@@ -55,18 +55,18 @@ class Metadata:
     revocation_ocsp_must_staple :bool = field(default_factory=bool)
     port :int = 443
 
-def get_certificates(host :str, port :int = 443, cafiles :list = None) -> tuple[bytes,list,Metadata]:
+def get_certificates(host :str, port :int = 443, cafiles :list = None, tlsext :bool = False) -> tuple[bytes,list,Metadata]:
     if cafiles is not None and not isinstance(cafiles, list):
         raise TypeError(f"provided an invalid type {type(cafiles)} for cafiles, expected list")
     if not isinstance(port, int):
         raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
-    if not validators.domain(host):
+    if validators.domain(host) is not True:
         raise ValueError(f"provided an invalid domain {host}")
 
     x509 = None
     certificate_chain = []
     metadata = Metadata(host=host, port=port)
-    for method in [SSL.TLSv1_2_METHOD, SSL.TLSv1_1_METHOD, SSL.TLSv1_METHOD, SSL.SSLv23_METHOD]:
+    for method in [SSL.TLSv1_METHOD, SSL.TLSv1_1_METHOD, SSL.TLSv1_2_METHOD, SSL.SSLv23_METHOD]:
         certificate_chain = []
         ctx = SSL.Context(method=method)
         ctx.check_hostname = False
@@ -74,7 +74,8 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None) -> tuple[
         conn = SSL.Connection(ctx, socket(AF_INET, SOCK_STREAM))
         conn.connect((host, port))
         conn.settimeout(3)
-        conn.set_tlsext_host_name(idna.encode(host))
+        if tlsext is True:
+            conn.set_tlsext_host_name(idna.encode(host))
         conn.setblocking(1)
         try:
             conn.do_handshake()
@@ -89,44 +90,21 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None) -> tuple[
             break
     return x509, certificate_chain, metadata
 
-def extract_metadata(cert :X509, metadata :Metadata = None) -> Metadata:
-    if metadata is None or not isinstance(metadata, Metadata):
-        metadata = Metadata()
-    public_key = cert.get_pubkey()
-    if public_key.type() == TYPE_RSA:
-        metadata.certificate_public_key_type = 'RSA'
-    if public_key.type() == TYPE_DSA:
-        metadata.certificate_public_key_type = 'DSA'
-    if public_key.type() == TYPE_DH:
-        metadata.certificate_public_key_type = 'DH'
-    if public_key.type() == TYPE_EC:
-        metadata.certificate_public_key_type = 'EC'
-    metadata.certificate_key_size = public_key.bits()
-    metadata.certificate_serial_number = str(cert.get_serial_number())
-    subject = cert.get_subject()
-    metadata.certificate_subject = "".join("/{0:s}={1:s}".format(name.decode(), value.decode()) for name, value in subject.get_components())
-    issuer: X509Name = cert.get_issuer()
-    metadata.certificate_issuer = issuer.commonName
-    metadata.certificate_issuer_country = issuer.countryName
-    metadata.certificate_signature_algorithm = cert.get_signature_algorithm().decode('ascii')
-    metadata.certificate_sha256_fingerprint = cert.digest('sha256').decode('ascii')
-    metadata.certificate_sha1_fingerprint = cert.digest('sha1').decode('ascii')
-    metadata.certificate_md5_fingerprint = cert.digest('md5').decode('ascii')
+def is_self_signed(cert :Certificate) -> bool:
+    certificate_is_self_signed = False
+    authority_key_identifier = None
+    subject_key_identifier = None
     try:
-        metadata.certificate_san = cert.to_cryptography().extensions.get_extension_for_class(x509.SubjectAlternativeName).value.get_values_for_type(x509.DNSName)
+        authority_key_identifier = hexlify(cert.extensions.get_extension_for_class(extensions.AuthorityKeyIdentifier).value.key_identifier).decode('utf-8')
     except extensions.ExtensionNotFound:
-        pass
-    not_before = datetime.strptime(cert.get_notBefore().decode('ascii'), X509_DATE_FMT)
-    not_after = datetime.strptime(cert.get_notAfter().decode('ascii'), X509_DATE_FMT)
-    metadata.certificate_not_before = not_before.isoformat()
-    metadata.certificate_not_after = not_after.isoformat()
-    metadata.certificate_common_name = extract_certificate_common_name(cert.to_cryptography())
-    for ext in metadata.certificate_extensions:
-        if ext['name'] == 'TLSFeature' and 'rfc6066' in ext['features']:
-            metadata.revocation_ocsp_stapling = True
-            metadata.revocation_ocsp_must_staple = True
-
-    return metadata
+        certificate_is_self_signed = True
+    try:
+        subject_key_identifier = hexlify(cert.extensions.get_extension_for_class(extensions.SubjectKeyIdentifier).value.key_identifier).decode('utf-8')
+    except extensions.ExtensionNotFound:
+        certificate_is_self_signed = True
+    if subject_key_identifier == authority_key_identifier:
+        certificate_is_self_signed = True
+    return certificate_is_self_signed
 
 def gather_key_usages(cert :Certificate) -> tuple[list, list, list]:
     certificate_extensions = []
@@ -278,25 +256,39 @@ def extract_certificate_common_name(cert :Certificate):
             return fields.value
     return None
 
-def match_hostname(host :str, cert :Certificate) -> bool:
-    if not validators.domain(host):
+def validate_common_name(common_name :str, host :str) -> bool:
+    if not isinstance(common_name, str):
+        raise ValueError("invalid certificate_common_name provided")
+    if not isinstance(host, str):
+        raise ValueError("invalid host provided")
+    if validators.domain(host) is not True:
         raise ValueError(f"provided an invalid domain {host}")
+    if common_name.startswith('*.'):
+        common_name_suffix = common_name.replace('*.', '')
+        if validators.domain(common_name_suffix) is not True:
+            return False
+        return common_name_suffix == host or host.endswith(common_name_suffix)
+    return validators.domain(common_name) is True
+
+def match_hostname(host :str, cert :Certificate) -> bool:
+    if not isinstance(host, str):
+        raise ValueError("invalid host provided")
     if not isinstance(cert, Certificate):
         raise ValueError("invalid Certificate provided")
+    if validators.domain(host) is not True:
+        raise ValueError(f"provided an invalid domain {host}")
     certificate_san = []
     try:
         certificate_san = cert.extensions.get_extension_for_class(x509.SubjectAlternativeName).value.get_values_for_type(x509.DNSName)
     except extensions.ExtensionNotFound:
         pass
+    valid_common_name = False
     wildcard_hosts = set()
     domains = set()
     for fields in cert.subject:
         current = str(fields.oid)
         if "commonName" in current:
-            certificate_common_name = fields.value
-            if not validators.domain(certificate_common_name):
-                return False
-            domains.add(certificate_common_name)
+            valid_common_name = validate_common_name(fields.value, host)
     for san in certificate_san:
         if san.startswith('*.'):
             wildcard_hosts.add(san)
@@ -309,7 +301,7 @@ def match_hostname(host :str, cert :Certificate) -> bool:
             matched_wildcard = True
             break
 
-    return certificate_common_name is not None and (matched_wildcard is True or host in domains)
+    return valid_common_name is True and (matched_wildcard is True or host in domains)
 
 def validate_certificate_chain(der :bytes, pem_certificate_chain :list, validator_key_usage :list, validator_extended_key_usage :list):
     # TODO perhaps remove certvalidator, consider once merged: https://github.com/pyca/cryptography/issues/2381

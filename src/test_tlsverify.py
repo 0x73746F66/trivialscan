@@ -46,12 +46,12 @@ class TestValidator:
     def test_tlsverify_valid(self):
         self._setup()
         self._verify.verify()
-        assert self._verify.certificate_chain_valid is True
+        assert self._verify.certificate_valid is True
         assert len(self._verify.certificate_verify_messages) == 0
 
     def test_tlsverify_valid_chain(self):
         self._setup()
         self._verify.verify()
-        assert self._verify.certificate_valid is True
+        assert self._verify.certificate_chain_valid is True
         assert self._verify.certificate_chain_validation_result is None
         pprint(self._metadata)
