@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.0.11",
+    version="0.1.0",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -21,7 +21,7 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     ],
     include_package_data=True,
-    scripts=['src/tlsverify.py'],
+    scripts=['src/tlsverify/cli.py'],
     install_requires=[
         'certifi==2021.5.30',
         'cryptography==35.0.0',
@@ -33,6 +33,9 @@ setup(
         'idna==3.2',
         'tabulate==0.8.9'
     ],
+    entry_points = {
+        'console_scripts': ['tlsverify=tlsverify.cli:main'],
+    },
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     python_requires=">=3.8",

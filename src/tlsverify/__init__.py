@@ -10,6 +10,7 @@ from cryptography.x509 import extensions, Certificate, SubjectAlternativeName, D
 from certvalidator.errors import PathValidationError, RevokedError, InvalidCertificateError, PathBuildingError
 from tlsverify import util
 from tlsverify.exceptions import ValidationError
+from tabulate import tabulate
 
 __module__ = 'tlsverify'
 
@@ -51,6 +52,32 @@ class Validator:
 
     def cert_to_text(self) -> str:
         return dump_certificate(FILETYPE_TEXT, self.x509)
+
+    def tabulate(self) -> str:
+        def any_to_string(value, delimiter='\n') -> str:
+            if isinstance(value, str):
+                return value
+            if isinstance(value, list) and isinstance(value[0], str):
+                return delimiter.join(value)
+            if isinstance(value, list) and not isinstance(value[0], str):
+                n = []
+                for d in value:
+                    n.append(any_to_string(d, delimiter))
+                return any_to_string(n)
+            if isinstance(value, dict):
+                return delimiter.join([f'{key}={str(value[key])}' for key in value.keys()])
+            return str(value)
+        skip = ['certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier']
+        kv = [
+            ['certificate_valid', self.certificate_valid],
+            ['certificate_chain_valid', self.certificate_chain_valid],
+            ['certificate_chain_validation_result', self.certificate_chain_validation_result]
+        ]
+        kv += [['Error', err] for err in self.certificate_verify_messages]
+        kv += [[f'Check {key}', self.validation_checks[key]] for key in self.validation_checks.keys()]
+        kv += [[key, getattr(self.metadata, key)] for key in list(vars(self.metadata).keys()) if key not in skip]
+        kv += [[v['name'], any_to_string(v, ' ') if v['name'] not in v else any_to_string(v[v['name']], ' ')] for v in self.metadata.certificate_extensions if v['name'] not in skip]
+        return tabulate(kv, tablefmt='tsv', disable_numparse=True, colalign=("right",))
 
     def init_der(self, der :bytes):
         self._der = der

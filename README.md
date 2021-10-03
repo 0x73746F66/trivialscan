@@ -2,19 +2,29 @@
 
 Because, no one wants to write several hundred lines of code for every project that uses micro-services, internal APIs, zero-trust, etc. where you probably should be doing more then just the basic built-in OpenSSL hostname and root trust store checks.
 
-## Usage
+## Basic Usage
 
-Basic usage
+`pip install -U tls-verify`
 
 ```py
 import tlsverify
 
 host = 'google.com'
-is_valid, validators = tlsverify.verify(host)
+is_valid, _ = tlsverify.verify(host)
+print('\nValid ✓✓✓' if is_valid else '\nNot Valid. There where validation errors')
+```
+
+## Granular Usage
+
+```py
+import tlsverify
+
+host = 'google.com'
+is_valid, validators_list = tlsverify.verify(host)
 assert is_valid
 # Or inspect each result separately
 if is_valid is False:
-  for validator in validators:
+  for validator in validators_list:
     print(validator.metadata.certificate_subject)
     print(validator.metadata.certificate_serial_number)
     print(validator.certificate_valid)
@@ -45,12 +55,26 @@ print(type(validator.certificate))
 print(type(validator.x509))
 ```
 
-Use it as a cli:
+## Use it as a cli:
+
+Get [pipx](https://packaging.python.org/key_projects/#pipx) for [better python command line tool installs](https://packaging.python.org/guides/installing-stand-alone-command-line-tools/) and then `pipx install --python $(which python3.9) tls-verify`
 
 ```sh
-
+tlsverify --help
 ```
 
+produces:
+
+```
+usage: tlsverify [-h] -H HOST [-p PORT] [-c CAFILES] [--sni]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -H HOST, --host HOST  host to check
+  -p PORT, --port PORT  TLS port of host
+  -c CAFILES, --cafiles CAFILES
+                        path to PEM encoded CA bundle file
+  --sni                 Negotiate SNI via PyOpenSSL Connection set_tlsext_host_name and INDA encoded host
 ```
 
 ## Project Goals
@@ -113,7 +137,7 @@ all have known certs and should be rejected in production environments.
 #### Why another python library
 
 We have several existing options in Python;
-- Python bindings for OpenSSL are built-in
+- `pyOpenSSL` Python bindings for OpenSSL
 - `certifi` is self-explanatory
 - `cryptography` is a powerful tool that can be used for this purpose
 - `certvalidator` was intended to be used for this exact purpose
@@ -165,4 +189,10 @@ With an absence of any open source, lack of easy path for vendors to do proper T
 In the absence of vendors providing proper and complete TLS validation capabilities, the onus really is on the client to perform their own validation to protect themselves, no one will do it for you.
 
 ## Non-goals
+
+Rewrite logic that is provided via existing packages int he ecosystem, currently we utilise:
+- `pyOpenSSL` Python bindings for OpenSSL
+- `certifi` is self-explanatory
+- `cryptography` is a powerful tool that can be used for this purpose
+- `certvalidator` was intended to be used for this exact purpose but is limited to 
 
