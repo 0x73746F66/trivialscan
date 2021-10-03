@@ -7,24 +7,50 @@ Because, no one wants to write several hundred lines of code for every project t
 Basic usage
 
 ```py
-from tlsverify import Validator
-host = 'expired.badssl.com'
-validator = Validator(host)
-if not validator.verify():
-  print(validator.certificate_verify_messages)
-  print(validator.certificate_chain_validation_result)
+import tlsverify
 
+host = 'google.com'
+is_valid, validators = tlsverify.verify(host)
+assert is_valid
 # Or inspect each result separately
-print(validator.certificate_valid is True)
-print(validator.certificate_chain_valid is True)
+if is_valid is False:
+  for validator in validators:
+    print(validator.metadata.certificate_subject)
+    print(validator.metadata.certificate_serial_number)
+    print(validator.certificate_valid)
+    print(validator.certificate_chain_valid)
+    print(validator.certificate_verify_messages)
+    print(validator.certificate_chain_validation_result)
+```
+
+util.Metadata uses `dataclasses` for convenience:
+
+```py
 # dict of normalized metadata
-print(validator.get_metadata())
-# Access DER/ASN1
+from dataclasses import asdict
+print(asdict(validator.metadata))
+```
+
+Access the certificate in many formats conveniently:
+
+```py
+print(validator.cert_to_text())
+# Access DER/ASN1 bytes
 print(validator.der)
+# Access PEM encoded bytes
+print(validator.pem)
 # Access cryptography.x509.Certificate
 print(type(validator.certificate))
 # Access OpenSSL.crypto.X509
 print(type(validator.x509))
+```
+
+Use it as a cli:
+
+```sh
+
+```
+
 ```
 
 ## Project Goals

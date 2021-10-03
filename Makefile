@@ -12,7 +12,7 @@ help: ## This help.
 
 
 install-deps: ## setup for development of this project
-	pip install -q -U pip setuptools wheel semgrep pylint pytest build
+	pip install -q -U pip setuptools wheel semgrep pylint pytest build twine
 
 install: build ## Install the package
 	pip install -q -U --no-cache-dir --force-reinstall dist/tls_verify-*-py2.py3-none-any.whl

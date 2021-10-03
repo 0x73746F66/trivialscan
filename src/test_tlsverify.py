@@ -1,19 +1,30 @@
+from datetime import datetime
 import pytest
 import tlsverify
 from pprint import pprint
 
 class TestValidator:
     _verify :tlsverify.Validator
-    _metadata :dict
     host = 'google.com'
     def _setup(self):
         if not hasattr(self, '_verify'):
             self._verify = tlsverify.Validator(self.host)
-            self._metadata = self._verify.get_metadata()
+        self._verify.extract_metadata()
 
     def test_tlsverify_no_args(self):
-        with pytest.raises(TypeError):
-            tlsverify.Validator()
+        v = tlsverify.Validator()
+        assert v.certificate_valid is False
+        assert v.validation_checks == {}
+        assert v.certificate_verify_messages == []
+        assert v.certificate_chain_valid is None
+        assert v.certificate_chain_validation_result is None
+        assert v._pem is None
+        assert v._der is None
+        assert v.x509 is None
+        assert v.certificate is None
+        assert v._pem_certificate_chain == []
+        assert v.certificate_chain == []
+        assert v.metadata is None
 
     def test_tlsverify_not_a_domain(self):
         with pytest.raises(ValueError):
@@ -27,31 +38,47 @@ class TestValidator:
         with pytest.raises(TypeError):
             tlsverify.Validator('badssl.com', 443, cafiles='/path/to/cafile')
 
-    def test_tlsverify_metadata(self):
-        self._setup()
-        assert isinstance(self._metadata, dict)
-        assert 'host' in self._metadata
-
-    def test_tlsverify_metadata_host(self):
-        self._setup()
-        assert hasattr(self._verify.metadata, 'host')
-        assert self.host == self._metadata.get('host')
-        assert self.host == self._verify.metadata.host
-
-    def test_tlsverify_metadata_port(self):
-        self._setup()
-        assert 443 == self._metadata.get('port')
-        assert 443 == self._verify.metadata.port
-
-    def test_tlsverify_valid(self):
+    def test_tlsverify_verify(self):
         self._setup()
         self._verify.verify()
         assert self._verify.certificate_valid is True
         assert len(self._verify.certificate_verify_messages) == 0
 
     def test_tlsverify_valid_chain(self):
+        want = 'Validated: digital_signature,key_encipherment,server_auth'
         self._setup()
-        self._verify.verify()
+        _, x509_certificate_chain, _, _ = tlsverify.util.get_certificates(self.host)
+        self._verify.verify_chain(self._verify.convert_x509_to_PEM(x509_certificate_chain))
         assert self._verify.certificate_chain_valid is True
-        assert self._verify.certificate_chain_validation_result is None
-        pprint(self._metadata)
+        assert self._verify.certificate_chain_validation_result == want
+
+    def test_tlsverify_metadata(self):
+        self._setup()
+        assert isinstance(self._verify.metadata, tlsverify.util.Metadata)
+        assert self._verify.metadata.host == self.host
+        assert 443 == self._verify.metadata.port
+        assert self._verify.metadata.certificate_public_key_type in ['RSA', 'DSA', 'EC', 'DH']
+        assert isinstance(self._verify.metadata.certificate_key_size, int)
+        assert len(self._verify.metadata.certificate_serial_number.replace(':', '')) == 64
+        assert isinstance(self._verify.metadata.certificate_serial_number_decimal, int)
+        assert isinstance(self._verify.metadata.certificate_serial_number_hex, str)
+        assert self.host in self._verify.metadata.certificate_subject
+        assert isinstance(self._verify.metadata.certificate_issuer, str)
+        assert isinstance(self._verify.metadata.certificate_issuer_country, str)
+        assert isinstance(self._verify.metadata.certificate_signature_algorithm, str)
+        assert isinstance(self._verify.metadata.certificate_pin_sha256, str)
+        assert len(self._verify.metadata.certificate_sha256_fingerprint) == 64
+        assert len(self._verify.metadata.certificate_sha1_fingerprint) == 40
+        assert len(self._verify.metadata.certificate_md5_fingerprint) == 32
+        assert datetime.fromisoformat(self._verify.metadata.certificate_not_before)
+        assert datetime.fromisoformat(self._verify.metadata.certificate_not_after)
+        assert self.host in self._verify.metadata.certificate_common_name
+        assert isinstance(self._verify.metadata.certificate_san, list)
+        assert isinstance(self._verify.metadata.certificate_subject_key_identifier, str)
+        assert isinstance(self._verify.metadata.certificate_authority_key_identifier, str)
+        assert isinstance(self._verify.metadata.certificate_extensions, list)
+        assert isinstance(self._verify.metadata.certificate_is_self_signed, bool)
+        assert isinstance(self._verify.metadata.negotiated_cipher, str)
+        assert self._verify.metadata.negotiated_protocol in ['TLSv1', 'TLSv1.1', 'TLSv1.2']
+        assert isinstance(self._verify.metadata.revocation_ocsp_stapling, bool)
+        assert isinstance(self._verify.metadata.revocation_ocsp_must_staple, bool)

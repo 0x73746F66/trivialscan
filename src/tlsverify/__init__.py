@@ -1,12 +1,11 @@
 import hashlib
 import logging
-from datetime import datetime
 from base64 import b64encode
-from dataclasses import asdict
-from ssl import PEM_cert_to_DER_cert
+from datetime import datetime
 import validators
 import asn1crypto
-from OpenSSL.crypto import X509, X509Name, dump_certificate, load_certificate, FILETYPE_PEM, FILETYPE_ASN1, TYPE_RSA, TYPE_DSA, TYPE_DH, TYPE_EC
+from ssl import PEM_cert_to_DER_cert
+from OpenSSL.crypto import X509, X509Name, dump_certificate, load_certificate, FILETYPE_PEM, FILETYPE_ASN1, FILETYPE_TEXT, TYPE_RSA, TYPE_DSA, TYPE_DH, TYPE_EC
 from cryptography.x509 import extensions, Certificate, SubjectAlternativeName, DNSName
 from certvalidator.errors import PathValidationError, RevokedError, InvalidCertificateError, PathBuildingError
 from tlsverify import util
@@ -22,7 +21,7 @@ class Validator:
     x509 :X509
     certificate :Certificate
     _pem_certificate_chain :list
-    _X509_certificate_chain :list
+    certificate_chain :list
     metadata :util.Metadata
 
     def __init__(self, host :str = None, port :int = 443) -> None:
@@ -31,19 +30,27 @@ class Validator:
         self.certificate_verify_messages = []
         self.certificate_chain_valid = None
         self.certificate_chain_validation_result = None
+        self._pem = None
+        self._der = None
+        self.x509 = None
+        self.certificate = None
+        self._pem_certificate_chain = []
+        self.certificate_chain = []
+        self.metadata = None
         if host is not None:
-            self.x509, self._X509_certificate_chain, self.metadata = util.get_certificates(host, port)
-            if self.x509 is None or not self._X509_certificate_chain:
+            self.x509, self.certificate_chain, protocol, cipher = util.get_certificates(host, port)
+            self.metadata = util.Metadata(host=host, port=port, negotiated_cipher=cipher, negotiated_protocol=protocol)
+            if self.x509 is None or not self.certificate_chain:
                 raise ValidationError(f'Unable to negotiate a TLS socket connection with server at {host}:{port} to obtain the Certificate')
             self._pem = dump_certificate(FILETYPE_PEM, self.x509)
             self._der = PEM_cert_to_DER_cert(self._pem.decode())
             self.certificate = self.x509.to_cryptography()
             self._pem_certificate_chain = []
-            for cert in self._X509_certificate_chain:
+            for cert in self.certificate_chain:
                 self._pem_certificate_chain.append(dump_certificate(FILETYPE_PEM, cert))
 
-    def get_metadata(self) -> dict:
-        return asdict(self.metadata)
+    def cert_to_text(self) -> str:
+        return dump_certificate(FILETYPE_TEXT, self.x509)
 
     def init_der(self, der :bytes):
         self._der = der
@@ -63,8 +70,38 @@ class Validator:
         self._der = PEM_cert_to_DER_cert(self._pem.decode())
         self.certificate = x509.to_cryptography()
 
+    @staticmethod
+    def convert_decimal_to_serial_bytes(decimal :int):
+        # add leading 0
+        a = "0%x" % decimal
+        # force even num bytes, remove leading 0 if necessary
+        b = a[1:] if len(a)%2==1 else a
+        return format(':'.join(s.encode('utf8').hex().lower() for s in b))
+
+    @staticmethod
+    def convert_decimal_to_serial_bytes(decimal :int):
+        # add leading 0
+        a = "0%x" % decimal
+        # force even num bytes, remove leading 0 if necessary
+        b = a[1:] if len(a)%2==1 else a
+        return format(':'.join(s.encode('utf8').hex().lower() for s in b))
+
+    
+    @staticmethod
+    def str_n_split(input :str, n :int = 2, delimiter :str = ' '):
+        return delimiter.join([input[i:i+n] for i in range(0, len(input), n)])
+
+    @staticmethod
+    def convert_x509_to_PEM(certificate_chain :list) -> list[bytes]:
+        pem_certs = []
+        for cert in certificate_chain:
+            if not isinstance(cert, X509):
+                raise ValidationError(f'convert_x509_to_PEM expected OpenSSL.crypto.X509, got {type(cert)}')
+            pem_certs.append(dump_certificate(FILETYPE_PEM, cert))
+        return pem_certs
+
     def extract_metadata(self):
-        if not hasattr(self, 'metadata'):
+        if not hasattr(self, 'metadata') or self.metadata is None:
             self.metadata = util.Metadata(host=None)
         public_key = self.x509.get_pubkey()
         if public_key.type() == TYPE_RSA:
@@ -76,7 +113,9 @@ class Validator:
         if public_key.type() == TYPE_EC:
             self.metadata.certificate_public_key_type = 'EC'
         self.metadata.certificate_key_size = public_key.bits()
-        self.metadata.certificate_serial_number = self.x509.get_serial_number()
+        self.metadata.certificate_serial_number_decimal = self.x509.get_serial_number()
+        self.metadata.certificate_serial_number = Validator.convert_decimal_to_serial_bytes(self.x509.get_serial_number())
+        self.metadata.certificate_serial_number_hex = '{0:#0{1}x}'.format(self.x509.get_serial_number(), 4)
         subject = self.x509.get_subject()
         self.metadata.certificate_subject = "".join("/{0:s}={1:s}".format(name.decode(), value.decode()) for name, value in subject.get_components())
         issuer: X509Name = self.x509.get_issuer()
@@ -100,9 +139,14 @@ class Validator:
             if ext['name'] == 'TLSFeature' and 'rfc6066' in ext['features']:
                 self.metadata.revocation_ocsp_stapling = True
                 self.metadata.revocation_ocsp_must_staple = True
+            if ext['name'] == 'subjectKeyIdentifier':
+                self.metadata.certificate_subject_key_identifier = ext[ext['name']]
+            if ext['name'] == 'authorityKeyIdentifier':
+                self.metadata.certificate_authority_key_identifier = ext[ext['name']]
 
     def verify(self, host :str = None, port :int = None, server_cert :bool = True) -> bool:
-        self.extract_metadata()
+        if not hasattr(self, 'metadata') or self.metadata is None:
+            self.metadata = util.Metadata(host=host, port=port)
         if server_cert and isinstance(host, str):
             self.metadata.host = host
         if server_cert and validators.domain(self.metadata.host) is not True:
@@ -167,23 +211,25 @@ class Validator:
             self.certificate_chain_validation_result = f'Validated: {",".join(validator_key_usage + validator_extended_key_usage)}'
 
         self.certificate_valid = all(list(self.validation_checks.values()))
+        self.extract_metadata()
         return self.certificate_valid and self.certificate_chain_valid
 
 def verify(host :str, port :int = 443, cafiles :list = None, tlsext :bool = False) -> tuple[bool,list[Validator]]:
     validations = []
-    x509, x509_certificate_chain, _ = util.get_certificates(host, port, cafiles, tlsext=tlsext)
+    x509, x509_certificate_chain, protocol, cipher = util.get_certificates(host, port, cafiles, tlsext=tlsext)
     validator = Validator()
     validator.init_x509(x509)
+    validator.extract_metadata()
     validator.verify(host, port)
-    certificate_chain = []
+    validator.metadata.negotiated_cipher = cipher
+    validator.metadata.negotiated_protocol = protocol
     for cert in x509_certificate_chain:
-        certificate_chain.append(dump_certificate(FILETYPE_PEM, cert))
         peer_validator = Validator()
         peer_validator.init_x509(cert)
+        peer_validator.extract_metadata()
         peer_validator.verify(server_cert=False)
         validations.append(peer_validator)
-
-    validator.verify_chain(certificate_chain)
+    validator.verify_chain(Validator.convert_x509_to_PEM(x509_certificate_chain))
     validations.append(validator)
     valid = all([v.certificate_valid for v in validations])
     return valid, validations

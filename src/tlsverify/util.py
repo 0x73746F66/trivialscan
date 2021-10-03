@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from binascii import hexlify
+import logging
 from ssl import create_default_context, SSLCertVerificationError, Purpose
 from socket import socket, AF_INET, SOCK_STREAM
 from cryptography import x509
@@ -12,6 +13,7 @@ from tlsverify.exceptions import ValidationError
 
 __module__ = 'tlsverify.util'
 
+logger = logging.getLogger(__name__)
 X509_DATE_FMT = r'%Y%m%d%H%M%SZ'
 WEAK_KEY_SIZE = {
     'RSA': 1024,
@@ -35,6 +37,8 @@ class Metadata:
     certificate_public_key_type :str = field(default_factory=str)
     certificate_key_size :int = field(default_factory=int)
     certificate_serial_number :str = field(default_factory=str)
+    certificate_serial_number_decimal :int = field(default_factory=str)
+    certificate_serial_number_hex :str = field(default_factory=str)
     certificate_subject :str = field(default_factory=str)
     certificate_issuer :str = field(default_factory=str)
     certificate_issuer_country :str = field(default_factory=str)
@@ -47,6 +51,8 @@ class Metadata:
     certificate_not_after :str = field(default_factory=str)
     certificate_common_name :str = field(default_factory=str)
     certificate_san :list = field(default_factory=list)
+    certificate_subject_key_identifier :str = field(default_factory=str)
+    certificate_authority_key_identifier :str = field(default_factory=str)
     certificate_extensions :list = field(default_factory=list)
     certificate_is_self_signed : bool = field(default_factory=bool)
     negotiated_cipher :str = field(default_factory=str)
@@ -62,10 +68,10 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, tlsext :b
         raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
     if validators.domain(host) is not True:
         raise ValueError(f"provided an invalid domain {host}")
-
+    negotiated_cipher = None
+    negotiated_protocol = None
     x509 = None
     certificate_chain = []
-    metadata = Metadata(host=host, port=port)
     for method in [SSL.TLSv1_METHOD, SSL.TLSv1_1_METHOD, SSL.TLSv1_2_METHOD, SSL.SSLv23_METHOD]:
         certificate_chain = []
         ctx = SSL.Context(method=method)
@@ -80,15 +86,18 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, tlsext :b
         try:
             conn.do_handshake()
             x509 = conn.get_peer_certificate()
+            negotiated_cipher = conn.get_cipher_name()
+            negotiated_protocol = conn.get_protocol_version_name()
             for (_, cert) in enumerate(conn.get_peer_cert_chain()):
                 certificate_chain.append(cert)
-            metadata.negotiated_cipher = conn.get_cipher_name()
-            metadata.negotiated_protocol = conn.get_protocol_version_name()
+        except Exception as ex:
+            logger.exception(ex)
         finally:
             conn.close()
         if x509 is not None:
             break
-    return x509, certificate_chain, metadata
+
+    return x509, certificate_chain, negotiated_protocol, negotiated_cipher
 
 def is_self_signed(cert :Certificate) -> bool:
     certificate_is_self_signed = False
@@ -99,7 +108,7 @@ def is_self_signed(cert :Certificate) -> bool:
     except extensions.ExtensionNotFound:
         certificate_is_self_signed = True
     try:
-        subject_key_identifier = hexlify(cert.extensions.get_extension_for_class(extensions.SubjectKeyIdentifier).value.key_identifier).decode('utf-8')
+        subject_key_identifier = hexlify(cert.extensions.get_extension_for_class(extensions.SubjectKeyIdentifier).value.digest).decode('utf-8')
     except extensions.ExtensionNotFound:
         certificate_is_self_signed = True
     if subject_key_identifier == authority_key_identifier:

@@ -7,7 +7,7 @@ setup(
     version="0.0.10",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
-    description="Because; of course it is",
+    description="Validate the security of your TLS connections so that they deserve your trust.",
     long_description=pathlib.Path(os.path.join(os.path.dirname(__file__), "README.md")).read_text(),
     long_description_content_type="text/markdown",
     url="https://gitlab.com/chrislangton/py-tls-veryify",
@@ -21,6 +21,7 @@ setup(
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     ],
     include_package_data=True,
+    scripts=['src/tlsverify.py'],
     install_requires=[
         'certifi==2021.5.30',
         'cryptography==35.0.0',
