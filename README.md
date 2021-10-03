@@ -194,5 +194,4 @@ Rewrite logic that is provided via existing packages int he ecosystem, currently
 - `pyOpenSSL` Python bindings for OpenSSL
 - `certifi` is self-explanatory
 - `cryptography` is a powerful tool that can be used for this purpose
-- `certvalidator` was intended to be used for this exact purpose but is limited to 
-
+- `certvalidator` was intended to be used for this exact purpose [but is limited](https://github.com/wbond/certvalidator/issues/36)
