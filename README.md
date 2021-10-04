@@ -66,7 +66,7 @@ tlsverify --help
 produces:
 
 ```
-usage: tlsverify [-h] -H HOST [-p PORT] [-c CAFILES] [--sni]
+usage: tlsverify [-h] -H HOST [-p PORT] [-c CAFILES] [--sni] [-v] [-vv] [-vvv] [-vvvv]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -75,62 +75,93 @@ optional arguments:
   -c CAFILES, --cafiles CAFILES
                         path to PEM encoded CA bundle file
   --sni                 Negotiate SNI via PyOpenSSL Connection set_tlsext_host_name and INDA encoded host
+  -v, --errors-only     set logging level to ERROR (default CRITICAL)
+  -vv, --warning        set logging level to WARNING (default CRITICAL)
+  -vvv, --info          set logging level to INFO (default CRITICAL)
+  -vvvv, --debug        set logging level to DEBUG (default CRITICAL)
 ```
 
-## Project Goals
+## Implemented
 
-1. ensure default and expected standard validation mechanism:
+- ✓ Certificate Formats
+  - ✓ plaintext
+  - ✓ PEM
+  - ✓ ASN1/DER
+  - ✓ pyOpenSSL object
+  - ✓ python `cryptography` object
+- ✓ TLS Information
+  - ✓ negotiated_protocol
+  - ✓ negotiated_cipher
+- ✓ X.509 Information
+  - ✓ certificate_subject
+  - ✓ certificate_issuer
+  - ✓ certificate_issuer_country
+  - ✓ certificate_signature_algorithm
+- ✓ Signatures
+  - ✓ certificate_md5_fingerprint
+  - ✓ certificate_sha1_fingerprint
+  - ✓ certificate_sha256_fingerprint
+  - ✓ certificate_pin_sha256
+  - ✓ certificate_serial_number
+  - ✓ certificate_serial_number_decimal
+  - ✓ certificate_serial_number_hex
+  - ✓ certificate_public_key_type
+  - ✓ certificate_key_size
+- ✓ Expiry date is future dated
 - ✓ Hostname match
   - ✓ common name
   - ✓ subjectAltName
   - ✓ properly handle wildcard names
+- ✓ certificate_is_self_signed
+- ⌛ Enumerate the TLS extensions to ensure all validations are performed (excluding non-standard or any custom extensions that may exist)
+  - ✓ subjectAltName
+  - ✓ issuerAlternativeName
+  - ✓ authorityKeyIdentifier matches issuer subjectKeyIdentifier
+  - ✓ keyUsage
+  - ✓ extendedKeyUsage
+  - ✓ inhibitAnyPolicy
+- ✓ revocation
+  - ✓ OCSP
 - ✓ Root Certificate is a CA and in a trust store
-- ✓ Expiry date is future dated compared to the computer time (not the actual time in reality)
+- ✓ Validate the complete chain (a requirement for zero-trust)
+  - ✓ correctly build the chain
+  - ✓ All certs in the chain are not revoked
+  - ✓ Intermediate key usages are verified
+  - ✓ optionally; allow the user to include additional cacert bundle
+  - ⌛ optionally; client condition; path length is exactly 3 (Root CA, signer/issuer, server cert) regardless of tls extension basicConstraints path_length
+- ✓ Not using known weak "x"
+  - ✓ keys
+  - ✓ signature algorithm
 
-2. ⌛ Enumerate the TLS extensions to ensure all validations are performed (excluding non-standard or any custom extensions that may exist)
+## ⌛ Todo
 
-3. Validate the complete chain (a requirement for zero-trust)
-- ✓ build the chain for the user
-- ✓ optionally; allow the user to include additional cacert bundle
-- ⌛ optionally; cert chain is exactly 3 (Root CA, signer/issuer, server cert)
-
-4. ✓ All certs in the chain are not revoked
-- ✓ OCSP, must resolve if not stapled, if must-staple (rfc6066) is present the CA provides a valid response, i.e. validate not revoked
-- ⌛ CRL, must resolve and not be revoked
-
-5. ✓ Key usages for all certs in the chain are verified for correctness
-
-6. ✓ Timestamps are valid
-- ⌛ optionally: use NTP
-- ✓ all certs Expiry date is future dated compared to the real time (NTP)
-- ✓ all certs Issued date is past dated compared to the real time (NTP)
-
-7. ✓ Not using known weak "x"
-- ✓ keys
-- ⌛ protocol
-- ✓ signature algorithm
-- ⌛ cipher
-
-8. ⌛ Not using a known vulnerable "x"
-- ⌛ compromised private keys (pwnedkeys.com to start)
-- ⌛ compromised intermediate certs;
-  - ⌛ Lenovo Superfish
-  - ⌛ Dell eDellRoot
-  - ⌛ Dell DSD Test Provider
-- ⌛ certs bundled with development tools; 
-  - ⌛ burp
-  - ⌛ wireshark
-  - ⌛ webpack
-  - ⌛ preact-cli
-  - ⌛ charles
-
-all have known certs and should be rejected in production environments.
-
-9. ⌛ Provide a simple set of methods that can verify the following:
-- ⌛ Issuer match
-  - ⌛ If the server is owned or operated by you (Zero-trust requirement)
-- ⌛ if CT expected (Zero-trust requirement), Certificate Transparency resolves
-- ⌛ if HPKP is still present and expected, validate per the policy
+- Known RSA/DSA private keys: https://www.hdm.io/tools/debian-openssl/
+- TLS extensions
+  - basicConstraints path_length
+  - IssuingDistributionPoint
+  - cRLDistributionPoints
+  - signedCertificateTimestampList
+  - OCSPNonce
+- rfc6066; OCSP must resolve if not stapled, if must-staple flag is present the CA provides a valid response, i.e. validate not revoked
+- Timestamps are valid using NTP
+- Not using known weak "x"
+  - protocol
+  - cipher
+- Not using a known vulnerable "x"
+- compromised private keys (pwnedkeys.com to start)
+- compromised intermediate certs;
+  - Lenovo Superfish
+  - Dell eDellRoot
+  - Dell DSD Test Provider
+- Non-trusted certs; bundled with development tools
+  - burp
+  - wireshark
+  - webpack
+  - preact-cli
+  - charles
+- Issuer match (If the server is owned or operated by you, a Zero-trust requirement)
+- if CT expected (Zero-trust requirement), Certificate Transparency resolves
+- if HPKP is still present and expected, validate per the policy
 
 ### Rationale
 
@@ -195,3 +226,7 @@ Rewrite logic that is provided via existing packages int he ecosystem, currently
 - `certifi` is self-explanatory
 - `cryptography` is a powerful tool that can be used for this purpose
 - `certvalidator` was intended to be used for this exact purpose [but is limited](https://github.com/wbond/certvalidator/issues/36)
+
+## I have paid for weak certs, what now?
+
+Likely you can get a free Certificate Reissuance: [Debian keep a list](https://wiki.debian.org/SSLkeys#SSL_Certificate_Reissuance) of references that might help, otherwise contact your cert issuer and ask them to correct the problem for free.

@@ -25,6 +25,8 @@ build: check ## build wheel file
 	python3 -m build
 
 publish: build ## upload to pypi.org
+	git tag $(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')
+	git push -u origin --tags
 	python3 -m twine upload dist/*
 
 test-local: ## Prettier test outputs
@@ -38,3 +40,24 @@ semgrep-sast-ci: ## run core semgrep rules for CI
 	semgrep --disable-version-check -q --strict --error -o semgrep-ci.json --json --timeout=0 --config=p/r2c-ci --lang=py src/**/*.py
 
 test-all: semgrep-sast-ci pylint-ci ## Run all CI tests
+
+run-valid:
+	python src/main.py -H google.com
+
+run-invalid-expired:
+	python src/main.py -H expired.badssl.com
+
+run-invalid-selfsigned:
+	python src/main.py -H self-signed.badssl.com
+
+run-invalid-hostname:
+	python src/main.py -H wrong.host.badssl.com
+
+run-invalid-untrusted:
+	python src/main.py -H untrusted.root.badssl.com
+
+run-invalid-revoked:
+	python src/main.py -H revoked.badssl.com --sni
+
+run-invalid-hpkp:
+	python src/main.py -H pinning-test.badssl.com --sni

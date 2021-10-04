@@ -1,15 +1,13 @@
 from dataclasses import dataclass, field
 from binascii import hexlify
 import logging
-from ssl import create_default_context, SSLCertVerificationError, Purpose
 from socket import socket, AF_INET, SOCK_STREAM
 from cryptography import x509
-from cryptography.x509 import Certificate, extensions
+from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
 from OpenSSL import SSL
 from certvalidator import CertificateValidator, ValidationContext
 import validators
 import idna
-from tlsverify.exceptions import ValidationError
 
 __module__ = 'tlsverify.util'
 
@@ -29,6 +27,14 @@ KNOWN_WEAK_SIGNATURE_ALGORITHMS = {
     'sha1WithRSAEncryption': 'Macquarie University Australia 2009: identified vulnerabilities to collision attacks, later in 2017 Marc Stevens demonstrated collision proofs',
     'md5WithRSAEncryption': 'Arjen Lenstra and Benne de Weger 2005: vulnerable to hash collision attacks',
     'md2WithRSAEncryption': 'Rogier, N. and Chauvaud, P. in 1995: vulnerable to collision, later preimage resistance, and second-preimage resistance attacks were demonstrated at BlackHat 2008 by Mark Twain',
+}
+OPEN_SSL_METHOD_LOOKUP = {
+    1: 'SSLv2',
+    2: 'SSLv3',
+    3: 'SSLv23',
+    4: 'TLSv1',
+    5: 'TLSv1.1',
+    6: 'TLSv1.2',
 }
 
 @dataclass
@@ -73,6 +79,7 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, tlsext :b
     x509 = None
     certificate_chain = []
     for method in [SSL.TLSv1_METHOD, SSL.TLSv1_1_METHOD, SSL.TLSv1_2_METHOD, SSL.SSLv23_METHOD]:
+        logger.debug(f'Trying protocol {OPEN_SSL_METHOD_LOOKUP[method]}')
         certificate_chain = []
         ctx = SSL.Context(method=method)
         ctx.check_hostname = False
@@ -81,6 +88,7 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, tlsext :b
         conn.connect((host, port))
         conn.settimeout(3)
         if tlsext is True:
+            logger.debug('using SNI')
             conn.set_tlsext_host_name(idna.encode(host))
         conn.setblocking(1)
         try:
@@ -90,11 +98,13 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, tlsext :b
             negotiated_protocol = conn.get_protocol_version_name()
             for (_, cert) in enumerate(conn.get_peer_cert_chain()):
                 certificate_chain.append(cert)
+            logger.debug(f'Peer cert chain length: {len(certificate_chain)}')
         except Exception as ex:
-            logger.exception(ex)
+            logger.warning(ex, exc_info=True)
         finally:
             conn.close()
         if x509 is not None:
+            logger.debug(f'negotiated protocol {negotiated_protocol} cipher {negotiated_cipher}')
             break
 
     return x509, certificate_chain, negotiated_protocol, negotiated_cipher
@@ -105,15 +115,45 @@ def is_self_signed(cert :Certificate) -> bool:
     subject_key_identifier = None
     try:
         authority_key_identifier = hexlify(cert.extensions.get_extension_for_class(extensions.AuthorityKeyIdentifier).value.key_identifier).decode('utf-8')
-    except extensions.ExtensionNotFound:
+    except extensions.ExtensionNotFound as ex:
+        logger.debug(ex, exc_info=True)
         certificate_is_self_signed = True
     try:
         subject_key_identifier = hexlify(cert.extensions.get_extension_for_class(extensions.SubjectKeyIdentifier).value.digest).decode('utf-8')
-    except extensions.ExtensionNotFound:
+    except extensions.ExtensionNotFound as ex:
+        logger.debug(ex, exc_info=True)
         certificate_is_self_signed = True
     if subject_key_identifier == authority_key_identifier:
         certificate_is_self_signed = True
     return certificate_is_self_signed
+
+def get_san(cert :Certificate) -> list:
+    san = []
+    try:
+        san = cert.extensions.get_extension_for_class(SubjectAlternativeName).value.get_values_for_type(DNSName)
+    except extensions.ExtensionNotFound as ex:
+        logger.debug(ex, exc_info=True)
+    return san
+
+def check_usage(cert :Certificate, key :str) -> bool:
+    key_usage = None
+    ext_key_usage = None
+    try:
+        key_usage = cert.extensions.get_extension_for_class(extensions.KeyUsage).value
+    except extensions.ExtensionNotFound as ex:
+        logger.debug(ex, exc_info=True)
+    try:
+        ext_key_usage = cert.extensions.get_extension_for_class(extensions.ExtendedKeyUsage).value
+    except extensions.ExtensionNotFound as ex:
+        logger.debug(ex, exc_info=True)
+    if key_usage is None and ext_key_usage is None:
+        logger.warning('no key usages could not be found')
+        return False
+    if isinstance(key_usage, extensions.KeyUsage) and hasattr(key_usage, key) and getattr(key_usage, key) is True:
+        return True
+    if isinstance(ext_key_usage, extensions.ExtendedKeyUsage) and key in [usage._name for usage in ext_key_usage if hasattr(usage, '_name')]:
+        return True
+    return False
 
 def gather_key_usages(cert :Certificate) -> tuple[list, list, list]:
     certificate_extensions = []
@@ -289,8 +329,8 @@ def match_hostname(host :str, cert :Certificate) -> bool:
     certificate_san = []
     try:
         certificate_san = cert.extensions.get_extension_for_class(x509.SubjectAlternativeName).value.get_values_for_type(x509.DNSName)
-    except extensions.ExtensionNotFound:
-        pass
+    except extensions.ExtensionNotFound as ex:
+        logger.debug(ex, exc_info=True)
     valid_common_name = False
     wildcard_hosts = set()
     domains = set()
@@ -316,7 +356,7 @@ def validate_certificate_chain(der :bytes, pem_certificate_chain :list, validato
     # TODO perhaps remove certvalidator, consider once merged: https://github.com/pyca/cryptography/issues/2381
     ctx = ValidationContext(allow_fetching=True, revocation_mode='hard-fail', weak_hash_algos=set(["md2", "md5", "sha1"]))
     validator = CertificateValidator(der, validation_context=ctx, intermediate_certs=pem_certificate_chain)
-    validator.validate_usage(
+    return validator.validate_usage(
         key_usage=set(validator_key_usage),
         extended_key_usage=set(validator_extended_key_usage),
     )

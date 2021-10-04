@@ -6,7 +6,7 @@ import validators
 import asn1crypto
 from ssl import PEM_cert_to_DER_cert
 from OpenSSL.crypto import X509, X509Name, dump_certificate, load_certificate, FILETYPE_PEM, FILETYPE_ASN1, FILETYPE_TEXT, TYPE_RSA, TYPE_DSA, TYPE_DH, TYPE_EC
-from cryptography.x509 import extensions, Certificate, SubjectAlternativeName, DNSName
+from cryptography.x509 import Certificate
 from certvalidator.errors import PathValidationError, RevokedError, InvalidCertificateError, PathBuildingError
 from tlsverify import util
 from tlsverify.exceptions import ValidationError
@@ -40,17 +40,20 @@ class Validator:
         self.metadata = None
         if host is not None:
             self.x509, self.certificate_chain, protocol, cipher = util.get_certificates(host, port)
+            logger.debug('added pyOpenSSL x509')
             self.metadata = util.Metadata(host=host, port=port, negotiated_cipher=cipher, negotiated_protocol=protocol)
             if self.x509 is None or not self.certificate_chain:
                 raise ValidationError(f'Unable to negotiate a TLS socket connection with server at {host}:{port} to obtain the Certificate')
             self._pem = dump_certificate(FILETYPE_PEM, self.x509)
+            logger.debug('added PEM bytes')
             self._der = PEM_cert_to_DER_cert(self._pem.decode())
+            logger.debug('added ASN1/DER bytes')
             self.certificate = self.x509.to_cryptography()
-            self._pem_certificate_chain = []
-            for cert in self.certificate_chain:
-                self._pem_certificate_chain.append(dump_certificate(FILETYPE_PEM, cert))
+            logger.debug('added lib cryptography object')
+            self._pem_certificate_chain = Validator.convert_x509_to_PEM(self.certificate_chain)
 
     def cert_to_text(self) -> str:
+        logger.debug('dump_certificate x509 FILETYPE_TEXT')
         return dump_certificate(FILETYPE_TEXT, self.x509)
 
     def tabulate(self) -> str:
@@ -81,21 +84,33 @@ class Validator:
 
     def init_der(self, der :bytes):
         self._der = der
+        logger.debug('added ASN1/DER bytes')
         self.x509 = load_certificate(FILETYPE_ASN1, der)
+        logger.debug('added pyOpenSSL x509')
         self._pem = dump_certificate(FILETYPE_PEM, self.x509)
+        logger.debug('added PEM bytes')
         self.certificate = self.x509.to_cryptography()
+        logger.debug('added lib cryptography object')
 
     def init_pem(self, pem :bytes):
         self._pem = pem
+        logger.debug('added PEM bytes')
         self.x509 = load_certificate(FILETYPE_PEM, pem)
+        logger.debug('added pyOpenSSL x509')
         self._der = PEM_cert_to_DER_cert(self._pem.decode())
+        logger.debug('added ASN1/DER bytes')
         self.certificate = self.x509.to_cryptography()
+        logger.debug('added lib cryptography object')
 
     def init_x509(self, x509 :X509):
         self.x509 = x509
+        logger.debug('added pyOpenSSL x509')
         self._pem = dump_certificate(FILETYPE_PEM, x509)
+        logger.debug('added PEM bytes')
         self._der = PEM_cert_to_DER_cert(self._pem.decode())
+        logger.debug('added ASN1/DER bytes')
         self.certificate = x509.to_cryptography()
+        logger.debug('added lib cryptography object')
 
     @staticmethod
     def convert_decimal_to_serial_bytes(decimal :int):
@@ -105,15 +120,6 @@ class Validator:
         b = a[1:] if len(a)%2==1 else a
         return format(':'.join(s.encode('utf8').hex().lower() for s in b))
 
-    @staticmethod
-    def convert_decimal_to_serial_bytes(decimal :int):
-        # add leading 0
-        a = "0%x" % decimal
-        # force even num bytes, remove leading 0 if necessary
-        b = a[1:] if len(a)%2==1 else a
-        return format(':'.join(s.encode('utf8').hex().lower() for s in b))
-
-    
     @staticmethod
     def str_n_split(input :str, n :int = 2, delimiter :str = ' '):
         return delimiter.join([input[i:i+n] for i in range(0, len(input), n)])
@@ -153,10 +159,8 @@ class Validator:
         self.metadata.certificate_sha256_fingerprint = hashlib.sha256(self._der).hexdigest()
         self.metadata.certificate_sha1_fingerprint = hashlib.sha1(self._der).hexdigest()
         self.metadata.certificate_md5_fingerprint = hashlib.md5(self._der).hexdigest()
-        try:
-            self.metadata.certificate_san = self.certificate.extensions.get_extension_for_class(SubjectAlternativeName).value.get_values_for_type(DNSName)
-        except extensions.ExtensionNotFound:
-            pass
+        self.metadata.certificate_san = util.get_san(self.certificate)
+        self.metadata.certificate_valid_tls_usage = util.check_usage(self.certificate, 'digital_signature') is True and util.check_usage(self.certificate, 'serverAuth') is True
         not_before = datetime.strptime(self.x509.get_notBefore().decode('ascii'), util.X509_DATE_FMT)
         not_after = datetime.strptime(self.x509.get_notAfter().decode('ascii'), util.X509_DATE_FMT)
         self.metadata.certificate_not_before = not_before.isoformat()
@@ -171,15 +175,26 @@ class Validator:
             if ext['name'] == 'authorityKeyIdentifier':
                 self.metadata.certificate_authority_key_identifier = ext[ext['name']]
 
-    def verify(self, host :str = None, port :int = None, server_cert :bool = True) -> bool:
+    def verify(self, host :str = None, port :int = None, peer :bool = False) -> bool:
         if not hasattr(self, 'metadata') or self.metadata is None:
             self.metadata = util.Metadata(host=host, port=port)
-        if server_cert and isinstance(host, str):
-            self.metadata.host = host
-        if server_cert and validators.domain(self.metadata.host) is not True:
-            raise ValueError(f"provided an invalid domain {host}")
-        if server_cert and isinstance(port, int):
-            self.metadata.port = port
+        if peer is False:
+            logger.debug('Server certificate validations')
+            if isinstance(host, str):
+                self.metadata.host = host
+            if validators.domain(self.metadata.host) is not True:
+                raise ValueError(f"provided an invalid domain {host}")
+            if isinstance(port, int):
+                self.metadata.port = port
+            self.validation_checks['certificate_valid_tls_usage'] = util.check_usage(self.certificate, 'digital_signature') is True and util.check_usage(self.certificate, 'serverAuth') is True
+            self.validation_checks['common_name_valid'] = util.validate_common_name(self.metadata.certificate_common_name, self.metadata.host) is True
+            self.validation_checks['match_hostname'] = util.match_hostname(self.metadata.host, self.certificate)
+            self.metadata.certificate_is_self_signed = util.is_self_signed(self.certificate)
+            self.validation_checks['not_self_signed'] = self.metadata.certificate_is_self_signed is False
+            if self.metadata.certificate_is_self_signed:
+                self.validation_checks['trusted_ca'] = False
+                self.certificate_verify_messages.append('The CA is not properly imported as a trusted CA into the browser, Chrome based browsers will block visitors and show them ERR_CERT_AUTHORITY_INVALID')
+        logger.debug('Common certificate validations')
         not_after = datetime.fromisoformat(self.metadata.certificate_not_after)
         not_before = datetime.fromisoformat(self.metadata.certificate_not_before)
         self.validation_checks['not_expired'] = not_after > datetime.utcnow()
@@ -195,14 +210,6 @@ class Validator:
         self.validation_checks['avoid_known_weak_keys'] = self.metadata.certificate_public_key_type not in util.KNOWN_WEAK_KEYS.keys() or self.metadata.certificate_key_size > util.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
         if self.validation_checks['avoid_known_weak_keys'] is False:
             self.certificate_verify_messages.append(util.KNOWN_WEAK_KEYS[self.metadata.certificate_public_key_type])
-        if server_cert:
-            self.validation_checks['common_name_valid'] = util.validate_common_name(self.metadata.certificate_common_name, self.metadata.host) is True
-            self.validation_checks['match_hostname'] = util.match_hostname(self.metadata.host, self.certificate)
-            self.metadata.certificate_is_self_signed = util.is_self_signed(self.certificate)
-            self.validation_checks['not_self_signed'] = self.metadata.certificate_is_self_signed is False
-            if self.metadata.certificate_is_self_signed:
-                self.validation_checks['trusted_CA'] = False
-                self.certificate_verify_messages.append('The CA is not properly imported as a trusted CA into the browser, Chrome based browsers will block visitors and show them ERR_CERT_AUTHORITY_INVALID')
         self.certificate_valid = all(list(self.validation_checks.values()))
         return self.certificate_valid
 
@@ -210,26 +217,32 @@ class Validator:
         if certificate_chain is not None:
             self._pem_certificate_chain = certificate_chain
         self.metadata.certificate_extensions, validator_key_usage, validator_extended_key_usage = util.gather_key_usages(self.certificate)
+        self.validation_checks['not_revoked'] = True
         try:
+            logger.debug('certificate chain validation')
             util.validate_certificate_chain(self._der, self._pem_certificate_chain, validator_key_usage, validator_extended_key_usage)
         except RevokedError as ex:
+            logger.debug(ex, exc_info=True)
             self.validation_checks['not_revoked'] = False
             self.certificate_chain_valid = False
             self.certificate_chain_validation_result = str(ex)
         except InvalidCertificateError as ex:
+            logger.debug(ex, exc_info=True)
             self.validation_checks['certificate_chain_valid'] = False
             self.certificate_chain_valid = False
             self.certificate_chain_validation_result = str(ex)
         except PathValidationError as ex:
+            logger.debug(ex, exc_info=True)
             self.validation_checks['certificate_chain_valid'] = False
             self.certificate_chain_valid = False
             self.certificate_chain_validation_result = str(ex)
         except PathBuildingError as ex:
+            logger.debug(ex, exc_info=True)
             self.validation_checks['certificate_chain_valid'] = False
             self.certificate_chain_valid = False
             self.certificate_chain_validation_result = str(ex)
         except Exception as ex:
-            logger.exception(ex)
+            logger.warning(ex, exc_info=True)
             self.validation_checks['certificate_chain_valid'] = False
             self.certificate_chain_validation_result = str(ex)
 
@@ -254,7 +267,7 @@ def verify(host :str, port :int = 443, cafiles :list = None, tlsext :bool = Fals
         peer_validator = Validator()
         peer_validator.init_x509(cert)
         peer_validator.extract_metadata()
-        peer_validator.verify(server_cert=False)
+        peer_validator.verify(peer=True)
         validations.append(peer_validator)
     validator.verify_chain(Validator.convert_x509_to_PEM(x509_certificate_chain))
     validations.append(validator)
