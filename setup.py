@@ -12,7 +12,9 @@ setup(
     long_description_content_type="text/markdown",
     url="https://gitlab.com/chrislangton/py-tls-veryify",
     project_urls={
-        "Git": "https://gitlab.com/chrislangton/py-tls-veryify",
+        "Source": "https://gitlab.com/chrislangton/py-tls-veryify",
+        "Documentation": "https://gitlab.com/chrislangton/py-tls-veryify/-/blob/main/README.md",
+        "Tracker": "https://gitlab.com/chrislangton/py-tls-veryify/-/issues",
     },
     classifiers=[
         "Operating System :: OS Independent",
