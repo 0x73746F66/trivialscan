@@ -255,15 +255,35 @@ class Validator:
         return self.certificate_valid and self.certificate_chain_valid
 
 def verify(host :str, port :int = 443, cafiles :list = None, tlsext :bool = False) -> tuple[bool,list[Validator]]:
+    additional_cert = None
     validations = []
+    logger.info('Testing TLS connection')
     x509, x509_certificate_chain, protocol, cipher = util.get_certificates(host, port, cafiles, tlsext=tlsext)
+    sni_support = None
+    if isinstance(x509, X509) and tlsext is True:
+        logger.info('SNI supported')
+        sni_support = True
+    if not isinstance(x509, X509) and tlsext is False:
+        logger.info('SNI not support')
+        x509, x509_certificate_chain, protocol, cipher = util.get_certificates(host, port, cafiles, tlsext=False)
+        sni_support = False
+    if not isinstance(x509, X509):
+        raise ValidationError('Unable to negotiate a tls connection')
+    if isinstance(x509, X509) and tlsext is False:
+        logger.info('Checking SNI support')
+        additional_cert, _, _, _ = util.get_certificates(host, port, cafiles, tlsext=True)
+        sni_support = isinstance(additional_cert, X509)
+
+    logger.info('Checking server certificate')
     validator = Validator()
     validator.init_x509(x509)
     validator.extract_metadata()
     validator.verify(host, port)
     validator.metadata.negotiated_cipher = cipher
     validator.metadata.negotiated_protocol = protocol
+    validator.metadata.sni_support = sni_support
     for cert in x509_certificate_chain:
+        logger.info('Checking peer certificate')
         peer_validator = Validator()
         peer_validator.init_x509(cert)
         peer_validator.extract_metadata()
@@ -271,5 +291,15 @@ def verify(host :str, port :int = 443, cafiles :list = None, tlsext :bool = Fals
         validations.append(peer_validator)
     validator.verify_chain(Validator.convert_x509_to_PEM(x509_certificate_chain))
     validations.append(validator)
+
+    if isinstance(additional_cert, X509):
+        additional_validator = Validator()
+        additional_validator.init_x509(additional_cert)
+        additional_validator.extract_metadata()
+    if validator.metadata.certificate_common_name != additional_validator.metadata.certificate_common_name:
+        logger.info('Checking additional SNI negotiated certificate')
+        additional_validator.verify(host, port)
+        validations.append(additional_validator)
+
     valid = all([v.certificate_valid for v in validations])
     return valid, validations

@@ -63,6 +63,7 @@ class Metadata:
     certificate_is_self_signed : bool = field(default_factory=bool)
     negotiated_cipher :str = field(default_factory=str)
     negotiated_protocol :str = field(default_factory=str)
+    sni_support :bool = field(default_factory=bool)
     revocation_ocsp_stapling :bool = field(default_factory=bool)
     revocation_ocsp_must_staple :bool = field(default_factory=bool)
     port :int = 443

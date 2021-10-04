@@ -97,6 +97,7 @@ optional arguments:
   - ✓ certificate_issuer
   - ✓ certificate_issuer_country
   - ✓ certificate_signature_algorithm
+  - ✓ SNI
 - ✓ Signatures
   - ✓ certificate_md5_fingerprint
   - ✓ certificate_sha1_fingerprint
@@ -133,6 +134,7 @@ optional arguments:
   - ✓ keys
   - ✓ signature algorithm
 
+
 ## ⌛ Todo
 
 - Known RSA/DSA private keys: https://www.hdm.io/tools/debian-openssl/
@@ -162,6 +164,9 @@ optional arguments:
 - Issuer match (If the server is owned or operated by you, a Zero-trust requirement)
 - if CT expected (Zero-trust requirement), Certificate Transparency resolves
 - if HPKP is still present and expected, validate per the policy
+- Extended Validation
+- DNS CAA
+- DNSSEC
 
 ### Rationale
 
