@@ -137,7 +137,12 @@ optional arguments:
 
 ## ⌛ Todo
 
+- Test timings
+- Handshake Simulations
+- Enumerate Cipher Suites
 - Known RSA/DSA private keys: https://www.hdm.io/tools/debian-openssl/
+- Common DH primes and public server param (Ys) reuse
+- ECDH public server param reuse
 - TLS extensions
   - basicConstraints path_length
   - IssuingDistributionPoint
@@ -164,9 +169,19 @@ optional arguments:
 - Issuer match (If the server is owned or operated by you, a Zero-trust requirement)
 - if CT expected (Zero-trust requirement), Certificate Transparency resolves
 - if HPKP is still present and expected, validate per the policy
-- Extended Validation
-- DNS CAA
-- DNSSEC
+- report Extended Validation
+- report DNS CAA
+- report DNSSEC
+- report Secure Renegotiation
+- report Downgrade attack prevention
+- report TLS compression
+- report Forward Secrecy
+- report ALPN
+- report NPN
+- report SPDY
+- report Session resumption
+- report HSTS
+- report HTTP status code and banners
 
 ### Rationale
 
@@ -183,6 +198,14 @@ To perform proper and complete TLS validation, one must actually write several h
 Given `certvalidator` provide us a solution to validate the entire cert chain, I was very disappointed to learn that the validator class required at least 200+ lines of code just to build the `key_usages` argument by enumerating the TLS extensions.
 
 We need a simple tool that abstracts the repeatable steps, and the code bases of the above are not ideal (typical gate-keeping or procrastination in PRs and unnecessary py-golf - sorry if you're a fan of perl golf, it's not for me)
+
+#### NPN
+
+NPN was the TLS extension used to negotiate SPDY (and, in transition, HTTP/2). During the standardization process, NPN was replaced with ALPN, published as rfc7301 in July 2014. Chrome removed NPN and SPDY protocol.
+
+Given the maker of SPDY and therefore the transitional TLS extension NPN has removed support from their Chrome browser, any server that supports both have a larger than needed attack surface, and technology not supported for many years can be quietly vulnerable, so obscure that any vulnerability reports about them will be treated as not in scope, nor will they get a CVE published because the CVE issuer is the same entity that decides if it is a bug or not.
+
+Maybe vulnerabilities in SPDY or NPN will be disclosed via UVI (Cloud Security Alliance), but UVI is not yet mainstream and is mostly unheard of in security research communities as of late 2021.
 
 #### HPKP
 

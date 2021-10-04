@@ -1,4 +1,3 @@
-from os import getenv
 import logging
 import argparse
 from . import verify
@@ -34,6 +33,3 @@ def cli():
         print(validator.tabulate())
         print('\n\n')
     print('\nValid ✓✓✓' if valid else '\nNot Valid. There where validation errors')
-
-if __name__ == "__main__":
-    cli()
