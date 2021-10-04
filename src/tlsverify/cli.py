@@ -1,10 +1,12 @@
 import logging
 import argparse
+from datetime import datetime
 from . import verify
 
 __module__ = 'tlsverify.cli'
 
 def cli():
+    evaluation_start = datetime.utcnow()
     parser = argparse.ArgumentParser()
     parser.add_argument('-H', '--host', help='host to check', dest='host', required=True)
     parser.add_argument('-p', '--port', help='TLS port of host', dest='port', default=443)
@@ -28,8 +30,9 @@ def cli():
         format='%(asctime)s - %(name)s - [%(levelname)s] %(message)s',
         level=log_level
     )
-    valid, validators = verify(args.host, args.port, cafiles=args.cafiles, tlsext=args.tlsext)
+    valid, validators = verify(args.host, int(args.port), cafiles=args.cafiles, tlsext=args.tlsext)
     for validator in validators:
         print(validator.tabulate())
         print('\n\n')
     print('\nValid ✓✓✓' if valid else '\nNot Valid. There where validation errors')
+    print(f'evaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}')

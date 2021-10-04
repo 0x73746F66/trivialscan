@@ -282,6 +282,8 @@ optional arguments:
   - ✓ keyUsage
   - ✓ extendedKeyUsage
   - ✓ inhibitAnyPolicy
+  - ✓ basicConstraints ca
+  - ✓ basicConstraints path_length
 - revocation
   - ✓ OCSP
 - ✓ Root Certificate is a CA and in a trust store
@@ -292,19 +294,19 @@ optional arguments:
   - ✓ optionally; allow the user to include additional cacert bundle
   - optionally; client condition; path length is exactly 3 (Root CA, signer/issuer, server cert) regardless of tls extension basicConstraints path_length
 - Not using known weak "x"
+  - ✓ protocol
   - ✓ keys
   - ✓ signature algorithm
+- ✓ CLI output evaluation duration
 
 ## ⌛ Todo
 
-- Test timings
 - Handshake Simulations
 - Enumerate Cipher Suites
 - Known RSA/DSA private keys: https://www.hdm.io/tools/debian-openssl/
-- Common DH primes and public server param (Ys) reuse
-- ECDH public server param reuse
+- Common DH primes and public server param (Ys) reuse - logjam
+- ECDH public server param reuse - Racoon
 - TLS extensions
-  - basicConstraints path_length
   - IssuingDistributionPoint
   - cRLDistributionPoints
   - signedCertificateTimestampList
@@ -312,7 +314,6 @@ optional arguments:
 - rfc6066; OCSP must resolve if not stapled, if must-staple flag is present the CA provides a valid response, i.e. validate not revoked
 - Timestamps are valid using NTP
 - Not using known weak "x"
-  - protocol
   - cipher
 - Not using a known vulnerable "x"
 - compromised private keys (pwnedkeys.com to start)

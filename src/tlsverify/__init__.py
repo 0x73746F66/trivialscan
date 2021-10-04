@@ -8,6 +8,7 @@ from ssl import PEM_cert_to_DER_cert
 from OpenSSL.crypto import X509, X509Name, dump_certificate, load_certificate, FILETYPE_PEM, FILETYPE_ASN1, FILETYPE_TEXT, TYPE_RSA, TYPE_DSA, TYPE_DH, TYPE_EC
 from cryptography.x509 import Certificate
 from certvalidator.errors import PathValidationError, RevokedError, InvalidCertificateError, PathBuildingError
+from validators.utils import ValidationFailure
 from tlsverify import util
 from tlsverify.exceptions import ValidationError
 from tabulate import tabulate
@@ -54,7 +55,7 @@ class Validator:
 
     def cert_to_text(self) -> str:
         logger.debug('dump_certificate x509 FILETYPE_TEXT')
-        return dump_certificate(FILETYPE_TEXT, self.x509)
+        return dump_certificate(FILETYPE_TEXT, self.x509).decode()
 
     def tabulate(self) -> str:
         def any_to_string(value, delimiter='\n') -> str:
@@ -210,6 +211,9 @@ class Validator:
         self.validation_checks['avoid_known_weak_keys'] = self.metadata.certificate_public_key_type not in util.KNOWN_WEAK_KEYS.keys() or self.metadata.certificate_key_size > util.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
         if self.validation_checks['avoid_known_weak_keys'] is False:
             self.certificate_verify_messages.append(util.KNOWN_WEAK_KEYS[self.metadata.certificate_public_key_type])
+        self.validation_checks['avoid_deprecated_protocols'] = self.metadata.negotiated_protocol not in util.WEAK_PROTOCOL.keys()
+        if self.validation_checks['avoid_deprecated_protocols'] is False:
+            self.certificate_verify_messages.append(util.WEAK_PROTOCOL[self.metadata.negotiated_protocol])
         self.certificate_valid = all(list(self.validation_checks.values()))
         return self.certificate_valid
 
@@ -277,16 +281,24 @@ def verify(host :str, port :int = 443, cafiles :list = None, tlsext :bool = Fals
     logger.info('Checking server certificate')
     validator = Validator()
     validator.init_x509(x509)
+    ca, path_length = util.get_basic_constraints(validator.certificate)
+    if isinstance(ca, bool) and ca is True:
+        raise ValidationFailure('server cert should not be a CA')
     validator.extract_metadata()
-    validator.verify(host, port)
     validator.metadata.negotiated_cipher = cipher
     validator.metadata.negotiated_protocol = protocol
     validator.metadata.sni_support = sni_support
+    if isinstance(path_length, int):
+        validator.metadata.tlsext_basic_constraints_path_length = len(x509_certificate_chain) == path_length
+    validator.verify(host, port)
     for cert in x509_certificate_chain:
         logger.info('Checking peer certificate')
         peer_validator = Validator()
         peer_validator.init_x509(cert)
+        _, peer_path_length = util.get_basic_constraints(peer_validator.certificate)
         peer_validator.extract_metadata()
+        if isinstance(peer_path_length, int):
+            peer_validator.metadata.tlsext_basic_constraints_path_length = len(x509_certificate_chain) == peer_path_length
         peer_validator.verify(peer=True)
         validations.append(peer_validator)
     validator.verify_chain(Validator.convert_x509_to_PEM(x509_certificate_chain))

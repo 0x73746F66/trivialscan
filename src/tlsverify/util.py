@@ -28,18 +28,23 @@ KNOWN_WEAK_SIGNATURE_ALGORITHMS = {
     'md5WithRSAEncryption': 'Arjen Lenstra and Benne de Weger 2005: vulnerable to hash collision attacks',
     'md2WithRSAEncryption': 'Rogier, N. and Chauvaud, P. in 1995: vulnerable to collision, later preimage resistance, and second-preimage resistance attacks were demonstrated at BlackHat 2008 by Mark Twain',
 }
-OPEN_SSL_METHOD_LOOKUP = {
-    1: 'SSLv2',
-    2: 'SSLv3',
-    3: 'SSLv23',
-    4: 'TLSv1',
-    5: 'TLSv1.1',
-    6: 'TLSv1.2',
+OPENSSL_VERSION_LOOKUP = {
+    768: 'SSLv3',
+    769: 'TLSv1',
+    770: 'TLSv1.1',
+    771: 'TLSv1.2',
+    772: 'TLSv1.3',
+}
+WEAK_PROTOCOL = {
+    'SSLv2': 'SSLv2 Deprecated in 2011 (rfc6176) with undetectable manipulator-in-the-middle exploits',
+    'SSLv3': 'SSLv3 Deprecated in 2015 (rfc7568) mainly due to POODLE, a manipulator-in-the-middle exploit',
+    'TLSv1': 'TLSv1 2018 deprecated by PCI Council. Also in 2018, Apple, Google, Microsoft, and Mozilla jointly announced deprecation. Officially deprecated in 2020 (rfc8996)',
+    'TLSv1.1': 'TLSv1.1 No longer supported by Firefox 24 or newer and Chrome 29 or newer. Deprecated in 2020 (rfc8996)',
 }
 
 @dataclass
 class Metadata:
-    host :str
+    host :str = field(default_factory=str)
     certificate_public_key_type :str = field(default_factory=str)
     certificate_key_size :int = field(default_factory=int)
     certificate_serial_number :str = field(default_factory=str)
@@ -61,6 +66,7 @@ class Metadata:
     certificate_authority_key_identifier :str = field(default_factory=str)
     certificate_extensions :list = field(default_factory=list)
     certificate_is_self_signed : bool = field(default_factory=bool)
+    tlsext_basic_constraints_path_length :int = field(default_factory=str)
     negotiated_cipher :str = field(default_factory=str)
     negotiated_protocol :str = field(default_factory=str)
     sni_support :bool = field(default_factory=bool)
@@ -79,17 +85,18 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, tlsext :b
     negotiated_protocol = None
     x509 = None
     certificate_chain = []
-    for method in [SSL.TLSv1_METHOD, SSL.TLSv1_1_METHOD, SSL.TLSv1_2_METHOD, SSL.SSLv23_METHOD]:
-        logger.debug(f'Trying protocol {OPEN_SSL_METHOD_LOOKUP[method]}')
+    for version in [SSL.SSL3_VERSION, SSL.TLS1_VERSION, SSL.TLS1_1_VERSION, SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]:
+        logger.info(f'Trying protocol {OPENSSL_VERSION_LOOKUP[version]}')
         certificate_chain = []
-        ctx = SSL.Context(method=method)
+        ctx = SSL.Context(method=SSL.SSLv23_METHOD)
+        ctx.set_max_proto_version(version)
         ctx.check_hostname = False
         ctx.verify_mode = SSL.VERIFY_NONE
         conn = SSL.Connection(ctx, socket(AF_INET, SOCK_STREAM))
         conn.connect((host, port))
         conn.settimeout(3)
         if tlsext is True:
-            logger.debug('using SNI')
+            logger.info('using SNI')
             conn.set_tlsext_host_name(idna.encode(host))
         conn.setblocking(1)
         try:
@@ -100,6 +107,9 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, tlsext :b
             for (_, cert) in enumerate(conn.get_peer_cert_chain()):
                 certificate_chain.append(cert)
             logger.debug(f'Peer cert chain length: {len(certificate_chain)}')
+        except SSL.Error as err:
+            if 'no protocols available' not in str(err) and 'alert protocol' not in str(err):
+                logger.warning(err, exc_info=True)
         except Exception as ex:
             logger.warning(ex, exc_info=True)
         finally:
@@ -135,6 +145,16 @@ def get_san(cert :Certificate) -> list:
     except extensions.ExtensionNotFound as ex:
         logger.debug(ex, exc_info=True)
     return san
+
+def get_basic_constraints(cert :Certificate) -> tuple[bool, int]:
+    basic_constraints = None
+    try:
+        basic_constraints = cert.extensions.get_extension_for_class(extensions.BasicConstraints).value
+    except extensions.ExtensionNotFound as ex:
+        logger.debug(ex, exc_info=True)
+    if not isinstance(basic_constraints, extensions.BasicConstraints):
+        return None, None
+    return basic_constraints.ca, basic_constraints.path_length
 
 def check_usage(cert :Certificate, key :str) -> bool:
     key_usage = None
