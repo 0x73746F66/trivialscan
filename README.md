@@ -14,7 +14,7 @@ is_valid, _ = tlsverify.verify(host)
 print('\nValid ✓✓✓' if is_valid else '\nNot Valid. There where validation errors')
 ```
 
-## Granular Usage
+### Results
 
 ```py
 import tlsverify
@@ -41,7 +41,7 @@ from dataclasses import asdict
 print(asdict(validator.metadata))
 ```
 
-Access the certificate in many formats conveniently:
+### Certificate Formats
 
 ```py
 print(validator.cert_to_text())
@@ -54,6 +54,167 @@ print(type(validator.certificate))
 # Access OpenSSL.crypto.X509
 print(type(validator.x509))
 ```
+
+## Granular Usage
+
+```py
+from pathlib import Path
+from tlsverify import Validator
+
+pem = Path(os.path.join(os.path.dirname(__file__), "cert.pem")).read_bytes()
+validator = Validator()
+validator.init_pem(pem)
+validator.extract_metadata()
+if not validator.verify(host, port):
+  print(validator.metadata.certificate_subject)
+  print(validator.metadata.certificate_serial_number)
+  print(validator.certificate_valid)
+  print(validator.certificate_chain_valid)
+  print(validator.certificate_verify_messages)
+  print(validator.certificate_chain_validation_result)
+```
+
+### Retrieve Certificates Only
+
+```py
+from tlsverify.util import get_certificates
+x509, x509_certificate_chain, _, _ = get_certificates(host)
+```
+
+### View Certificate in plan text
+
+```py
+from pathlib import Path
+from tlsverify import Validator
+
+pem = Path(os.path.join(os.path.dirname(__file__), "cert.der")).read_bytes()
+validator = Validator()
+validator.init_der(der)
+print(validator.cert_to_text())
+```
+
+### Only Verify the Certificate Chain
+
+```py
+from tlsverify import Validator
+from tlsverify.util import get_certificates
+
+x509, x509_certificate_chain, _, _ = get_certificates(host)
+validator = Validator()
+validator.init_x509(x509)
+validator.extract_metadata()
+validator.verify_chain(Validator.convert_x509_to_PEM(x509_certificate_chain))
+```
+
+### Just get the KeyUsage and ExtendedKeyUsage as lists
+
+You may wish to call the `certvalidator` library yourself, to save you a few hundred lines of code (when not using `tls-verify`) you can gather the key usage lists first:
+
+```py
+from pathlib import Path
+from tlsverify import Validator
+from tlsverify.util import gather_key_usages
+
+host = 'google.com'
+pem = Path(os.path.join(os.path.dirname(__file__), "cert.pem")).read_bytes()
+validator = Validator()
+validator.init_pem(pem)
+_, key_usage, ext_key_usage = gather_key_usages(validator.certificate)
+```
+
+Then call the external library directly, as you would without `tls-verify` [per their docs](https://github.com/wbond/certvalidator/blob/master/docs/api.md):
+
+```py
+from certvalidator import CertificateValidator
+validator = CertificateValidator(der, intermediate_certs=intermediate_certs)
+validator.validate_usage(
+    key_usage=set(key_usage),
+    extended_key_usage=set(ext_key_usage),
+)
+```
+
+### Check if a KeyUsage or ExtendedKeyUsage is present
+
+```py
+from pathlib import Path
+from tlsverify import Validator
+from tlsverify.util import check_usage
+
+pem = Path(os.path.join(os.path.dirname(__file__), "cert.pem")).read_bytes()
+validator = Validator()
+validator.init_pem(pem)
+print(check_usage(validator.certificate, 'digital_signature'))
+print(check_usage(validator.certificate, 'clientAuth'))
+```
+
+### Get TLS Extensions dictionary
+
+```py
+from pathlib import Path
+from tlsverify import Validator
+from tlsverify.util import gather_key_usages
+
+host = 'google.com'
+pem = Path(os.path.join(os.path.dirname(__file__), "cert.pem")).read_bytes()
+validator = Validator()
+validator.init_pem(pem)
+extensions, _, _ = gather_key_usages(validator.certificate)
+```
+
+### is_self_signed
+
+```py
+from pathlib import Path
+from tlsverify import Validator
+from tlsverify.util import is_self_signed
+
+pem = Path(os.path.join(os.path.dirname(__file__), "cert.pem")).read_bytes()
+validator = Validator()
+validator.init_pem(pem)
+print(is_self_signed(validator.certificate))
+```
+
+### get subjectAlternativeNames (SAN)
+
+```py
+from pathlib import Path
+from tlsverify import Validator
+from tlsverify.util import get_san
+
+pem = Path(os.path.join(os.path.dirname(__file__), "cert.pem")).read_bytes()
+validator = Validator()
+validator.init_pem(pem)
+print(get_san(validator.certificate))
+```
+
+### Validate the common name (incl. wildcard) against the server host name
+
+```py
+from pathlib import Path
+from tlsverify import Validator
+from tlsverify.util import validate_common_name
+
+host = 'google.com'
+pem = Path(os.path.join(os.path.dirname(__file__), "cert.pem")).read_bytes()
+validator = Validator()
+validator.init_pem(pem)
+print(validate_common_name(validator.metadata.certificate_common_name, host))
+```
+
+### Validate host name (incl. wildcard SAN and common name)
+
+```py
+from pathlib import Path
+from tlsverify import Validator
+from tlsverify.util import match_hostname
+
+host = 'google.com'
+pem = Path(os.path.join(os.path.dirname(__file__), "cert.pem")).read_bytes()
+validator = Validator()
+validator.init_pem(pem)
+print(match_hostname(host, validator.certificate))
+```
+
 
 ## Use it as a cli:
 
@@ -83,22 +244,22 @@ optional arguments:
 
 ## Implemented
 
-- ✓ Certificate Formats
+- Certificate Formats
   - ✓ plaintext
   - ✓ PEM
   - ✓ ASN1/DER
   - ✓ pyOpenSSL object
   - ✓ python `cryptography` object
-- ✓ TLS Information
+- TLS Information
   - ✓ negotiated_protocol
   - ✓ negotiated_cipher
-- ✓ X.509 Information
+- X.509 Information
   - ✓ certificate_subject
   - ✓ certificate_issuer
   - ✓ certificate_issuer_country
   - ✓ certificate_signature_algorithm
   - ✓ SNI
-- ✓ Signatures
+- Signatures
   - ✓ certificate_md5_fingerprint
   - ✓ certificate_sha1_fingerprint
   - ✓ certificate_sha256_fingerprint
@@ -109,31 +270,30 @@ optional arguments:
   - ✓ certificate_public_key_type
   - ✓ certificate_key_size
 - ✓ Expiry date is future dated
-- ✓ Hostname match
+- Hostname match
   - ✓ common name
   - ✓ subjectAltName
   - ✓ properly handle wildcard names
 - ✓ certificate_is_self_signed
-- ⌛ Enumerate the TLS extensions to ensure all validations are performed (excluding non-standard or any custom extensions that may exist)
+- Enumerate the TLS extensions to ensure all validations are performed (excluding non-standard or any custom extensions that may exist)
   - ✓ subjectAltName
   - ✓ issuerAlternativeName
   - ✓ authorityKeyIdentifier matches issuer subjectKeyIdentifier
   - ✓ keyUsage
   - ✓ extendedKeyUsage
   - ✓ inhibitAnyPolicy
-- ✓ revocation
+- revocation
   - ✓ OCSP
 - ✓ Root Certificate is a CA and in a trust store
-- ✓ Validate the complete chain (a requirement for zero-trust)
+- Validate the complete chain (a requirement for zero-trust)
   - ✓ correctly build the chain
   - ✓ All certs in the chain are not revoked
   - ✓ Intermediate key usages are verified
   - ✓ optionally; allow the user to include additional cacert bundle
-  - ⌛ optionally; client condition; path length is exactly 3 (Root CA, signer/issuer, server cert) regardless of tls extension basicConstraints path_length
-- ✓ Not using known weak "x"
+  - optionally; client condition; path length is exactly 3 (Root CA, signer/issuer, server cert) regardless of tls extension basicConstraints path_length
+- Not using known weak "x"
   - ✓ keys
   - ✓ signature algorithm
-
 
 ## ⌛ Todo
 
