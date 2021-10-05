@@ -2,6 +2,7 @@ import hashlib
 import logging
 from base64 import b64encode
 from datetime import datetime
+from pathlib import Path
 import validators
 import asn1crypto
 from ssl import PEM_cert_to_DER_cert
@@ -40,7 +41,7 @@ class Validator:
         self.certificate_chain = []
         self.metadata = None
         if host is not None:
-            self.x509, self.certificate_chain, protocol, cipher = util.get_certificates(host, port)
+            self.x509, self.certificate_chain, valid_subjects, protocol, cipher = util.get_certificates(host, port) #TODO handle clientAuth
             logger.debug('added pyOpenSSL x509')
             self.metadata = util.Metadata(host=host, port=port, negotiated_cipher=cipher, negotiated_protocol=protocol)
             if self.x509 is None or not self.certificate_chain:
@@ -161,7 +162,7 @@ class Validator:
         self.metadata.certificate_sha1_fingerprint = hashlib.sha1(self._der).hexdigest()
         self.metadata.certificate_md5_fingerprint = hashlib.md5(self._der).hexdigest()
         self.metadata.certificate_san = util.get_san(self.certificate)
-        self.metadata.certificate_valid_tls_usage = util.check_usage(self.certificate, 'digital_signature') is True and util.check_usage(self.certificate, 'serverAuth') is True
+        self.metadata.certificate_valid_tls_usage = util.key_usage_exists(self.certificate, 'digital_signature') is True and util.key_usage_exists(self.certificate, 'serverAuth') is True
         not_before = datetime.strptime(self.x509.get_notBefore().decode('ascii'), util.X509_DATE_FMT)
         not_after = datetime.strptime(self.x509.get_notAfter().decode('ascii'), util.X509_DATE_FMT)
         self.metadata.certificate_not_before = not_before.isoformat()
@@ -176,6 +177,12 @@ class Validator:
             if ext['name'] == 'authorityKeyIdentifier':
                 self.metadata.certificate_authority_key_identifier = ext[ext['name']]
 
+    def client_authentication(self, valid_subjects :list[tuple], client_pem :list[str], client_ca :str = None, cafiles :list[str] = None) -> bool:
+        """
+        valid_subjects: [[(b'C', b'US'),(b'ST', b'California'),(b'L', b'San Francisco'),(b'O', b'BadSSL'),(b'CN', b'BadSSL Client Root Certificate Authority')]]
+        """
+        raise NotImplementedError()
+
     def verify(self, host :str = None, port :int = None, peer :bool = False) -> bool:
         if not hasattr(self, 'metadata') or self.metadata is None:
             self.metadata = util.Metadata(host=host, port=port)
@@ -187,7 +194,7 @@ class Validator:
                 raise ValueError(f"provided an invalid domain {host}")
             if isinstance(port, int):
                 self.metadata.port = port
-            self.validation_checks['certificate_valid_tls_usage'] = util.check_usage(self.certificate, 'digital_signature') is True and util.check_usage(self.certificate, 'serverAuth') is True
+            self.validation_checks['certificate_valid_tls_usage'] = util.key_usage_exists(self.certificate, 'digital_signature') is True and util.key_usage_exists(self.certificate, 'serverAuth') is True
             self.validation_checks['common_name_valid'] = util.validate_common_name(self.metadata.certificate_common_name, self.metadata.host) is True
             self.validation_checks['match_hostname'] = util.match_hostname(self.metadata.host, self.certificate)
             self.metadata.certificate_is_self_signed = util.is_self_signed(self.certificate)
@@ -258,26 +265,28 @@ class Validator:
         self.extract_metadata()
         return self.certificate_valid and self.certificate_chain_valid
 
-def verify(host :str, port :int = 443, cafiles :list = None, tlsext :bool = False) -> tuple[bool,list[Validator]]:
+def verify(host :str, port :int = 443, cafiles :list = None, tlsext :bool = False, client_pem :str = None, client_ca :str = None) -> tuple[bool,list[Validator]]:
     additional_cert = None
-    validations = []
+    peer_validations = []
     logger.info('Testing TLS connection')
-    x509, x509_certificate_chain, protocol, cipher = util.get_certificates(host, port, cafiles, tlsext=tlsext)
+    x509, x509_certificate_chain, valid_subjects, protocol, cipher = util.get_certificates(host, port, cafiles=cafiles, client_pem=client_pem, client_ca=client_ca, tlsext=tlsext)
     sni_support = None
     if isinstance(x509, X509) and tlsext is True:
         logger.info('SNI supported')
         sni_support = True
     if not isinstance(x509, X509) and tlsext is False:
         logger.info('SNI not support')
-        x509, x509_certificate_chain, protocol, cipher = util.get_certificates(host, port, cafiles, tlsext=False)
+        x509, x509_certificate_chain, extra_valid_subjects, protocol, cipher = util.get_certificates(host, port, cafiles=cafiles, client_pem=client_pem, client_ca=client_ca, tlsext=False)
         sni_support = False
+        valid_subjects += extra_valid_subjects
     if not isinstance(x509, X509):
         raise ValidationError('Unable to negotiate a tls connection')
     if isinstance(x509, X509) and tlsext is False:
         logger.info('Checking SNI support')
-        additional_cert, _, _, _ = util.get_certificates(host, port, cafiles, tlsext=True)
+        additional_cert, _, additional_valid_subjects, _, _ = util.get_certificates(host, port, cafiles=cafiles, client_pem=client_pem, client_ca=client_ca, tlsext=True)
         sni_support = isinstance(additional_cert, X509)
-
+        valid_subjects += additional_valid_subjects
+        
     logger.info('Checking server certificate')
     validator = Validator()
     validator.init_x509(x509)
@@ -291,6 +300,10 @@ def verify(host :str, port :int = 443, cafiles :list = None, tlsext :bool = Fals
     if isinstance(path_length, int):
         validator.metadata.tlsext_basic_constraints_path_length = len(x509_certificate_chain) == path_length
     validator.verify(host, port)
+    if len(valid_subjects) > 0 and util.key_usage_exists(validator.certificate, 'clientAuth') is True:
+        pass
+        # validator.client_authentication(valid_subjects, cafiles=cafiles, client_pem=client_pem, client_ca=client_ca)
+
     for cert in x509_certificate_chain:
         logger.info('Checking peer certificate')
         peer_validator = Validator()
@@ -300,18 +313,25 @@ def verify(host :str, port :int = 443, cafiles :list = None, tlsext :bool = Fals
         if isinstance(peer_path_length, int):
             peer_validator.metadata.tlsext_basic_constraints_path_length = len(x509_certificate_chain) == peer_path_length
         peer_validator.verify(peer=True)
-        validations.append(peer_validator)
+        peer_validations.append(peer_validator)
     validator.verify_chain(Validator.convert_x509_to_PEM(x509_certificate_chain))
-    validations.append(validator)
-
+    validations = peer_validations
     if isinstance(additional_cert, X509):
         additional_validator = Validator()
         additional_validator.init_x509(additional_cert)
         additional_validator.extract_metadata()
-    if validator.metadata.certificate_common_name != additional_validator.metadata.certificate_common_name:
-        logger.info('Checking additional SNI negotiated certificate')
-        additional_validator.verify(host, port)
-        validations.append(additional_validator)
+        if validator.metadata.certificate_common_name != additional_validator.metadata.certificate_common_name:
+            logger.info('Checking additional SNI negotiated certificate')
+            additional_validator.verify(host, port)
+            tmp_valid = all([v.certificate_valid for v in peer_validations + [validator]] + [additional_validator.certificate_valid])
+            if tmp_valid is False:
+                logger.info('Checking peer certificate')
+                additional_validator.verify_chain(Validator.convert_x509_to_PEM(x509_certificate_chain))
+            validations.append(additional_validator)
+        if len(valid_subjects) > 0 and util.key_usage_exists(additional_validator.certificate, 'clientAuth') is True:
+            pass
+            # additional_validator.client_authentication(valid_subjects, cafiles=cafiles, client_pem=client_pem, client_ca=client_ca)
+    validations.append(validator)
 
     valid = all([v.certificate_valid for v in validations])
     return valid, validations

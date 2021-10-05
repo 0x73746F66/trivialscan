@@ -78,7 +78,7 @@ if not validator.verify(host, port):
 
 ```py
 from tlsverify.util import get_certificates
-x509, x509_certificate_chain, _, _ = get_certificates(host)
+x509, x509_certificate_chain, _, _, _ = get_certificates(host)
 ```
 
 ### View Certificate in plan text
@@ -87,7 +87,7 @@ x509, x509_certificate_chain, _, _ = get_certificates(host)
 from pathlib import Path
 from tlsverify import Validator
 
-pem = Path(os.path.join(os.path.dirname(__file__), "cert.der")).read_bytes()
+der = Path(os.path.join(os.path.dirname(__file__), "cert.der")).read_bytes()
 validator = Validator()
 validator.init_der(der)
 print(validator.cert_to_text())
@@ -99,7 +99,7 @@ print(validator.cert_to_text())
 from tlsverify import Validator
 from tlsverify.util import get_certificates
 
-x509, x509_certificate_chain, _, _ = get_certificates(host)
+x509, x509_certificate_chain, _, _, _ = get_certificates(host)
 validator = Validator()
 validator.init_x509(x509)
 validator.extract_metadata()
@@ -138,13 +138,13 @@ validator.validate_usage(
 ```py
 from pathlib import Path
 from tlsverify import Validator
-from tlsverify.util import check_usage
+from tlsverify.util import key_usage_exists
 
-pem = Path(os.path.join(os.path.dirname(__file__), "cert.pem")).read_bytes()
+der = Path(os.path.join(os.path.dirname(__file__), "cert.der")).read_bytes()
 validator = Validator()
-validator.init_pem(pem)
-print(check_usage(validator.certificate, 'digital_signature'))
-print(check_usage(validator.certificate, 'clientAuth'))
+validator.init_der(der)
+print(key_usage_exists(validator.certificate, 'digital_signature'))
+print(key_usage_exists(validator.certificate, 'clientAuth'))
 ```
 
 ### Get TLS Extensions dictionary
@@ -181,9 +181,9 @@ from pathlib import Path
 from tlsverify import Validator
 from tlsverify.util import get_san
 
-pem = Path(os.path.join(os.path.dirname(__file__), "cert.pem")).read_bytes()
+der = Path(os.path.join(os.path.dirname(__file__), "cert.der")).read_bytes()
 validator = Validator()
-validator.init_pem(pem)
+validator.init_der(der)
 print(get_san(validator.certificate))
 ```
 
@@ -284,6 +284,8 @@ optional arguments:
   - ✓ inhibitAnyPolicy
   - ✓ basicConstraints ca
   - ✓ basicConstraints path_length
+- Authentication
+  - ✓ clientAuth
 - revocation
   - ✓ OCSP
 - ✓ Root Certificate is a CA and in a trust store
@@ -307,6 +309,7 @@ optional arguments:
 - Common DH primes and public server param (Ys) reuse - logjam
 - ECDH public server param reuse - Racoon
 - TLS extensions
+  - validate clientAuth subjects
   - IssuingDistributionPoint
   - cRLDistributionPoints
   - signedCertificateTimestampList
@@ -330,6 +333,13 @@ optional arguments:
 - Issuer match (If the server is owned or operated by you, a Zero-trust requirement)
 - if CT expected (Zero-trust requirement), Certificate Transparency resolves
 - if HPKP is still present and expected, validate per the policy
+- Proxy support
+- Authentication
+  - proxy auth
+  - basic authentication
+  - apikey
+  - custom authenticator (i.e. bespoke signers and custom headers
+  - HMAC [httpbis-message-signatures](https://datatracker.ietf.org/doc/draft-ietf-httpbis-message-signatures/) example custom authenticator
 - report Extended Validation
 - report DNS CAA
 - report DNSSEC

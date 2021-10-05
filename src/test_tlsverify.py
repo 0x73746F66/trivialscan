@@ -47,7 +47,7 @@ class TestValidator:
     def test_tlsverify_valid_chain(self):
         want = 'Validated: digital_signature,key_encipherment,server_auth'
         self._setup()
-        _, x509_certificate_chain, _, _ = tlsverify.util.get_certificates(self.host)
+        _, x509_certificate_chain, _, _, _ = tlsverify.util.get_certificates(self.host)
         self._verify.verify_chain(self._verify.convert_x509_to_PEM(x509_certificate_chain))
         assert self._verify.certificate_chain_valid is True
         assert self._verify.certificate_chain_validation_result == want

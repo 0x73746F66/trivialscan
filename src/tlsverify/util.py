@@ -1,10 +1,16 @@
+import logging
+import string
+import random
+from urllib.request import urlretrieve
 from dataclasses import dataclass, field
 from binascii import hexlify
-import logging
 from socket import socket, AF_INET, SOCK_STREAM
+from pathlib import Path
 from cryptography import x509
 from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
 from OpenSSL import SSL
+from OpenSSL.crypto import FILETYPE_PEM
+from certifi import where
 from certvalidator import CertificateValidator, ValidationContext
 import validators
 import idna
@@ -74,21 +80,71 @@ class Metadata:
     revocation_ocsp_must_staple :bool = field(default_factory=bool)
     port :int = 443
 
-def get_certificates(host :str, port :int = 443, cafiles :list = None, tlsext :bool = False) -> tuple[bytes,list,Metadata]:
-    if cafiles is not None and not isinstance(cafiles, list):
-        raise TypeError(f"provided an invalid type {type(cafiles)} for cafiles, expected list")
+def filter_valid_files_urls(inputs :list[str], exception :Exception = None, tmp_path_prefix :str = '/tmp') -> list[str]:
+    ret = set()
+    for test in inputs:
+        if test is None:
+            raise exception
+        file_path = Path(test)
+        if file_path.is_file() is False and validators.url(test) is not True:
+            raise exception
+        if file_path.is_file():
+            ret.add(test)
+            continue
+        if validators.url(test) is True:
+            r = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+            local_path = f'{tmp_path_prefix}/{r}.pem'
+            urlretrieve(test, local_path)
+            file_path = Path(local_path)
+            if not file_path.is_file():
+                raise exception
+            ret.add(local_path)
+    return list(ret)
+
+def get_certificates(host :str, port :int = 443, cafiles :list = None, client_pem :str = None, client_ca :str = None, tlsext :bool = False, tmp_path_prefix :str = '/tmp') -> tuple[bytes,list,Metadata]:
     if not isinstance(port, int):
         raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
     if validators.domain(host) is not True:
         raise ValueError(f"provided an invalid domain {host}")
+    if not isinstance(tmp_path_prefix, str):
+        raise TypeError(f"provided an invalid type {type(tmp_path_prefix)} for tmp_path_prefix, expected str")
+
+    client_pem_err = AttributeError(f'client_pem was provided "{client_pem}" but is not a valid URL or file does not exist')
+    if client_pem is not None:
+        if not isinstance(client_pem, str):
+            raise client_pem_err
+        res = filter_valid_files_urls([client_pem], client_pem_err, tmp_path_prefix)
+        if len(res) == 1:
+            client_pem = res[0]
+    client_ca_err = AttributeError(f'client_ca was provided "{client_ca}" but is not a valid URL or file does not exist')
+    if client_ca is not None:
+        if not isinstance(client_ca, str):
+            raise client_ca_err
+        res = filter_valid_files_urls([client_ca], client_ca_err, tmp_path_prefix)
+        if len(res) == 1:
+            client_ca = res[0]
+
+    cafiles_err = AttributeError(f'cafiles was provided but is not a valid URLs or files do not exist\n{cafiles}')
+    if cafiles is not None:
+        if not isinstance(cafiles, list):
+            raise cafiles_err
+        cafiles = filter_valid_files_urls(cafiles, cafiles_err, tmp_path_prefix)
     negotiated_cipher = None
     negotiated_protocol = None
     x509 = None
+    client_ca_list = []
     certificate_chain = []
     for version in [SSL.SSL3_VERSION, SSL.TLS1_VERSION, SSL.TLS1_1_VERSION, SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]:
         logger.info(f'Trying protocol {OPENSSL_VERSION_LOOKUP[version]}')
         certificate_chain = []
         ctx = SSL.Context(method=SSL.SSLv23_METHOD)
+        ctx.load_verify_locations(cafile=where())
+        for cafile in cafiles or []:
+            ctx.load_verify_locations(cafile=cafile)
+        if client_pem is not None:
+            ctx.use_certificate_file(certfile=client_pem, filetype=FILETYPE_PEM)
+        if client_ca is not None:
+            ctx.load_client_ca(cafile=client_ca)
         ctx.set_max_proto_version(version)
         ctx.check_hostname = False
         ctx.verify_mode = SSL.VERIFY_NONE
@@ -101,6 +157,7 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, tlsext :b
         conn.setblocking(1)
         try:
             conn.do_handshake()
+            client_ca_list = conn.get_client_ca_list()
             x509 = conn.get_peer_certificate()
             negotiated_cipher = conn.get_cipher_name()
             negotiated_protocol = conn.get_protocol_version_name()
@@ -117,8 +174,11 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, tlsext :b
         if x509 is not None:
             logger.debug(f'negotiated protocol {negotiated_protocol} cipher {negotiated_cipher}')
             break
+    
+    if len(client_ca_list) > 0:
+        client_ca_list = [cca.get_components() for cca in client_ca_list]
 
-    return x509, certificate_chain, negotiated_protocol, negotiated_cipher
+    return x509, certificate_chain, client_ca_list, negotiated_protocol, negotiated_cipher
 
 def is_self_signed(cert :Certificate) -> bool:
     certificate_is_self_signed = False
@@ -156,7 +216,7 @@ def get_basic_constraints(cert :Certificate) -> tuple[bool, int]:
         return None, None
     return basic_constraints.ca, basic_constraints.path_length
 
-def check_usage(cert :Certificate, key :str) -> bool:
+def key_usage_exists(cert :Certificate, key :str) -> bool:
     key_usage = None
     ext_key_usage = None
     try:

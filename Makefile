@@ -92,3 +92,7 @@ run-known-pwnd: ## superfish.badssl.com edellroot.badssl.com dsdtestprovider.bad
 	@python src/command-line.py -H dsdtestprovider.badssl.com
 	@python src/command-line.py -H preact-cli.badssl.com
 	@python src/command-line.py -H webpack-dev-server.badssl.com
+
+run-deprecated-tls: ## client.badssl.com client-cert-missing.badssl.com
+	@python src/command-line.py -H client.badssl.com -C https://badssl.com/certs/badssl.com-client.pem
+	@python src/command-line.py -H client-cert-missing.badssl.com -C https://badssl.com/certs/badssl.com-client.pem

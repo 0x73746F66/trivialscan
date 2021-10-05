@@ -1,6 +1,6 @@
 .venv/
 .vscode/
-.history/
+.lh/
 dist/
 src/tls_verify.egg-info/
 .pypirc
