@@ -1,7 +1,5 @@
 from datetime import datetime
-import pytest
 import tlsverify
-from pprint import pprint
 
 class TestMetadata:
     _verify :tlsverify.Validator

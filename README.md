@@ -66,19 +66,14 @@ validator = Validator()
 validator.init_pem(pem)
 validator.extract_metadata()
 if not validator.verify(host, port):
-  print(validator.metadata.certificate_subject)
-  print(validator.metadata.certificate_serial_number)
-  print(validator.certificate_valid)
-  print(validator.certificate_chain_valid)
-  print(validator.certificate_verify_messages)
-  print(validator.certificate_chain_validation_result)
+  print(validator)
 ```
 
 ### Retrieve Certificates Only
 
 ```py
 from tlsverify.util import get_certificates
-x509, x509_certificate_chain, _, _, _ = get_certificates(host)
+x509, x509_certificate_chain, protocol, cipher, verifier_errors = get_certificates(host)
 ```
 
 ### View Certificate in plan text
@@ -99,7 +94,7 @@ print(validator.cert_to_text())
 from tlsverify import Validator
 from tlsverify.util import get_certificates
 
-x509, x509_certificate_chain, _, _, _ = get_certificates(host)
+x509, x509_certificate_chain, protocol, cipher, verifier_errors = get_certificates(host)
 validator = Validator()
 validator.init_x509(x509)
 validator.extract_metadata()
@@ -227,14 +222,22 @@ tlsverify --help
 produces:
 
 ```
-usage: tlsverify [-h] -H HOST [-p PORT] [-c CAFILES] [--sni] [-v] [-vv] [-vvv] [-vvvv]
+usage: command-line.py [-h] -H HOST [-p PORT] [-c CAFILES] [-C CLIENT_PEM] [-T CLIENT_CA] [-t TMP_PATH_PREFIX]
+                       [--sni] [-v] [-vv] [-vvv] [-vvvv]
 
 optional arguments:
   -h, --help            show this help message and exit
   -H HOST, --host HOST  host to check
   -p PORT, --port PORT  TLS port of host
   -c CAFILES, --cafiles CAFILES
-                        path to PEM encoded CA bundle file
+                        path to PEM encoded CA bundle file, url or file path accepted
+  -C CLIENT_PEM, --client-pem CLIENT_PEM
+                        path to PEM encoded client certificate, url or file path accepted
+  -T CLIENT_CA, --client-ca-pem CLIENT_CA
+                        path to PEM encoded client CA certificate, url or file path accepted
+  -t TMP_PATH_PREFIX, --tmp-path-prefix TMP_PATH_PREFIX
+                        local file path to use as a prefix when saving temporary files such as those being fetched
+                        for client authorization
   --sni                 Negotiate SNI via PyOpenSSL Connection set_tlsext_host_name and INDA encoded host
   -v, --errors-only     set logging level to ERROR (default CRITICAL)
   -vv, --warning        set logging level to WARNING (default CRITICAL)
@@ -253,6 +256,8 @@ optional arguments:
 - TLS Information
   - ✓ negotiated_protocol
   - ✓ negotiated_cipher
+  - ✓ RSA private key
+  - ✓ DSA private key
 - X.509 Information
   - ✓ certificate_subject
   - ✓ certificate_issuer
@@ -284,6 +289,7 @@ optional arguments:
   - ✓ inhibitAnyPolicy
   - ✓ basicConstraints ca
   - ✓ basicConstraints path_length
+  - ✓ validate clientAuth subjects
 - Authentication
   - ✓ clientAuth
 - revocation
@@ -300,6 +306,7 @@ optional arguments:
   - ✓ keys
   - ✓ signature algorithm
 - ✓ CLI output evaluation duration
+- ✓ OpenSSL verify errors are actually evaluated and reported instead of either terminate connection or simply ignored (default approach most use VERIFY_NONE we actually let openssl do verification and keep the connection open anyway)
 
 ## ⌛ Todo
 
@@ -309,7 +316,6 @@ optional arguments:
 - Common DH primes and public server param (Ys) reuse - logjam
 - ECDH public server param reuse - Racoon
 - TLS extensions
-  - validate clientAuth subjects
   - IssuingDistributionPoint
   - cRLDistributionPoints
   - signedCertificateTimestampList

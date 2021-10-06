@@ -9,11 +9,12 @@ from pathlib import Path
 from cryptography import x509
 from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
 from OpenSSL import SSL
-from OpenSSL.crypto import FILETYPE_PEM
+from OpenSSL.crypto import X509, FILETYPE_PEM, X509Name
 from certifi import where
 from certvalidator import CertificateValidator, ValidationContext
 import validators
 import idna
+from . import exceptions
 
 __module__ = 'tlsverify.util'
 
@@ -71,7 +72,8 @@ class Metadata:
     certificate_subject_key_identifier :str = field(default_factory=str)
     certificate_authority_key_identifier :str = field(default_factory=str)
     certificate_extensions :list = field(default_factory=list)
-    certificate_is_self_signed : bool = field(default_factory=bool)
+    certificate_is_self_signed :bool = field(default_factory=bool)
+    certificate_client_authentication :bool = field(default_factory=bool)
     tlsext_basic_constraints_path_length :int = field(default_factory=str)
     negotiated_cipher :str = field(default_factory=str)
     negotiated_protocol :str = field(default_factory=str)
@@ -93,13 +95,53 @@ def filter_valid_files_urls(inputs :list[str], exception :Exception = None, tmp_
             continue
         if validators.url(test) is True:
             r = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
-            local_path = f'{tmp_path_prefix}/{r}.pem'
+            local_path = f'{tmp_path_prefix}/tlsverify-{r}'
             urlretrieve(test, local_path)
             file_path = Path(local_path)
             if not file_path.is_file():
                 raise exception
             ret.add(local_path)
     return list(ret)
+
+def convert_decimal_to_serial_bytes(decimal :int):
+    # add leading 0
+    a = "0%x" % decimal
+    # force even num bytes, remove leading 0 if necessary
+    b = a[1:] if len(a)%2==1 else a
+    return format(':'.join(s.encode('utf8').hex().lower() for s in b))
+
+def get_server_expected_client_subjects(host :str, port :int = 443, cafiles :list = None) -> list[X509Name]:
+    if not isinstance(port, int):
+        raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
+    if not isinstance(cafiles, list) and cafiles is not None:
+        raise TypeError(f"provided an invalid type {type(cafiles)} for cafiles, expected list")
+    if validators.domain(host) is not True:
+        raise ValueError(f"provided an invalid domain {host}")
+    logger.info('Negotiating with the server to derive expected client certificate subjects')
+    expected_subjects = []
+    ctx = SSL.Context(method=SSL.SSLv23_METHOD)
+    ctx.load_verify_locations(cafile=where())
+    for cafile in cafiles or []:
+        ctx.load_verify_locations(cafile=cafile)
+    ctx.verify_mode = SSL.VERIFY_NONE
+    ctx.check_hostname = False
+    conn = SSL.Connection(ctx, socket(AF_INET, SOCK_STREAM))
+    conn.connect((host, port))
+    conn.settimeout(3)
+    conn.set_tlsext_host_name(idna.encode(host))
+    conn.setblocking(1)
+    conn.set_connect_state()
+    try:
+        conn.do_handshake()
+        expected_subjects :list[X509Name] = conn.get_client_ca_list()
+    except SSL.Error as err:
+        if 'no protocols available' not in str(err) and 'alert protocol' not in str(err):
+            logger.warning(err, exc_info=True)
+    except Exception as ex:
+        logger.warning(ex, exc_info=True)
+    finally:
+        conn.close()
+    return expected_subjects
 
 def get_certificates(host :str, port :int = 443, cafiles :list = None, client_pem :str = None, client_ca :str = None, tlsext :bool = False, tmp_path_prefix :str = '/tmp') -> tuple[bytes,list,Metadata]:
     if not isinstance(port, int):
@@ -129,11 +171,23 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, client_pe
         if not isinstance(cafiles, list):
             raise cafiles_err
         cafiles = filter_valid_files_urls(cafiles, cafiles_err, tmp_path_prefix)
+
     negotiated_cipher = None
     negotiated_protocol = None
     x509 = None
-    client_ca_list = []
     certificate_chain = []
+    verifier_errors = []
+    def verifier(conn :SSL.Connection, server_cert :X509, errno :int, depth :int, preverify_ok :int):
+        # preverify_ok indicates, whether the verification of the server certificate in question was passed (preverify_ok=1) or not (preverify_ok=0)
+        # https://www.openssl.org/docs/man1.0.2/man1/verify.html
+        verifier_errors = conn.get_app_data()
+        if not isinstance(verifier_errors, list):
+            verifier_errors = []
+        if errno in exceptions.X509_MESSAGES.keys():
+            verifier_errors.append((server_cert, exceptions.X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT))
+        conn.set_app_data(verifier_errors)
+        return True
+
     for version in [SSL.SSL3_VERSION, SSL.TLS1_VERSION, SSL.TLS1_1_VERSION, SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]:
         logger.info(f'Trying protocol {OPENSSL_VERSION_LOOKUP[version]}')
         certificate_chain = []
@@ -143,11 +197,18 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, client_pe
             ctx.load_verify_locations(cafile=cafile)
         if client_pem is not None:
             ctx.use_certificate_file(certfile=client_pem, filetype=FILETYPE_PEM)
-        if client_ca is not None:
-            ctx.load_client_ca(cafile=client_ca)
+            if client_ca is not None:
+                ctx.load_client_ca(cafile=client_ca)
+        """
+        VERIFY_NONE: if used, no others may. if not using an anonymous cipher (by default disabled), the server will send a certificate which will be checked. The result of the certificate verification process can be checked after the TLS/SSL handshake using the SSL_get_verify_result(3) function. The handshake will be continued regardless of the verification result.
+        VERIFY_PEER: ensure `ctx.set_verify` is used. the server certificate is verified. If the verification process fails, the TLS/SSL handshake is immediately terminated with an alert message containing the reason for the verification failure. If no server certificate is sent, because an anonymous cipher is used, SSL_VERIFY_PEER is ignored.
+        VERIFY_FAIL_IF_NO_PEER_CERT: ignored
+        VERIFY_CLIENT_ONCE: ignored
+        VERIFY_POST_HANDSHAKE: ignored
+        """
+        ctx.set_verify(SSL.VERIFY_NONE, verifier)
         ctx.set_max_proto_version(version)
         ctx.check_hostname = False
-        ctx.verify_mode = SSL.VERIFY_NONE
         conn = SSL.Connection(ctx, socket(AF_INET, SOCK_STREAM))
         conn.connect((host, port))
         conn.settimeout(3)
@@ -155,9 +216,10 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, client_pe
             logger.info('using SNI')
             conn.set_tlsext_host_name(idna.encode(host))
         conn.setblocking(1)
+        conn.set_connect_state()
         try:
             conn.do_handshake()
-            client_ca_list = conn.get_client_ca_list()
+            verifier_errors = conn.get_app_data()
             x509 = conn.get_peer_certificate()
             negotiated_cipher = conn.get_cipher_name()
             negotiated_protocol = conn.get_protocol_version_name()
@@ -174,11 +236,8 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, client_pe
         if x509 is not None:
             logger.debug(f'negotiated protocol {negotiated_protocol} cipher {negotiated_cipher}')
             break
-    
-    if len(client_ca_list) > 0:
-        client_ca_list = [cca.get_components() for cca in client_ca_list]
 
-    return x509, certificate_chain, client_ca_list, negotiated_protocol, negotiated_cipher
+    return x509, certificate_chain, negotiated_protocol, negotiated_cipher, verifier_errors
 
 def is_self_signed(cert :Certificate) -> bool:
     certificate_is_self_signed = False

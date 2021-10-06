@@ -1,7 +1,5 @@
-from datetime import datetime
 import pytest
 import tlsverify
-from pprint import pprint
 
 class TestValidator:
     _verify :tlsverify.Validator
@@ -24,7 +22,6 @@ class TestValidator:
         assert v.certificate is None
         assert v._pem_certificate_chain == []
         assert v.certificate_chain == []
-        assert v.metadata is None
 
     def test_tlsverify_not_a_domain(self):
         with pytest.raises(ValueError):
@@ -35,7 +32,7 @@ class TestValidator:
             tlsverify.Validator(self.host, '443')
 
     def test_tlsverify_cafiles(self):
-        with pytest.raises(TypeError):
+        with pytest.raises(AttributeError):
             tlsverify.Validator('badssl.com', 443, cafiles='/path/to/cafile')
 
     def test_tlsverify_verify(self):
