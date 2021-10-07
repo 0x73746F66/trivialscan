@@ -1,6 +1,12 @@
 # Change Log
 
-## 0.2.1 Oct 8th 2021
+## 0.2.2 Oct 7th 2021
+
+- Added `util` documentation
+- Added documentation for all known errors and validation failures
+- Organized internal exceptions
+
+## 0.2.1 Oct 7th 2021
 
 - Added structured documentation
 - fingerprints now match the browser format when output on cli
