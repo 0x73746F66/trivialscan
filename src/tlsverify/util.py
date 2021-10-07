@@ -184,7 +184,7 @@ def get_certificates(host :str, port :int = 443, cafiles :list = None, client_pe
         if not isinstance(verifier_errors, list):
             verifier_errors = []
         if errno in exceptions.X509_MESSAGES.keys():
-            verifier_errors.append((server_cert, exceptions.X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT))
+            verifier_errors.append((server_cert, exceptions.X509_MESSAGES[errno]))
         conn.set_app_data(verifier_errors)
         return True
 
