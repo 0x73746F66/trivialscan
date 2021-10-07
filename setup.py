@@ -4,16 +4,16 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.2.2",
+    version="0.2.3",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
-    long_description=pathlib.Path(os.path.join(os.path.dirname(__file__), "README.md")).read_text(),
+    long_description=pathlib.Path(os.path.join(os.path.dirname(__file__), "pypi-page.md")).read_text(),
     long_description_content_type="text/markdown",
     url="https://gitlab.com/chrislangton/py-tls-veryify",
     project_urls={
         "Source": "https://gitlab.com/chrislangton/py-tls-veryify",
-        "Documentation": "https://gitlab.com/chrislangton/py-tls-veryify/-/blob/main/README.md",
+        "Documentation": "https://gitlab.com/chrislangton/py-tls-veryify/-/blob/main/docs/0.index.md",
         "Tracker": "https://gitlab.com/chrislangton/py-tls-veryify/-/issues",
     },
     classifiers=[

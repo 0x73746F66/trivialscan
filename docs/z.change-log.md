@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.2.3 Oct 7th 2021
+
+- Added pypi.org page documentation
+- Fixed OpenSSL errors to be correct messages
+
 ## 0.2.2 Oct 7th 2021
 
 - Added `util` documentation
