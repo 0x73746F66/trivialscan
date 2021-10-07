@@ -508,6 +508,6 @@ def convert_x509_to_PEM(certificate_chain :list) -> list[bytes]:
     pem_certs = []
     for cert in certificate_chain:
         if not isinstance(cert, X509):
-            raise exceptions.ValidationError(f'convert_x509_to_PEM expected OpenSSL.crypto.X509, got {type(cert)}')
+            raise AttributeError(f'convert_x509_to_PEM expected OpenSSL.crypto.X509, got {type(cert)}')
         pem_certs.append(dump_certificate(FILETYPE_PEM, cert))
     return pem_certs

@@ -51,7 +51,7 @@ class Validator:
             self.metadata.negotiated_cipher = cipher
             self.metadata.negotiated_protocol = protocol
             if self.x509 is None or not self.certificate_chain:
-                raise exceptions.ValidationError(f'Unable to negotiate a TLS socket connection with server at {host}:{port} to obtain the Certificate')
+                raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=host, port=port))
             self._pem = dump_certificate(FILETYPE_PEM, self.x509)
             logger.debug('added PEM bytes')
             self._der = PEM_cert_to_DER_cert(self._pem.decode())
@@ -207,7 +207,7 @@ class Validator:
                     client_cert = client_pem
                     break
         if client_cert is None or not isinstance(client_cert, str):
-            raise exceptions.ValidationError('client_authentication failed, the provided client certificate did not match any of the server provided subjects')
+            raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_CLIENT_AUTHENTICATION)
         return client_cert
 
     def load_verifier_errors(self, errors :list[tuple[X509, int]]):
