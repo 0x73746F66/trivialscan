@@ -66,6 +66,9 @@ X509_MESSAGES = {
     50: "This should never happen.",
 }
 
+VALIDATION_ERROR_TLS_FAILED = 'Unable to negotiate a TLS socket connection with server at {host}:{port} to obtain the Certificate'
+VALIDATION_ERROR_CLIENT_AUTHENTICATION = 'Client Authentication failed, the provided client certificate did not match any of the server provided subjects'
+
 class ValidationError(ValueError):
     def __init__(self, message :str = None, openssl_errno :int = None):
         if openssl_errno in X509_MESSAGES.keys():
