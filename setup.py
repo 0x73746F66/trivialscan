@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.2.0",
+    version="0.2.1",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",

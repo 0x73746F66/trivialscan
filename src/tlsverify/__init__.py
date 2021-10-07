@@ -4,7 +4,6 @@ import logging
 from base64 import b64encode
 from datetime import datetime
 from pathlib import Path
-from cryptography import x509
 import validators
 import asn1crypto
 from ssl import PEM_cert_to_DER_cert
@@ -59,7 +58,7 @@ class Validator:
             logger.debug('added ASN1/DER bytes')
             self.certificate = self.x509.to_cryptography()
             logger.debug('added lib cryptography object')
-            self._pem_certificate_chain = Validator.convert_x509_to_PEM(self.certificate_chain)
+            self._pem_certificate_chain = util.convert_x509_to_PEM(self.certificate_chain)
 
     def __repr__ (self) -> str:
         certificate_verify_messages = '", "'.join(self.certificate_verify_messages)
@@ -89,6 +88,7 @@ class Validator:
             if isinstance(value, dict):
                 return delimiter.join([f'{key}={str(value[key])}' for key in value.keys()])
             return str(value)
+        fingerprints = ['certificate_sha256_fingerprint', 'certificate_sha1_fingerprint', 'certificate_md5_fingerprint', 'certificate_subject_key_identifier', 'certificate_authority_key_identifier']
         skip = ['certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier']
         kv = [
             ['certificate_valid', self.certificate_valid],
@@ -97,7 +97,7 @@ class Validator:
         ]
         kv += [['Error', err] for err in self.certificate_verify_messages]
         kv += [[f'Check {key}', self.validation_checks[key]] for key in self.validation_checks.keys()]
-        kv += [[key, getattr(self.metadata, key)] for key in list(vars(self.metadata).keys()) if key not in skip]
+        kv += [[key, util.str_n_split(getattr(self.metadata, key)).upper() if key in fingerprints else getattr(self.metadata, key)] for key in list(vars(self.metadata).keys()) if key not in skip]
         kv += [[v['name'], any_to_string(v, ' ') if v['name'] not in v else any_to_string(v[v['name']], ' ')] for v in self.metadata.certificate_extensions if v['name'] not in skip]
         return tabulate(kv, tablefmt='tsv', disable_numparse=True, colalign=("right",))
 
@@ -141,19 +141,6 @@ class Validator:
     def cert_to_text(self) -> str:
         logger.debug('dump_certificate x509 FILETYPE_TEXT')
         return dump_certificate(FILETYPE_TEXT, self.x509).decode()
-
-    @staticmethod
-    def str_n_split(input :str, n :int = 2, delimiter :str = ' '):
-        return delimiter.join([input[i:i+n] for i in range(0, len(input), n)])
-
-    @staticmethod
-    def convert_x509_to_PEM(certificate_chain :list) -> list[bytes]:
-        pem_certs = []
-        for cert in certificate_chain:
-            if not isinstance(cert, X509):
-                raise exceptions.ValidationError(f'convert_x509_to_PEM expected OpenSSL.crypto.X509, got {type(cert)}')
-            pem_certs.append(dump_certificate(FILETYPE_PEM, cert))
-        return pem_certs
 
     def extract_metadata(self):
         if not hasattr(self, 'metadata') or self.metadata is None:
@@ -231,17 +218,9 @@ class Validator:
             if errno in exceptions.X509_MESSAGES and self.x509.get_serial_number() == cert.get_serial_number() and message not in self.certificate_verify_messages:
                 self.certificate_verify_messages.append(exceptions.X509_MESSAGES[errno])
 
-    def verify(self, host :str = None, port :int = None, peer :bool = False) -> bool:
-        if not hasattr(self, 'metadata') or self.metadata is None:
-            self.metadata = util.Metadata(host=host, port=port)
+    def verify(self, peer :bool = False, **kwargs) -> bool:
         if peer is False:
             logger.debug('Server certificate validations')
-            if isinstance(host, str):
-                self.metadata.host = host
-            if validators.domain(self.metadata.host) is not True:
-                raise ValueError(f"provided an invalid domain {host}")
-            if isinstance(port, int):
-                self.metadata.port = port
             self.validation_checks['certificate_valid_tls_usage'] = util.key_usage_exists(self.certificate, 'digital_signature') is True and util.key_usage_exists(self.certificate, 'serverAuth') is True
             self.validation_checks['common_name_valid'] = util.validate_common_name(self.metadata.certificate_common_name, self.metadata.host) is True
             self.validation_checks['match_hostname'] = util.match_hostname(self.metadata.host, self.certificate)
@@ -313,6 +292,15 @@ class Validator:
         self.extract_metadata()
         return self.certificate_valid and self.certificate_chain_valid
 
+    @staticmethod
+    def str_n_split(**kwargs):
+        logger.warning(DeprecationWarning('Validator.str_n_split is now a util.str_n_split and will soon be removed.'), stack_info=True)
+        return util.str_n_split(**kwargs)
+
+    @staticmethod
+    def convert_x509_to_PEM(**kwargs) -> list[bytes]:
+        logger.warning(DeprecationWarning('Validator.convert_x509_to_PEM is now a util.convert_x509_to_PEM and will soon be removed.'), stack_info=True)
+        return util.convert_x509_to_PEM(**kwargs)
 
 def verify(host :str, port :int = 443, cafiles :list = None, tlsext :bool = False, client_pem :str = None, client_ca :str = None, tmp_path_prefix :str = '/tmp') -> tuple[bool,list[Validator]]:
     if not isinstance(port, int):
@@ -372,7 +360,7 @@ def verify(host :str, port :int = 443, cafiles :list = None, tlsext :bool = Fals
         validator.metadata.tlsext_basic_constraints_path_length = len(x509_certificate_chain) == path_length
 
     validator.load_verifier_errors(verifier_errors)
-    validator.verify(host, port)
+    validator.verify()
     # client_authentication would raise ValidationError or client_validated=True
     validator.metadata.certificate_client_authentication = util.key_usage_exists(validator.certificate, 'clientAuth') is True and client_validated
     for cert in x509_certificate_chain:
@@ -386,24 +374,25 @@ def verify(host :str, port :int = 443, cafiles :list = None, tlsext :bool = Fals
         peer_validator.load_verifier_errors(verifier_errors)
         peer_validator.verify(peer=True)
         peer_validations.append(peer_validator)
-    validator.verify_chain(Validator.convert_x509_to_PEM(x509_certificate_chain))
+    validator.verify_chain(util.convert_x509_to_PEM(x509_certificate_chain))
     validations = peer_validations
     if isinstance(additional_cert, X509):
         additional_validator = Validator()
         if isinstance(tmp_path_prefix, str):
             additional_validator.tmp_path_prefix = tmp_path_prefix
         additional_validator.init_x509(additional_cert)
+        additional_validator.init_server(host)
         additional_validator.extract_metadata()
         # client_authentication would raise ValidationError or client_validated=True
         additional_validator.metadata.certificate_client_authentication = util.key_usage_exists(additional_validator.certificate, 'clientAuth') is True and client_validated
         additional_validator.load_verifier_errors(verifier_errors)
         if validator.metadata.certificate_common_name != additional_validator.metadata.certificate_common_name:
             logger.info('Checking additional SNI negotiated certificate')
-            additional_validator.verify(host, port)
+            additional_validator.verify()
             tmp_valid = all([v.certificate_valid for v in peer_validations + [validator]] + [additional_validator.certificate_valid])
             if tmp_valid is False:
                 logger.info('Checking peer certificate')
-                additional_validator.verify_chain(Validator.convert_x509_to_PEM(x509_certificate_chain))
+                additional_validator.verify_chain(util.convert_x509_to_PEM(x509_certificate_chain))
             validations.append(additional_validator)
     validations.append(validator)
 

@@ -9,7 +9,7 @@ from pathlib import Path
 from cryptography import x509
 from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
 from OpenSSL import SSL
-from OpenSSL.crypto import X509, FILETYPE_PEM, X509Name
+from OpenSSL.crypto import X509, FILETYPE_PEM, X509Name, dump_certificate
 from certifi import where
 from certvalidator import CertificateValidator, ValidationContext
 import validators
@@ -500,3 +500,14 @@ def validate_certificate_chain(der :bytes, pem_certificate_chain :list, validato
         key_usage=set(validator_key_usage),
         extended_key_usage=set(validator_extended_key_usage),
     )
+
+def str_n_split(input :str, n :int = 2, delimiter :str = ' '):
+    return delimiter.join([input[i:i+n] for i in range(0, len(input), n)])
+
+def convert_x509_to_PEM(certificate_chain :list) -> list[bytes]:
+    pem_certs = []
+    for cert in certificate_chain:
+        if not isinstance(cert, X509):
+            raise exceptions.ValidationError(f'convert_x509_to_PEM expected OpenSSL.crypto.X509, got {type(cert)}')
+        pem_certs.append(dump_certificate(FILETYPE_PEM, cert))
+    return pem_certs
