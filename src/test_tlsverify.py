@@ -1,17 +1,18 @@
-import pytest
-import tlsverify
-from tlsverify import util
+from tlsverify.validator import Validator
+from tlsverify.transport import Transport
 
 class TestValidator:
-    _verify :tlsverify.Validator
-    host = 'ssllabs.com'
+    _verify :Validator
+    host = 'http2.github.io'
     def _setup(self):
         if not hasattr(self, '_verify'):
-            self._verify = tlsverify.Validator(self.host)
-        self._verify.extract_metadata()
+            transport = Transport(self.host)
+            transport.connect_least_secure()
+            self._verify = Validator()
+            self._verify.mount(transport)
 
     def test_tlsverify_no_args(self):
-        v = tlsverify.Validator()
+        v = Validator()
         assert v.certificate_valid is False
         assert v.validation_checks == {}
         assert v.certificate_verify_messages == []
@@ -24,17 +25,6 @@ class TestValidator:
         assert v._pem_certificate_chain == []
         assert v.certificate_chain == []
 
-    def test_tlsverify_not_a_domain(self):
-        with pytest.raises(ValueError):
-            tlsverify.Validator('not a domain')
-
-    def test_tlsverify_not_a_port(self):
-        with pytest.raises(TypeError):
-            tlsverify.Validator(self.host, '443')
-
-    def test_tlsverify_cafiles(self):
-        with pytest.raises(AttributeError):
-            tlsverify.Validator('badssl.com', 443, cafiles='/path/to/cafile')
 
     def test_tlsverify_verify(self):
         self._setup()
@@ -45,7 +35,6 @@ class TestValidator:
     def test_tlsverify_valid_chain(self):
         want = 'Validated: digital_signature,key_encipherment,server_auth'
         self._setup()
-        _, x509_certificate_chain, _, _, _ = tlsverify.util.get_certificates(self.host)
-        self._verify.verify_chain(util.convert_x509_to_PEM(x509_certificate_chain))
+        self._verify.verify_chain()
         assert self._verify.certificate_chain_valid is True
         assert self._verify.certificate_chain_validation_result == want

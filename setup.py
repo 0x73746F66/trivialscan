@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.2.3",
+    version="0.3.0",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -36,8 +36,8 @@ tlsverify --help
 produces:
 
 ```
-usage: command-line.py [-h] -H HOST [-p PORT] [-c CAFILES] [-C CLIENT_PEM] [-T CLIENT_CA] [-t TMP_PATH_PREFIX]
-                       [--sni] [-v] [-vv] [-vvv] [-vvvv]
+usage: tlsverify [-h] -H HOST [-p PORT] [-c CAFILES] [-C CLIENT_PEM] [-t TMP_PATH_PREFIX] [--disable-sni] [-b] [-v]
+               [-vv] [-vvv] [-vvvv]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -47,12 +47,11 @@ optional arguments:
                         path to PEM encoded CA bundle file, url or file path accepted
   -C CLIENT_PEM, --client-pem CLIENT_PEM
                         path to PEM encoded client certificate, url or file path accepted
-  -T CLIENT_CA, --client-ca-pem CLIENT_CA
-                        path to PEM encoded client CA certificate, url or file path accepted
   -t TMP_PATH_PREFIX, --tmp-path-prefix TMP_PATH_PREFIX
                         local file path to use as a prefix when saving temporary files such as those being fetched
                         for client authorization
-  --sni                 Negotiate SNI via PyOpenSSL Connection set_tlsext_host_name and INDA encoded host
+  --disable-sni         Do not negotiate SNI using INDA encoded host
+  -b, --progress-bars   Show task progress bars
   -v, --errors-only     set logging level to ERROR (default CRITICAL)
   -vv, --warning        set logging level to WARNING (default CRITICAL)
   -vvv, --info          set logging level to INFO (default CRITICAL)
@@ -68,57 +67,85 @@ optional arguments:
   - ✓ pyOpenSSL object
   - ✓ python `cryptography` object
 - TLS Information
-  - ✓ negotiated_protocol
-  - ✓ negotiated_cipher
+  - ✓ Negotiated protocol
+  - ✓ Negotiated cipher (if a strong cipher, and if Forward Anonymity)
   - ✓ RSA private key
   - ✓ DSA private key
+  - ✓ Compression supported
+  - ✓ Client Renegotiation supported
+  - ✓ Session Resumption caching
+  - ✓ Session Resumption tickets
+  - ✓ Session Resumption ticket hint
+- HTTP Information
+  - ✓ HTTP/1 supported (response status and headers)
+  - ✓ HTTP/1.1 supported (response status and headers)
+  - ✓ HTTP/2 (TLS) supported (response frame)
+  - ~~HTTP/2 clear text supported (response frame)~~ Fix planned for 0.3.1
+  - ✓ Expect-CT header (report_uri)
+  - ✓ Strict-Transport-Security (HSTS) header
+  - ✓ X-Frame-Options (XFO) header
+  - ✓ X-Content-Type-Options header (nosniff)
+  - ✓ Content-Security-Policy (CSP) header is present
+  - ✓ Cross-Origin-Embedder-Policy (COEP) header (require-corp)
+  - ✓ Cross-Origin-Resource-Policy (CORP) header (same-origin)
+  - ✓ Cross-Origin-Opener-Policy (COOP) header (same-origin)
+  - ✓ Referrer-Policy header (report on unsafe-url usage)
+  - ✓ X-XSS-Protection header (enabled in blocking mode)
 - X.509 Information
-  - ✓ certificate_subject
-  - ✓ certificate_issuer
-  - ✓ certificate_issuer_country
-  - ✓ certificate_signature_algorithm
-  - ✓ SNI
-- Signatures
-  - ✓ certificate_md5_fingerprint
-  - ✓ certificate_sha1_fingerprint
-  - ✓ certificate_sha256_fingerprint
-  - ✓ certificate_pin_sha256
-  - ✓ certificate_serial_number
-  - ✓ certificate_serial_number_decimal
-  - ✓ certificate_serial_number_hex
-  - ✓ certificate_public_key_type
-  - ✓ certificate_key_size
-- ✓ Expiry date is future dated
+  - ✓ Root CA
+  - ✓ Intermediate CAs
+  - ✓ Certificate is self signed
+  - ✓ Issuer
+  - ✓ Serial Number (Hex, Decimal)
+  - ✓ Certificate Pin (sha256)
+  - ✓ Signature Algorithm
+  - ✓ Fingerprint (md5, sha1, sha256)
+  - ✓ SNI Support
+  - ✓ OCSP response status
+  - ✓ OCSP last status and time
+  - ✓ OCSP stapling
+  - ✓ OCSP must staple flag
+  - ✓ Public Key type
+  - ✓ Public Key size
+  - ✓ Derive Private Key (PEM format)
+  - ✓ Authority Key Identifier
+  - ✓ Subject Key Identifier
+  - ✓ TLS Extensions
+  - ✓ Client Authentication expected
+  - ✓ Certificate Issuer validation Type (DV, EV, OV)
 - Hostname match
   - ✓ common name
   - ✓ subjectAltName
   - ✓ properly handle wildcard names
-- ✓ certificate_is_self_signed
-- Enumerate the TLS extensions to ensure all validations are performed (excluding non-standard or any custom extensions that may exist)
+  - ✓ properly handle SNI
+- Validations (Actual validity per the RFCs, fail any should fail to establish TLS)
+  - ✓ Expiry date is future dated
+  - ✓ OCSP revocation
+  - ✓ Valid for TLS use (digital signature)
+  - ✓ Deprecated protocol
+  - ✓ Common Name exists, and uses valid syntax
+  - ✓ Root Certificate is a CA and in a trust store
+  - ✓ Validate clientAuth expected subjects sent by server
+  - ✓ Intermediate key usages are verified
   - ✓ subjectAltName
   - ✓ issuerAlternativeName
   - ✓ authorityKeyIdentifier matches issuer subjectKeyIdentifier
   - ✓ keyUsage
   - ✓ extendedKeyUsage
   - ✓ inhibitAnyPolicy
-  - ✓ basicConstraints ca
-  - ✓ basicConstraints path_length
-  - ✓ validate clientAuth subjects
+  - ✓ basicConstraints path length
+- Assertions (Opinionated checking, TLS is expected to still work)
+  - ✓ Every certificate in the chain perform all validations (a requirement for zero-trust)
+  - ✓ Weak ciphers
+  - ✓ Weak keys
+  - ✓ Weak Signature Algorithm
+  - ~~If OCSP stapling, ensure a response was received~~ Fix planned for 0.3.1
+  - ✓ rfc6066; if OCSP must-staple flag is present the CA provides a valid response, i.e. resolve and validate not revoked
+  - ✓ Server certificates should not be a CA
+  - ✓ When client certificate presented, check cert usage permits clientAuth
+  - ✓ Certificate is not self signed
 - Authentication
   - ✓ clientAuth
-- revocation
-  - ✓ OCSP
-- ✓ Root Certificate is a CA and in a trust store
-- Validate the complete chain (a requirement for zero-trust)
-  - ✓ correctly build the chain
-  - ✓ All certs in the chain are not revoked
-  - ✓ Intermediate key usages are verified
-  - ✓ optionally; allow the user to include additional cacert bundle
-  - optionally; client condition; path length is exactly 3 (Root CA, signer/issuer, server cert) regardless of tls extension basicConstraints path_length
-- Not using known weak "x"
-  - ✓ protocol
-  - ✓ keys
-  - ✓ signature algorithm
 - ✓ CLI output evaluation duration
 - ✓ OpenSSL verify errors are actually evaluated and reported instead of either terminate connection or simply ignored (default approach most use VERIFY_NONE we actually let openssl do verification and keep the connection open anyway)
 
@@ -147,7 +174,9 @@ optional arguments:
         'pyOpenSSL==21.0.0',
         'validators==0.18.2',
         'idna==3.2',
-        'tabulate==0.8.9'
+        'rich==10.12.0',
+        'hyperframe==6.0.1',
+        'retry==0.9.2'
     ],
     entry_points = {
         'console_scripts': ['tlsverify=tlsverify.cli:cli'],

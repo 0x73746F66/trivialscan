@@ -17,77 +17,100 @@ See [Documentation](./docs/0.index.md) section of this repository
   - ✓ pyOpenSSL object
   - ✓ python `cryptography` object
 - TLS Information
-  - ✓ negotiated_protocol
-  - ✓ negotiated_cipher
+  - ✓ Negotiated protocol
+  - ✓ Negotiated cipher (if a strong cipher, and if Forward Anonymity)
   - ✓ RSA private key
   - ✓ DSA private key
+  - ✓ Compression supported
+  - ✓ Client Renegotiation supported
+  - ✓ Session Resumption caching
+  - ✓ Session Resumption tickets
+  - ✓ Session Resumption ticket hint
+- HTTP Information
+  - ✓ HTTP/1 supported (response status and headers)
+  - ✓ HTTP/1.1 supported (response status and headers)
+  - ✓ HTTP/2 (TLS) supported (response frame)
+  - ✓ Expect-CT header (report_uri)
+  - ✓ Strict-Transport-Security (HSTS) header
+  - ✓ X-Frame-Options (XFO) header
+  - ✓ X-Content-Type-Options header (nosniff)
+  - ✓ Content-Security-Policy (CSP) header is present
+  - ✓ Cross-Origin-Embedder-Policy (COEP) header (require-corp)
+  - ✓ Cross-Origin-Resource-Policy (CORP) header (same-origin)
+  - ✓ Cross-Origin-Opener-Policy (COOP) header (same-origin)
+  - ✓ Referrer-Policy header (report on unsafe-url usage)
+  - ✓ X-XSS-Protection header (enabled in blocking mode)
 - X.509 Information
-  - ✓ certificate_subject
-  - ✓ certificate_issuer
-  - ✓ certificate_issuer_country
-  - ✓ certificate_signature_algorithm
-  - ✓ SNI
-- Signatures
-  - ✓ certificate_md5_fingerprint
-  - ✓ certificate_sha1_fingerprint
-  - ✓ certificate_sha256_fingerprint
-  - ✓ certificate_pin_sha256
-  - ✓ certificate_serial_number
-  - ✓ certificate_serial_number_decimal
-  - ✓ certificate_serial_number_hex
-  - ✓ certificate_public_key_type
-  - ✓ certificate_key_size
-- ✓ Expiry date is future dated
+  - ✓ Root CA
+  - ✓ Intermediate CAs
+  - ✓ Certificate is self signed
+  - ✓ Issuer
+  - ✓ Serial Number (Hex, Decimal)
+  - ✓ Certificate Pin (sha256)
+  - ✓ Signature Algorithm
+  - ✓ Fingerprint (md5, sha1, sha256)
+  - ✓ SNI Support
+  - ✓ OCSP response status
+  - ✓ OCSP last status and time
+  - ✓ OCSP stapling
+  - ✓ OCSP must staple flag
+  - ✓ Public Key type
+  - ✓ Public Key size
+  - ✓ Derive Private Key (PEM format)
+  - ✓ Authority Key Identifier
+  - ✓ Subject Key Identifier
+  - ✓ TLS Extensions
+  - ✓ Client Authentication expected
+  - ✓ Certificate Issuer validation Type (DV, EV, OV)
 - Hostname match
   - ✓ common name
   - ✓ subjectAltName
   - ✓ properly handle wildcard names
-- ✓ certificate_is_self_signed
-- Enumerate the TLS extensions to ensure all validations are performed (excluding non-standard or any custom extensions that may exist)
+  - ✓ properly handle SNI
+- Validations (Actual validity per the RFCs, fail any should fail to establish TLS)
+  - ✓ Expiry date is future dated
+  - ✓ OCSP revocation
+  - ✓ Valid for TLS use (digital signature)
+  - ✓ Deprecated protocol
+  - ✓ Common Name exists, and uses valid syntax
+  - ✓ Root Certificate is a CA and in a trust store
+  - ✓ Validate clientAuth expected subjects sent by server
+  - ✓ Intermediate key usages are verified
   - ✓ subjectAltName
   - ✓ issuerAlternativeName
   - ✓ authorityKeyIdentifier matches issuer subjectKeyIdentifier
   - ✓ keyUsage
   - ✓ extendedKeyUsage
   - ✓ inhibitAnyPolicy
-  - ✓ basicConstraints ca
-  - ✓ basicConstraints path_length
-  - ✓ validate clientAuth subjects
+  - ✓ basicConstraints path length
+- Assertions (Opinionated checking, TLS is expected to still work)
+  - ✓ Every certificate in the chain perform all validations (a requirement for zero-trust)
+  - ✓ Weak ciphers
+  - ✓ Weak keys
+  - ✓ Weak Signature Algorithm
+  - ✓ rfc6066; if OCSP must-staple flag is present the CA provides a valid response, i.e. resolve and validate not revoked
+  - ✓ Server certificates should not be a CA
+  - ✓ When client certificate presented, check cert usage permits clientAuth
+  - ✓ Certificate is not self signed
 - Authentication
   - ✓ clientAuth
-- revocation
-  - ✓ OCSP
-- ✓ Root Certificate is a CA and in a trust store
-- Validate the complete chain (a requirement for zero-trust)
-  - ✓ correctly build the chain
-  - ✓ All certs in the chain are not revoked
-  - ✓ Intermediate key usages are verified
-  - ✓ optionally; allow the user to include additional cacert bundle
-  - optionally; client condition; path length is exactly 3 (Root CA, signer/issuer, server cert) regardless of tls extension basicConstraints path_length
-- Not using known weak "x"
-  - ✓ protocol
-  - ✓ keys
-  - ✓ signature algorithm
 - ✓ CLI output evaluation duration
 - ✓ OpenSSL verify errors are actually evaluated and reported instead of either terminate connection or simply ignored (default approach most use VERIFY_NONE we actually let openssl do verification and keep the connection open anyway)
 
 ## ⌛ Todo
 
 - Handshake Simulations
-- Enumerate Cipher Suites
+- HTTP/2 clear text supported (response frame)
+- If OCSP stapling, ensure a response was received
 - Known RSA/DSA private keys: https://www.hdm.io/tools/debian-openssl/
 - Common DH primes and public server param (Ys) reuse - logjam
 - ECDH public server param reuse - Racoon
 - TLS extensions
   - IssuingDistributionPoint
   - cRLDistributionPoints
-  - signedCertificateTimestampList
-  - OCSPNonce
-- rfc6066; OCSP must resolve if not stapled, if must-staple flag is present the CA provides a valid response, i.e. validate not revoked
+  - signedCertificateTimestampList (CT)
+  - OCSPNonce reuse
 - Timestamps are valid using NTP
-- Not using known weak "x"
-  - cipher
-- Not using a known vulnerable "x"
 - compromised private keys (pwnedkeys.com to start)
 - compromised intermediate certs;
   - Lenovo Superfish
@@ -109,19 +132,9 @@ See [Documentation](./docs/0.index.md) section of this repository
   - apikey
   - custom authenticator (i.e. bespoke signers and custom headers
   - HMAC [httpbis-message-signatures](https://datatracker.ietf.org/doc/draft-ietf-httpbis-message-signatures/) example custom authenticator
-- report Extended Validation
 - report DNS CAA
 - report DNSSEC
-- report Secure Renegotiation
 - report Downgrade attack prevention
-- report TLS compression
-- report Forward Secrecy
-- report ALPN
-- report NPN
-- report SPDY
-- report Session resumption
-- report HSTS
-- report HTTP status code and banners
 
 ### Rationale
 

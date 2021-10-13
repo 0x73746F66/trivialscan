@@ -1,5 +1,52 @@
 # Change Log
 
+## 0.3.0 Oct 13th 2021
+
+- Improved cli outputs
+- Renamed cli argument `--sni` to `--disable-sni`
+- Added cli argument to enable progress bars
+- Simplified `tlsverify.verify` helper function
+- New `Transport` class `tlsverify.transport.Transport` for all transport related functionality
+- Moved `Metadata` class from `tlsverify.util.Metadata` to `tlsverify.metadata.Metadata`
+- Moved `Validator` class from `tlsverify.Validator` to `tlsverify.validator.Validator`
+- Validator class refactored to remove all transport related functionality, it now mounts a `Transport` instance for validation purposes
+- Removed `Validator.extract_metadata`, which is now split into; `extract_x509_metadata` and `extract_transport_metadata` and called privately when needed
+- Removed `Validator.client_authentication` which is not part of the `Transport` class
+- Added the OID to derive EV, DV, OV certs
+- Added OCSP resolution and response statuses
+- Added detections for Session Resumption caching and tickets
+- Infer weak ciphers by checking against a list of ciphers considered safe from known attacks, with available empirical proof
+- Infer strong ciphers, i.e. the 3 TLS1.3 ciphers that have no known weaknesses, everything else is not considered 'strong' (but may not be vulnerable either)
+- `util.filter_valid_files_urls` now returns `False` instead of raising exceptions
+- Removed `util.get_server_expected_client_subjects` and `util.get_certificates` (Refactored to the `Transport` class)
+- Infer compression support
+- Infer client-side TLS Renegotiation support
+- Validate basicConstraints path length (i.e. Let's Encrypt serial `0x912b084acf0c18a753f6d62e25a75f5a` uses this constraint and some issued certificates had invalid chains)
+- Added HTTP Information:
+  - HTTP/1 supported (response status and headers)
+  - HTTP/1.1 supported (response status and headers)
+  - HTTP/2 (TLS) supported (response frame)
+  - Expect-CT header (report_uri)
+  - Strict-Transport-Security (HSTS) header
+  - X-Frame-Options (XFO) header
+  - X-Content-Type-Options header (nosniff)
+  - Content-Security-Policy (CSP) header is present
+  - Cross-Origin-Embedder-Policy (COEP) header (require-corp)
+  - Cross-Origin-Resource-Policy (CORP) header (same-origin)
+  - Cross-Origin-Opener-Policy (COOP) header (same-origin)
+  - Referrer-Policy header (report on unsafe-url usage)
+  - X-XSS-Protection header (enabled in blocking mode)
+- Added X.509 Information:
+  - Root CA
+  - Intermediate CAs
+  - OCSP response status
+  - OCSP last status and time
+  - OCSP stapling
+  - OCSP must staple flag (rfc6066)
+  - Derive Private Key (PEM format)
+  - Client Authentication expected
+  - Certificate Issuer validation Type (DV, EV, OV)
+
 ## 0.2.3 Oct 7th 2021
 
 - Added pypi.org page documentation

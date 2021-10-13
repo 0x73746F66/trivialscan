@@ -5,3 +5,4 @@ dist/
 src/tls_verify.egg-info/
 .pypirc
 **/__pycache__/
+.coverage
