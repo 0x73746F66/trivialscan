@@ -6,8 +6,7 @@ from datetime import datetime
 from pathlib import Path
 import asn1crypto
 from ssl import PEM_cert_to_DER_cert
-from OpenSSL.crypto import X509, Error, X509Name, dump_privatekey, dump_certificate, load_certificate, FILETYPE_PEM, FILETYPE_ASN1, FILETYPE_TEXT, TYPE_RSA, TYPE_DSA, TYPE_DH, TYPE_EC
-from cryptography import x509
+from OpenSSL.crypto import X509,  X509Name, dump_privatekey, dump_certificate, load_certificate, FILETYPE_PEM, FILETYPE_ASN1, FILETYPE_TEXT, TYPE_RSA, TYPE_DSA, TYPE_DH, TYPE_EC
 from cryptography.x509 import Certificate, extensions, PolicyInformation
 from certvalidator.errors import PathValidationError, RevokedError, InvalidCertificateError, PathBuildingError
 from rich.progress import Progress, TaskID
@@ -208,6 +207,7 @@ class Validator:
         self.metadata.http1_support = transport.http1_support
         self.metadata.http1_1_support = transport.http1_1_support
         self.metadata.http2_support = transport.http2_support
+        self.http2_cleartext_support = transport.http2_cleartext_support
 
     def extract_x509_metadata(self, x509 :X509):
         if not hasattr(self, 'metadata') or not isinstance(self.metadata, Metadata):
