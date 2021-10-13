@@ -2,23 +2,44 @@ import logging
 import string
 import random
 from urllib.request import urlretrieve
-from dataclasses import dataclass, field
 from binascii import hexlify
-from socket import socket, AF_INET, SOCK_STREAM
 from pathlib import Path
 from cryptography import x509
 from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
 from OpenSSL import SSL
-from OpenSSL.crypto import X509, FILETYPE_PEM, X509Name, dump_certificate
-from certifi import where
+from OpenSSL.crypto import X509, FILETYPE_PEM, dump_certificate
 from certvalidator import CertificateValidator, ValidationContext
 import validators
-import idna
-from . import exceptions
+
 
 __module__ = 'tlsverify.util'
 
 logger = logging.getLogger(__name__)
+
+VALIDATION_OID = {
+    '2.16.840.1.114414.1.7.23.1': 'DV',
+    '1.3.6.1.4.1.46222.1.10': 'DV',
+    '1.3.6.1.4.1.34697.1.1': 'EV',
+    '2.16.840.1.113839.0.6.3': 'EV',
+    '2.16.792.3.0.3.1.1.5': 'EV',
+    '1.3.6.1.4.1.5237.1.1.3': 'EV',
+    '2.16.840.1.101.3.2.1.1.5': 'EV',
+    '1.3.6.1.4.1.30360.3.3.3.3.4.4.3.0': 'EV',
+    '1.3.6.1.4.1.46222.1.1': 'EV',
+    '1.3.6.1.4.1.311.60': 'EV',
+    '1.3.6.1.4.1.48679.100': 'EV',
+    '1.3.6.1.4.1.55594.1.1.1': 'EV',
+    '1.3.6.1.4.1.4788.2.200.1': 'EV',
+    '1.3.6.1.4.1.4788.2.202.1': 'EV',
+    '1.3.6.1.4.1.31247.1.3': 'EV',
+    '1.3.6.1.4.1.52331.2': 'EV',
+    '2.16.840.1.114414.1.7.23.2': 'OV',
+    '2.16.792.3.0.3.1.1.2': 'OV',
+    '1.3.6.1.4.1.46222.1.20': 'OV',
+    '2.23.140.1.2.1': 'DV',
+    '2.23.140.1.2.2': 'OV',
+    '2.23.140.1.2.3': 'EV',
+}
 X509_DATE_FMT = r'%Y%m%d%H%M%SZ'
 WEAK_KEY_SIZE = {
     'RSA': 1024,
@@ -48,58 +69,71 @@ WEAK_PROTOCOL = {
     'TLSv1': 'TLSv1 2018 deprecated by PCI Council. Also in 2018, Apple, Google, Microsoft, and Mozilla jointly announced deprecation. Officially deprecated in 2020 (rfc8996)',
     'TLSv1.1': 'TLSv1.1 No longer supported by Firefox 24 or newer and Chrome 29 or newer. Deprecated in 2020 (rfc8996)',
 }
+OCSP_RESP_STATUS = {
+    0: 'Successful',
+    1: 'Malformed Request',
+    2: 'Internal Error',
+    3: 'Try Later',
+    4: 'Signature Required',
+    5: 'Unauthorized',
+}
+OCSP_CERT_STATUS = {
+    0: 'Good',
+    1: 'Revoked',
+    2: 'Unknown',
+}
+SESSION_CACHE_MODE = {
+    SSL.SESS_CACHE_OFF: 'no caching',
+    SSL.SESS_CACHE_CLIENT: 'session_resumption_tickets',
+    SSL.SESS_CACHE_SERVER: 'session_resumption_caching',
+    SSL.SESS_CACHE_BOTH: 'session_resumption_both',
+}
+NOT_KNOWN_WEAK_CIPHERS = [
+    'ECDHE-RSA-AES256-GCM-SHA384',
+    'ECDHE-RSA-AES256-SHA384',
+    'ECDHE-RSA-AES128-GCM-SHA256',
+    'ECDHE-RSA-AES128-SHA256',
+    'ECDHE-ECDSA-AES256-GCM-SHA384',
+    'ECDHE-ECDSA-AES256-SHA384',
+    'ECDHE-ECDSA-AES128-GCM-SHA256',
+    'ECDHE-ECDSA-AES128-SHA256',
+    'DHE-DSS-AES256-GCM-SHA384',
+    'DHE-RSA-AES256-GCM-SHA384',
+    'DHE-RSA-AES256-SHA256',
+    'DHE-DSS-AES256-SHA256',
+    'DHE-DSS-AES128-GCM-SHA256',
+    'DHE-RSA-AES128-GCM-SHA256',
+    'DHE-RSA-AES128-SHA256',
+    'DHE-DSS-AES128-SHA256',
+]
+STRONG_CIPHERS = [
+    'TLS_CHACHA20_POLY1305_SHA256',
+    'TLS_AES_128_CCM_8_SHA256',
+    'TLS_AES_128_CCM_SHA2',
+]
 
-@dataclass
-class Metadata:
-    host :str = field(default_factory=str)
-    certificate_public_key_type :str = field(default_factory=str)
-    certificate_key_size :int = field(default_factory=int)
-    certificate_serial_number :str = field(default_factory=str)
-    certificate_serial_number_decimal :int = field(default_factory=str)
-    certificate_serial_number_hex :str = field(default_factory=str)
-    certificate_subject :str = field(default_factory=str)
-    certificate_issuer :str = field(default_factory=str)
-    certificate_issuer_country :str = field(default_factory=str)
-    certificate_signature_algorithm :str = field(default_factory=str)
-    certificate_pin_sha256 :str = field(default_factory=str)
-    certificate_sha256_fingerprint :str = field(default_factory=str)
-    certificate_sha1_fingerprint :str = field(default_factory=str)
-    certificate_md5_fingerprint :str = field(default_factory=str)
-    certificate_not_before :str = field(default_factory=str)
-    certificate_not_after :str = field(default_factory=str)
-    certificate_common_name :str = field(default_factory=str)
-    certificate_san :list = field(default_factory=list)
-    certificate_subject_key_identifier :str = field(default_factory=str)
-    certificate_authority_key_identifier :str = field(default_factory=str)
-    certificate_extensions :list = field(default_factory=list)
-    certificate_is_self_signed :bool = field(default_factory=bool)
-    certificate_client_authentication :bool = field(default_factory=bool)
-    tlsext_basic_constraints_path_length :int = field(default_factory=str)
-    negotiated_cipher :str = field(default_factory=str)
-    negotiated_protocol :str = field(default_factory=str)
-    sni_support :bool = field(default_factory=bool)
-    revocation_ocsp_stapling :bool = field(default_factory=bool)
-    revocation_ocsp_must_staple :bool = field(default_factory=bool)
-    port :int = 443
 
-def filter_valid_files_urls(inputs :list[str], exception :Exception = None, tmp_path_prefix :str = '/tmp') -> list[str]:
+def filter_valid_files_urls(inputs :list[str], tmp_path_prefix :str = '/tmp'):
     ret = set()
     for test in inputs:
         if test is None:
-            raise exception
+            return False
         file_path = Path(test)
         if file_path.is_file() is False and validators.url(test) is not True:
-            raise exception
+            return False
         if file_path.is_file():
             ret.add(test)
             continue
         if validators.url(test) is True:
             r = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
             local_path = f'{tmp_path_prefix}/tlsverify-{r}'
-            urlretrieve(test, local_path)
+            try:
+                urlretrieve(test, local_path)
+            except Exception as ex:
+                logger.error(ex, stack_info=True)
             file_path = Path(local_path)
             if not file_path.is_file():
-                raise exception
+                return False
             ret.add(local_path)
     return list(ret)
 
@@ -110,135 +144,6 @@ def convert_decimal_to_serial_bytes(decimal :int):
     b = a[1:] if len(a)%2==1 else a
     return format(':'.join(s.encode('utf8').hex().lower() for s in b))
 
-def get_server_expected_client_subjects(host :str, port :int = 443, cafiles :list = None) -> list[X509Name]:
-    if not isinstance(port, int):
-        raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
-    if not isinstance(cafiles, list) and cafiles is not None:
-        raise TypeError(f"provided an invalid type {type(cafiles)} for cafiles, expected list")
-    if validators.domain(host) is not True:
-        raise ValueError(f"provided an invalid domain {host}")
-    logger.info('Negotiating with the server to derive expected client certificate subjects')
-    expected_subjects = []
-    ctx = SSL.Context(method=SSL.SSLv23_METHOD)
-    ctx.load_verify_locations(cafile=where())
-    for cafile in cafiles or []:
-        ctx.load_verify_locations(cafile=cafile)
-    ctx.verify_mode = SSL.VERIFY_NONE
-    ctx.check_hostname = False
-    conn = SSL.Connection(ctx, socket(AF_INET, SOCK_STREAM))
-    conn.connect((host, port))
-    conn.settimeout(3)
-    conn.set_tlsext_host_name(idna.encode(host))
-    conn.setblocking(1)
-    conn.set_connect_state()
-    try:
-        conn.do_handshake()
-        expected_subjects :list[X509Name] = conn.get_client_ca_list()
-    except SSL.Error as err:
-        if 'no protocols available' not in str(err) and 'alert protocol' not in str(err):
-            logger.warning(err, exc_info=True)
-    except Exception as ex:
-        logger.warning(ex, exc_info=True)
-    finally:
-        conn.close()
-    return expected_subjects
-
-def get_certificates(host :str, port :int = 443, cafiles :list = None, client_pem :str = None, client_ca :str = None, tlsext :bool = False, tmp_path_prefix :str = '/tmp') -> tuple[bytes,list,Metadata]:
-    if not isinstance(port, int):
-        raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
-    if validators.domain(host) is not True:
-        raise ValueError(f"provided an invalid domain {host}")
-    if not isinstance(tmp_path_prefix, str):
-        raise TypeError(f"provided an invalid type {type(tmp_path_prefix)} for tmp_path_prefix, expected str")
-
-    client_pem_err = AttributeError(f'client_pem was provided "{client_pem}" but is not a valid URL or file does not exist')
-    if client_pem is not None:
-        if not isinstance(client_pem, str):
-            raise client_pem_err
-        res = filter_valid_files_urls([client_pem], client_pem_err, tmp_path_prefix)
-        if len(res) == 1:
-            client_pem = res[0]
-    client_ca_err = AttributeError(f'client_ca was provided "{client_ca}" but is not a valid URL or file does not exist')
-    if client_ca is not None:
-        if not isinstance(client_ca, str):
-            raise client_ca_err
-        res = filter_valid_files_urls([client_ca], client_ca_err, tmp_path_prefix)
-        if len(res) == 1:
-            client_ca = res[0]
-
-    cafiles_err = AttributeError(f'cafiles was provided but is not a valid URLs or files do not exist\n{cafiles}')
-    if cafiles is not None:
-        if not isinstance(cafiles, list):
-            raise cafiles_err
-        cafiles = filter_valid_files_urls(cafiles, cafiles_err, tmp_path_prefix)
-
-    negotiated_cipher = None
-    negotiated_protocol = None
-    x509 = None
-    certificate_chain = []
-    verifier_errors = []
-    def verifier(conn :SSL.Connection, server_cert :X509, errno :int, depth :int, preverify_ok :int):
-        # preverify_ok indicates, whether the verification of the server certificate in question was passed (preverify_ok=1) or not (preverify_ok=0)
-        # https://www.openssl.org/docs/man1.0.2/man1/verify.html
-        verifier_errors = conn.get_app_data()
-        if not isinstance(verifier_errors, list):
-            verifier_errors = []
-        if errno in exceptions.X509_MESSAGES.keys():
-            verifier_errors.append((server_cert, exceptions.X509_MESSAGES[errno]))
-        conn.set_app_data(verifier_errors)
-        return True
-
-    for version in [SSL.SSL3_VERSION, SSL.TLS1_VERSION, SSL.TLS1_1_VERSION, SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]:
-        logger.info(f'Trying protocol {OPENSSL_VERSION_LOOKUP[version]}')
-        certificate_chain = []
-        ctx = SSL.Context(method=SSL.SSLv23_METHOD)
-        ctx.load_verify_locations(cafile=where())
-        for cafile in cafiles or []:
-            ctx.load_verify_locations(cafile=cafile)
-        if client_pem is not None:
-            ctx.use_certificate_file(certfile=client_pem, filetype=FILETYPE_PEM)
-            if client_ca is not None:
-                ctx.load_client_ca(cafile=client_ca)
-        """
-        VERIFY_NONE: if used, no others may. if not using an anonymous cipher (by default disabled), the server will send a certificate which will be checked. The result of the certificate verification process can be checked after the TLS/SSL handshake using the SSL_get_verify_result(3) function. The handshake will be continued regardless of the verification result.
-        VERIFY_PEER: ensure `ctx.set_verify` is used. the server certificate is verified. If the verification process fails, the TLS/SSL handshake is immediately terminated with an alert message containing the reason for the verification failure. If no server certificate is sent, because an anonymous cipher is used, SSL_VERIFY_PEER is ignored.
-        VERIFY_FAIL_IF_NO_PEER_CERT: ignored
-        VERIFY_CLIENT_ONCE: ignored
-        VERIFY_POST_HANDSHAKE: ignored
-        """
-        ctx.set_verify(SSL.VERIFY_NONE, verifier)
-        ctx.set_max_proto_version(version)
-        ctx.check_hostname = False
-        conn = SSL.Connection(ctx, socket(AF_INET, SOCK_STREAM))
-        conn.connect((host, port))
-        conn.settimeout(3)
-        if tlsext is True:
-            logger.info('using SNI')
-            conn.set_tlsext_host_name(idna.encode(host))
-        conn.setblocking(1)
-        conn.set_connect_state()
-        try:
-            conn.do_handshake()
-            verifier_errors = conn.get_app_data()
-            x509 = conn.get_peer_certificate()
-            negotiated_cipher = conn.get_cipher_name()
-            negotiated_protocol = conn.get_protocol_version_name()
-            for (_, cert) in enumerate(conn.get_peer_cert_chain()):
-                certificate_chain.append(cert)
-            logger.debug(f'Peer cert chain length: {len(certificate_chain)}')
-        except SSL.Error as err:
-            if 'no protocols available' not in str(err) and 'alert protocol' not in str(err):
-                logger.warning(err, exc_info=True)
-        except Exception as ex:
-            logger.warning(ex, exc_info=True)
-        finally:
-            conn.close()
-        if x509 is not None:
-            logger.debug(f'negotiated protocol {negotiated_protocol} cipher {negotiated_cipher}')
-            break
-
-    return x509, certificate_chain, negotiated_protocol, negotiated_cipher, verifier_errors
-
 def is_self_signed(cert :Certificate) -> bool:
     certificate_is_self_signed = False
     authority_key_identifier = None
@@ -246,12 +151,12 @@ def is_self_signed(cert :Certificate) -> bool:
     try:
         authority_key_identifier = hexlify(cert.extensions.get_extension_for_class(extensions.AuthorityKeyIdentifier).value.key_identifier).decode('utf-8')
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, exc_info=True)
+        logger.debug(ex, stack_info=True)
         certificate_is_self_signed = True
     try:
         subject_key_identifier = hexlify(cert.extensions.get_extension_for_class(extensions.SubjectKeyIdentifier).value.digest).decode('utf-8')
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, exc_info=True)
+        logger.debug(ex, stack_info=True)
         certificate_is_self_signed = True
     if subject_key_identifier == authority_key_identifier:
         certificate_is_self_signed = True
@@ -262,7 +167,7 @@ def get_san(cert :Certificate) -> list:
     try:
         san = cert.extensions.get_extension_for_class(SubjectAlternativeName).value.get_values_for_type(DNSName)
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, exc_info=True)
+        logger.debug(ex, stack_info=True)
     return san
 
 def get_basic_constraints(cert :Certificate) -> tuple[bool, int]:
@@ -270,7 +175,7 @@ def get_basic_constraints(cert :Certificate) -> tuple[bool, int]:
     try:
         basic_constraints = cert.extensions.get_extension_for_class(extensions.BasicConstraints).value
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, exc_info=True)
+        logger.debug(ex, stack_info=True)
     if not isinstance(basic_constraints, extensions.BasicConstraints):
         return None, None
     return basic_constraints.ca, basic_constraints.path_length
@@ -281,11 +186,11 @@ def key_usage_exists(cert :Certificate, key :str) -> bool:
     try:
         key_usage = cert.extensions.get_extension_for_class(extensions.KeyUsage).value
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, exc_info=True)
+        logger.debug(ex, stack_info=True)
     try:
         ext_key_usage = cert.extensions.get_extension_for_class(extensions.ExtendedKeyUsage).value
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, exc_info=True)
+        logger.debug(ex, stack_info=True)
     if key_usage is None and ext_key_usage is None:
         logger.warning('no key usages could not be found')
         return False
@@ -470,7 +375,7 @@ def match_hostname(host :str, cert :Certificate) -> bool:
     try:
         certificate_san = cert.extensions.get_extension_for_class(x509.SubjectAlternativeName).value.get_values_for_type(x509.DNSName)
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, exc_info=True)
+        logger.debug(ex, stack_info=True)
     valid_common_name = False
     wildcard_hosts = set()
     domains = set()
@@ -502,6 +407,7 @@ def validate_certificate_chain(der :bytes, pem_certificate_chain :list, validato
     )
 
 def str_n_split(input :str, n :int = 2, delimiter :str = ' '):
+    if not isinstance(input, str): return input
     return delimiter.join([input[i:i+n] for i in range(0, len(input), n)])
 
 def convert_x509_to_PEM(certificate_chain :list) -> list[bytes]:

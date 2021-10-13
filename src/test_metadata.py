@@ -1,17 +1,21 @@
 from datetime import datetime
-import tlsverify
+from tlsverify.metadata import Metadata
+from tlsverify.transport import Transport
+from tlsverify.validator import Validator
 
 class TestMetadata:
-    _verify :tlsverify.Validator
-    host = 'ssllabs.com'
+    _verify :Validator
+    host = 'http2.github.io'
     def setup(self):
         if not hasattr(self, '_verify'):
-            self._verify = tlsverify.Validator(self.host)
-        self._verify.extract_metadata()
+            transport = Transport(self.host)
+            transport.connect_least_secure()
+            self._verify = Validator()
+            self._verify.mount(transport)
 
     def test_metadata(self):
         self.setup()
-        assert isinstance(self._verify.metadata, tlsverify.util.Metadata)
+        assert isinstance(self._verify.metadata, Metadata)
     def test_host(self):
         self.setup()
         assert self._verify.metadata.host == self.host
@@ -33,9 +37,6 @@ class TestMetadata:
     def test_certificate_serial_number_hex(self):
         self.setup()
         assert isinstance(self._verify.metadata.certificate_serial_number_hex, str)
-    def test_certificate_subject(self):
-        self.setup()
-        assert self.host in self._verify.metadata.certificate_subject
     def test_certificate_issuer(self):
         self.setup()
         assert isinstance(self._verify.metadata.certificate_issuer, str)
@@ -63,9 +64,6 @@ class TestMetadata:
     def test_certificate_not_after(self):
         self.setup()
         assert datetime.fromisoformat(self._verify.metadata.certificate_not_after)
-    def test_certificate_common_name(self):
-        self.setup()
-        assert self.host in self._verify.metadata.certificate_common_name
     def test_certificate_san(self):
         self.setup()
         assert isinstance(self._verify.metadata.certificate_san, list)
