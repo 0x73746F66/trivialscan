@@ -100,7 +100,6 @@ See [Documentation](./docs/0.index.md) section of this repository
 ## ⌛ Todo
 
 - Handshake Simulations
-- HTTP/2 clear text supported (response frame)
 - If OCSP stapling, ensure a response was received
 - Known RSA/DSA private keys: https://www.hdm.io/tools/debian-openssl/
 - Common DH primes and public server param (Ys) reuse - logjam
