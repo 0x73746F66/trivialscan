@@ -10,7 +10,7 @@ from rich.style import Style
 from rich.logging import RichHandler
 from rich.progress import Progress
 from . import exceptions, verify
-from .validator import Validator
+from .validator import CertValidator, PeerCertValidator, Validator
 from .transport import Transport
 
 
@@ -40,7 +40,7 @@ def main(host :str, port :int = 443, cafiles :list = None, use_sni :bool = True,
         while not progress.finished:
             progress.update(prog_client_auth, advance=1)
             progress.update(prog_tls_nego, advance=1)
-            validator = Validator()
+            validator = CertValidator()
             transport = Transport(host, port)
             if client_pem is None:
                 progress.update(prog_client_auth, visible=False)
@@ -56,19 +56,11 @@ def main(host :str, port :int = 443, cafiles :list = None, use_sni :bool = True,
             progress.update(prog_server_val, advance=1)
             validator.verify(updater=(progress, prog_tls_nego))
             progress.update(prog_server_val, advance=1)
-            validator.verify_chain()
-            progress.update(prog_server_val, completed=5)
             prog_chain_val = progress.add_task("[cyan]Certificate Chain Validation...", total=len(validator._pem_certificate_chain))
-            for cert in transport.certificate_chain:
-                if cert.get_serial_number() == validator.x509.get_serial_number():
-                    continue
-                peer_validator = Validator(peer=True)
-                peer_validator.mount(transport)
-                peer_validator.init_x509(cert)
-                peer_validator.verify()
-                results.append(peer_validator)
-                progress.update(prog_chain_val, advance=1)
-            progress.update(prog_chain_val, completed=5)
+            validator.verify_chain(updater=(progress, prog_tls_nego))
+            results = validator.peer_validations
+            progress.update(prog_server_val, completed=5)
+            progress.update(prog_chain_val, completed=len(validator._pem_certificate_chain))
             results.append(validator)
 
     console = Console()

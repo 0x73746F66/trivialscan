@@ -200,10 +200,16 @@ def key_usage_exists(cert :Certificate, key :str) -> bool:
         return True
     return False
 
-def gather_key_usages(cert :Certificate) -> tuple[list, list, list]:
+def get_valid_certificate_extensions(cert :Certificate) -> list[extensions.Extension]:
     certificate_extensions = []
-    validator_key_usage = []
-    validator_extended_key_usage = []
+    for ext in cert.extensions:
+        if isinstance(ext.value, extensions.UnrecognizedExtension):
+            continue
+        certificate_extensions.append(ext.value)
+    return certificate_extensions
+
+def get_certificate_extensions(cert :Certificate) -> list[dict]:
+    certificate_extensions = []
     for ext in cert.extensions:
         data = {
             'critical': ext.critical,
@@ -257,17 +263,13 @@ def gather_key_usages(cert :Certificate) -> tuple[list, list, list]:
                     })
         if isinstance(ext.value, extensions.ExtendedKeyUsage):
             data[data['name']] = [x._name for x in ext.value or []] # pylint: disable=protected-access
-            if 'serverAuth' in data[data['name']]:
-                validator_extended_key_usage.append('server_auth')
         if isinstance(ext.value, extensions.TLSFeature):
             data[data['name']] = []
             for feature in ext.value:
                 if feature.value == 5:
                     data[data['name']].append('OCSP Must-Staple (rfc6066)')
-                    validator_extended_key_usage.append('ocsp_signing')
                 if feature.value == 17:
                     data[data['name']].append('multiple OCSP responses (rfc6961)')
-                    validator_extended_key_usage.append('ocsp_signing')
         if isinstance(ext.value, extensions.InhibitAnyPolicy):
             data[data['name']] = ext.value.skip_certs
         if isinstance(ext.value, extensions.KeyUsage):
@@ -275,39 +277,30 @@ def gather_key_usages(cert :Certificate) -> tuple[list, list, list]:
             data['digital_signature'] = ext.value.digital_signature
             if ext.value.digital_signature:
                 data[data['name']].append('digital_signature')
-                validator_key_usage.append('digital_signature')
             data['content_commitment'] = ext.value.content_commitment
             if ext.value.content_commitment:
                 data[data['name']].append('content_commitment')
-                validator_key_usage.append('content_commitment')
             data['key_encipherment'] = ext.value.key_encipherment
             if ext.value.key_encipherment:
                 data[data['name']].append('key_encipherment')
-                validator_key_usage.append('key_encipherment')
             data['data_encipherment'] = ext.value.data_encipherment
             if ext.value.data_encipherment:
                 data[data['name']].append('data_encipherment')
-                validator_key_usage.append('data_encipherment')
             data['key_agreement'] = ext.value.key_agreement
             if ext.value.key_agreement:
                 data[data['name']].append('key_agreement')
-                validator_key_usage.append('key_agreement')
                 data['decipher_only'] = ext.value.decipher_only
                 if ext.value.decipher_only:
                     data[data['name']].append('decipher_only')
-                    validator_key_usage.append('decipher_only')
                 data['encipher_only'] = ext.value.encipher_only
                 if ext.value.encipher_only:
                     data[data['name']].append('encipher_only')
-                    validator_key_usage.append('encipher_only')
             data['key_cert_sign'] = ext.value.key_cert_sign
             if ext.value.key_cert_sign:
                 data[data['name']].append('key_cert_sign')
-                validator_key_usage.append('key_cert_sign')
             data['crl_sign'] = ext.value.crl_sign
             if ext.value.crl_sign:
                 data[data['name']].append('crl_sign')
-                validator_key_usage.append('crl_sign')
         if isinstance(ext.value, extensions.NameConstraints):
             data['permitted_subtrees'] = [x.value for x in ext.value.permitted_subtrees or []]
             data['excluded_subtrees'] = [x.value for x in ext.value.excluded_subtrees or []]
@@ -341,7 +334,57 @@ def gather_key_usages(cert :Certificate) -> tuple[list, list, list]:
             data['indirect_crl'] = ext.value.indirect_crl
             data['only_contains_attribute_certs'] = ext.value.only_contains_attribute_certs
         certificate_extensions.append(data)
-    return certificate_extensions, validator_key_usage, validator_extended_key_usage
+    return certificate_extensions
+
+def gather_key_usages(cert :Certificate) -> tuple[list, list]:
+    validator_key_usage = []
+    validator_extended_key_usage = []
+    for ext in get_valid_certificate_extensions(cert):
+        if isinstance(ext, extensions.UnrecognizedExtension):
+            continue
+        ext_name = ext.oid._name
+        if isinstance(ext, extensions.ExtendedKeyUsage):
+            extended_usages = [x._name for x in ext or []] # pylint: disable=protected-access
+            if 'serverAuth' in extended_usages:
+                validator_extended_key_usage.append('server_auth')
+        if isinstance(ext, extensions.TLSFeature):
+            for feature in ext:
+                if feature.value == 5:
+                    validator_extended_key_usage.append('ocsp_signing')
+                if feature.value == 17:
+                    validator_extended_key_usage.append('ocsp_signing')
+        if isinstance(ext, extensions.KeyUsage):
+            if ext.digital_signature:
+                validator_key_usage.append('digital_signature')
+            if ext.content_commitment:
+                validator_key_usage.append('content_commitment')
+            if ext.key_encipherment:
+                validator_key_usage.append('key_encipherment')
+            if ext.data_encipherment:
+                validator_key_usage.append('data_encipherment')
+            if ext.key_agreement:
+                validator_key_usage.append('key_agreement')
+                if ext.decipher_only:
+                    validator_key_usage.append('decipher_only')
+                if ext.encipher_only:
+                    validator_key_usage.append('encipher_only')
+            if ext.key_cert_sign:
+                validator_key_usage.append('key_cert_sign')
+            if ext.crl_sign:
+                validator_key_usage.append('crl_sign')
+
+    return validator_key_usage, validator_extended_key_usage
+
+def get_ski_aki(cert :Certificate) -> tuple[str, str]:
+    ski = None
+    aki = None
+    for ext in get_certificate_extensions(cert):
+        if ext['name'] == 'subjectKeyIdentifier':
+            ski = ext[ext['name']]
+        if ext['name'] == 'authorityKeyIdentifier':
+            aki = ext[ext['name']]
+
+    return ski, aki
 
 def extract_certificate_common_name(cert :Certificate):
     for fields in cert.subject:

@@ -3,7 +3,7 @@ import validators
 from OpenSSL.crypto import X509
 from . import exceptions
 from .transport import Transport
-from .validator import Validator
+from .validator import Validator, CertValidator
 
 
 __module__ = 'tlsverify'
@@ -23,8 +23,7 @@ def verify(host :str, port :int = 443, cafiles :list = None, use_sni :bool = Tru
     if not isinstance(tmp_path_prefix, str):
         raise TypeError(f"provided an invalid type {type(tmp_path_prefix)} for tmp_path_prefix, expected str")
 
-    results = []
-    validator = Validator()
+    validator = CertValidator()
     transport = Transport(host, port)
     if client_pem is not None:
         transport.pre_client_authentication_check(client_pem_path=client_pem)
@@ -34,16 +33,8 @@ def verify(host :str, port :int = 443, cafiles :list = None, use_sni :bool = Tru
         validator.tmp_path_prefix = tmp_path_prefix
     validator.mount(transport)
     validator.verify()
-    validator.verify_chain()
-    for cert in transport.certificate_chain:
-        if cert.get_serial_number() == validator.x509.get_serial_number():
-            continue
-        peer_validator = Validator(peer=True)
-        peer_validator.mount(transport)
-        peer_validator.init_x509(cert)
-        peer_validator.verify()
-        results.append(peer_validator)
+    validator.verify_chain()    
+    results = validator.peer_validations
     results.append(validator)
-
     valid = all([v.certificate_valid for v in results])
     return valid, results
