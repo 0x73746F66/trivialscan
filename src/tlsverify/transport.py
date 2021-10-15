@@ -1,5 +1,6 @@
 import logging
 import ssl
+from base64 import urlsafe_b64encode
 from datetime import datetime
 from socket import socket, AF_INET, SOCK_STREAM, MSG_PEEK
 from pathlib import Path
@@ -9,7 +10,7 @@ from OpenSSL.SSL import _lib as native_openssl
 from OpenSSL.crypto import X509, FILETYPE_PEM, X509Name, load_certificate
 from certifi import where
 from retry.api import retry
-from hyperframe.frame import Frame
+from hyperframe.frame import Frame, SettingsFrame
 from hyperframe.exceptions import InvalidFrameError
 from rich.progress import Progress, TaskID
 import validators
@@ -30,13 +31,14 @@ class Transport:
     peer_address :str
     sni_support :bool
     http2_support :bool
+    http2_cleartext_support :bool
     http2_response_frame :str
     http1_support :bool
     http1_code :int
     http1_status :str
     http1_response_proto :str
     http1_headers :dict
-    httcertificate_chainp1_1_support :bool
+    http1_1_support :bool
     http1_1_code :int
     http1_1_status :str
     http1_1_response_proto :str
@@ -94,6 +96,7 @@ class Transport:
         self.http1_support = False
         self.http1_1_support = False
         self.http2_support = False
+        self.http2_cleartext_support = False
         self.peer_address = None
         self.ocsp_revocation_reason = None
         self.ocsp_revocation_time = None
@@ -294,22 +297,10 @@ class Transport:
         return f
 
     @retry((SSL.WantReadError), tries=20, delay=0.5, logger=logger)
-    def _http2_with_preamble(self, conn :SSL.Connection, request :Frame, response_wait :int = 3) -> Frame:
-        logger.info(f'HTTP/2 sending preamble')
-        try:
-            conn.sendall(b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n')
-            conn.sendall(bytes([0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00]))
-        except SSL.Error as err:
-            if 'protocol is shutdown' not in str(err):
-                logger.warning(err, exc_info=True)
-        except SSL.ZeroReturnError:
-            pass
-        return self._http2(conn, request, response_wait)
-
-    @retry((SSL.WantReadError), tries=20, delay=0.5, logger=logger)
     def _http2(self, conn :SSL.Connection, request :Frame, response_wait :int = 3) -> Frame:
         logger.info(f'HTTP/2 Request:\n{request}')
         try:
+            conn.sendall(b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n')
             conn.sendall(request.serialize())
         except SSL.Error as err:
             if 'protocol is shutdown' not in str(err):
@@ -340,6 +331,58 @@ class Transport:
             conn.close()
         return resp
 
+    def test_h2c(self, method :str = 'GET', uri_path :str = '/', timeout :int = 5, include_settings :bool = True) -> Frame:
+        logger.info(f'Testing HTTP/2 clear text')
+        def _read(s :socket):
+            resp = b''
+            while not resp.endswith(b"\r\n\r\n"):
+                data = s.recv(1)
+                if not data: break
+                resp += data
+            return resp
+
+        preamble = b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n'
+        req_parts = [
+            f"{method} {uri_path} HTTP/1.1",
+            f"Host: {self.host}",
+            "Accept: */*",
+            "Connection: Upgrade",
+        ]
+        if include_settings:
+            settings_frame = SettingsFrame(0, settings={
+                SettingsFrame.HEADER_TABLE_SIZE: 4096,
+                SettingsFrame.INITIAL_WINDOW_SIZE: 2 ** 16 - 1,
+                SettingsFrame.MAX_FRAME_SIZE: 2 ** 14,
+            })
+            http2_settings = urlsafe_b64encode(settings_frame.serialize_body()).rstrip(b'=')
+            req_parts.append(f"HTTP2-Settings: {http2_settings.decode()}")
+            req_parts.append("Upgrade: h2c, HTTP2-Settings")
+        else:
+            req_parts.append("Upgrade: h2c")
+        request = '\r\n'.join(req_parts) + '\r\n\r\n'
+        self.http2_cleartext_support = False
+        sock = socket(AF_INET, SOCK_STREAM)
+        sock.settimeout(timeout)
+        try:
+            sock.connect((self.host, 80 if self.port == 443 else self.port))            
+            sock.sendall(preamble)
+            logger.info(f'HTTP/2 clear text Request,\n{request}')
+            sock.sendall(request.encode())
+            if include_settings:
+                logger.info(f'HTTP2-Settings: {Transport.decode_http2_frame(settings_frame.serialize())}')
+                sock.sendall(settings_frame.serialize())
+        except Exception as ex:
+            logger.warning(ex, exc_info=True)
+        
+        response = _read(sock)
+        logger.info(f'HTTP/2 clear text Response,\n{response.decode()}')
+        if b'\r\n\r\n' in response:
+            headers, _ = response.split(b'\r\n\r\n', 1)
+            split_headers = headers.split()
+            if split_headers[1] == b'101':
+                self.http2_cleartext_support = True
+        sock.close()
+
     def test_http2(self, uri_path :str = '/', response_wait :int = 3):
         if not any([ssl.HAS_ALPN, ssl.HAS_NPN]):
             return
@@ -368,10 +411,6 @@ class Transport:
         if isinstance(resp, Frame):
             self.http2_support = True
             self.http2_response_frame = str(resp)
-            return
-        resp = self._http2_with_preamble(_con(), request, response_wait)
-        self.http2_support = isinstance(resp, Frame)
-        self.http2_response_frame = str(resp)
 
     def connect(self, tls_version :int, use_sni :bool = False, protocol :str = None):
         logger.info(f'Trying TLS version {util.OPENSSL_VERSION_LOOKUP[tls_version]}')
@@ -398,11 +437,6 @@ class Transport:
             self.session_cache_mode = util.SESSION_CACHE_MODE[native_openssl.SSL_CTX_get_session_cache_mode(conn._context._context)]
             self.session_tickets = native_openssl.SSL_SESSION_has_ticket(conn.get_session()._session) == 1
             self.session_ticket_hints = native_openssl.SSL_SESSION_get_ticket_lifetime_hint(conn.get_session()._session) > 0
-            # session_compress_id = native_openssl.SSL_COMP_get_compression_methods()
-            # print('session_compress_id')
-            # print(type(session_compress_id))
-            # print(session_compress_id)
-            # exit(0)
             self.peer_address, _ = conn.getpeername()
             self.ciphers = conn.get_cipher_list()
             if not isinstance(self.server_certificate, X509):
@@ -448,6 +482,7 @@ class Transport:
                     self.sni_support = True
                 for protocol in ['HTTP/1.0', 'HTTP/1.1']:
                     self.connect(tls_version=version, use_sni=use_sni, protocol=protocol)
+                self.test_h2c()
                 self.test_http2()
                 if isinstance(progress, Progress): progress.update(task, advance=1)
                 return True
