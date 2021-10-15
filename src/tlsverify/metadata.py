@@ -69,4 +69,5 @@ class Metadata:
     http1_support :bool = field(default_factory=bool)
     http1_1_support :bool = field(default_factory=bool)
     http2_support :bool = field(default_factory=bool)
+    http2_cleartext_support :bool = field(default_factory=bool)
     port :int = 443

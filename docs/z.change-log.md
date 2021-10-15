@@ -1,5 +1,18 @@
 # Change Log
 
+## 0.3.1
+
+- Added http2 cleartext (h2c) support
+- Made `Validator` a base class and split into `CertValidator` and `PeerCertValidator` for respective purposes
+- Output properly identify certificate types as one of; Server, Intermediate, Intermediate CA, or Root CA
+- Adjust outputs based on certificate type
+- removed bespoke path_length basicConstraint checking from `CertValidator.verify_chain()`, instead rely on external lib `CertificateValidator` to identify broken paths
+- Added `util.get_certificate_extensions()` which returns extensions as a list of dictionaries
+- Added `util.get_valid_certificate_extensions()` which returns only valid extension classes in a list
+- `util.gather_key_usages()` no longer returns extensions, use one of the new methods instead
+- Added `util.get_ski_aki()` to unify multiple places that needed this
+- unified peer validator implementations across cli and `verify` helper
+
 ## 0.3.0 Oct 13th 2021
 
 - Improved cli outputs
