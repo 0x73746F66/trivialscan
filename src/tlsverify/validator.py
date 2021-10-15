@@ -125,7 +125,7 @@ class Validator:
         not_after = datetime.strptime(x509.get_notAfter().decode('ascii'), util.X509_DATE_FMT)
         self.metadata.certificate_not_before = not_before.isoformat()
         self.metadata.certificate_not_after = not_after.isoformat()
-        self.metadata.certificate_common_name = util.extract_certificate_common_name(self.certificate)
+        self.metadata.certificate_common_name = util.extract_from_subject(self.certificate)
         self.metadata.certificate_subject_key_identifier, self.metadata.certificate_authority_key_identifier = util.get_ski_aki(self.certificate)
         for ext in self.metadata.certificate_extensions:
             if ext['name'] == 'TLSFeature' and 'rfc6066' in ext['features']:
@@ -157,7 +157,23 @@ class Validator:
         self.validation_checks['avoid_known_weak_keys'] = self.metadata.certificate_public_key_type not in util.KNOWN_WEAK_KEYS.keys() or self.metadata.certificate_key_size > util.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
         if self.validation_checks['avoid_known_weak_keys'] is False:
             self.certificate_verify_messages.append(util.KNOWN_WEAK_KEYS[self.metadata.certificate_public_key_type])
-   
+        logger.debug('Impersonation, C2, other detections')
+        bad_cn = ['localhost', 'portswigger']
+        bad_ou = ['charlesproxy', 'portswigger']
+        bad_san = ['localhost', 'lvh.me']
+        for cn in bad_cn:
+            if cn in self.metadata.certificate_common_name.lower():
+                self.metadata.possible_phish_or_malicious = True
+        subject_ou = util.extract_from_subject(self.certificate, 'organizationalUnitName')
+        if subject_ou:
+            for ou in bad_ou:
+                if ou in subject_ou.lower():
+                    self.metadata.possible_phish_or_malicious = True
+        for bad in bad_san:
+            for san in self.metadata.certificate_san:
+                if bad in san:
+                    self.metadata.possible_phish_or_malicious = True
+
 class PeerCertValidator(Validator):
     _parent :Validator
     def __init__(self, **kwargs) -> None:
@@ -204,13 +220,14 @@ class PeerCertValidator(Validator):
         fingerprints = ['certificate_sha256_fingerprint', 'certificate_sha1_fingerprint', 'certificate_md5_fingerprint', 'certificate_subject_key_identifier', 'certificate_authority_key_identifier']
         skip = ['host', 'port', 'offered_ciphers', 'certificate_subject', 'certificate_issuer', 'certificate_common_name', 'certificate_intermediate_ca', 'certificate_root_ca', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier']
         skip.extend(['certificate_client_authentication', 'client_certificate_expected', 'certificate_valid_tls_usage', 'certification_authority_authorization', 'dnssec', 'scsv_support', 'compression_support', 'peer_address', 'http_expect_ct_report_uri', 'http_xss_protection', 'http_status_code', 'http1_support', 'http1_1_support', 'http2_support', 'http2_cleartext_support'])
-        skip.extend(['sni_support', 'negotiated_protocol', 'negotiated_cipher', 'weak_cipher', 'strong_cipher', 'forward_anonymity', 'session_resumption_caching', 'session_resumption_tickets', 'session_resumption_ticket_hint', 'client_renegotiation', 'http_hsts', 'http_xfo', 'http_csp', 'http_coep', 'http_coop', 'http_corp', 'http_nosniff', 'http_unsafe_referrer'])
+        skip.extend(['sni_support', 'negotiated_protocol', 'peer_address', 'negotiated_cipher', 'weak_cipher', 'strong_cipher', 'forward_anonymity', 'session_resumption_caching', 'session_resumption_tickets', 'session_resumption_ticket_hint', 'client_renegotiation', 'http_hsts', 'http_xfo', 'http_csp', 'http_coep', 'http_coop', 'http_corp', 'http_nosniff', 'http_unsafe_referrer'])
         peer_type = 'Intermediate Certificate'
         if self.metadata.certificate_intermediate_ca: peer_type = 'Intermediate CA'
         if self.metadata.certificate_root_ca: peer_type = 'Root CA'
         title = f'{peer_type}: {self.metadata.certificate_subject}'
         caption = '\n'.join([
             f'Issuer: {self.metadata.certificate_issuer}',
+            util.date_diff(self.certificate.not_valid_after),
         ])
         title_style = Style(bold=True, color='green' if self.certificate_valid else 'bright_red')
         table = Table(title=title, caption=caption, title_style=title_style)
@@ -271,7 +288,7 @@ class CertValidator(Validator):
             if isinstance(value, bytes):
                 return value.decode()
             if isinstance(value, list) and isinstance(value[0], str):
-                return delimiter.join(value)
+                return delimiter.join([str(v) for v in value])
             if isinstance(value, list) and not isinstance(value[0], str):
                 n = []
                 for d in value:
@@ -281,9 +298,12 @@ class CertValidator(Validator):
                 return delimiter.join([f'{key}={str(value[key])}' for key in value.keys()])
             return str(value)
         fingerprints = ['certificate_sha256_fingerprint', 'certificate_sha1_fingerprint', 'certificate_md5_fingerprint', 'certificate_subject_key_identifier', 'certificate_authority_key_identifier']
-        skip = ['host', 'port', 'offered_ciphers', 'certificate_subject', 'certificate_serial_number', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier']
-        title = f'Server Certificate: {self.metadata.certificate_subject}'
-        caption = '\n'.join([f'{self.metadata.host}:{self.metadata.port} ({self.metadata.peer_address})', self.metadata.certificate_serial_number])
+        skip = ['host', 'port', 'offered_ciphers', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier']
+        title = f'{self.metadata.host}:{self.metadata.port} ({self.metadata.peer_address})'
+        caption = '\n'.join([
+            f'Issuer: {self.metadata.certificate_issuer}',
+            util.date_diff(self.certificate.not_valid_after),
+        ])
         title_style = Style(bold=True, color='green' if self.certificate_valid else 'bright_red')
         table = Table(title=title, caption=caption, title_style=title_style)
         table.add_column("", justify="right", style="cyan", no_wrap=True)

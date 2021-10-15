@@ -331,12 +331,15 @@ class Transport:
             conn.close()
         return resp
 
-    def test_h2c(self, method :str = 'GET', uri_path :str = '/', timeout :int = 5, include_settings :bool = True) -> Frame:
+    def test_h2c(self, method :str = 'GET', uri_path :str = '/', timeout :int = 3, include_settings :bool = True) -> Frame:
         logger.info(f'Testing HTTP/2 clear text')
         def _read(s :socket):
             resp = b''
             while not resp.endswith(b"\r\n\r\n"):
-                data = s.recv(1)
+                try:
+                    data = s.recv(1)
+                except Exception:
+                    break
                 if not data: break
                 resp += data
             return resp

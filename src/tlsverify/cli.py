@@ -76,6 +76,7 @@ def main(host :str, port :int = 443, cafiles :list = None, use_sni :bool = True,
 
 def cli():
     parser = argparse.ArgumentParser()
+    parser.add_argument("targets", nargs="*")
     parser.add_argument('-H', '--host', help='host to check', dest='host', required=True)
     parser.add_argument('-p', '--port', help='TLS port of host', dest='port', default=443)
     parser.add_argument('-c', '--cafiles', help='path to PEM encoded CA bundle file, url or file path accepted', dest='cafiles', default=None)

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.3.1",
+    version="0.3.3",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -80,7 +80,7 @@ optional arguments:
   - ✓ HTTP/1 supported (response status and headers)
   - ✓ HTTP/1.1 supported (response status and headers)
   - ✓ HTTP/2 (TLS) supported (response frame)
-  - ~~HTTP/2 clear text supported (response frame)~~ Fix planned for 0.3.1
+  - ✓ HTTP/2 clear text supported (response frame)
   - ✓ Expect-CT header (report_uri)
   - ✓ Strict-Transport-Security (HSTS) header
   - ✓ X-Frame-Options (XFO) header
@@ -127,7 +127,10 @@ optional arguments:
   - ✓ Root Certificate is a CA and in a trust store
   - ✓ Validate clientAuth expected subjects sent by server
   - ✓ Intermediate key usages are verified
-  - ✓ subjectAltName
+  - ✓ Valid SAN
+  - ✓ Impersonation detections
+  - ✓ C2 (command and control) detections
+  - ✓ Non-production grade detections
   - ✓ issuerAlternativeName
   - ✓ authorityKeyIdentifier matches issuer subjectKeyIdentifier
   - ✓ keyUsage
@@ -139,7 +142,7 @@ optional arguments:
   - ✓ Weak ciphers
   - ✓ Weak keys
   - ✓ Weak Signature Algorithm
-  - ~~If OCSP stapling, ensure a response was received~~ Fix planned for 0.3.1
+  - ~~If OCSP stapling, ensure a response was received~~ Fix planned for 0.3.4
   - ✓ rfc6066; if OCSP must-staple flag is present the CA provides a valid response, i.e. resolve and validate not revoked
   - ✓ Server certificates should not be a CA
   - ✓ When client certificate presented, check cert usage permits clientAuth

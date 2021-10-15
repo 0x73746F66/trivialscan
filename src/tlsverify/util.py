@@ -1,5 +1,6 @@
 import logging
 import string
+from datetime import datetime
 import random
 from urllib.request import urlretrieve
 from binascii import hexlify
@@ -386,10 +387,10 @@ def get_ski_aki(cert :Certificate) -> tuple[str, str]:
 
     return ski, aki
 
-def extract_certificate_common_name(cert :Certificate):
+def extract_from_subject(cert :Certificate, name :str = 'commonName'):
     for fields in cert.subject:
         current = str(fields.oid)
-        if "commonName" in current:
+        if name in current:
             return fields.value
     return None
 
@@ -460,3 +461,18 @@ def convert_x509_to_PEM(certificate_chain :list) -> list[bytes]:
             raise AttributeError(f'convert_x509_to_PEM expected OpenSSL.crypto.X509, got {type(cert)}')
         pem_certs.append(dump_certificate(FILETYPE_PEM, cert))
     return pem_certs
+
+def date_diff(comparer :datetime) -> str:
+    interval = comparer - datetime.utcnow()
+    if interval.days < -1:
+        return f"Expired {int(abs(interval.days))} days ago"
+    if interval.days == -1:
+        return f"Expired yesterday"
+    if interval.days == 0:
+        return "Expires today"
+    if interval.days == 1:
+        return "Expires tomorrow"
+    if interval.days > 365:
+        return f"Expires in {interval.days} days ({int(round(interval.days/365))} years)"
+    if interval.days > 1:
+        return f"Expires in {interval.days} days"

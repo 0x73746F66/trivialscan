@@ -1,6 +1,12 @@
 # Change Log
 
-## 0.3.1
+## 0.3.2 Oct 14th 2021
+
+- Fixed an issue with the h2c test that effected some sites that sink non-TLS requests
+- Adjusted CLI output frame title and captions
+- added detections for possible phish or malicious
+
+## 0.3.1 Oct 14th 2021
 
 - Added http2 cleartext (h2c) support
 - Made `Validator` a base class and split into `CertValidator` and `PeerCertValidator` for respective purposes

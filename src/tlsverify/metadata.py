@@ -71,3 +71,4 @@ class Metadata:
     http2_support :bool = field(default_factory=bool)
     http2_cleartext_support :bool = field(default_factory=bool)
     port :int = 443
+    possible_phish_or_malicious :bool = field(default_factory=bool)
