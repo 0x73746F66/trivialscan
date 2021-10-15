@@ -1,10 +1,18 @@
 # Change Log
 
+## 0.3.4 Oct 16th 2021
+
+- CLI now supports assessing multiple target domains
+- Added reference certificates and utility tool to view them
+
+## 0.3.3 Oct 15th 2021
+
+- added detections for possible phish or malicious
+
 ## 0.3.2 Oct 14th 2021
 
 - Fixed an issue with the h2c test that effected some sites that sink non-TLS requests
 - Adjusted CLI output frame title and captions
-- added detections for possible phish or malicious
 
 ## 0.3.1 Oct 14th 2021
 

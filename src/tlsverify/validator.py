@@ -298,7 +298,7 @@ class CertValidator(Validator):
                 return delimiter.join([f'{key}={str(value[key])}' for key in value.keys()])
             return str(value)
         fingerprints = ['certificate_sha256_fingerprint', 'certificate_sha1_fingerprint', 'certificate_md5_fingerprint', 'certificate_subject_key_identifier', 'certificate_authority_key_identifier']
-        skip = ['host', 'port', 'offered_ciphers', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier']
+        skip = ['host', 'port', 'offered_ciphers', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier', 'certificate_root_ca', 'certificate_intermediate_ca']
         title = f'{self.metadata.host}:{self.metadata.port} ({self.metadata.peer_address})'
         caption = '\n'.join([
             f'Issuer: {self.metadata.certificate_issuer}',

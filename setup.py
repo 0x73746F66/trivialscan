@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.3.3",
+    version="0.3.4",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -39,6 +39,9 @@ produces:
 usage: tlsverify [-h] -H HOST [-p PORT] [-c CAFILES] [-C CLIENT_PEM] [-t TMP_PATH_PREFIX] [--disable-sni] [-b] [-v]
                [-vv] [-vvv] [-vvvv]
 
+positional arguments:
+  targets               All unnamed arguments are hosts (and ports) targets to test. ~$ tlsverify google.com:443
+                        github.io owasp.org:80
 optional arguments:
   -h, --help            show this help message and exit
   -H HOST, --host HOST  host to check

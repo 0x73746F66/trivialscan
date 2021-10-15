@@ -9,6 +9,7 @@ from .validator import Validator, CertValidator
 __module__ = 'tlsverify'
 logger = logging.getLogger(__name__)
 
+# When chaning this ensure cli.main() is also updated
 def verify(host :str, port :int = 443, cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp') -> tuple[bool,list[Validator]]:
     if not isinstance(port, int):
         raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
@@ -28,7 +29,7 @@ def verify(host :str, port :int = 443, cafiles :list = None, use_sni :bool = Tru
     if client_pem is not None:
         transport.pre_client_authentication_check(client_pem_path=client_pem)
     if not transport.connect_least_secure(cafiles=cafiles, use_sni=use_sni) or not isinstance(transport.server_certificate, X509):
-        raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED)
+        raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=host, port=port))
     if isinstance(tmp_path_prefix, str):
         validator.tmp_path_prefix = tmp_path_prefix
     validator.mount(transport)
