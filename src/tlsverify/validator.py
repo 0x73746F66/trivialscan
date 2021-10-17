@@ -12,6 +12,7 @@ from certvalidator.errors import PathValidationError, RevokedError, InvalidCerti
 from rich.progress import Progress, TaskID
 from rich.table import Table
 from rich.style import Style
+from rich import box
 from . import util
 from . import exceptions
 from .transport import Transport
@@ -198,25 +199,7 @@ class PeerCertValidator(Validator):
         return res
 
     def to_rich(self) -> Table:
-        def any_to_string(value, delimiter='\n') -> str:
-            if isinstance(value, str):
-                return value
-            if value is None:
-                return 'Unknown'
-            if isinstance(value, bool):
-                return 'True' if value else 'False'
-            if isinstance(value, bytes):
-                return value.decode()
-            if isinstance(value, list) and isinstance(value[0], str):
-                return delimiter.join(value)
-            if isinstance(value, list) and not isinstance(value[0], str):
-                n = []
-                for d in value:
-                    n.append(any_to_string(d, delimiter))
-                return any_to_string(n)
-            if isinstance(value, dict):
-                return delimiter.join([f'{key}={str(value[key])}' for key in value.keys()])
-            return str(value)
+        good, bad = ('dark_sea_green2', 'light_coral')
         fingerprints = ['certificate_sha256_fingerprint', 'certificate_sha1_fingerprint', 'certificate_md5_fingerprint', 'certificate_subject_key_identifier', 'certificate_authority_key_identifier']
         skip = ['host', 'port', 'offered_ciphers', 'certificate_subject', 'certificate_issuer', 'certificate_common_name', 'certificate_intermediate_ca', 'certificate_root_ca', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier']
         skip.extend(['certificate_client_authentication', 'client_certificate_expected', 'certificate_valid_tls_usage', 'certification_authority_authorization', 'dnssec', 'scsv_support', 'compression_support', 'peer_address', 'http_expect_ct_report_uri', 'http_xss_protection', 'http_status_code', 'http1_support', 'http1_1_support', 'http2_support', 'http2_cleartext_support'])
@@ -229,21 +212,48 @@ class PeerCertValidator(Validator):
             f'Issuer: {self.metadata.certificate_issuer}',
             util.date_diff(self.certificate.not_valid_after),
         ])
-        title_style = Style(bold=True, color='green' if self.certificate_valid else 'bright_red')
-        table = Table(title=title, caption=caption, title_style=title_style)
-        table.add_column("", justify="right", style="cyan", no_wrap=True)
+        title_style = Style(bold=True, color=good if self.certificate_valid else bad)
+        table = Table(title=title, caption=caption, title_style=title_style, box=box.MINIMAL_HEAVY_HEAD)
+        table.add_column("", justify="right", style="dark_turquoise", no_wrap=True)
         table.add_column("Result", justify="left")
-        table.add_row('certificate_valid', any_to_string(self.certificate_valid))
+        table.add_row('certificate_valid', util.styled_boolean(self.certificate_valid, ('Valid', 'Validation Issues'), (good, bad)))
         for i, err in enumerate(self.certificate_verify_messages):
             table.add_row(f'Note {i+1}', err)
         for key in self.validation_checks.keys():
-            table.add_row(f'Rule {key}', any_to_string(self.validation_checks[key]))
+            table.add_row(f'Rule {key}', util.styled_boolean(self.validation_checks[key], ('Pass', 'Fail'), (good, bad)))
         for key in list(vars(self.metadata).keys()):
-            if key not in skip:
-                table.add_row(key, util.str_n_split(getattr(self.metadata, key)).upper() if key in fingerprints and isinstance(getattr(self.metadata, key), str) else any_to_string(getattr(self.metadata, key)))
+            if key in skip:
+                continue
+            val = getattr(self.metadata, key)
+            if key in fingerprints and isinstance(val, str):
+                table.add_row(key, util.str_n_split(val).upper())
+                continue
+            if val is None or (isinstance(val, str) and len(val) == 0):
+                table.add_row(key, util.styled_value("Unknown", color='magenta'))
+                continue
+            if isinstance(val, bool):
+                table.add_row(key, util.styled_boolean(val, represent_as=('Detected', 'Not Detected'), colors=(good, bad)))
+                continue
+            table.add_row(key, util.styled_any(val))
         for v in self.metadata.certificate_extensions:
-            if v['name'] not in skip:
-                table.add_row(v['name'], any_to_string(v, ' ') if v['name'] not in v else any_to_string(v[v['name']], ' '))
+            ext = v['name']
+            del v['name']
+            if ext in skip:
+                continue
+            if ext in v:
+                ext_sub = v[ext]
+                del v[ext]
+                table.add_row(ext, util.styled_dict(v))
+                if isinstance(ext_sub, list):
+                    for sub in ext_sub:
+                        if isinstance(sub, str):
+                            table.add_row('', util.styled_value(sub, crop=False))
+                            continue
+                        table.add_row('', util.styled_any(sub))
+                    continue
+                table.add_row('', str(ext_sub))
+                continue    
+            table.add_row(ext, util.styled_any(v))
         return table
 
 class CertValidator(Validator):
@@ -278,25 +288,7 @@ class CertValidator(Validator):
         return res
 
     def to_rich(self) -> Table:
-        def any_to_string(value, delimiter='\n') -> str:
-            if isinstance(value, str):
-                return value
-            if value is None:
-                return 'Unknown'
-            if isinstance(value, bool):
-                return 'True' if value else 'False'
-            if isinstance(value, bytes):
-                return value.decode()
-            if isinstance(value, list) and isinstance(value[0], str):
-                return delimiter.join([str(v) for v in value])
-            if isinstance(value, list) and not isinstance(value[0], str):
-                n = []
-                for d in value:
-                    n.append(any_to_string(d, delimiter))
-                return any_to_string(n)
-            if isinstance(value, dict):
-                return delimiter.join([f'{key}={str(value[key])}' for key in value.keys()])
-            return str(value)
+        good, bad = ('dark_sea_green2', 'light_coral')
         fingerprints = ['certificate_sha256_fingerprint', 'certificate_sha1_fingerprint', 'certificate_md5_fingerprint', 'certificate_subject_key_identifier', 'certificate_authority_key_identifier']
         skip = ['host', 'port', 'offered_ciphers', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier', 'certificate_root_ca', 'certificate_intermediate_ca']
         title = f'{self.metadata.host}:{self.metadata.port} ({self.metadata.peer_address})'
@@ -304,23 +296,50 @@ class CertValidator(Validator):
             f'Issuer: {self.metadata.certificate_issuer}',
             util.date_diff(self.certificate.not_valid_after),
         ])
-        title_style = Style(bold=True, color='green' if self.certificate_valid else 'bright_red')
-        table = Table(title=title, caption=caption, title_style=title_style)
-        table.add_column("", justify="right", style="cyan", no_wrap=True)
+        title_style = Style(bold=True, color=good if self.certificate_valid else bad)
+        table = Table(title=title, caption=caption, title_style=title_style, box=box.MINIMAL_HEAVY_HEAD)
+        table.add_column("", justify="right", style="dark_turquoise", no_wrap=True)
         table.add_column("Result", justify="left")
-        table.add_row('certificate_valid', any_to_string(self.certificate_valid))
-        table.add_row('certificate_chain_valid', any_to_string(self.certificate_chain_valid))
-        table.add_row('certificate_chain_validation_result', any_to_string(self.certificate_chain_validation_result))
+        table.add_row('certificate_valid', util.styled_boolean(self.certificate_valid, ('Valid', 'Validation Issues'), (good, bad)))
+        table.add_row('certificate_chain_valid', util.styled_boolean(self.certificate_chain_valid, ('Pass', 'Fail'), (good, bad)))
+        table.add_row('certificate_chain_validation_result', util.styled_any(self.certificate_chain_validation_result))
         for i, err in enumerate(self.certificate_verify_messages):
             table.add_row(f'Note {i+1}', err)
         for key in self.validation_checks.keys():
-            table.add_row(f'Rule {key}', any_to_string(self.validation_checks[key]))
+            table.add_row(f'Rule {key}', util.styled_boolean(self.validation_checks[key], ('Pass', 'Fail'), (good, bad)))
         for key in list(vars(self.metadata).keys()):
-            if key not in skip:
-                table.add_row(key, util.str_n_split(getattr(self.metadata, key)).upper() if key in fingerprints and isinstance(getattr(self.metadata, key), str) else any_to_string(getattr(self.metadata, key)))
+            if key in skip:
+                continue
+            val = getattr(self.metadata, key)
+            if key in fingerprints and isinstance(val, str):
+                table.add_row(key, util.str_n_split(val).upper())
+                continue
+            if val is None or (isinstance(val, str) and len(val) == 0):
+                table.add_row(key, util.styled_value("Unknown", color='magenta'))
+                continue
+            if isinstance(val, bool):
+                table.add_row(key, util.styled_boolean(val, represent_as=('Detected', 'Not Detected'), colors=(good, bad)))
+                continue
+            table.add_row(key, util.styled_any(val))
         for v in self.metadata.certificate_extensions:
-            if v['name'] not in skip:
-                table.add_row(v['name'], any_to_string(v, ' ') if v['name'] not in v else any_to_string(v[v['name']], ' '))
+            ext = v['name']
+            del v['name']
+            if ext in skip:
+                continue
+            if ext in v:
+                ext_sub = v[ext]
+                del v[ext]
+                table.add_row(ext, util.styled_dict(v))
+                if isinstance(ext_sub, list):
+                    for sub in ext_sub:
+                        if isinstance(sub, str):
+                            table.add_row('', util.styled_value(sub, crop=False))
+                            continue
+                        table.add_row('', util.styled_any(sub))
+                    continue
+                table.add_row('', str(ext_sub))
+                continue    
+            table.add_row(ext, util.styled_any(v))
         return table
 
     def mount(self, transport :Transport):

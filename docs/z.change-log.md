@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.3.5 Oct 17th 2021
+
+- CLI output Results are now colored
+
 ## 0.3.4 Oct 16th 2021
 
 - CLI now supports assessing multiple target domains

@@ -72,8 +72,8 @@ def main(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = T
         if debug:
             inspect(result.transport, title=result.transport.negotiated_protocol)
         console.print(result.to_rich())
-        print('\n\n')
-    result_style = Style(color='green' if valid else 'bright_red')
+        console.print('\n\n')
+    result_style = Style(color='dark_sea_green2' if valid else 'light_coral')
     console.print('Valid ✓✓✓' if valid else '\nNot Valid. There where validation errors', style=result_style)
     console.print(f'Evaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n\n')
 
@@ -159,7 +159,7 @@ def cli():
                 inspect(result.transport, title=result.transport.negotiated_protocol)
                 inspect(result.metadata, title=result.metadata.certificate_subject)
             console.print(result.to_rich())
-            print('\n\n')
-        result_style = Style(color='green' if valid else 'bright_red')
+            console.print('\n\n')
+        result_style = Style(color='dark_sea_green2' if valid else 'light_coral')
         console.print('Valid ✓✓✓' if valid else '\nNot Valid. There where validation errors', style=result_style)
         console.print(f'Evaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n\n')
