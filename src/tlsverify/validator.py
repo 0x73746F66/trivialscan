@@ -128,9 +128,10 @@ class Validator:
         self.metadata.certificate_not_after = not_after.isoformat()
         self.metadata.certificate_common_name = util.extract_from_subject(self.certificate)
         self.metadata.certificate_subject_key_identifier, self.metadata.certificate_authority_key_identifier = util.get_ski_aki(self.certificate)
-        for ext in self.metadata.certificate_extensions:
-            if ext['name'] == 'TLSFeature' and 'rfc6066' in ext['features']:
-                self.metadata.revocation_ocsp_must_staple = True
+        if self.metadata.revocation_ocsp_must_staple is not True:
+            for ext in self.metadata.certificate_extensions:
+                if ext['name'] == 'TLSFeature' and 'rfc6066' in ext['features']:
+                    self.metadata.revocation_ocsp_must_staple = True
         policies = []
         try:
             policies = self.certificate.extensions.get_extension_for_class(extensions.CertificatePolicies).value._policies
@@ -139,7 +140,7 @@ class Validator:
         for policy in policies:
             if not isinstance(policy, PolicyInformation): continue
             if policy.policy_identifier._dotted_string in util.VALIDATION_OID.keys():
-                self.metadata.certificate_validation_type = util.VALIDATION_OID[policy.policy_identifier._dotted_string]
+                self.metadata.certificate_validation_type = util.VALIDATION_TYPES[util.VALIDATION_OID[policy.policy_identifier._dotted_string]]
 
     def verify(self) -> bool:
         logger.debug('Common certificate validations')
@@ -201,9 +202,7 @@ class PeerCertValidator(Validator):
     def to_rich(self) -> Table:
         good, bad = ('dark_sea_green2', 'light_coral')
         fingerprints = ['certificate_sha256_fingerprint', 'certificate_sha1_fingerprint', 'certificate_md5_fingerprint', 'certificate_subject_key_identifier', 'certificate_authority_key_identifier']
-        skip = ['host', 'port', 'offered_ciphers', 'certificate_subject', 'certificate_issuer', 'certificate_common_name', 'certificate_intermediate_ca', 'certificate_root_ca', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier']
-        skip.extend(['certificate_client_authentication', 'client_certificate_expected', 'certificate_valid_tls_usage', 'certification_authority_authorization', 'dnssec', 'scsv_support', 'compression_support', 'peer_address', 'http_expect_ct_report_uri', 'http_xss_protection', 'http_status_code', 'http1_support', 'http1_1_support', 'http2_support', 'http2_cleartext_support'])
-        skip.extend(['sni_support', 'negotiated_protocol', 'peer_address', 'negotiated_cipher', 'weak_cipher', 'strong_cipher', 'forward_anonymity', 'session_resumption_caching', 'session_resumption_tickets', 'session_resumption_ticket_hint', 'client_renegotiation', 'http_hsts', 'http_xfo', 'http_csp', 'http_coep', 'http_coop', 'http_corp', 'http_nosniff', 'http_unsafe_referrer'])
+        skip = ['host', 'port', 'offered_ciphers', 'certificate_subject', 'certificate_issuer', 'certificate_common_name', 'certificate_intermediate_ca', 'certificate_root_ca', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier', 'revocation_ocsp_status', 'revocation_ocsp_response', 'revocation_ocsp_reason', 'revocation_ocsp_time', 'client_certificate_expected', 'certification_authority_authorization', 'dnssec', 'scsv_support', 'compression_support', 'http_expect_ct_report_uri', 'http_xss_protection', 'http_status_code', 'http1_support', 'http1_1_support', 'http2_support', 'http2_cleartext_support', 'sni_support', 'negotiated_protocol', 'peer_address', 'negotiated_cipher', 'weak_cipher', 'strong_cipher', 'forward_anonymity', 'session_resumption_caching', 'session_resumption_tickets', 'session_resumption_ticket_hint', 'client_renegotiation', 'http_hsts', 'http_xfo', 'http_csp', 'http_coep', 'http_coop', 'http_corp', 'http_nosniff', 'http_unsafe_referrer']
         peer_type = 'Intermediate Certificate'
         if self.metadata.certificate_intermediate_ca: peer_type = 'Intermediate CA'
         if self.metadata.certificate_root_ca: peer_type = 'Root CA'
@@ -249,6 +248,10 @@ class PeerCertValidator(Validator):
                         if isinstance(sub, str):
                             table.add_row('', util.styled_value(sub, crop=False))
                             continue
+                        if isinstance(sub, dict):
+                            for subk, subv in sub.items():
+                                table.add_row('', subk+'='+util.styled_value(subv))
+                            continue
                         table.add_row('', util.styled_any(sub))
                     continue
                 table.add_row('', str(ext_sub))
@@ -290,7 +293,7 @@ class CertValidator(Validator):
     def to_rich(self) -> Table:
         good, bad = ('dark_sea_green2', 'light_coral')
         fingerprints = ['certificate_sha256_fingerprint', 'certificate_sha1_fingerprint', 'certificate_md5_fingerprint', 'certificate_subject_key_identifier', 'certificate_authority_key_identifier']
-        skip = ['host', 'port', 'offered_ciphers', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier', 'certificate_root_ca', 'certificate_intermediate_ca']
+        skip = ['host', 'port', 'offered_ciphers', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier', 'certificate_root_ca', 'certificate_intermediate_ca', 'peer_address']
         title = f'{self.metadata.host}:{self.metadata.port} ({self.metadata.peer_address})'
         caption = '\n'.join([
             f'Issuer: {self.metadata.certificate_issuer}',
@@ -335,6 +338,10 @@ class CertValidator(Validator):
                         if isinstance(sub, str):
                             table.add_row('', util.styled_value(sub, crop=False))
                             continue
+                        if isinstance(sub, dict):
+                            for subk, subv in sub.items():
+                                table.add_row('', subk+'='+util.styled_value(subv))
+                            continue
                         table.add_row('', util.styled_any(sub))
                     continue
                 table.add_row('', str(ext_sub))
@@ -360,7 +367,8 @@ class CertValidator(Validator):
         self._pem_certificate_chain = util.convert_x509_to_PEM(transport.certificate_chain)
         self.certificate_chain = transport.certificate_chain
         self.metadata.peer_address = transport.peer_address
-        # self.metadata.revocation_ocsp_stapling = 
+        self.metadata.revocation_ocsp_stapling = transport.ocsp_stapling
+        self.metadata.revocation_ocsp_must_staple = transport.ocsp_must_staple
         self.metadata.revocation_ocsp_status = transport.ocsp_certificate_status
         self.metadata.revocation_ocsp_response = transport.ocsp_response_status
         self.metadata.revocation_ocsp_reason = transport.ocsp_revocation_reason
@@ -402,10 +410,6 @@ class CertValidator(Validator):
         self.metadata.http2_support = transport.http2_support
         self.http2_cleartext_support = transport.http2_cleartext_support
 
-    def extract_x509_metadata(self, x509 :X509):
-        super().extract_x509_metadata(x509)
-        self.metadata.certificate_valid_tls_usage = util.key_usage_exists(self.certificate, 'digital_signature') is True and util.key_usage_exists(self.certificate, 'serverAuth') is True
-
     def header_exists(self, name :str, includes_value :str = None) -> bool:
         if not isinstance(name, str):
             raise AttributeError(f'Invalid value for name, got {type(name)} expected str')
@@ -437,9 +441,8 @@ class CertValidator(Validator):
         logger.debug('Server certificate validations')
         self.validation_checks['basic_constraints_ca'] = True
         if self.transport.client_certificate_expected:
-            self.metadata.certificate_client_authentication = self.transport.client_certificate_match and isinstance(self.transport.client_certificate, X509) and self.transport.negotiated_protocol is not None and util.key_usage_exists(self.certificate, 'clientAuth') is True
             self.validation_checks['client_certificate_permits_authentication_usage'] = isinstance(self.transport.client_certificate, X509) and util.key_usage_exists(self.transport.client_certificate.to_cryptography(), 'clientAuth') is True
-            self.validation_checks['client_authentication'] = self.metadata.certificate_client_authentication
+            self.validation_checks['client_authentication'] = self.transport.client_certificate_match and isinstance(self.transport.client_certificate, X509) and self.transport.negotiated_protocol is not None and util.key_usage_exists(self.certificate, 'clientAuth') is True
             if self.validation_checks['client_authentication'] is False:
                 self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CLIENT_AUTHENTICATION)
         if isinstance(ca, bool) and ca is True:
@@ -456,10 +459,10 @@ class CertValidator(Validator):
         self.validation_checks['avoid_deprecated_protocols'] = self.metadata.negotiated_protocol not in util.WEAK_PROTOCOL.keys()
         if self.validation_checks['avoid_deprecated_protocols'] is False:
             self.certificate_verify_messages.append(util.WEAK_PROTOCOL[self.metadata.negotiated_protocol])
-        # if self.metadata.revocation_ocsp_stapling is True:
-        #     self.validation_checks['ocsp_staple_satisfied'] = False
-        #     if self.metadata.revocation_ocsp_response is not None:
-        #         self.validation_checks['ocsp_staple_satisfied'] = True
+        if self.metadata.revocation_ocsp_stapling is True:
+            self.validation_checks['ocsp_staple_satisfied'] = False
+            if self.metadata.revocation_ocsp_response is not None:
+                self.validation_checks['ocsp_staple_satisfied'] = True
         if self.metadata.revocation_ocsp_must_staple is True:
             self.validation_checks['ocsp_must_staple_satisfied'] = False
             if self.metadata.revocation_ocsp_status == util.OCSP_CERT_STATUS[0]:

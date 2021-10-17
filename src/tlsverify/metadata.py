@@ -29,8 +29,6 @@ class Metadata:
     certificate_authority_key_identifier :str = field(default_factory=str)
     certificate_extensions :list = field(default_factory=list)
     certificate_is_self_signed :bool = field(default_factory=bool)
-    certificate_client_authentication :bool = field(default_factory=bool)
-    certificate_valid_tls_usage :bool = field(default_factory=bool)
     client_certificate_expected :bool = field(default_factory=bool)
     certificate_validation_type :str = field(default_factory=str) # None, DNS, Extended, Organisation
     certification_authority_authorization :bool = field(default_factory=bool)

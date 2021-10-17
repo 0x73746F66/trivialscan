@@ -4,7 +4,11 @@ from base64 import urlsafe_b64encode
 from datetime import datetime
 from socket import socket, AF_INET, SOCK_STREAM, MSG_PEEK
 from pathlib import Path
-from cryptography.x509.ocsp import load_der_ocsp_response, OCSPResponseStatus, OCSPCertStatus
+from cryptography.x509 import extensions, oid
+from cryptography.x509.base import Certificate
+from cryptography.x509.ocsp import OCSPResponse, load_der_ocsp_response, OCSPResponseStatus, OCSPCertStatus, OCSPRequestBuilder
+from cryptography.hazmat.primitives.hashes import SHA1
+from cryptography.hazmat.primitives.serialization import Encoding
 from OpenSSL import SSL
 from OpenSSL.SSL import _lib as native_openssl
 from OpenSSL.crypto import X509, FILETYPE_PEM, X509Name, load_certificate
@@ -13,6 +17,7 @@ from retry.api import retry
 from hyperframe.frame import Frame, SettingsFrame
 from hyperframe.exceptions import InvalidFrameError
 from rich.progress import Progress, TaskID
+from requests import post
 import validators
 import idna
 from . import util
@@ -43,6 +48,8 @@ class Transport:
     http1_1_status :str
     http1_1_response_proto :str
     http1_1_headers :dict
+    ocsp_stapling : bool
+    ocsp_must_staple : bool
     ocsp_revocation_reason :str
     ocsp_revocation_time :str
     ocsp_response_status :str
@@ -98,6 +105,8 @@ class Transport:
         self.http2_support = False
         self.http2_cleartext_support = False
         self.peer_address = None
+        self.ocsp_stapling = None
+        self.ocsp_must_staple = None
         self.ocsp_revocation_reason = None
         self.ocsp_revocation_time = None
         self.ocsp_response_status = None
@@ -240,13 +249,86 @@ class Transport:
             self.client_renegotiation = self.client_renegotiation is True
         return True
 
-    def _ocsp_handler(self, conn :SSL.Connection, assertion :bytes):
-        ocsp = load_der_ocsp_response(assertion)
-        self.ocsp_revocation_reason = ocsp.revocation_reason
-        self.ocsp_revocation_time = ocsp.revocation_time
-        self.ocsp_response_status = util.OCSP_RESP_STATUS[ocsp.response_status]
-        self.ocsp_certificate_status = util.OCSP_CERT_STATUS[ocsp.certificate_status]
-        return ocsp.response_status == OCSPResponseStatus.SUCCESSFUL and ocsp.certificate_status == OCSPCertStatus.GOOD
+    def _get_ocsp_response(self, issuer :Certificate, uri :str, timeout :int = 3) -> OCSPResponse:
+        builder = OCSPRequestBuilder()
+        builder = builder.add_certificate(self.server_certificate.to_cryptography(), issuer, SHA1())
+        ocsp_request = builder.build()
+        try:
+            response = post(
+                uri,
+                data=ocsp_request.public_bytes(Encoding.DER),
+                headers={'Content-Type': 'application/ocsp-request'},
+                timeout=timeout)
+        except Exception as ex:
+            logger.warning(ex, exc_info=True)
+            return None
+        if response.status_code != 200:
+            logger.warning("HTTP request returned %d", response.status_code)
+            return None
+        response = load_der_ocsp_response(response.content)
+        if response.response_status != OCSPResponseStatus.SUCCESSFUL:
+            return None
+        if response.serial_number != ocsp_request.serial_number:
+            logger.debug("Response serial number does not match request")
+            return None
+        return response
+
+    def _ocsp_handler(self, conn :SSL.Connection, assertion :bytes, userdata) -> bool:
+        if not isinstance(self.server_certificate, X509):
+            self.server_certificate = conn.get_peer_certificate()
+            for (_, cert) in enumerate(conn.get_peer_cert_chain()):
+                self.certificate_chain.append(cert)
+        issuer = util.issuer_from_chain(self.server_certificate, self.certificate_chain)
+        if not isinstance(issuer, X509):
+            logger.warning('Issuer certificate not found in chain')
+            return False
+        self.ocsp_stapling = False
+        self.ocsp_must_staple = False
+        ext = None
+        try:
+            ext = self.server_certificate.to_cryptography().extensions.get_extension_for_class(extensions.TLSFeature)
+        except Exception:
+            pass
+        if ext is not None:
+            for feature in ext.value:
+                if feature == extensions.TLSFeatureType.status_request:
+                    logger.debug("Peer presented a must-staple cert")
+                    self.ocsp_must_staple = True
+                    break
+        response = None
+        if assertion == b'':
+            if self.ocsp_must_staple is True:
+                return False # stapled response is expected and required
+            ext = self.server_certificate.to_cryptography().extensions.get_extension_for_class(extensions.AuthorityInformationAccess)
+            if ext is None:
+                return True # stapled response is expected though not required, not very good but still a valid assertion
+            uris = [desc.access_location.value for desc in ext.value if desc.access_method == oid.AuthorityInformationAccessOID.OCSP]
+            if not uris:
+                return True # stapled response is expected though not required, without any responders it is still a valid assertion
+            for uri in uris:
+                logger.debug(f"Requesting OCSP from responder {uri}")
+                response = self._get_ocsp_response(issuer.to_cryptography(), uri)
+                if response is None:
+                    continue
+        if response is None and assertion != b'':
+            self.ocsp_stapling = True
+            response = load_der_ocsp_response(assertion)
+        if response is None:
+            logger.warning("OCSP response is not available")
+            return False
+        if response.this_update > datetime.utcnow():
+            logger.error("OCSP thisUpdate is future dated")
+            return False
+        logger.info("OCSP response received")
+        if response.revocation_reason:
+            self.ocsp_revocation_reason = response.revocation_reason.value
+        if response.revocation_time:
+            self.ocsp_revocation_time = response.revocation_time.value
+        if response.response_status.value in util.OCSP_RESP_STATUS:
+            self.ocsp_response_status = util.OCSP_RESP_STATUS[response.response_status.value]
+        if response.certificate_status.value in util.OCSP_CERT_STATUS:
+            self.ocsp_certificate_status = util.OCSP_CERT_STATUS[response.certificate_status.value]
+        return response.response_status == OCSPResponseStatus.SUCCESSFUL and response.certificate_status == OCSPCertStatus.GOOD
 
     def prepare_context(self, method :str = None, verify_mode :str = None, check_hostname :bool = False) -> SSL.Context:
         if not isinstance(check_hostname, bool):
@@ -424,19 +506,21 @@ class Transport:
         if self.client_pem_path is not None:
             ctx.use_certificate_file(certfile=self.client_pem_path, filetype=FILETYPE_PEM)
         ctx.set_verify(getattr(SSL, Transport.default_connect_verify_mode), self._verifier)
-        ctx.set_ocsp_client_callback(self._ocsp_handler)
         ctx.set_max_proto_version(tls_version)
         ctx.check_hostname = False
         conn = SSL.Connection(ctx, socket(AF_INET, SOCK_STREAM))
         conn.settimeout(3)
         conn.setblocking(1)
+        ctx.set_ocsp_client_callback(self._ocsp_handler)
+        conn.request_ocsp()
         if all([use_sni, ssl.HAS_SNI]):
             logger.info('using SNI')
             conn.set_tlsext_host_name(idna.encode(self.host))        
         try:
             conn.connect((self.host, self.port))
             conn.do_handshake()
-            conn.request_ocsp()
+            self.negotiated_cipher = conn.get_cipher_name()
+            self.negotiated_protocol = conn.get_protocol_version_name()
             self.session_cache_mode = util.SESSION_CACHE_MODE[native_openssl.SSL_CTX_get_session_cache_mode(conn._context._context)]
             self.session_tickets = native_openssl.SSL_SESSION_has_ticket(conn.get_session()._session) == 1
             self.session_ticket_hints = native_openssl.SSL_SESSION_get_ticket_lifetime_hint(conn.get_session()._session) > 0
@@ -444,8 +528,6 @@ class Transport:
             self.ciphers = conn.get_cipher_list()
             if not isinstance(self.server_certificate, X509):
                 self.server_certificate = conn.get_peer_certificate()
-                self.negotiated_cipher = conn.get_cipher_name()
-                self.negotiated_protocol = conn.get_protocol_version_name()
                 for (_, cert) in enumerate(conn.get_peer_cert_chain()):
                     self.certificate_chain.append(cert)
                 logger.debug(f'Peer cert chain length: {len(self.certificate_chain)}')

@@ -8,7 +8,7 @@ from pathlib import Path
 from cryptography import x509
 from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
 from OpenSSL import SSL
-from OpenSSL.crypto import X509, FILETYPE_PEM, dump_certificate
+from OpenSSL.crypto import FILETYPE_TEXT, X509, FILETYPE_PEM, dump_certificate
 from certvalidator import CertificateValidator, ValidationContext
 from rich.style import Style
 from rich.console import Console
@@ -42,6 +42,11 @@ VALIDATION_OID = {
     '2.23.140.1.2.1': 'DV',
     '2.23.140.1.2.2': 'OV',
     '2.23.140.1.2.3': 'EV',
+}
+VALIDATION_TYPES = {
+    'DV': 'Domain Validation (DV)',
+    'OV': 'Organization Validation (OV)',
+    'EV': 'Extended Validation (EV)',
 }
 X509_DATE_FMT = r'%Y%m%d%H%M%SZ'
 WEAK_KEY_SIZE = {
@@ -452,6 +457,15 @@ def validate_certificate_chain(der :bytes, pem_certificate_chain :list, validato
         extended_key_usage=set(validator_extended_key_usage),
     )
 
+def issuer_from_chain(certificate :X509, chain :list[X509]) -> Certificate:
+    issuer = None
+    issuer_name = certificate.get_issuer().CN.strip()
+    for peer in chain:
+        if peer.get_subject().CN.strip() == issuer_name:
+            issuer = peer
+            break
+    return issuer
+
 def str_n_split(input :str, n :int = 2, delimiter :str = ' '):
     if not isinstance(input, str): return input
     return delimiter.join([input[i:i+n] for i in range(0, len(input), n)])
@@ -518,10 +532,9 @@ def styled_list(values :list, delimiter :str = '\n', color :str = 'bright_white'
 
     return delimiter.join(styled_values)
 
-def styled_dict(values :dict, delimiter :str = '=', colors :tuple[str, str] = ('bright_white', 'bright_white'), bold_keys :bool = True) -> str:
+def styled_dict(values :dict, delimiter :str = '=', colors :tuple[str, str] = ('bright_white', 'bright_white')) -> str:
     pairs = []
-    for k, v in values.items():
-        key = styled_value(k, color=colors[0], bold=bold_keys)
+    for key, v in values.items():
         if isinstance(v, bool):
             pairs.append(f'{key}={styled_boolean(v)}')
             continue
@@ -532,7 +545,7 @@ def styled_dict(values :dict, delimiter :str = '=', colors :tuple[str, str] = ('
             pairs.append(f'{key}={styled_list(v, color=colors[1])}')
             continue
         if isinstance(v, dict):
-            pairs.append(f'{key}={styled_dict(v, delimiter=delimiter, colors=colors, bold_keys=bold_keys)}')
+            pairs.append(f'{key}={styled_dict(v, delimiter=delimiter, colors=colors)}')
             continue
         if isinstance(v, (int, float)):
             v = str(v)

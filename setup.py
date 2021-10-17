@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.3.5",
+    version="0.3.6",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -145,7 +145,7 @@ optional arguments:
   - ✓ Weak ciphers
   - ✓ Weak keys
   - ✓ Weak Signature Algorithm
-  - ~~If OCSP stapling, ensure a response was received~~ Fix planned for 0.3.4
+  - ✓ If OCSP stapling, ensure a response was received
   - ✓ rfc6066; if OCSP must-staple flag is present the CA provides a valid response, i.e. resolve and validate not revoked
   - ✓ Server certificates should not be a CA
   - ✓ When client certificate presented, check cert usage permits clientAuth

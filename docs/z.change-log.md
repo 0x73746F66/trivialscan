@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.3.6 Oct 17th 2021
+
+- Added code to manually resolve OCSP for verification (verify status codes from OpenSSL were never evaluated)
+- fixed CLI output colored results for some TLS extensions
+
 ## 0.3.5 Oct 17th 2021
 
 - CLI output Results are now colored
