@@ -467,6 +467,10 @@ class CertValidator(Validator):
             self.validation_checks['ocsp_must_staple_satisfied'] = False
             if self.metadata.revocation_ocsp_status == util.OCSP_CERT_STATUS[0]:
                 self.validation_checks['ocsp_must_staple_satisfied'] = True
+        if self.metadata.certification_authority_authorization is True:
+            self.validation_checks['valid_caa'] = util.caa_valid(self.metadata.host, self.x509, self.certificate_chain)
+        if self.metadata.dnssec is True:
+            self.validation_checks['valid_dnssec'] = util.dnssec_valid(self.metadata.host)
 
         if isinstance(progress, Progress): progress.update(task, advance=1)
         return self.certificate_valid
@@ -530,3 +534,10 @@ class CertValidator(Validator):
         self.certificate_chain_valid = self.certificate_chain_valid is not False
 
         return self.certificate_valid and self.certificate_chain_valid
+
+    def extract_x509_metadata(self, x509 :X509):
+        super().extract_x509_metadata(x509)
+        self.metadata.certification_authority_authorization = util.caa_exist(self.metadata.host)
+        dnssec = util.get_dnssec(self.metadata.host)
+        if dnssec is not None:
+            self.metadata.dnssec = len(dnssec) > 0

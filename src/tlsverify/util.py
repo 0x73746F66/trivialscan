@@ -8,11 +8,14 @@ from pathlib import Path
 from cryptography import x509
 from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
 from OpenSSL import SSL
-from OpenSSL.crypto import FILETYPE_TEXT, X509, FILETYPE_PEM, dump_certificate
+from OpenSSL.crypto import X509, FILETYPE_PEM, dump_certificate
 from certvalidator import CertificateValidator, ValidationContext
 from rich.style import Style
 from rich.console import Console
 import validators
+from dns import resolver, dnssec, rdatatype, message, query, name as dns_name
+from dns.exception import DNSException, Timeout as DNSTimeoutError
+from tldextract import TLDExtract
 
 
 __module__ = 'tlsverify.util'
@@ -483,7 +486,7 @@ def date_diff(comparer :datetime) -> str:
     if interval.days < -1:
         return f"Expired {int(abs(interval.days))} days ago"
     if interval.days == -1:
-        return f"Expired yesterday"
+        return "Expired yesterday"
     if interval.days == 0:
         return "Expires today"
     if interval.days == 1:
@@ -575,3 +578,150 @@ def styled_any(value, dict_delimiter='=', list_delimiter='\n', color :str = 'bri
     if isinstance(value, datetime):
         return styled_value(value.isoformat(), color=color)
     return styled_value(value, color=color)
+
+def get_dnssec(domain_name :str):
+    dns_resolver = resolver.Resolver(configure=False)
+    dns_resolver.lifetime = 5
+    try:
+        response = resolver.query(domain_name, rdatatype.NS)
+    except DNSTimeoutError:
+        logger.warning('DNS Timeout')
+        return None
+    except DNSException as ex:
+        logger.warning(ex, exc_info=True)
+        return None
+    except ConnectionResetError:
+        logger.warning('Connection reset by peer')
+        return None
+    except ConnectionError:
+        logger.warning('Name or service not known')
+        return None
+    dns_resolver.nameservers = ['1.1.1.1', '8.8.8.8', '9.9.9.9']
+    nameservers = []
+    for ns in [i.to_text() for i in response.rrset]:
+        logger.info(f'Checking A for {ns}')
+        try:
+            response = dns_resolver.query(ns, rdtype=rdatatype.A)
+        except DNSTimeoutError:
+            logger.warning(f'DNS Timeout {ns} A')
+            continue
+        except DNSException as ex:
+            logger.warning(ex, exc_info=True)
+            continue
+        except ConnectionResetError:
+            logger.warning(f'Connection reset by peer {ns} A')
+            continue
+        except ConnectionError:
+            logger.warning(f'Name or service not known {ns} A')
+            continue
+        nameservers += [i.to_text() for i in response.rrset]
+    if not nameservers:
+        logger.warning('No nameservers found')
+        return None
+    for ns in nameservers:
+        try:
+            request = message.make_query(domain_name, rdatatype.DNSKEY, want_dnssec=True)
+            response = query.udp(request, ns, timeout=2)
+        except DNSTimeoutError:
+            logger.warning('DNSKEY DNS Timeout')
+            continue
+        except DNSException as ex:
+            logger.warning(ex, exc_info=True)
+            continue
+        except ConnectionResetError:
+            logger.warning('DNSKEY Connection reset by peer')
+            continue
+        except ConnectionError:
+            logger.warning('DNSKEY Name or service not known')
+            continue
+        if response.rcode() != 0:
+            logger.warning('No DNSKEY record')
+            continue
+
+        return response.answer
+    return None
+
+def dnssec_valid(domain_name) -> bool:
+    answer = get_dnssec(domain_name)
+    if answer is None:
+        return False
+    if len(answer) != 2:
+        logger.warning(f'DNSKEY answer too many values {len(answer)}')
+        return False
+    name = dns_name.from_text(domain_name)
+    try:
+        dnssec.validate(answer[0], answer[1], {name: answer[0]})
+    except dnssec.ValidationFailure as err:
+        logger.warning(err, exc_info=True)
+        return False
+    return True
+
+def get_caa(domain_name :str):
+    extractor = TLDExtract(cache_dir='/tmp')
+    ext = extractor(f'http://{domain_name}')
+    apex = ext.registered_domain
+    try_apex = apex != domain_name
+    response = None
+    dns_resolver = resolver.Resolver(configure=False)
+    dns_resolver.lifetime = 5
+    try:
+        response = resolver.query(domain_name, rdatatype.CAA)
+    except DNSTimeoutError:
+        logger.warning('DNS Timeout')
+    except DNSException as ex:
+        logger.warning(ex, exc_info=True)
+    except ConnectionResetError:
+        logger.warning('Connection reset by peer')
+    except ConnectionError:
+        logger.warning('Name or service not known')
+    if not response and try_apex:
+        return caa_valid(apex)
+    if not response:
+        return None
+    return response
+
+def caa_exist(domain_name :str) -> bool:
+    response = get_caa(domain_name)
+    if response is None:
+        return False
+    issuers = set()
+    for rdata in response:
+        common_name, *rest = rdata.value.decode().split(';')
+        issuers.add(common_name.strip())
+
+    return len(issuers) > 0
+
+def caa_valid(domain_name :str, cert :X509, certificate_chain :list[X509]) -> bool:
+    extractor = TLDExtract(cache_dir='/tmp')
+    response = get_caa(domain_name)
+    if response is None:
+        return False
+    wild_issuers = set()
+    issuers = set()
+    for rdata in response:
+        common_name, *rest = rdata.value.decode().split(';')
+        if 'issuewild' in rdata.to_text():
+            wild_issuers.add(common_name.strip())
+    for rdata in response:
+        common_name, *rest = rdata.value.decode().split(';')
+        # issuewild tags take precedence over issue tags when specified.
+        if common_name not in wild_issuers:
+            issuers.add(common_name.strip())
+
+    issuer = issuer_from_chain(cert, certificate_chain)
+    if not isinstance(issuer, X509):
+        logger.warning('Issuer certificate not found in chain')
+        return False
+    if validators.domain(issuer.get_issuer().OU) is not True:
+        logger.warning('Issuer OU has no domain to validate CAA record')
+        return False
+
+    issuer_ext = extractor(f'http://{issuer.get_issuer().OU}')
+    issuer_apex = issuer_ext.registered_domain
+    common_name = cert.get_subject().CN
+    if issuer_apex in wild_issuers:
+        return True
+    if not common_name.startswith('*.') and issuer_apex in issuers:
+        return True
+
+    return False

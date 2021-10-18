@@ -26,6 +26,9 @@ See [Documentation](./docs/0.index.md) section of this repository
   - ✓ Session Resumption caching
   - ✓ Session Resumption tickets
   - ✓ Session Resumption ticket hint
+- DNS Information
+  - ✓ Certification Authority Authorization (CAA)
+  - ✓ DNSSEC
 - HTTP Information
   - ✓ HTTP/1 supported (response status and headers)
   - ✓ HTTP/1.1 supported (response status and headers)
@@ -87,6 +90,8 @@ See [Documentation](./docs/0.index.md) section of this repository
   - ✓ inhibitAnyPolicy
   - ✓ basicConstraints path length
 - Assertions (Opinionated checking, TLS is expected to still work)
+  - ✓ Valid CAA
+  - ✓ Valid DNSSEC
   - ✓ Every certificate in the chain perform all validations (a requirement for zero-trust)
   - ✓ Weak ciphers
   - ✓ Weak keys

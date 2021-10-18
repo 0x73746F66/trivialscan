@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.3.7",
+    version="0.3.8",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -79,11 +79,13 @@ optional arguments:
   - ✓ Session Resumption caching
   - ✓ Session Resumption tickets
   - ✓ Session Resumption ticket hint
+- DNS Information
+  - ✓ Certification Authority Authorization (CAA)
+  - ✓ DNSSEC
 - HTTP Information
   - ✓ HTTP/1 supported (response status and headers)
   - ✓ HTTP/1.1 supported (response status and headers)
   - ✓ HTTP/2 (TLS) supported (response frame)
-  - ✓ HTTP/2 clear text supported (response frame)
   - ✓ Expect-CT header (report_uri)
   - ✓ Strict-Transport-Security (HSTS) header
   - ✓ X-Frame-Options (XFO) header
@@ -141,11 +143,12 @@ optional arguments:
   - ✓ inhibitAnyPolicy
   - ✓ basicConstraints path length
 - Assertions (Opinionated checking, TLS is expected to still work)
+  - ✓ Valid CAA
+  - ✓ Valid DNSSEC
   - ✓ Every certificate in the chain perform all validations (a requirement for zero-trust)
   - ✓ Weak ciphers
   - ✓ Weak keys
   - ✓ Weak Signature Algorithm
-  - ✓ If OCSP stapling, ensure a response was received
   - ✓ rfc6066; if OCSP must-staple flag is present the CA provides a valid response, i.e. resolve and validate not revoked
   - ✓ Server certificates should not be a CA
   - ✓ When client certificate presented, check cert usage permits clientAuth
@@ -183,7 +186,10 @@ optional arguments:
         'rich==10.12.0',
         'hyperframe==6.0.1',
         'retry==0.9.2',
-        'requests==2.26.0'
+        'urllib3==1.26.7',
+        'requests==2.26.0',
+        'dnspython==2.1.0',
+        'tldextract==3.1.2'
     ],
     entry_points = {
         'console_scripts': ['tlsverify=tlsverify.cli:cli'],

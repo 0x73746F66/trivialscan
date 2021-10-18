@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.style import Style
 from rich.logging import RichHandler
 from rich.progress import Progress
-from . import exceptions, verify
+from . import exceptions, verify, util
 from .validator import CertValidator, PeerCertValidator, Validator
 from .transport import Transport
 
