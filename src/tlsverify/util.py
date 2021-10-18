@@ -675,7 +675,7 @@ def get_caa(domain_name :str):
     except ConnectionError:
         logger.warning('Name or service not known')
     if not response and try_apex:
-        return caa_valid(apex)
+        return get_caa(apex)
     if not response:
         return None
     return response

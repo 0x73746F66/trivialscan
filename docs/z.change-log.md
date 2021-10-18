@@ -1,18 +1,16 @@
 # Change Log
 
-## 0.3.8 Oct 17th 2021
+## 0.4.0 Oct 19th 2021
 
 - Added `util.get_dnssec()` and `util.dnssec_valid()` for DNSSEC existence and validation
 - Added `util.get_caa()`, `util.caa_exist()`, and `util.caa_valid()` for CAA record existence and validation
 
-## 0.3.7 Oct 17th 2021
+## 0.3.7 Oct 18th 2021
 
 - Added code to manually resolve OCSP for verification (verify status codes from OpenSSL were never evaluated)
 - fixed CLI output colored results for some TLS extensions
 
-## 0.3.6 Oct 17th 2021
-
-Version yanked
+## 0.3.6 yanked
 
 ## 0.3.5 Oct 17th 2021
 
