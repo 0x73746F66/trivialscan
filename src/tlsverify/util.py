@@ -46,6 +46,165 @@ VALIDATION_OID = {
     '2.23.140.1.2.2': 'OV',
     '2.23.140.1.2.3': 'EV',
 }
+# https://ccadb-public.secure.force.com/ccadb/AllCAAIdentifiersReport
+CAA_DOMAINS = {
+    "camerfirma.com": ["AC Camerfirma, S.A."],
+    "actalis.it": ["Actalis"],
+    "amazon.com": ["Amazon Trust Services"],
+    "amazontrust.com": ["Amazon Trust Services"],
+    "awstrust.com": ["Amazon Trust Services"],
+    "amazonaws.com": ["Amazon Trust Services"],
+    "aws.amazon.com": ["Amazon Trust Services"],
+    "pki.apple.com": ["Apple Public Server ECC CA 11 - G1","Apple Public Server ECC CA 12 - G1","Apple Public Server RSA CA 11 - G1","Apple Public Server RSA CA 12 - G1"],
+    "certum.pl": ["Asseco Data Systems S.A. (previously Unizeto Certum)"],
+    "certum.eu": ["Asseco Data Systems S.A. (previously Unizeto Certum)"],
+    "yandex.ru": ["Asseco Data Systems S.A. (previously Unizeto Certum)"],
+    "atos.net": ["Atos"],
+    "firmaprofesional.com": ["Autoridad de Certificacion Firmaprofesional"],
+    "anf.es": ["Autoridad de Certificación (ANF AC)"],
+    "buypass.com": ["Buypass"],
+    "buypass.no": ["Buypass"],
+    "certicamara.com": ["Certicámara"],
+    "certigna.fr": ["Dhimyotis / Certigna","Certigna Entity Code Signing CA","Certigna Identity CA","Certigna Identity Plus CA","Certigna Services CA"],
+    "www.certinomis.com": ["Certinomis / Docapost"],
+    "www.certinomis.fr": ["Certinomis / Docapost"],
+    "certsign.ro": ["certSIGN"],
+    "cfca.com.cn": ["China Financial Certification Authority (CFCA)"],
+    "pki.hinet.net": ["Chunghwa Telecom"],
+    "tls.hinet.net": ["Chunghwa Telecom"],
+    "eca.hinet.net": ["Chunghwa Telecom"],
+    "epki.com.tw": ["Chunghwa Telecom"],
+    "publicca.hinet.net": ["Chunghwa Telecom"],
+    "cisco.com": ["Cisco","Cisco XSSL-R2"],
+    "Comsign.co.il": ["ComSign"],
+    "Comsign.co.uk": ["ComSign"],
+    "Comsigneurope.com": ["ComSign"],
+    "aoc.cat": ["Consorci Administració Oberta de Catalunya (Consorci AOC, CATCert)"],
+    "jcsinc.co.jp": ["Cybertrust Japan / JCSI","Cybertrust Japan SureCode CA G1","Cybertrust Japan SureCode CA G2","Cybertrust Japan SureCode CA G3","Cybertrust Japan SureCode CA G4","Cybertrust Japan SureCode EV CA G1","Cybertrust Japan SureCode EV CA G2","Cybertrust Japan SureCode EV CA G3","Cybertrust Japan SureCode EV CA G4","Cybertrust Japan SureMail CA G5","Cybertrust Japan SureMail CA G6","Cybertrust Japan SureServer CA G4","Cybertrust Japan SureServer CA G5","Cybertrust Japan SureServer CA G6","Cybertrust Japan SureServer CA G7","Cybertrust Japan SureServer CA G8","Cybertrust Japan SureServer EV CA G3","Cybertrust Japan SureServer EV CA G4","Cybertrust Japan SureServer EV CA G5","Cybertrust Japan SureServer EV CA G6","Cybertrust Japan SureServer EV CA G7","Cybertrust Japan SureServer EV CA G8","Cybertrust Japan SureServer EV CA G9","Cybertrust Japan SureTime CA G1","Cybertrust Japan SureTime CA G2","Cybertrust Japan SureTime CA G3","Cybertrust Japan SureTime CA G4"],
+    "dtrust.de": ["D-TRUST"],
+    "d-trust.de": ["D-TRUST"],
+    "dtrust.net": ["D-TRUST"],
+    "d-trust.net": ["D-TRUST"],
+    "telesec.de": ["Deutsche Telekom Security GmbH"],
+    "pki.dfn.de": ["Deutsche Telekom Security GmbH"],
+    "dfn.de": ["Deutsche Telekom Security GmbH"],
+    "digicert.com": ["QuoVadis","Symantec","Symantec / GeoTrust","Symantec / VeriSign","DigiCert"],
+    "geotrust.com": ["Symantec","Symantec / GeoTrust","Symantec / VeriSign","QuoVadis","DigiCert"],
+    "rapidssl.com": ["DigiCert","QuoVadis","Symantec","Symantec / GeoTrust","Symantec / VeriSign"],
+    "digitalcertvalidation.com": ["Symantec","Symantec / GeoTrust","Symantec / VeriSign","QuoVadis","DigiCert"],
+    "volusion.digitalcertvalidation.com": ["Symantec","Symantec / GeoTrust","Symantec / VeriSign","DigiCert"],
+    "stratossl.digitalcertvalidation.com": ["Symantec","Symantec / GeoTrust","Symantec / VeriSign","DigiCert"],
+    "intermediatecertificate.digitalcertvalidation.com": ["DigiCert","Symantec","Symantec / GeoTrust","Symantec / VeriSign"],
+    "1and1.digitalcertvalidation.com": ["Symantec","Symantec / GeoTrust","Symantec / VeriSign","DigiCert","Digidentity B.V."],
+    "digidentity.com": ["Digidentity BV PKIoverheid Burger CA - 2021","Digidentity BV PKIoverheid Organisatie Server CA - G3","Digidentity BV PKIoverheid Organisatie Server CA - G3","Digidentity BV PKIoverheid Organisatie Services CA - 2021","Digidentity Organisatie CA - G2","Digidentity PKIoverheid Organisatie Server CA - G3","Digidentity PKIoverheid Server CA 2020"],
+    "disig.sk": ["Disig, a.s."],
+    "globaltrust.eu": ["e-commerce monitoring GmbH"],
+    "e-tugra.com.tr": ["E-Tugra"],
+    "e-tugra.com": ["E-Tugra"],
+    "etugra.com": ["E-Tugra"],
+    "etugra.com.tr": ["E-Tugra"],
+    "edicomgroup.com": ["EDICOM"],
+    "emsign.com": ["eMudhra Technologies Limited"],
+    "entrust.net": ["Entrust"],
+    "affirmtrust.com": ["Entrust"],
+    "fina.hr": ["Financijska agencija (Fina)"],
+    "gdca.com.cn": ["Global Digital Cybersecurity Authority Co., Ltd. (Formerly Guang Dong Certificate Authority (GDCA))"],
+    "globalsign.com": ["GlobalSign nv-sa"],
+    "godaddy.com": ["GoDaddy"],
+    "starfieldtech.com": ["GoDaddy"],
+    "pki.goog": ["Google Trust Services LLC"],
+    "google.com": ["Google Trust Services LLC"],
+    "eCert.gov.hk": ["Government of Hong Kong (SAR), Hongkong Post, Certizen"],
+    "hongkongpost.gov.hk": ["Government of Hong Kong (SAR), Hongkong Post, Certizen"],
+    "gpki.go.kr": ["Government of Korea, KLID"],
+    "accv.es": ["Government of Spain, Autoritat de Certificació de la Comunitat Valenciana (ACCV)"],
+    "fnmt.es": ["Government of Spain, Fábrica Nacional de Moneda y Timbre (FNMT)"],
+    "efos.se": ["Government of Sweden (Försäkringskassan)"],
+    "myndighetsca.se": ["Government of Sweden (Försäkringskassan)"],
+    "gca.nat.gov.tw": ["Government of Taiwan, Government Root Certification Authority (GRCA)"],
+    "www.pkioverheid.nl": ["Staat der Nederlanden Domein Server CA 2020","Government of The Netherlands, PKIoverheid (Logius)","QuoVadis CSP - PKI Overheid CA - G2","QuoVadis PKIoverheid EV CA","QuoVadis PKIoverheid Organisatie Server CA - G3","QuoVadis PKIoverheid Organisatie Server CA - G3","QuoVadis PKIoverheid Server CA 2020","QuoVadis PKIoverheid Server CA 2020"],
+    "tuntrust.tn": ["Government of Tunisia, Agence National de Certification Electronique / National Digital Certification Agency (ANCE/NDCA)"],
+    "kamusm.gov.tr": ["Government of Turkey, Kamu Sertifikasyon Merkezi (Kamu SM)"],
+    "harica.gr": ["HARICA"],
+    "identrust.com": ["IdenTrust Commercial Root CA 1","IdenTrust Services, LLC"],
+    "letsencrypt.org": ["R3", "R4", "Internet Security Research Group","ISRG Root X1"],
+    "izenpe.com": ["CA de Certificados SSL EV","Izenpe S.A."],
+    "izenpe.eus": ["CA de Certificados SSL EV","Izenpe S.A."],
+    "jprs.jp": ["JPRS Domain Validation Authority - G3","JPRS Domain Validation Authority - G3","JPRS Domain Validation Authority - G3","JPRS Domain Validation Authority - G4","JPRS Organization Validation Authority - G3","JPRS Organization Validation Authority - G3","JPRS Organization Validation Authority - G3","JPRS Organization Validation Authority - G4","KPN BV PKIoverheid Organisatie Server CA - G3"],
+    "kpn.com": ["KPN BV PKIoverheid Organisatie Server CA - G3","KPN CM PKIoverheid EV CA","KPN Corporate Market CSP Organisatie CA - G2","KPN Corporate Market CSP Organisatie Services CA - G3","KPN PKIoverheid EV CA","KPN PKIoverheid EV CA","KPN PKIoverheid Organisatie CA - G2","KPN PKIoverheid Organisatie CA - G2","KPN PKIoverheid Organisatie CA - G2","KPN PKIoverheid Organisatie Persoon CA - G3","KPN PKIoverheid Organisatie Persoon CA - G3","KPN PKIoverheid Organisatie Server CA - G3","KPN PKIoverheid Organisatie Server CA - G3","KPN PKIoverheid Organisatie Services CA - G3","KPN PKIoverheid Organisatie Services CA - G3","KPN PKIoverheid Server CA 2020","KPN PKIoverheid Server CA 2020"],
+    "elektronicznypodpis.pl": ["Krajowa Izba Rozliczeniowa S.A. (KIR)"],
+    "e-szigno.hu": ["Microsec Ltd."],
+    "microsoft.com": ["Microsoft Corporation","Microsoft RSA TLS Issuing AOC CA 02"],
+    "multicert.com": ["MULTICERT"],
+    "certificate.naver.com": ["NAVER Cloud"],
+    "netlock.hu": ["NETLOCK Kft."],
+    "netlock.net": ["NETLOCK Kft."],
+    "netlock.eu": ["NETLOCK Kft."],
+    "web.com": ["Network Solutions","Network Solutions Certificate Authority"],
+    "networksolutions.com": ["Network Solutions","Network Solutions Certificate Authority"],
+    "wisekey.com": ["OISTE"],
+    "hightrusted.com": ["OISTE"],
+    "certifyid.com": ["OISTE"],
+    "oiste.org": ["OISTE"],
+    "oaticerts.com": ["Open Access Technology International, Inc. (OATI)"],
+    "quovadisglobal.com": ["QuoVadis","QuoVadis CSP - PKI Overheid EV CA","QuoVadis CSP - PKI Overheid CA - G2","QuoVadis PKIoverheid EV CA","QuoVadis PKIoverheid Organisatie Server CA - G3","QuoVadis PKIoverheid Organisatie Server CA - G3","QuoVadis PKIoverheid Organisatie Services CA - G3","QuoVadis PKIoverheid Server CA 2020","QuoVadis PKIoverheid Server CA 2020"],
+    "digicert.ne.jp": ["QuoVadis"],
+    "cybertrust.ne.jp": ["QuoVadis","Cybertrust Japan / JCSI","Cybertrust Japan SureCode CA G1","Cybertrust Japan SureCode CA G2","Cybertrust Japan SureCode CA G3","Cybertrust Japan SureCode CA G4","Cybertrust Japan SureCode EV CA G1","Cybertrust Japan SureCode EV CA G2","Cybertrust Japan SureCode EV CA G3","Cybertrust Japan SureCode EV CA G4","Cybertrust Japan SureMail CA G5","Cybertrust Japan SureMail CA G6","Cybertrust Japan SureServer CA G4","Cybertrust Japan SureServer CA G5","Cybertrust Japan SureServer CA G6","Cybertrust Japan SureServer CA G7","Cybertrust Japan SureServer CA G8","Cybertrust Japan SureServer EV CA G3","Cybertrust Japan SureServer EV CA G4","Cybertrust Japan SureServer EV CA G5","Cybertrust Japan SureServer EV CA G6","Cybertrust Japan SureServer EV CA G7","Cybertrust Japan SureServer EV CA G8","Cybertrust Japan SureServer EV CA G9","Cybertrust Japan SureTime CA G1","Cybertrust Japan SureTime CA G2","Cybertrust Japan SureTime CA G3","Cybertrust Japan SureTime CA G4"],
+    "symantec.com": ["QuoVadis","DigiCert","Symantec","Symantec / GeoTrust","Symantec / VeriSign"],
+    "thawte.com": ["QuoVadis","Symantec","Symantec / GeoTrust","Symantec / VeriSign","DigiCert"],
+    "secomtrust.net": ["SECOM Trust Systems CO., LTD."],
+    "sectigo.com": ["Sectigo"],
+    "comodo.com": ["Sectigo"],
+    "comodoca.com": ["Sectigo"],
+    "usertrust.com": ["Sectigo"],
+    "trust-provider.com": ["Sectigo"],
+    "trustwave.com": ["SecureTrust"],
+    "securetrust.com": ["SecureTrust"],
+    "sheca.com": ["Shanghai Electronic Certification Authority Co., Ltd."],
+    "imtrust.cn": ["Shanghai Electronic Certification Authority Co., Ltd."],
+    "wwwtrust.cn": ["Shanghai Electronic Certification Authority Co., Ltd."],
+    "skidsolutions.eu": ["SK ID Solutions AS"],
+    "ssl.com": ["SSL.com"],
+    "pkioverheid.nl": ["Staat der Nederlanden Domein Server CA 2020"],
+    "admin.ch": ["Swiss BIT, Swiss Federal Office of Information Technology, Systems and Telecommunication (FOITT)"],
+    "swisssign.com": ["SwissSign AG"],
+    "swisssign.net": ["SwissSign AG"],
+    "swissign.com": ["SwissSign AG"],
+    "swisssign.ch": ["SwissSign AG"],
+    "swisssign.li": ["SwissSign AG"],
+    "swissign.li": ["SwissSign AG"],
+    "swisssign.org": ["SwissSign AG"],
+    "swisssign.biz": ["SwissSign AG"],
+    "swisstsa.ch": ["SwissSign AG"],
+    "swisstsa.li": ["SwissSign AG"],
+    "digitalid.ch": ["SwissSign AG"],
+    "digital-id.ch": ["SwissSign AG"],
+    "zert.ch": ["SwissSign AG"],
+    "rootsigning.com": ["SwissSign AG"],
+    "root-signing.ch": ["SwissSign AG"],
+    "ssl-certificate.ch": ["SwissSign AG"],
+    "managed-pki.ch": ["SwissSign AG"],
+    "managed-pki.de": ["SwissSign AG"],
+    "swissstick.com": ["SwissSign AG"],
+    "swisssigner.ch": ["SwissSign AG"],
+    "pki-posta.ch": ["SwissSign AG"],
+    "pki-poste.ch": ["SwissSign AG"],
+    "pki-post.ch": ["SwissSign AG"],
+    "trustdoc.ch": ["SwissSign AG"],
+    "trustsign.ch": ["SwissSign AG"],
+    "swisssigner.com": ["SwissSign AG"],
+    "postsuisseid.ch": ["SwissSign AG"],
+    "suisseid-service.ch": ["SwissSign AG"],
+    "signdemo.com": ["SwissSign AG"],
+    "sirb.com": ["SwissSign AG"],
+    "twca.com.tw": ["Taiwan-CA Inc. (TWCA)"],
+    "telia.com": ["Telia Company"],
+    "telia.fi": ["Telia Company"],
+    "telia.se": ["Telia Company"],
+    "trustcor.ca": ["TrustCor Systems"],
+    "trustfactory.net": ["TrustFactory Client Issuing Certificate Authority","TrustFactory SSL Issuing Certificate Authority","TrustFactory(Pty)Ltd"],
+    "gtlsca.nat.gov.tw": ["行政院/政府伺服器數位憑證管理中心 - G1"]
+}
 VALIDATION_TYPES = {
     'DV': 'Domain Validation (DV)',
     'OV': 'Organization Validation (OV)',
@@ -699,29 +858,41 @@ def caa_valid(domain_name :str, cert :X509, certificate_chain :list[X509]) -> bo
     wild_issuers = set()
     issuers = set()
     for rdata in response:
-        common_name, *rest = rdata.value.decode().split(';')
+        caa, *rest = rdata.value.decode().split(';')
         if 'issuewild' in rdata.to_text():
-            wild_issuers.add(common_name.strip())
+            wild_issuers.add(caa.strip())
     for rdata in response:
-        common_name, *rest = rdata.value.decode().split(';')
+        caa, *rest = rdata.value.decode().split(';')
         # issuewild tags take precedence over issue tags when specified.
-        if common_name not in wild_issuers:
-            issuers.add(common_name.strip())
+        if caa not in wild_issuers:
+            issuers.add(caa.strip())
 
     issuer = issuer_from_chain(cert, certificate_chain)
     if not isinstance(issuer, X509):
         logger.warning('Issuer certificate not found in chain')
         return False
-    if validators.domain(issuer.get_issuer().OU) is not True:
-        logger.warning('Issuer OU has no domain to validate CAA record')
+    
+    common_name = cert.get_subject().CN
+    issuer_cn = issuer.get_subject().O
+    for caa in wild_issuers:
+        issuer_common_names :list[str] = CAA_DOMAINS.get(caa, [])
+        if not issuer_common_names:
+            issuer_ext = extractor(f'http://{caa}')
+            issuer_apex = issuer_ext.registered_domain
+            issuer_common_names = CAA_DOMAINS.get(issuer_apex, [])
+        if issuer_cn in issuer_common_names:
+            return True
+
+    if common_name.startswith('*.'):
         return False
 
-    issuer_ext = extractor(f'http://{issuer.get_issuer().OU}')
-    issuer_apex = issuer_ext.registered_domain
-    common_name = cert.get_subject().CN
-    if issuer_apex in wild_issuers:
-        return True
-    if not common_name.startswith('*.') and issuer_apex in issuers:
-        return True
+    for caa in issuers:
+        issuer_common_names :list[str] = CAA_DOMAINS.get(caa, [])
+        if not issuer_common_names:
+            issuer_ext = extractor(f'http://{caa}')
+            issuer_apex = issuer_ext.registered_domain
+            issuer_common_names = CAA_DOMAINS.get(issuer_apex, [])
+        if issuer_cn in issuer_common_names:
+            return True
 
     return False

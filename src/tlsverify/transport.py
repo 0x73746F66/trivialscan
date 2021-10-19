@@ -508,17 +508,23 @@ class Transport:
         ctx.set_verify(getattr(SSL, Transport.default_connect_verify_mode), self._verifier)
         ctx.set_max_proto_version(tls_version)
         ctx.check_hostname = False
-        conn = SSL.Connection(ctx, socket(AF_INET, SOCK_STREAM))
-        conn.settimeout(3)
-        conn.setblocking(1)
+        sock = socket(AF_INET, SOCK_STREAM)
+        sock.settimeout(1)
+        conn = SSL.Connection(context=ctx, socket=sock)
+
+        conn.set_connect_state()
         ctx.set_ocsp_client_callback(self._ocsp_handler)
         conn.request_ocsp()
         if all([use_sni, ssl.HAS_SNI]):
             logger.info('using SNI')
             conn.set_tlsext_host_name(idna.encode(self.host))        
         try:
+            logger.info('connect')
             conn.connect((self.host, self.port))
+            conn.setblocking(1)
+            logger.info('handshake')
             conn.do_handshake()
+            logger.info('read')
             self.negotiated_cipher = conn.get_cipher_name()
             self.negotiated_protocol = conn.get_protocol_version_name()
             self.session_cache_mode = util.SESSION_CACHE_MODE[native_openssl.SSL_CTX_get_session_cache_mode(conn._context._context)]

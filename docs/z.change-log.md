@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.4.1 Oct 19th 2021
+
+- timeout fix for some domains that do not respond (failure to connect) to SSL at all
+- fixed the CAA validity by matching on organisation names in the issuer subject rather than the provided CAA dns record, this required adapting a [ccadb.org mapping](https://www.ccadb.org/resources) of known CAA identifiers
+- completed the reference message when ValidationError is raised byt he cli
+
 ## 0.4.0 Oct 19th 2021
 
 - Added `util.get_dnssec()` and `util.dnssec_valid()` for DNSSEC existence and validation

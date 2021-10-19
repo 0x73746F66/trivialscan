@@ -49,7 +49,7 @@ def main(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = T
                 else:
                     transport.pre_client_authentication_check(client_pem_path=client_pem, updater=(progress, prog_client_auth))
                 if not transport.connect_least_secure(cafiles=cafiles, use_sni=use_sni, updater=(progress, prog_tls_nego)) or not isinstance(transport.server_certificate, X509):
-                    raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED)
+                    raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=host, port=port))
                 progress.update(prog_client_auth, advance=1)
                 progress.update(prog_tls_nego, advance=1)
                 if isinstance(tmp_path_prefix, str):
@@ -67,10 +67,12 @@ def main(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = T
             progress.update(prog_chain_val, completed=3*len(domains))
 
     console = Console()
-    valid = all([v.certificate_valid for v in results])
+    valid = all(v.certificate_valid for v in results)
     for result in results:
-        if debug:
+        if debug and hasattr(result, 'transport'):
             inspect(result.transport, title=result.transport.negotiated_protocol)
+        if debug and hasattr(result, 'metadata'):
+            inspect(result.metadata, title=result.metadata.certificate_subject)
         console.print(result.to_rich())
         console.print('\n\n')
     result_style = Style(color='dark_sea_green2' if valid else 'light_coral')
@@ -155,8 +157,9 @@ def cli():
         console = Console()
         valid = all([v.certificate_valid for v in all_results])
         for result in all_results:
-            if debug:
+            if debug and hasattr(result, 'transport'):
                 inspect(result.transport, title=result.transport.negotiated_protocol)
+            if debug and hasattr(result, 'metadata'):
                 inspect(result.metadata, title=result.metadata.certificate_subject)
             console.print(result.to_rich())
             console.print('\n\n')
