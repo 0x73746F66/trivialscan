@@ -14,7 +14,7 @@ from . import exceptions, verify, util
 from .validator import CertValidator, PeerCertValidator, Validator
 from .transport import Transport
 
-
+__version__ = 'tls-verify==0.4.2'
 __module__ = 'tlsverify.cli'
 
 def main(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', debug :bool = False) -> tuple[bool,list[Validator]]:
@@ -93,6 +93,7 @@ def cli():
     parser.add_argument('-vv', '--warning', help='set logging level to WARNING (default CRITICAL)', dest='log_level_warning', action="store_true")
     parser.add_argument('-vvv', '--info', help='set logging level to INFO (default CRITICAL)', dest='log_level_info', action="store_true")
     parser.add_argument('-vvvv', '--debug', help='set logging level to DEBUG (default CRITICAL)', dest='log_level_debug', action="store_true")
+    parser.add_argument('--version', dest='show_version', action="store_true")
     args = parser.parse_args()
     log_level = logging.CRITICAL
     if args.log_level_error:
@@ -114,7 +115,12 @@ def cli():
         handlers=handlers
     )
     debug = log_level==logging.DEBUG
+    if args.show_version:
+        print(__version__)
+        parser.print_help(sys.stdout)
+        sys.exit(0)
     if args.host is None and len(args.targets) == 0:
+        print(__version__, file=sys.stderr)
         parser.print_help(sys.stderr)
         sys.exit(1)
     if args.host is not None:

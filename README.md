@@ -65,6 +65,7 @@ See [Documentation](./docs/0.index.md) section of this repository
   - ✓ TLS Extensions
   - ✓ Client Authentication expected
   - ✓ Certificate Issuer validation Type (DV, EV, OV)
+  - ✓ Root CA Trust Stores
 - Hostname match
   - ✓ common name
   - ✓ subjectAltName
@@ -73,6 +74,7 @@ See [Documentation](./docs/0.index.md) section of this repository
 - Validations (Actual validity per the RFCs, fail any should fail to establish TLS)
   - ✓ Expiry date is future dated
   - ✓ OCSP revocation
+  - ✓ Mozilla CRLite Revocation
   - ✓ Valid for TLS use (digital signature)
   - ✓ Deprecated protocol
   - ✓ Common Name exists, and uses valid syntax
@@ -89,6 +91,7 @@ See [Documentation](./docs/0.index.md) section of this repository
   - ✓ extendedKeyUsage
   - ✓ inhibitAnyPolicy
   - ✓ basicConstraints path length
+  - ✓ Root CA is added to the chain and validated like any other certificate (though browsers ignore this, it is a TLS requirement)
 - Assertions (Opinionated checking, TLS is expected to still work)
   - ✓ Valid CAA
   - ✓ Valid DNSSEC
@@ -154,10 +157,6 @@ Other tools with shared certificates that should not be used for a production we
   - Lenovo Superfish
   - Dell eDellRoot
   - Dell DSD Test Provider
-- Non-trusted certs; bundled with development tools
-  - webpack
-  - preact-cli
-  - charles
 - Issuer match (If the server is owned or operated by you, a Zero-trust requirement)
 - if CT expected (Zero-trust requirement), Certificate Transparency resolves
 - if HPKP is still present and expected, validate per the policy
@@ -168,9 +167,13 @@ Other tools with shared certificates that should not be used for a production we
   - apikey
   - custom authenticator (i.e. bespoke signers and custom headers
   - HMAC [httpbis-message-signatures](https://datatracker.ietf.org/doc/draft-ietf-httpbis-message-signatures/) example custom authenticator
-- report DNS CAA
-- report DNSSEC
 - report Downgrade attack prevention
+- Certificate Summary
+  - Public Key Modulus
+  - Public Key SPKI SHA-256
+  - deep link https://crt.sh/?sha1=
+  - Certificate Transparency
+  - OneCRL
 
 ### Rationale
 

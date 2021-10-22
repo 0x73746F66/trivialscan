@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.4.1",
+    version="0.4.2",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -118,6 +118,7 @@ optional arguments:
   - ✓ TLS Extensions
   - ✓ Client Authentication expected
   - ✓ Certificate Issuer validation Type (DV, EV, OV)
+  - ✓ Root CA Trust Stores
 - Hostname match
   - ✓ common name
   - ✓ subjectAltName
@@ -126,6 +127,7 @@ optional arguments:
 - Validations (Actual validity per the RFCs, fail any should fail to establish TLS)
   - ✓ Expiry date is future dated
   - ✓ OCSP revocation
+  - ✓ Mozilla CRLite Revocation
   - ✓ Valid for TLS use (digital signature)
   - ✓ Deprecated protocol
   - ✓ Common Name exists, and uses valid syntax
@@ -142,6 +144,7 @@ optional arguments:
   - ✓ extendedKeyUsage
   - ✓ inhibitAnyPolicy
   - ✓ basicConstraints path length
+  - ✓ Root CA is added to the chain and validated like any other certificate (though browsers ignore this, it is a TLS requirement)
 - Assertions (Opinionated checking, TLS is expected to still work)
   - ✓ Valid CAA
   - ✓ Valid DNSSEC
@@ -189,7 +192,9 @@ optional arguments:
         'urllib3==1.26.7',
         'requests==2.26.0',
         'dnspython==2.1.0',
-        'tldextract==3.1.2'
+        'tldextract==3.1.2',
+        'moz-crlite-query==0.4.2',
+        'tlstrust==1.0.1'
     ],
     entry_points = {
         'console_scripts': ['tlsverify=tlsverify.cli:cli'],

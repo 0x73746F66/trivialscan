@@ -1,10 +1,14 @@
 import logging
 import string
-from datetime import datetime
 import random
+from io import BytesIO
+from datetime import datetime, timedelta
 from urllib.request import urlretrieve
+from urllib.parse import urlparse
 from binascii import hexlify
 from pathlib import Path
+import requests
+import validators
 from cryptography import x509
 from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
 from OpenSSL import SSL
@@ -12,16 +16,17 @@ from OpenSSL.crypto import X509, FILETYPE_PEM, dump_certificate
 from certvalidator import CertificateValidator, ValidationContext
 from rich.style import Style
 from rich.console import Console
-import validators
 from dns import resolver, dnssec, rdatatype, message, query, name as dns_name
 from dns.exception import DNSException, Timeout as DNSTimeoutError
 from tldextract import TLDExtract
+from crlite_query import CRLiteDB, IntermediatesDB, CRLiteQuery
 
 
 __module__ = 'tlsverify.util'
 
 logger = logging.getLogger(__name__)
 
+CRLITE_URL = "https://firefox.settings.services.mozilla.com/v1/buckets/security-state/collections/cert-revocations/records" # https://github.com/mozilla/moz_crlite_query/blob/main/crlite_query/query_cli.py
 VALIDATION_OID = {
     '2.16.840.1.114414.1.7.23.1': 'DV',
     '1.3.6.1.4.1.46222.1.10': 'DV',
@@ -896,3 +901,39 @@ def caa_valid(domain_name :str, cert :X509, certificate_chain :list[X509]) -> bo
             return True
 
     return False
+
+def crlite_revoked(db_path :str, pem :bytes):
+    def find_attachments_base_url():
+        url = urlparse(CRLITE_URL)
+        base_rsp = requests.get(f"{url.scheme}://{url.netloc}/v1/")
+        return base_rsp.json()["capabilities"]["attachments"]["base_url"]
+
+    db_dir = Path(db_path)
+    if not db_dir.is_dir():
+        db_dir.mkdir()
+
+    last_updated = None
+    last_updated_file = (db_dir / ".last_updated")
+    if last_updated_file.is_file():
+        last_updated = datetime.fromtimestamp(last_updated_file.stat().st_mtime)
+    grace_time = datetime.utcnow() - timedelta(hours=6)
+    update = True
+    if last_updated is not None and last_updated > grace_time:
+        logger.info(f"Database was updated at {last_updated}, skipping.")
+        update = False
+    crlite_db = CRLiteDB(db_path=db_path)
+    if update:
+        crlite_db.update(
+            collection_url=CRLITE_URL,
+            attachments_base_url=find_attachments_base_url(),
+        )
+        crlite_db.cleanup()
+        last_updated_file.touch()
+        logger.info(f"Status: {crlite_db}")
+    query = CRLiteQuery(crlite_db=crlite_db, intermediates_db=IntermediatesDB(db_path=db_path, download_pems=False))
+    results = []
+    for result in query.query(name='peer', generator=query.gen_from_pem(BytesIO(pem))):
+        logger.info(result.print_query_result(verbose=1))
+        logger.debug(result.print_query_result(verbose=3))
+        results.append(result.is_revoked())
+    return any(results)
