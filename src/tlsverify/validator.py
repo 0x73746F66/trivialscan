@@ -32,6 +32,9 @@ class Validator:
     certificate :Certificate
     tmp_path_prefix :str
     metadata :Metadata
+    color_ok = 'dark_sea_green2'
+    color_nok = 'light_coral'
+    color_null = 'magenta'
 
     def __init__(self, tmp_path_prefix :str = '/tmp') -> None:
         if not isinstance(tmp_path_prefix, str):
@@ -182,38 +185,19 @@ class Validator:
             self.validation_checks['not_revoked'] = False
         #TODO OneCRL
 
-class RootCertValidator(Validator):
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
-
-    def __repr__ (self) -> str:
-        certificate_verify_messages = '", "'.join(self.certificate_verify_messages)
-        validation_checks = json.dumps(self.validation_checks)
-        res = f'<Validator(certificate_valid={self.certificate_valid}, ' +\
-              f'certificate_verify_messages=["{certificate_verify_messages}"]", ' +\
-              f'validation_checks={validation_checks}, ' +\
-               'metadata=<tlsverify.metadata.Metadata>, ' +\
-               'x509=<OpenSSL.crypto.X509>, ' +\
-               '_pem=<bytes>, ' +\
-               '_der=<bytes>, ' +\
-               'certificate=<cryptography.x509.Certificate>)>'
-        return res
-
-    def to_rich(self) -> Table:
-        good, bad = ('dark_sea_green2', 'light_coral')
-        fingerprints = ['certificate_sha256_fingerprint', 'certificate_sha1_fingerprint', 'certificate_md5_fingerprint', 'certificate_subject_key_identifier', 'certificate_authority_key_identifier']
-        skip = ['host', 'port', 'certificate_validation_type', 'certificate_is_self_signed', 'offered_ciphers', 'certificate_subject', 'certificate_issuer', 'certificate_common_name', 'certificate_intermediate_ca', 'certificate_root_ca', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier', 'revocation_ocsp_status', 'revocation_ocsp_response', 'revocation_ocsp_reason', 'revocation_ocsp_time', 'client_certificate_expected', 'certification_authority_authorization', 'dnssec', 'scsv_support', 'compression_support', 'http_expect_ct_report_uri', 'http_xss_protection', 'http_status_code', 'http1_support', 'http1_1_support', 'http2_support', 'http2_cleartext_support', 'sni_support', 'negotiated_protocol', 'peer_address', 'negotiated_cipher', 'weak_cipher', 'strong_cipher', 'forward_anonymity', 'session_resumption_caching', 'session_resumption_tickets', 'session_resumption_ticket_hint', 'client_renegotiation', 'http_hsts', 'http_xfo', 'http_csp', 'http_coep', 'http_coop', 'http_corp', 'http_nosniff', 'http_unsafe_referrer', 'certificate_authority_key_identifier', 'revocation_ocsp_stapling', 'revocation_ocsp_must_staple', 'revocation_crlite', 'common_name_defined', 'possible_phish_or_malicious']
-        title = f'Root CA: {self.metadata.certificate_subject}'
-        caption = util.date_diff(self.certificate.not_valid_after)
-        title_style = Style(bold=True, color=good if self.certificate_valid else bad)
+    def _make_table(self, title :str, caption :str) -> Table:
+        title_style = Style(bold=True, color=self.color_ok if self.certificate_valid else self.color_nok)
         table = Table(title=title, caption=caption, title_style=title_style, box=box.MINIMAL_HEAVY_HEAD)
         table.add_column("", justify="right", style="dark_turquoise", no_wrap=True)
         table.add_column("Result", justify="left")
-        table.add_row('certificate_valid', util.styled_boolean(self.certificate_valid, ('Trusted', 'Not Trusted'), (good, bad)))
+        return table
+
+    def _table_data(self, table :Table, skip :list[str], represent_as :tuple[str, str]) -> Table:
+        fingerprints = ['certificate_sha256_fingerprint', 'certificate_sha1_fingerprint', 'certificate_md5_fingerprint', 'certificate_subject_key_identifier', 'certificate_authority_key_identifier']
         for i, err in enumerate(self.certificate_verify_messages):
             table.add_row(f'Note {i+1}', err)
         for key in self.validation_checks.keys():
-            table.add_row(f'Rule {key}', util.styled_boolean(self.validation_checks[key], ('Pass', 'Fail'), (good, bad)))
+            table.add_row(f'Rule {key}', util.styled_boolean(self.validation_checks[key], ('Pass', 'Fail'), (self.color_ok, self.color_nok)))
         for key in list(vars(self.metadata).keys()):
             if key in skip:
                 continue
@@ -222,12 +206,15 @@ class RootCertValidator(Validator):
                 table.add_row(key, util.str_n_split(val).upper())
                 continue
             if val is None or (isinstance(val, str) and len(val) == 0):
-                table.add_row(key, util.styled_value("Unknown", color='magenta'))
+                table.add_row(key, util.styled_value("Unknown", color=self.color_null))
                 continue
             if isinstance(val, bool):
-                table.add_row(key, util.styled_boolean(val, represent_as=('Trusted', 'Not Trusted'), colors=(good, bad)))
+                table.add_row(key, util.styled_boolean(val, represent_as=represent_as, colors=(self.color_ok, self.color_nok)))
                 continue
             table.add_row(key, util.styled_any(val))
+        return table
+
+    def _table_ext(self, table :Table, skip :list[str]) -> Table:
         for v in self.metadata.certificate_extensions:
             ext = v['name']
             del v['name']
@@ -253,84 +240,63 @@ class RootCertValidator(Validator):
             table.add_row(ext, util.styled_any(v))
         return table
 
-class PeerCertValidator(Validator):
+class RootCertValidator(Validator):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def __repr__ (self) -> str:
+    def __repr__(self) -> str:
         certificate_verify_messages = '", "'.join(self.certificate_verify_messages)
         validation_checks = json.dumps(self.validation_checks)
-        res = f'<Validator(certificate_valid={self.certificate_valid}, ' +\
+        return f'<Validator(certificate_valid={self.certificate_valid}, ' +\
               f'certificate_verify_messages=["{certificate_verify_messages}"]", ' +\
               f'validation_checks={validation_checks}, ' +\
                'metadata=<tlsverify.metadata.Metadata>, ' +\
-               'transport=<tlsverify.transport.Transport>, ' +\
                'x509=<OpenSSL.crypto.X509>, ' +\
                '_pem=<bytes>, ' +\
                '_der=<bytes>, ' +\
                'certificate=<cryptography.x509.Certificate>)>'
-        return res
 
     def to_rich(self) -> Table:
-        good, bad = ('dark_sea_green2', 'light_coral')
-        fingerprints = ['certificate_sha256_fingerprint', 'certificate_sha1_fingerprint', 'certificate_md5_fingerprint', 'certificate_subject_key_identifier', 'certificate_authority_key_identifier']
+        skip = ['host', 'port', 'certificate_validation_type', 'certificate_is_self_signed', 'offered_ciphers', 'certificate_subject', 'certificate_issuer', 'certificate_common_name', 'certificate_intermediate_ca', 'certificate_root_ca', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier', 'revocation_ocsp_status', 'revocation_ocsp_response', 'revocation_ocsp_reason', 'revocation_ocsp_time', 'client_certificate_expected', 'certification_authority_authorization', 'dnssec', 'scsv_support', 'compression_support', 'http_expect_ct_report_uri', 'http_xss_protection', 'http_status_code', 'http1_support', 'http1_1_support', 'http2_support', 'http2_cleartext_support', 'sni_support', 'negotiated_protocol', 'peer_address', 'negotiated_cipher', 'weak_cipher', 'strong_cipher', 'forward_anonymity', 'session_resumption_caching', 'session_resumption_tickets', 'session_resumption_ticket_hint', 'client_renegotiation', 'http_hsts', 'http_xfo', 'http_csp', 'http_coep', 'http_coop', 'http_corp', 'http_nosniff', 'http_unsafe_referrer', 'certificate_authority_key_identifier', 'revocation_ocsp_stapling', 'revocation_ocsp_must_staple', 'revocation_crlite', 'common_name_defined', 'possible_phish_or_malicious']
+        title = f'Root CA: {self.metadata.certificate_subject}'
+        caption = util.date_diff(self.certificate.not_valid_after)
+        table = self._make_table(title, caption)
+        table.add_row('certificate_valid', util.styled_boolean(self.certificate_valid, ('Trusted', 'Not Trusted'), (self.color_ok, self.color_nok)))
+        self._table_data(table, skip, ('Trusted', 'Not Trusted'))
+        self._table_ext(table, skip)
+        return table
+
+class PeerCertValidator(Validator):
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    def __repr__(self) -> str:
+        certificate_verify_messages = '", "'.join(self.certificate_verify_messages)
+        validation_checks = json.dumps(self.validation_checks)
+        return f'<Validator(certificate_valid={self.certificate_valid}, ' +\
+              f'certificate_verify_messages=["{certificate_verify_messages}"]", ' +\
+              f'validation_checks={validation_checks}, ' +\
+               'metadata=<tlsverify.metadata.Metadata>, ' +\
+               'x509=<OpenSSL.crypto.X509>, ' +\
+               '_pem=<bytes>, ' +\
+               '_der=<bytes>, ' +\
+               'certificate=<cryptography.x509.Certificate>)>'
+
+    def to_rich(self) -> Table:
         skip = ['host', 'port', 'offered_ciphers', 'certificate_subject', 'certificate_issuer', 'certificate_common_name', 'certificate_intermediate_ca', 'certificate_root_ca', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier', 'revocation_ocsp_status', 'revocation_ocsp_response', 'revocation_ocsp_reason', 'revocation_ocsp_time', 'client_certificate_expected', 'certification_authority_authorization', 'dnssec', 'scsv_support', 'compression_support', 'http_expect_ct_report_uri', 'http_xss_protection', 'http_status_code', 'http1_support', 'http1_1_support', 'http2_support', 'http2_cleartext_support', 'sni_support', 'negotiated_protocol', 'peer_address', 'negotiated_cipher', 'weak_cipher', 'strong_cipher', 'forward_anonymity', 'session_resumption_caching', 'session_resumption_tickets', 'session_resumption_ticket_hint', 'client_renegotiation', 'http_hsts', 'http_xfo', 'http_csp', 'http_coep', 'http_coop', 'http_corp', 'http_nosniff', 'http_unsafe_referrer']
         peer_type = 'Intermediate Certificate'
         if self.metadata.certificate_intermediate_ca:
             peer_type = 'Intermediate CA'
             skip.extend(['trust_apple_legacy', 'trust_ccadb', 'trust_java', 'trust_android', 'trust_linux', 'trust_certifi', 'trust_apple_legacy_status', 'trust_ccadb_status', 'trust_java_status', 'trust_android_status', 'trust_linux_status', 'trust_certifi_status'])
-        if self.metadata.certificate_root_ca: peer_type = 'Root CA'
         title = f'{peer_type}: {self.metadata.certificate_subject}'
         caption = '\n'.join([
             f'Issuer: {self.metadata.certificate_issuer}',
             util.date_diff(self.certificate.not_valid_after),
         ])
-        title_style = Style(bold=True, color=good if self.certificate_valid else bad)
-        table = Table(title=title, caption=caption, title_style=title_style, box=box.MINIMAL_HEAVY_HEAD)
-        table.add_column("", justify="right", style="dark_turquoise", no_wrap=True)
-        table.add_column("Result", justify="left")
-        table.add_row('certificate_valid', util.styled_boolean(self.certificate_valid, ('Valid', 'Validation Issues'), (good, bad)))
-        for i, err in enumerate(self.certificate_verify_messages):
-            table.add_row(f'Note {i+1}', err)
-        for key in self.validation_checks.keys():
-            table.add_row(f'Rule {key}', util.styled_boolean(self.validation_checks[key], ('Pass', 'Fail'), (good, bad)))
-        for key in list(vars(self.metadata).keys()):
-            if key in skip:
-                continue
-            val = getattr(self.metadata, key)
-            if key in fingerprints and isinstance(val, str):
-                table.add_row(key, util.str_n_split(val).upper())
-                continue
-            if val is None or (isinstance(val, str) and len(val) == 0):
-                table.add_row(key, util.styled_value("Unknown", color='magenta'))
-                continue
-            if isinstance(val, bool):
-                table.add_row(key, util.styled_boolean(val, represent_as=('Detected', 'Not Detected'), colors=(good, bad)))
-                continue
-            table.add_row(key, util.styled_any(val))
-        for v in self.metadata.certificate_extensions:
-            ext = v['name']
-            del v['name']
-            if ext in skip:
-                continue
-            if ext in v:
-                ext_sub = v[ext]
-                del v[ext]
-                table.add_row(ext, util.styled_dict(v))
-                if isinstance(ext_sub, list):
-                    for sub in ext_sub:
-                        if isinstance(sub, str):
-                            table.add_row('', util.styled_value(sub, crop=False))
-                            continue
-                        if isinstance(sub, dict):
-                            for subk, subv in sub.items():
-                                table.add_row('', subk+'='+util.styled_value(subv))
-                            continue
-                        table.add_row('', util.styled_any(sub))
-                    continue
-                table.add_row('', str(ext_sub))
-                continue    
-            table.add_row(ext, util.styled_any(v))
+        table = self._make_table(title, caption)
+        table.add_row('certificate_valid', util.styled_boolean(self.certificate_valid, ('Valid', 'Validation Issues'), (self.color_ok, self.color_nok)))
+        self._table_data(table, skip, ('Detected', 'Not Detected'))
+        self._table_ext(table, skip)
         return table
 
 class CertValidator(Validator):
@@ -349,79 +315,36 @@ class CertValidator(Validator):
         self.peer_validations = []
         self.certificate_chain = []
 
-    def __repr__ (self) -> str:
+    def __repr__(self) -> str:
         certificate_verify_messages = '", "'.join(self.certificate_verify_messages)
         validation_checks = json.dumps(self.validation_checks)
-        res = f'<Validator(certificate_valid={self.certificate_valid}, ' +\
-              f'certificate_chain_valid={self.certificate_chain_valid}, ' +\
-              f'certificate_chain_validation_result={self.certificate_chain_validation_result}, ' +\
-              f'certificate_verify_messages=["{certificate_verify_messages}"]", ' +\
-              f'validation_checks={validation_checks}, ' +\
-               'metadata=<tlsverify.metadata.Metadata>, ' +\
-               'transport=<tlsverify.transport.Transport>, ' +\
-               'x509=<OpenSSL.crypto.X509>, ' +\
-               '_pem=<bytes>, ' +\
-               '_der=<bytes>, ' +\
-               'certificate=<cryptography.x509.Certificate>)>'
-        return res
+        return (
+            f'<Validator(certificate_valid={self.certificate_valid}, '
+            + f'certificate_chain_valid={self.certificate_chain_valid}, '
+            + f'certificate_chain_validation_result={self.certificate_chain_validation_result}, '
+            + f'certificate_verify_messages=["{certificate_verify_messages}"]", '
+            + f'validation_checks={validation_checks}, '
+            + 'metadata=<tlsverify.metadata.Metadata>, '
+            + 'transport=<tlsverify.transport.Transport>, '
+            + 'x509=<OpenSSL.crypto.X509>, '
+            + '_pem=<bytes>, '
+            + '_der=<bytes>, '
+            + 'certificate=<cryptography.x509.Certificate>)>'
+        )
 
     def to_rich(self) -> Table:
-        good, bad = ('dark_sea_green2', 'light_coral')
-        fingerprints = ['certificate_sha256_fingerprint', 'certificate_sha1_fingerprint', 'certificate_md5_fingerprint', 'certificate_subject_key_identifier', 'certificate_authority_key_identifier']
         skip = ['host', 'port', 'offered_ciphers', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier', 'certificate_root_ca', 'certificate_intermediate_ca', 'peer_address', 'trust_apple_legacy', 'trust_ccadb', 'trust_java', 'trust_android', 'trust_linux', 'trust_certifi', 'trust_apple_legacy_status', 'trust_ccadb_status', 'trust_java_status', 'trust_android_status', 'trust_linux_status', 'trust_certifi_status']
         title = f'{self.metadata.host}:{self.metadata.port} ({self.metadata.peer_address})'
         caption = '\n'.join([
             f'Issuer: {self.metadata.certificate_issuer}',
             util.date_diff(self.certificate.not_valid_after),
         ])
-        title_style = Style(bold=True, color=good if self.certificate_valid else bad)
-        table = Table(title=title, caption=caption, title_style=title_style, box=box.MINIMAL_HEAVY_HEAD)
-        table.add_column("", justify="right", style="dark_turquoise", no_wrap=True)
-        table.add_column("Result", justify="left")
-        table.add_row('certificate_valid', util.styled_boolean(self.certificate_valid, ('Valid', 'Validation Issues'), (good, bad)))
-        table.add_row('certificate_chain_valid', util.styled_boolean(self.certificate_chain_valid, ('Pass', 'Fail'), (good, bad)))
+        table = self._make_table(title, caption)
+        table.add_row('certificate_valid', util.styled_boolean(self.certificate_valid, ('Valid', 'Validation Issues'), (self.color_ok, self.color_nok)))
+        table.add_row('certificate_chain_valid', util.styled_boolean(self.certificate_chain_valid, ('Pass', 'Fail'), (self.color_ok, self.color_nok)))
         table.add_row('certificate_chain_validation_result', util.styled_any(self.certificate_chain_validation_result))
-        for i, err in enumerate(self.certificate_verify_messages):
-            table.add_row(f'Note {i+1}', err)
-        for key in self.validation_checks.keys():
-            table.add_row(f'Rule {key}', util.styled_boolean(self.validation_checks[key], ('Pass', 'Fail'), (good, bad)))
-        for key in list(vars(self.metadata).keys()):
-            if key in skip:
-                continue
-            val = getattr(self.metadata, key)
-            if key in fingerprints and isinstance(val, str):
-                table.add_row(key, util.str_n_split(val).upper())
-                continue
-            if val is None or (isinstance(val, str) and len(val) == 0):
-                table.add_row(key, util.styled_value("Unknown", color='magenta'))
-                continue
-            if isinstance(val, bool):
-                table.add_row(key, util.styled_boolean(val, represent_as=('Detected', 'Not Detected'), colors=(good, bad)))
-                continue
-            table.add_row(key, util.styled_any(val))
-        for v in self.metadata.certificate_extensions:
-            ext = v['name']
-            del v['name']
-            if ext in skip:
-                continue
-            if ext in v:
-                ext_sub = v[ext]
-                del v[ext]
-                table.add_row(ext, util.styled_dict(v))
-                if isinstance(ext_sub, list):
-                    for sub in ext_sub:
-                        if isinstance(sub, str):
-                            table.add_row('', util.styled_value(sub, crop=False))
-                            continue
-                        if isinstance(sub, dict):
-                            for subk, subv in sub.items():
-                                table.add_row('', subk+'='+util.styled_value(subv))
-                            continue
-                        table.add_row('', util.styled_any(sub))
-                    continue
-                table.add_row('', str(ext_sub))
-                continue    
-            table.add_row(ext, util.styled_any(v))
+        self._table_data(table, skip, ('Detected', 'Not Detected'))
+        self._table_ext(table, skip)
         return table
 
     def mount(self, transport :Transport):
@@ -551,54 +474,65 @@ class CertValidator(Validator):
         if isinstance(progress, Progress): progress.update(task, advance=1)
         return self.certificate_valid
 
-    def _root_validator(self, trust_store :TrustStore):
-        cert = trust_store.get_certificate_from_store(context.SOURCE_CERTIFI)
-        if cert.get_serial_number() not in self._root_certs:
+    def _get_root_certs(self, trust_store :TrustStore):
+        for source in [context.SOURCE_ANDROID, context.SOURCE_CCADB, context.SOURCE_JAVA, context.SOURCE_LINUX, context.SOURCE_CERTIFI]:
+            try:
+                yield trust_store.get_certificate_from_store(context_type=source)
+            except FileExistsError:
+                pass
+
+    def _validate_roots(self, trust_store :TrustStore):
+        for cert in self._get_root_certs(trust_store):
+            if cert.get_serial_number() in self._root_certs:
+                continue
             root_validator = RootCertValidator()
             root_validator.init_x509(cert)
             root_validator.metadata.certificate_root_ca = True
             root_validator.verify()
-            default_status = 'Not a Trusted CA'
-            root_validator.metadata.trust_apple_legacy_status = default_status
-            root_validator.metadata.trust_ccadb_status = default_status
-            root_validator.metadata.trust_android_status = default_status
-            root_validator.metadata.trust_java_status = default_status
-            root_validator.metadata.trust_linux_status = default_status
-            root_validator.metadata.trust_certifi_status = default_status
-
-            if trust_store.exists(context.SOURCE_APPLE):
-                root_validator.metadata.trust_apple_legacy_status = 'iOS, iPadOS, macOS, tvOS, and watchOS Root CA Trust Store (until April 2022)'
-                if trust_store.expired_in_store(context.SOURCE_APPLE):
-                    root_validator.metadata.trust_apple_legacy_status += ', Expired'
-            if trust_store.exists(context.SOURCE_CCADB):
-                root_validator.metadata.trust_ccadb_status = 'In Common CA Database (Mozilla, Microsoft, and Apple from Dec 2021)'
-                if trust_store.expired_in_store(context.SOURCE_CCADB):
-                    root_validator.metadata.trust_ccadb_status += ', Expired'
-            if trust_store.exists(context.SOURCE_ANDROID):
-                root_validator.metadata.trust_android_status = 'In Android Root CA Trust Store'
-                if trust_store.expired_in_store(context.SOURCE_ANDROID):
-                    root_validator.metadata.trust_android_status += ', Expired'
-            if trust_store.exists(context.SOURCE_JAVA):
-                root_validator.metadata.trust_java_status = 'In Java Root CA Trust Store'
-                if trust_store.expired_in_store(context.SOURCE_JAVA):
-                    root_validator.metadata.trust_java_status += ', Expired'
-            if trust_store.exists(context.SOURCE_LINUX):
-                root_validator.metadata.trust_linux_status = 'In common Linux Root CA Trust Stores (most debian-based distributions and any other distribution that provides the ca-certificates bundle, and is installed using defaults)'
-                if trust_store.expired_in_store(context.SOURCE_LINUX):
-                    root_validator.metadata.trust_linux_status += ', Expired'
-            if trust_store.exists(context.SOURCE_CERTIFI):
-                root_validator.metadata.trust_certifi_status = 'In Common Python Root CA Trust Store (Django, requests, urllib, and certifi)'
-                if trust_store.expired_in_store(context.SOURCE_CERTIFI):
-                    root_validator.metadata.trust_certifi_status += ', Expired'
-
-            root_validator.metadata.trust_apple_legacy = trust_store.apple
-            root_validator.metadata.trust_ccadb = trust_store.ccadb
-            root_validator.metadata.trust_java = trust_store.java
-            root_validator.metadata.trust_android = trust_store.android
-            root_validator.metadata.trust_linux = trust_store.linux
-            root_validator.metadata.trust_certifi = trust_store.certifi
-            self.peer_validations.append(root_validator)
+            self._root_validator(trust_store, root_validator)
             self._root_certs.append(cert.get_serial_number())
+
+    def _root_validator(self, trust_store :TrustStore, root_validator :RootCertValidator):
+        default_status = 'Not a Trusted CA'
+        root_validator.metadata.trust_apple_legacy_status = default_status
+        root_validator.metadata.trust_ccadb_status = default_status
+        root_validator.metadata.trust_android_status = default_status
+        root_validator.metadata.trust_java_status = default_status
+        root_validator.metadata.trust_linux_status = default_status
+        root_validator.metadata.trust_certifi_status = default_status
+
+        if trust_store.exists(context.SOURCE_APPLE):
+            root_validator.metadata.trust_apple_legacy_status = 'iOS, iPadOS, macOS, tvOS, and watchOS Root CA Trust Store (until April 2022)'
+            if trust_store.expired_in_store(context.SOURCE_APPLE):
+                root_validator.metadata.trust_apple_legacy_status += ', Expired'
+        if trust_store.exists(context.SOURCE_CCADB):
+            root_validator.metadata.trust_ccadb_status = 'In Common CA Database (Mozilla, Microsoft, and Apple from Dec 2021)'
+            if trust_store.expired_in_store(context.SOURCE_CCADB):
+                root_validator.metadata.trust_ccadb_status += ', Expired'
+        if trust_store.exists(context.SOURCE_ANDROID):
+            root_validator.metadata.trust_android_status = 'In Android Root CA Trust Store'
+            if trust_store.expired_in_store(context.SOURCE_ANDROID):
+                root_validator.metadata.trust_android_status += ', Expired'
+        if trust_store.exists(context.SOURCE_JAVA):
+            root_validator.metadata.trust_java_status = 'In Java Root CA Trust Store'
+            if trust_store.expired_in_store(context.SOURCE_JAVA):
+                root_validator.metadata.trust_java_status += ', Expired'
+        if trust_store.exists(context.SOURCE_LINUX):
+            root_validator.metadata.trust_linux_status = 'In common Linux Root CA Trust Stores (most debian-based distributions and any other distribution that provides the ca-certificates bundle, and is installed using defaults)'
+            if trust_store.expired_in_store(context.SOURCE_LINUX):
+                root_validator.metadata.trust_linux_status += ', Expired'
+        if trust_store.exists(context.SOURCE_CERTIFI):
+            root_validator.metadata.trust_certifi_status = 'In Common Python Root CA Trust Store (Django, requests, urllib, and certifi)'
+            if trust_store.expired_in_store(context.SOURCE_CERTIFI):
+                root_validator.metadata.trust_certifi_status += ', Expired'
+
+        root_validator.metadata.trust_apple_legacy = trust_store.apple
+        root_validator.metadata.trust_ccadb = trust_store.ccadb
+        root_validator.metadata.trust_java = trust_store.java
+        root_validator.metadata.trust_android = trust_store.android
+        root_validator.metadata.trust_linux = trust_store.linux
+        root_validator.metadata.trust_certifi = trust_store.certifi
+        self.peer_validations.append(root_validator)
 
     def verify_chain(self, updater :tuple[Progress, TaskID] = None) -> bool:
         if self._pem_certificate_chain is None or (isinstance(self._pem_certificate_chain, list) and len(self._pem_certificate_chain) == 0):
@@ -652,20 +586,20 @@ class CertValidator(Validator):
             check_root_ca = peer_validator.metadata.certificate_authority_key_identifier not in peer_lookup.keys()
             if check_root_ca:
                 self._root_certs = []
-                trust_store = TrustStore(ca_common_name=cert.get_issuer().commonName)
+                trust_store = TrustStore(ca_common_name=cert.get_issuer().commonName, authority_key_identifier=peer_validator.metadata.certificate_authority_key_identifier)
                 self.validation_checks['trusted_ca'] = trust_store.is_trusted
                 if trust_store.exists(context.SOURCE_APPLE):
-                    self._root_validator(trust_store)
+                    self._validate_roots(trust_store)
                 if trust_store.exists(context.SOURCE_CCADB):
-                    self._root_validator(trust_store)
+                    self._validate_roots(trust_store)
                 if trust_store.exists(context.SOURCE_ANDROID):
-                    self._root_validator(trust_store)
+                    self._validate_roots(trust_store)
                 if trust_store.exists(context.SOURCE_JAVA):
-                    self._root_validator(trust_store)
+                    self._validate_roots(trust_store)
                 if trust_store.exists(context.SOURCE_LINUX):
-                    self._root_validator(trust_store)
+                    self._validate_roots(trust_store)
                 if trust_store.exists(context.SOURCE_CERTIFI):
-                    self._root_validator(trust_store)
+                    self._validate_roots(trust_store)
             peer_validator.verify()
             self.validation_checks['not_revoked'] = self.validation_checks.get('not_revoked') is not False
             self.peer_validations.append(peer_validator)

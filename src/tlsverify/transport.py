@@ -127,7 +127,7 @@ class Transport:
         self.client_certificate_match = False
         valid_client_pem = util.filter_valid_files_urls([client_pem_path], self.tmp_path_prefix)
         if valid_client_pem is False:
-            logger.error(f'client_pem_path was provided but is not a valid URL or file does not exist')
+            logger.error('client_pem_path was provided but is not a valid URL or file does not exist')
             return False
         if isinstance(valid_client_pem, list) and len(valid_client_pem) == 1:
             self.client_pem_path = valid_client_pem[0]
@@ -136,9 +136,9 @@ class Transport:
         ctx.load_verify_locations(cafile=where())
         ctx.verify_mode = SSL.VERIFY_NONE
         ctx.check_hostname = False
-        conn = SSL.Connection(ctx, socket(AF_INET, SOCK_STREAM))
+        sock = self.prepare_socket(ctx)
+        conn = SSL.Connection(ctx, sock)
         conn.connect((self.host, self.port))
-        conn.settimeout(3)
         if ssl.HAS_SNI:
             conn.set_tlsext_host_name(idna.encode(self.host))
         conn.setblocking(1)
@@ -330,6 +330,12 @@ class Transport:
             self.ocsp_certificate_status = util.OCSP_CERT_STATUS[response.certificate_status.value]
         return response.response_status == OCSPResponseStatus.SUCCESSFUL and response.certificate_status == OCSPCertStatus.GOOD
 
+    def prepare_socket(self, ctx):
+        ctx.check_hostname = False
+        sock = socket(AF_INET, SOCK_STREAM)
+        sock.settimeout(1)
+        return sock
+
     def prepare_context(self, method :str = None, verify_mode :str = None, check_hostname :bool = False) -> SSL.Context:
         if not isinstance(check_hostname, bool):
             raise TypeError(f'check_hostname {type(check_hostname)}, bool supported')
@@ -358,14 +364,12 @@ class Transport:
     def prepare_connection(self, context :SSL.Context) -> SSL.Connection:
         ctx = ssl.SSLContext()
         ctx.verify_mode = ssl.CERT_NONE
-        ctx.check_hostname = False
-        sock = socket(AF_INET, SOCK_STREAM)
-        sock.settimeout(1)
+        sock = self.prepare_socket(ctx)
         conn = SSL.Connection(context, ctx.wrap_socket(sock, do_handshake_on_connect=False))
         conn.connect((self.host, self.port))
         conn.set_connect_state()
         if ssl.HAS_SNI is True:
-            conn.set_tlsext_host_name(idna.encode(self.host))        
+            conn.set_tlsext_host_name(idna.encode(self.host))
         conn.setblocking(1)
         return conn
 
@@ -499,32 +503,21 @@ class Transport:
 
     def connect(self, tls_version :int, use_sni :bool = False, protocol :str = None):
         logger.info(f'Trying TLS version {util.OPENSSL_VERSION_LOOKUP[tls_version]}')
-        ctx = SSL.Context(method=getattr(SSL, Transport.default_connect_method))
-        ctx.load_verify_locations(cafile=where())
-        for cafile in self.cafiles:
-            ctx.load_verify_locations(cafile=cafile)
-        if self.client_pem_path is not None:
-            ctx.use_certificate_file(certfile=self.client_pem_path, filetype=FILETYPE_PEM)
+        ctx = self.prepare_context()
         ctx.set_verify(getattr(SSL, Transport.default_connect_verify_mode), self._verifier)
         ctx.set_max_proto_version(tls_version)
-        ctx.check_hostname = False
-        sock = socket(AF_INET, SOCK_STREAM)
-        sock.settimeout(1)
+        sock = self.prepare_socket(ctx)
         conn = SSL.Connection(context=ctx, socket=sock)
-
-        conn.set_connect_state()
         ctx.set_ocsp_client_callback(self._ocsp_handler)
         conn.request_ocsp()
         if all([use_sni, ssl.HAS_SNI]):
             logger.info('using SNI')
-            conn.set_tlsext_host_name(idna.encode(self.host))        
+            conn.set_tlsext_host_name(idna.encode(self.host))
         try:
-            logger.info('connect')
             conn.connect((self.host, self.port))
+            conn.set_connect_state()
             conn.setblocking(1)
-            logger.info('handshake')
             conn.do_handshake()
-            logger.info('read')
             self.negotiated_cipher = conn.get_cipher_name()
             self.negotiated_protocol = conn.get_protocol_version_name()
             self.session_cache_mode = util.SESSION_CACHE_MODE[native_openssl.SSL_CTX_get_session_cache_mode(conn._context._context)]
@@ -562,22 +555,30 @@ class Transport:
                 raise TypeError(f"provided an invalid type {type(cafiles)} for cafiles, expected list")
             valid_cafiles = util.filter_valid_files_urls(cafiles)
             if valid_cafiles is False:
-                raise AttributeError(f'cafiles was provided but is not a valid URLs or files do not exist')
+                raise AttributeError('cafiles was provided but is not a valid URLs or files do not exist')
             if isinstance(valid_cafiles, list):
                 self.cafiles = valid_cafiles
         for version in [SSL.SSL3_VERSION, SSL.TLS1_VERSION, SSL.TLS1_1_VERSION, SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]:
             self.connect(tls_version=version, use_sni=use_sni)
             if isinstance(progress, Progress): progress.update(task, advance=1)
             if isinstance(self.server_certificate, X509):
-                if all([use_sni, ssl.HAS_SNI]):
-                    self.sni_support = True
-                for protocol in ['HTTP/1.0', 'HTTP/1.1']:
-                    self.connect(tls_version=version, use_sni=use_sni, protocol=protocol)
-                self.test_h2c()
-                self.test_http2()
+                res = self._connect_least_secure(
+                    use_sni, version
+                )
                 if isinstance(progress, Progress): progress.update(task, advance=1)
-                return True
+                return res
+
         return False
+
+    def _connect_least_secure(self, use_sni, version):
+        if all([use_sni, ssl.HAS_SNI]):
+            self.sni_support = True
+        for protocol in ['HTTP/1.0', 'HTTP/1.1']:
+            self.connect(tls_version=version, use_sni=use_sni, protocol=protocol)
+        self.test_h2c()
+        self.test_http2()
+        
+        return True
 
     @staticmethod
     def is_connection_closed(conn: SSL.Connection) -> bool:

@@ -30,7 +30,7 @@ class Metadata:
     certificate_extensions :list = field(default_factory=list)
     certificate_is_self_signed :bool = field(default_factory=bool)
     client_certificate_expected :bool = field(default_factory=bool)
-    certificate_validation_type :str = field(default_factory=str) # None, DNS, Extended, Organisation
+    certificate_validation_type :str = field(default_factory=str)
     certification_authority_authorization :bool = field(default_factory=bool)
     revocation_ocsp_stapling :bool = field(default_factory=bool)
     revocation_ocsp_must_staple :bool = field(default_factory=bool)

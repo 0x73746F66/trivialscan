@@ -1,5 +1,19 @@
 # Change Log
 
+## 0.4.3 Oct 23rd 2021
+
+- Bump `tlstrust==1.1.0` which optionally uses SKI for Root CA matching in case Certificates aren't issued improperly, using non-unique Issuer Subject Common Name
+- Show platform version information on cli `--version`
+- Simplified code for cli output, and reduced code reuse, with no functional changes
+
+## 0.4.2 Oct 23rd 2021
+
+- Added Mozilla CRLite Revocation
+- Added `tlstrust` library to verify Root CA Trust Stores (starting with 6 stores; Apple legacy, Android, Java, Linux, CCADB, and Python)
+- Root CA is added to the chain and validated like any other certificate (though browsers ignore this, it is a TLS requirement)
+- Show `tls-verify` version on cli `--version`
+- Bug fix to avoid fatal errors and just show output we have for sites that don't fully negotiate TLS
+
 ## 0.4.1 Oct 19th 2021
 
 - timeout fix for some domains that do not respond (failure to connect) to SSL at all

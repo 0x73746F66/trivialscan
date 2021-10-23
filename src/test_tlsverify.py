@@ -8,7 +8,7 @@ from tlsverify import exceptions
 
 class TestValidator:
     _verify :CertValidator
-    host = 'http2.github.io'
+    host = 'apple.com'
     def _setup(self):
         if not hasattr(self, '_verify'):
             transport = Transport(self.host)
@@ -49,7 +49,7 @@ class TestValidator:
         assert v.certificate is None
  
     def test_tlsverify_valid_chain(self):
-        want = 'Validated: digital_signature,key_encipherment,server_auth'
+        want = 'Validated: digital_signature,key_agreement,server_auth'
         self._setup()
         self._verify.verify_chain()
         assert self._verify.certificate_chain_valid is True

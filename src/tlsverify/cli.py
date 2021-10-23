@@ -115,12 +115,12 @@ def cli():
         handlers=handlers
     )
     debug = log_level==logging.DEBUG
+    def version(): import platform; print(f"{__version__} Python {sys.version} {platform.platform()} {platform.uname().node} {platform.uname().release} {platform.version()}")
     if args.show_version:
-        print(__version__)
-        parser.print_help(sys.stdout)
+        version()
         sys.exit(0)
     if args.host is None and len(args.targets) == 0:
-        print(__version__, file=sys.stderr)
+        version()
         parser.print_help(sys.stderr)
         sys.exit(1)
     if args.host is not None:
