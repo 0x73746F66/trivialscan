@@ -550,4 +550,4 @@ class CertValidator(Validator):
         if answer is not None and len(answer) > 0:
             self.metadata.dnssec = True
             _, _, _, _, _, _, algorithm, *rest = answer[0].to_text().split()
-        self.metadata.dnssec_algorithm = util.DNSSEC_ALGORITHMS[int(algorithm)]
+            self.metadata.dnssec_algorithm = util.DNSSEC_ALGORITHMS[int(algorithm)]

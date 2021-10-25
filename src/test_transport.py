@@ -3,7 +3,7 @@ from tlsverify.transport import Transport
 class TestMetadata:
     host = 'http2.github.io'
     def setup(self):
-        if not hasattr(self, '_verify'):
+        if not hasattr(self, '_transport'):
             self._transport = Transport(self.host)
             self._transport.connect_least_secure()
 

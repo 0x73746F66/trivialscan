@@ -10,11 +10,11 @@ class TestValidator:
     _verify :CertValidator
     host = 'apple.com'
     def _setup(self):
-        if not hasattr(self, '_verify'):
-            transport = Transport(self.host)
-            transport.connect_least_secure()
+        if not hasattr(self, '_transport'):
+            self._transport = Transport(self.host)
+            self._transport.connect_least_secure()
             self._verify = CertValidator()
-            self._verify.mount(transport)
+            self._verify.mount(self._transport)
 
     def test_tranport_mount(self):
         self._setup()
