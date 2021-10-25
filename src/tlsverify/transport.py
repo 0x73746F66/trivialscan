@@ -2,6 +2,7 @@ import logging
 import ssl
 from base64 import urlsafe_b64encode
 from datetime import datetime
+from time import sleep
 from socket import socket, AF_INET, SOCK_STREAM, MSG_PEEK
 from pathlib import Path
 from cryptography.x509 import extensions, oid
@@ -13,7 +14,6 @@ from OpenSSL import SSL
 from OpenSSL.SSL import _lib as native_openssl
 from OpenSSL.crypto import X509, FILETYPE_PEM, X509Name, load_certificate
 from certifi import where
-from retry.api import retry
 from hyperframe.frame import Frame, SettingsFrame
 from hyperframe.exceptions import InvalidFrameError
 from rich.progress import Progress, TaskID
@@ -64,6 +64,8 @@ class Transport:
     client_certificate :X509
     client_certificate_expected :bool
     client_certificate_match :bool
+    tls_downgrade :bool
+    preferred_protocol :str
     cafiles :list
     certificate_chain :list[X509]
     verifier_errors :list[tuple[X509], int]
@@ -105,6 +107,8 @@ class Transport:
         self.http2_support = False
         self.http2_cleartext_support = False
         self.peer_address = None
+        self.tls_downgrade = None
+        self.preferred_protocol = None
         self.ocsp_stapling = None
         self.ocsp_must_staple = None
         self.ocsp_revocation_reason = None
@@ -330,10 +334,10 @@ class Transport:
             self.ocsp_certificate_status = util.OCSP_CERT_STATUS[response.certificate_status.value]
         return response.response_status == OCSPResponseStatus.SUCCESSFUL and response.certificate_status == OCSPCertStatus.GOOD
 
-    def prepare_socket(self, ctx):
+    def prepare_socket(self, ctx, timeout :int = 1):
         ctx.check_hostname = False
         sock = socket(AF_INET, SOCK_STREAM)
-        sock.settimeout(1)
+        sock.settimeout(timeout)
         return sock
 
     def prepare_context(self, method :str = None, verify_mode :str = None, check_hostname :bool = False) -> SSL.Context:
@@ -361,10 +365,11 @@ class Transport:
         ctx.check_hostname = check_hostname
         return ctx
 
-    def prepare_connection(self, context :SSL.Context) -> SSL.Connection:
+    def prepare_connection(self, context :SSL.Context, sock :socket = None) -> SSL.Connection:
         ctx = ssl.SSLContext()
         ctx.verify_mode = ssl.CERT_NONE
-        sock = self.prepare_socket(ctx)
+        if sock is None:
+            sock = self.prepare_socket(ctx)
         conn = SSL.Connection(context, ctx.wrap_socket(sock, do_handshake_on_connect=False))
         conn.connect((self.host, self.port))
         conn.set_connect_state()
@@ -382,12 +387,14 @@ class Transport:
             f = None
         return f
 
-    @retry((SSL.WantReadError), tries=20, delay=0.5, logger=logger)
     def _http2(self, conn :SSL.Connection, request :Frame, response_wait :int = 3) -> Frame:
         logger.info(f'HTTP/2 Request:\n{request}')
         try:
             conn.sendall(b'PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n')
             conn.sendall(request.serialize())
+        except SSL.WantReadError:
+            sleep(0.5)
+            return self._http2(conn, request, response_wait)
         except SSL.Error as err:
             if 'protocol is shutdown' not in str(err):
                 logger.warning(err, exc_info=True)
@@ -402,7 +409,7 @@ class Transport:
                 data = conn.recv(1024)
                 if not data: break
                 frame_data += data
-            except (SSL.ZeroReturnError, SSL.WantReadError):
+            except (SSL.ZeroReturnError):
                 break
             except Exception as ex:
                 logger.warning(ex, exc_info=True)
@@ -417,7 +424,7 @@ class Transport:
             conn.close()
         return resp
 
-    def test_h2c(self, method :str = 'GET', uri_path :str = '/', timeout :int = 3, include_settings :bool = True) -> Frame:
+    def test_h2c(self, method :str = 'GET', uri_path :str = '/', response_wait :int = 3, include_settings :bool = True) -> Frame:
         logger.info(f'Testing HTTP/2 clear text')
         def _read(s :socket):
             resp = b''
@@ -451,7 +458,7 @@ class Transport:
         request = '\r\n'.join(req_parts) + '\r\n\r\n'
         self.http2_cleartext_support = False
         sock = socket(AF_INET, SOCK_STREAM)
-        sock.settimeout(timeout)
+        sock.settimeout(response_wait)
         try:
             sock.connect((self.host, 80 if self.port == 443 else self.port))            
             sock.sendall(preamble)
@@ -481,16 +488,18 @@ class Transport:
             raise AttributeError(f'uri_path not supported')
         if not uri_path.startswith('/'):
             uri_path = f'/{uri_path}'
+        ctx = self.prepare_context()
+        ctx.set_alpn_protos([b'h2', b'http/1.1'])
+        # rfc7540 section 9.2
+        ctx.set_options(ssl.OP_NO_COMPRESSION | ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1 | ssl.OP_NO_TLSv1_3)
+        ctx.set_cipher_list(b"ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM:DHE+CHACHA20")
         def _con():
-            ctx = self.prepare_context()
-            ctx.set_alpn_protos([b'h2', b'http/1.1'])
-            # rfc7540 section 9.2
-            ctx.set_options(ssl.OP_NO_COMPRESSION | ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1 | ssl.OP_NO_TLSv1_3)
-            ctx.set_cipher_list(b"ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM:DHE+CHACHA20")
-            conn = self.prepare_connection(ctx)
+            conn = self.prepare_connection(ctx, sock=self.prepare_socket(ctx, response_wait))
             conn.settimeout(response_wait)
             try:
                 conn.do_handshake()
+            except SSL.WantReadError:
+                pass
             except Exception as ex:
                 logger.warning(ex, exc_info=True)
             return conn
@@ -501,14 +510,39 @@ class Transport:
             self.http2_support = True
             self.http2_response_frame = str(resp)
 
+    def test_highest_tls_version(self, version, response_wait :int = 3):
+        if not isinstance(response_wait, int):
+            raise TypeError(f'response_wait {type(response_wait)}, int supported')
+        ctx = self.prepare_context()
+        ctx.set_min_proto_version(version)
+        def _con():
+            try:
+                conn = self.prepare_connection(ctx, sock=self.prepare_socket(ctx, timeout=response_wait))
+                conn.settimeout(response_wait)
+                conn.setblocking(1)
+                conn.do_handshake()
+                conn.shutdown()
+                conn.close()
+                self.preferred_protocol = conn.get_protocol_version_name()
+                return True
+
+            except SSL.WantReadError:
+                sleep(0.5)
+                return _con()
+            except Exception as ex:
+                logger.warning(ex, exc_info=True)
+            return False
+
+        return _con()
+
     def connect(self, tls_version :int, use_sni :bool = False, protocol :str = None):
         logger.info(f'Trying TLS version {util.OPENSSL_VERSION_LOOKUP[tls_version]}')
         ctx = self.prepare_context()
         ctx.set_verify(getattr(SSL, Transport.default_connect_verify_mode), self._verifier)
         ctx.set_max_proto_version(tls_version)
+        ctx.set_ocsp_client_callback(self._ocsp_handler)
         sock = self.prepare_socket(ctx)
         conn = SSL.Connection(context=ctx, socket=sock)
-        ctx.set_ocsp_client_callback(self._ocsp_handler)
         conn.request_ocsp()
         if all([use_sni, ssl.HAS_SNI]):
             logger.info('using SNI')
@@ -558,26 +592,38 @@ class Transport:
                 raise AttributeError('cafiles was provided but is not a valid URLs or files do not exist')
             if isinstance(valid_cafiles, list):
                 self.cafiles = valid_cafiles
-        for version in [SSL.SSL3_VERSION, SSL.TLS1_VERSION, SSL.TLS1_1_VERSION, SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]:
-            self.connect(tls_version=version, use_sni=use_sni)
+        tls_versions = [SSL.SSL3_VERSION, SSL.TLS1_VERSION, SSL.TLS1_1_VERSION, SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]
+        for index, version in enumerate(tls_versions):
+            self.connect(tls_version=version, use_sni=use_sni) # No HTTP test
             if isinstance(progress, Progress): progress.update(task, advance=1)
             if isinstance(self.server_certificate, X509):
-                res = self._connect_least_secure(
+                res = self._test_protocols(
                     use_sni, version
                 )
+                if version == SSL.TLS1_3_VERSION:
+                    # Already the highest TLS protocol, no downgrade possible
+                    self.tls_downgrade = False
+                else:
+                    logger.info('Trying to derive SCSV')
+                    # A connection of higher protocol indicates we have previously connected using the client fallback mechanism
+                    # When a handshake is rejected (False) assume downgrade attacks were prevented
+                    try:
+                        self.tls_downgrade = self.test_highest_tls_version(response_wait=1, version=tls_versions[index+1])
+                    except Exception:
+                        self.tls_downgrade = False
                 if isinstance(progress, Progress): progress.update(task, advance=1)
                 return res
 
         return False
 
-    def _connect_least_secure(self, use_sni, version):
+    def _test_protocols(self, use_sni, version):
         if all([use_sni, ssl.HAS_SNI]):
             self.sni_support = True
         for protocol in ['HTTP/1.0', 'HTTP/1.1']:
             self.connect(tls_version=version, use_sni=use_sni, protocol=protocol)
-        self.test_h2c()
-        self.test_http2()
-        
+        self.test_h2c(response_wait=3)
+        self.test_http2(response_wait=3)
+
         return True
 
     @staticmethod

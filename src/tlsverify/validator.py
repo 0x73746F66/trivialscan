@@ -7,13 +7,13 @@ from datetime import datetime
 from pathlib import Path
 import asn1crypto
 from ssl import PEM_cert_to_DER_cert
+from OpenSSL import SSL
 from OpenSSL.crypto import X509,  X509Name, dump_privatekey, dump_certificate, load_certificate, FILETYPE_PEM, FILETYPE_ASN1, FILETYPE_TEXT, TYPE_RSA, TYPE_DSA, TYPE_DH, TYPE_EC
 from cryptography.x509 import Certificate, extensions, PolicyInformation
 from certvalidator.errors import PathValidationError, RevokedError, InvalidCertificateError, PathBuildingError
+from dns.rrset import RRset
+from tldextract import TLDExtract
 from rich.progress import Progress, TaskID
-from rich.table import Table
-from rich.style import Style
-from rich import box
 from tlstrust import TrustStore, context
 from . import util
 from . import exceptions
@@ -32,9 +32,6 @@ class Validator:
     certificate :Certificate
     tmp_path_prefix :str
     metadata :Metadata
-    color_ok = 'dark_sea_green2'
-    color_nok = 'light_coral'
-    color_null = 'magenta'
 
     def __init__(self, tmp_path_prefix :str = '/tmp') -> None:
         if not isinstance(tmp_path_prefix, str):
@@ -153,7 +150,7 @@ class Validator:
         not_before = datetime.fromisoformat(self.metadata.certificate_not_before)
         self.validation_checks['not_expired'] = not_after > datetime.utcnow()
         if self.validation_checks['not_expired'] is False:
-            self.certificate_verify_messages.append(f'Expired {(datetime.utcnow() - not_after).days} days ago' if not_after < datetime.utcnow() else f'Valid for {(not_after - datetime.utcnow()).days} days')
+            self.certificate_verify_messages.append(util.date_diff(not_after))
         self.validation_checks['issued_past_tense'] = not_before < datetime.utcnow()
         if self.validation_checks['issued_past_tense'] is False:
             self.certificate_verify_messages.append(f'Will only be valid for use in {(datetime.utcnow() - self.metadata.certificate_not_before).days} days')
@@ -183,62 +180,9 @@ class Validator:
         self.metadata.revocation_crlite = util.crlite_revoked(db_path=path.join(self.tmp_path_prefix, ".crlite_db"), pem=self._pem)
         if self.metadata.revocation_crlite:
             self.validation_checks['not_revoked'] = False
+        if self.metadata.certificate_private_key_pem and 'BEGIN PRIVATE KEY' in self.metadata.certificate_private_key_pem:
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_EXPOSED_PRIVATE_KEY)
         #TODO OneCRL
-
-    def _make_table(self, title :str, caption :str) -> Table:
-        title_style = Style(bold=True, color=self.color_ok if self.certificate_valid else self.color_nok)
-        table = Table(title=title, caption=caption, title_style=title_style, box=box.MINIMAL_HEAVY_HEAD)
-        table.add_column("", justify="right", style="dark_turquoise", no_wrap=True)
-        table.add_column("Result", justify="left")
-        return table
-
-    def _table_data(self, table :Table, skip :list[str], represent_as :tuple[str, str]) -> Table:
-        fingerprints = ['certificate_sha256_fingerprint', 'certificate_sha1_fingerprint', 'certificate_md5_fingerprint', 'certificate_subject_key_identifier', 'certificate_authority_key_identifier']
-        for i, err in enumerate(self.certificate_verify_messages):
-            table.add_row(f'Note {i+1}', err)
-        for key in self.validation_checks.keys():
-            table.add_row(f'Rule {key}', util.styled_boolean(self.validation_checks[key], ('Pass', 'Fail'), (self.color_ok, self.color_nok)))
-        for key in list(vars(self.metadata).keys()):
-            if key in skip:
-                continue
-            val = getattr(self.metadata, key)
-            if key in fingerprints and isinstance(val, str):
-                table.add_row(key, util.str_n_split(val).upper())
-                continue
-            if val is None or (isinstance(val, str) and len(val) == 0):
-                table.add_row(key, util.styled_value("Unknown", color=self.color_null))
-                continue
-            if isinstance(val, bool):
-                table.add_row(key, util.styled_boolean(val, represent_as=represent_as, colors=(self.color_ok, self.color_nok)))
-                continue
-            table.add_row(key, util.styled_any(val))
-        return table
-
-    def _table_ext(self, table :Table, skip :list[str]) -> Table:
-        for v in self.metadata.certificate_extensions:
-            ext = v['name']
-            del v['name']
-            if ext in skip:
-                continue
-            if ext in v:
-                ext_sub = v[ext]
-                del v[ext]
-                table.add_row(ext, util.styled_dict(v))
-                if isinstance(ext_sub, list):
-                    for sub in ext_sub:
-                        if isinstance(sub, str):
-                            table.add_row('', util.styled_value(sub, crop=False))
-                            continue
-                        if isinstance(sub, dict):
-                            for subk, subv in sub.items():
-                                table.add_row('', subk+'='+util.styled_value(subv))
-                            continue
-                        table.add_row('', util.styled_any(sub))
-                    continue
-                table.add_row('', str(ext_sub))
-                continue    
-            table.add_row(ext, util.styled_any(v))
-        return table
 
 class RootCertValidator(Validator):
     def __init__(self, **kwargs) -> None:
@@ -256,16 +200,6 @@ class RootCertValidator(Validator):
                '_der=<bytes>, ' +\
                'certificate=<cryptography.x509.Certificate>)>'
 
-    def to_rich(self) -> Table:
-        skip = ['host', 'port', 'certificate_validation_type', 'certificate_is_self_signed', 'offered_ciphers', 'certificate_subject', 'certificate_issuer', 'certificate_common_name', 'certificate_intermediate_ca', 'certificate_root_ca', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier', 'revocation_ocsp_status', 'revocation_ocsp_response', 'revocation_ocsp_reason', 'revocation_ocsp_time', 'client_certificate_expected', 'certification_authority_authorization', 'dnssec', 'scsv_support', 'compression_support', 'http_expect_ct_report_uri', 'http_xss_protection', 'http_status_code', 'http1_support', 'http1_1_support', 'http2_support', 'http2_cleartext_support', 'sni_support', 'negotiated_protocol', 'peer_address', 'negotiated_cipher', 'weak_cipher', 'strong_cipher', 'forward_anonymity', 'session_resumption_caching', 'session_resumption_tickets', 'session_resumption_ticket_hint', 'client_renegotiation', 'http_hsts', 'http_xfo', 'http_csp', 'http_coep', 'http_coop', 'http_corp', 'http_nosniff', 'http_unsafe_referrer', 'certificate_authority_key_identifier', 'revocation_ocsp_stapling', 'revocation_ocsp_must_staple', 'revocation_crlite', 'common_name_defined', 'possible_phish_or_malicious']
-        title = f'Root CA: {self.metadata.certificate_subject}'
-        caption = util.date_diff(self.certificate.not_valid_after)
-        table = self._make_table(title, caption)
-        table.add_row('certificate_valid', util.styled_boolean(self.certificate_valid, ('Trusted', 'Not Trusted'), (self.color_ok, self.color_nok)))
-        self._table_data(table, skip, ('Trusted', 'Not Trusted'))
-        self._table_ext(table, skip)
-        return table
-
 class PeerCertValidator(Validator):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -281,23 +215,6 @@ class PeerCertValidator(Validator):
                '_pem=<bytes>, ' +\
                '_der=<bytes>, ' +\
                'certificate=<cryptography.x509.Certificate>)>'
-
-    def to_rich(self) -> Table:
-        skip = ['host', 'port', 'offered_ciphers', 'certificate_subject', 'certificate_issuer', 'certificate_common_name', 'certificate_intermediate_ca', 'certificate_root_ca', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier', 'revocation_ocsp_status', 'revocation_ocsp_response', 'revocation_ocsp_reason', 'revocation_ocsp_time', 'client_certificate_expected', 'certification_authority_authorization', 'dnssec', 'scsv_support', 'compression_support', 'http_expect_ct_report_uri', 'http_xss_protection', 'http_status_code', 'http1_support', 'http1_1_support', 'http2_support', 'http2_cleartext_support', 'sni_support', 'negotiated_protocol', 'peer_address', 'negotiated_cipher', 'weak_cipher', 'strong_cipher', 'forward_anonymity', 'session_resumption_caching', 'session_resumption_tickets', 'session_resumption_ticket_hint', 'client_renegotiation', 'http_hsts', 'http_xfo', 'http_csp', 'http_coep', 'http_coop', 'http_corp', 'http_nosniff', 'http_unsafe_referrer']
-        peer_type = 'Intermediate Certificate'
-        if self.metadata.certificate_intermediate_ca:
-            peer_type = 'Intermediate CA'
-            skip.extend(['trust_apple_legacy', 'trust_ccadb', 'trust_java', 'trust_android', 'trust_linux', 'trust_certifi', 'trust_apple_legacy_status', 'trust_ccadb_status', 'trust_java_status', 'trust_android_status', 'trust_linux_status', 'trust_certifi_status'])
-        title = f'{peer_type}: {self.metadata.certificate_subject}'
-        caption = '\n'.join([
-            f'Issuer: {self.metadata.certificate_issuer}',
-            util.date_diff(self.certificate.not_valid_after),
-        ])
-        table = self._make_table(title, caption)
-        table.add_row('certificate_valid', util.styled_boolean(self.certificate_valid, ('Valid', 'Validation Issues'), (self.color_ok, self.color_nok)))
-        self._table_data(table, skip, ('Detected', 'Not Detected'))
-        self._table_ext(table, skip)
-        return table
 
 class CertValidator(Validator):
     _pem_certificate_chain :list
@@ -331,21 +248,6 @@ class CertValidator(Validator):
             + '_der=<bytes>, '
             + 'certificate=<cryptography.x509.Certificate>)>'
         )
-
-    def to_rich(self) -> Table:
-        skip = ['host', 'port', 'offered_ciphers', 'certificate_san', 'certificate_extensions', 'subjectKeyIdentifier', 'authorityKeyIdentifier', 'certificate_root_ca', 'certificate_intermediate_ca', 'peer_address', 'trust_apple_legacy', 'trust_ccadb', 'trust_java', 'trust_android', 'trust_linux', 'trust_certifi', 'trust_apple_legacy_status', 'trust_ccadb_status', 'trust_java_status', 'trust_android_status', 'trust_linux_status', 'trust_certifi_status']
-        title = f'{self.metadata.host}:{self.metadata.port} ({self.metadata.peer_address})'
-        caption = '\n'.join([
-            f'Issuer: {self.metadata.certificate_issuer}',
-            util.date_diff(self.certificate.not_valid_after),
-        ])
-        table = self._make_table(title, caption)
-        table.add_row('certificate_valid', util.styled_boolean(self.certificate_valid, ('Valid', 'Validation Issues'), (self.color_ok, self.color_nok)))
-        table.add_row('certificate_chain_valid', util.styled_boolean(self.certificate_chain_valid, ('Pass', 'Fail'), (self.color_ok, self.color_nok)))
-        table.add_row('certificate_chain_validation_result', util.styled_any(self.certificate_chain_validation_result))
-        self._table_data(table, skip, ('Detected', 'Not Detected'))
-        self._table_ext(table, skip)
-        return table
 
     def mount(self, transport :Transport):
         if not isinstance(transport, Transport):
@@ -387,6 +289,8 @@ class CertValidator(Validator):
         self.metadata.session_resumption_ticket_hint = transport.session_ticket_hints
         self.metadata.compression_support = self.header_exists(name='content-encoding', includes_value='gzip')
         self.metadata.client_renegotiation = transport.client_renegotiation
+        self.metadata.scsv = transport.tls_downgrade is False # modern network tools such as F5 try to hide cause and blend in making scsv undetectable directly but a downgrade can still be observed
+        self.metadata.preferred_protocol = transport.preferred_protocol
         self.metadata.http_hsts = self.header_exists(name='strict-transport-security', includes_value='max-age')
         self.metadata.http_expect_ct_report_uri = self.header_exists(name='expect-ct', includes_value='report-uri')
         self.metadata.http_xfo = self.header_exists(name='x-frame-options') or self.header_exists(name='content-security-policy', includes_value='frame-ancestors')
@@ -397,13 +301,14 @@ class CertValidator(Validator):
         self.metadata.http_corp = self.header_exists(name='cross-origin-resource-policy', includes_value='same-origin')
         self.metadata.http_unsafe_referrer = self.header_exists(name='referrer-policy', includes_value='unsafe-url')
         self.metadata.http_xss_protection = self.header_exists(name='x-xss-protection', includes_value='1; mode=block')
-        http_statuses = []
+        http_statuses = [505]
         if transport.http1_support:
             http_statuses.append(transport.http1_code)
         if transport.http1_1_support:
             http_statuses.append(transport.http1_1_code)
-        if self.metadata.http_status_code:
-            self.metadata.http_status_code = min(*http_statuses, 511 if transport.client_certificate_expected else 505)
+        if transport.client_certificate_expected:
+            http_statuses.append(511)
+        self.metadata.http_status_code = min(http_statuses)
         self.metadata.http1_support = transport.http1_support
         self.metadata.http1_1_support = transport.http1_1_support
         self.metadata.http2_support = transport.http2_support
@@ -436,6 +341,7 @@ class CertValidator(Validator):
         if isinstance(updater, tuple): progress, task = updater
         super().verify()
         if isinstance(progress, Progress): progress.update(task, advance=1)
+        tldext = TLDExtract(cache_dir='/tmp')(f'http://{self.metadata.host}')
         ca = util.get_basic_constraints(self.certificate)
         logger.debug('Server certificate validations')
         self.validation_checks['basic_constraints_ca'] = True
@@ -452,6 +358,8 @@ class CertValidator(Validator):
         self.validation_checks['match_hostname'] = util.match_hostname(self.metadata.host, self.certificate)
         self.metadata.certificate_is_self_signed = util.is_self_signed(self.certificate)
         self.validation_checks['not_self_signed'] = self.metadata.certificate_is_self_signed is False
+        if self.metadata.preferred_protocol != self.metadata.negotiated_protocol:
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_SCSV.format(protocol=self.metadata.preferred_protocol, fallback=self.metadata.negotiated_protocol))
         if self.metadata.certificate_is_self_signed:
             self.validation_checks['trusted_ca'] = False
             self.certificate_verify_messages.append('The CA is not properly imported as a trusted CA into the browser, Chrome based browsers will block visitors and show them ERR_CERT_AUTHORITY_INVALID')
@@ -466,10 +374,35 @@ class CertValidator(Validator):
             self.validation_checks['ocsp_must_staple_satisfied'] = False
             if self.metadata.revocation_ocsp_status == util.OCSP_CERT_STATUS[0]:
                 self.validation_checks['ocsp_must_staple_satisfied'] = True
-        if self.metadata.certification_authority_authorization is True:
+        if self.metadata.certification_authority_authorization:
             self.validation_checks['valid_caa'] = util.caa_valid(self.metadata.host, self.x509, self.certificate_chain)
-        if self.metadata.dnssec is True:
+        if self.metadata.dnssec:
             self.validation_checks['valid_dnssec'] = util.dnssec_valid(self.metadata.host)
+            if self.validation_checks['valid_dnssec'] is False and tldext.registered_domain != self.metadata.host:
+                self.validation_checks['valid_dnssec'] = util.dnssec_valid(tldext.registered_domain)
+                if self.validation_checks['valid_dnssec']:
+                    self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_DNSSEC_TARGET)
+                else:
+                    self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_DNSSEC_REGISTERED_DOMAIN)
+        else:
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_DNSSEC_MISSING)
+        if self.metadata.certificate_validation_type == util.VALIDATION_TYPES['DV']:
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CERTIFICATE_VALIDATION_TYPE)
+        if not self.metadata.certification_authority_authorization:
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CERTIFICATION_AUTHORITY_AUTHORIZATION)
+        if self.metadata.session_resumption_caching and self.metadata.negotiated_protocol != util.OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION]:
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_SESSION_RESUMPTION_CACHING)
+        if self.metadata.session_resumption_caching and self.metadata.negotiated_protocol == util.OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION]:
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_SESSION_RESUMPTION_CACHING_TLS1_3)
+        if self.metadata.session_resumption_tickets and self.metadata.negotiated_protocol != util.OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION]:
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_SESSION_RESUMPTION_TICKETS)
+        if self.metadata.client_renegotiation:
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CLIENT_RENEGOTIATION)
+        if self.metadata.compression_support:
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_COMPRESSION_SUPPORT)
+        self.validation_checks['avoid_deprecated_dnssec_algorithms'] = self.metadata.dnssec_algorithm not in util.WEAK_DNSSEC_ALGORITHMS.keys()
+        if self.validation_checks['avoid_deprecated_dnssec_algorithms'] is False:
+            self.certificate_verify_messages.append(util.WEAK_DNSSEC_ALGORITHMS[self.metadata.dnssec_algorithm])
 
         if isinstance(progress, Progress): progress.update(task, advance=1)
         return self.certificate_valid
@@ -613,6 +546,8 @@ class CertValidator(Validator):
     def extract_x509_metadata(self, x509 :X509):
         super().extract_x509_metadata(x509)
         self.metadata.certification_authority_authorization = util.caa_exist(self.metadata.host)
-        dnssec = util.get_dnssec(self.metadata.host)
-        if dnssec is not None:
-            self.metadata.dnssec = len(dnssec) > 0
+        answer :list[RRset] = util.get_dnssec_answer(self.metadata.host)
+        if answer is not None and len(answer) > 0:
+            self.metadata.dnssec = True
+            _, _, _, _, _, _, algorithm, *rest = answer[0].to_text().split()
+        self.metadata.dnssec_algorithm = util.DNSSEC_ALGORITHMS[int(algorithm)]

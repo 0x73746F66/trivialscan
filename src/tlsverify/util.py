@@ -18,6 +18,7 @@ from rich.style import Style
 from rich.console import Console
 from dns import resolver, dnssec, rdatatype, message, query, name as dns_name
 from dns.exception import DNSException, Timeout as DNSTimeoutError
+from dns.resolver import NoAnswer
 from tldextract import TLDExtract
 from crlite_query import CRLiteDB, IntermediatesDB, CRLiteQuery
 
@@ -222,14 +223,14 @@ WEAK_KEY_SIZE = {
     'EC': 160,
 }
 KNOWN_WEAK_KEYS = {
-    'RSA': '2000: Factorization of a 512-bit RSA Modulus, essentially derive a private key knowing only the public key. Verified bt EFF in 2001. Later in 2009 factorization of up to 1024-bit keys',
-    'DSA': '1999: HPL Laboratories demonstrated lattice attacks on DSA, a non-trivial example of the known message attack that is a total break and message forgery technique. 2010 Dimitrios Poulakis demonstrated a lattice reduction technique for single or multiple message forgery',
-    'EC': '2010 Dimitrios Poulakis demonstrated a lattice reduction technique to attack ECDSA for single or multiple message forgery',
+    'RSA': 'The use RSA Encryption is considered vulnerable in certain context. 2000: Factorization of a 512-bit RSA Modulus, essentially derive a private key knowing only the public key. Verified bt EFF in 2001. Later in 2009 factorization of up to 1024-bit keys',
+    'DSA': 'The use DSA Encryption is considered vulnerable. 1999: HPL Laboratories demonstrated lattice attacks on DSA, a non-trivial example of the known message attack that is a total break and message forgery technique. 2010 Dimitrios Poulakis demonstrated a lattice reduction technique for single or multiple message forgery',
+    'EC': 'The use Elliptic-curve Encryption is considered vulnerable in certain context. 2010 Dimitrios Poulakis demonstrated a lattice reduction technique to attack ECDSA for single or multiple message forgery',
 }
 KNOWN_WEAK_SIGNATURE_ALGORITHMS = {
-    'sha1WithRSAEncryption': 'Macquarie University Australia 2009: identified vulnerabilities to collision attacks, later in 2017 Marc Stevens demonstrated collision proofs',
-    'md5WithRSAEncryption': 'Arjen Lenstra and Benne de Weger 2005: vulnerable to hash collision attacks',
-    'md2WithRSAEncryption': 'Rogier, N. and Chauvaud, P. in 1995: vulnerable to collision, later preimage resistance, and second-preimage resistance attacks were demonstrated at BlackHat 2008 by Mark Twain',
+    'sha1WithRSAEncryption': 'The use of SHA1 with RSA Encryption is considered vulnerable. Macquarie University Australia 2009: identified vulnerabilities to collision attacks, later in 2017 Marc Stevens demonstrated collision proofs',
+    'md5WithRSAEncryption': 'The use of MD5 with RSA Encryption is considered vulnerable. Arjen Lenstra and Benne de Weger 2005: vulnerable to hash collision attacks',
+    'md2WithRSAEncryption': 'The use of MD2 with RSA Encryption is considered vulnerable. Rogier, N. and Chauvaud, P. in 1995: vulnerable to collision, later preimage resistance, and second-preimage resistance attacks were demonstrated at BlackHat 2008 by Mark Twain',
 }
 OPENSSL_VERSION_LOOKUP = {
     768: 'SSLv3',
@@ -286,7 +287,32 @@ STRONG_CIPHERS = [
     'TLS_AES_128_CCM_8_SHA256',
     'TLS_AES_128_CCM_SHA2',
 ]
-
+DNSSEC_ALGORITHMS = {
+    1: 'RSA/MD5',
+    3: 'DSA/SHA-1',
+    5: 'RSA/SHA-1',
+    6: 'DSA-NSEC3-SHA1',
+    7: 'RSASHA1-NSEC3-SHA1',
+    8: 'RSA/SHA-256',
+    10: 'RSA/SHA-512',
+    12: 'GOST R 34.10-2001',
+    13: 'ECDSA/SHA-256',
+    14: 'ECDSA/SHA-384',
+    15: 'Ed25519',
+    16: 'Ed448',
+}
+WEAK_DNSSEC_ALGORITHMS = {
+    'RSA/MD5': 'DNSSEC Algorithm RSA/MD5 was deprecated in 2005',
+    'DSA/SHA-1': 'DNSSEC Algorithm DSA/SHA-1 was deprecated in 2004',
+    'RSA/SHA-1': KNOWN_WEAK_SIGNATURE_ALGORITHMS['sha1WithRSAEncryption'],
+    'DSA-NSEC3-SHA1': 'DNSSEC Algorithm was DSA-NSEC3-SHA1 deprecated in 2008',
+    'GOST R 34.10-2001': 'DNSSEC Algorithm GOST R 34.10-2001 was deprecated in 2010',
+}
+STRONG_DNSSEC_ALGORITHMS = [
+    'ECDSA/SHA-384',
+    'Ed25519',
+    'Ed448',
+]
 
 def filter_valid_files_urls(inputs :list[str], tmp_path_prefix :str = '/tmp'):
     ret = set()
@@ -517,38 +543,39 @@ def gather_key_usages(cert :Certificate) -> tuple[list, list]:
     for ext in get_valid_certificate_extensions(cert):
         if isinstance(ext, extensions.UnrecognizedExtension):
             continue
-        ext_name = ext.oid._name
         if isinstance(ext, extensions.ExtendedKeyUsage):
             extended_usages = [x._name for x in ext or []] # pylint: disable=protected-access
             if 'serverAuth' in extended_usages:
                 validator_extended_key_usage.append('server_auth')
         if isinstance(ext, extensions.TLSFeature):
             for feature in ext:
-                if feature.value == 5:
-                    validator_extended_key_usage.append('ocsp_signing')
-                if feature.value == 17:
+                if feature.value in [5, 17]:
                     validator_extended_key_usage.append('ocsp_signing')
         if isinstance(ext, extensions.KeyUsage):
-            if ext.digital_signature:
-                validator_key_usage.append('digital_signature')
-            if ext.content_commitment:
-                validator_key_usage.append('content_commitment')
-            if ext.key_encipherment:
-                validator_key_usage.append('key_encipherment')
-            if ext.data_encipherment:
-                validator_key_usage.append('data_encipherment')
-            if ext.key_agreement:
-                validator_key_usage.append('key_agreement')
-                if ext.decipher_only:
-                    validator_key_usage.append('decipher_only')
-                if ext.encipher_only:
-                    validator_key_usage.append('encipher_only')
-            if ext.key_cert_sign:
-                validator_key_usage.append('key_cert_sign')
-            if ext.crl_sign:
-                validator_key_usage.append('crl_sign')
-
+            validator_key_usage += _extract_key_usage(ext)
     return validator_key_usage, validator_extended_key_usage
+
+def _extract_key_usage(ext):
+    validator_key_usage = []
+    if ext.digital_signature:
+        validator_key_usage.append('digital_signature')
+    if ext.content_commitment:
+        validator_key_usage.append('content_commitment')
+    if ext.key_encipherment:
+        validator_key_usage.append('key_encipherment')
+    if ext.data_encipherment:
+        validator_key_usage.append('data_encipherment')
+    if ext.key_agreement:
+        validator_key_usage.append('key_agreement')
+        if ext.decipher_only:
+            validator_key_usage.append('decipher_only')
+        if ext.encipher_only:
+            validator_key_usage.append('encipher_only')
+    if ext.key_cert_sign:
+        validator_key_usage.append('key_cert_sign')
+    if ext.crl_sign:
+        validator_key_usage.append('crl_sign')
+    return validator_key_usage
 
 def get_ski_aki(cert :Certificate) -> tuple[str, str]:
     ski = None
@@ -744,10 +771,19 @@ def styled_any(value, dict_delimiter='=', list_delimiter='\n', color :str = 'bri
     return styled_value(value, color=color)
 
 def get_dnssec(domain_name :str):
+    logger.warning(DeprecationWarning('util.get_dnssec() was deprecated in version 0.4.3 and will be removed in version 0.5.0'), exc_info=True)
+    return get_dnssec_answer(domain_name)
+
+def get_dnssec_answer(domain_name :str):
+    logger.info(f'Trying to resolve DNSSEC for {domain_name}')
     dns_resolver = resolver.Resolver(configure=False)
     dns_resolver.lifetime = 5
+    tldext = TLDExtract(cache_dir='/tmp')(f'http://{domain_name}')
+    answers = []
     try:
         response = resolver.query(domain_name, rdatatype.NS)
+    except NoAnswer:
+        return get_dnssec_answer(tldext.registered_domain) if tldext.registered_domain != domain_name else None
     except DNSTimeoutError:
         logger.warning('DNS Timeout')
         return None
@@ -783,6 +819,7 @@ def get_dnssec(domain_name :str):
         logger.warning('No nameservers found')
         return None
     for ns in nameservers:
+        logger.info(f'Trying to resolve DNSKEY using NS {ns}')
         try:
             request = message.make_query(domain_name, rdatatype.DNSKEY, want_dnssec=True)
             response = query.udp(request, ns, timeout=2)
@@ -802,11 +839,17 @@ def get_dnssec(domain_name :str):
             logger.warning('No DNSKEY record')
             continue
 
-        return response.answer
-    return None
+        logger.info(f'{ns} answered {response.answer}')
+        if len(response.answer) == 2:
+            return response.answer
+        answers += response.answer
+        if len(answers) == 2:
+            return answers
+
+    return get_dnssec_answer(tldext.registered_domain) if tldext.registered_domain != domain_name else None
 
 def dnssec_valid(domain_name) -> bool:
-    answer = get_dnssec(domain_name)
+    answer = get_dnssec_answer(domain_name)
     if answer is None:
         return False
     if len(answer) != 2:
@@ -821,10 +864,8 @@ def dnssec_valid(domain_name) -> bool:
     return True
 
 def get_caa(domain_name :str):
-    extractor = TLDExtract(cache_dir='/tmp')
-    ext = extractor(f'http://{domain_name}')
-    apex = ext.registered_domain
-    try_apex = apex != domain_name
+    tldext = TLDExtract(cache_dir='/tmp')(f'http://{domain_name}')
+    try_apex = tldext.registered_domain != domain_name
     response = None
     dns_resolver = resolver.Resolver(configure=False)
     dns_resolver.lifetime = 5
@@ -839,14 +880,17 @@ def get_caa(domain_name :str):
     except ConnectionError:
         logger.warning('Name or service not known')
     if not response and try_apex:
-        return get_caa(apex)
+        logger.info(f'Trying to resolve CAA for {tldext.registered_domain}')
+        return get_caa(tldext.registered_domain)
     if not response:
         return None
     return response
 
 def caa_exist(domain_name :str) -> bool:
+    logger.info(f'Trying to resolve CAA for {domain_name}')
     response = get_caa(domain_name)
     if response is None:
+        logger.info('No CAA records')
         return False
     issuers = set()
     for rdata in response:

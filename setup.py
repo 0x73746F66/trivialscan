@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.4.3",
+    version="0.4.4",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -79,9 +79,14 @@ optional arguments:
   - ✓ Session Resumption caching
   - ✓ Session Resumption tickets
   - ✓ Session Resumption ticket hint
+  - ✓ Downgrade attack detection and SCSV
 - DNS Information
-  - ✓ Certification Authority Authorization (CAA)
-  - ✓ DNSSEC
+  - ✓ Certification Authority Authorization (CAA) present
+  - ✓ CAA Valid
+  - ✓ DNSSEC present
+  - ✓ DNSSEC valid
+  - ✓ DNSSEC algorithm
+  - ✓ DNSSEC deprecated and weak algorithms
 - HTTP Information
   - ✓ HTTP/1 supported (response status and headers)
   - ✓ HTTP/1.1 supported (response status and headers)

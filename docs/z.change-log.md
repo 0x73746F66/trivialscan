@@ -1,5 +1,23 @@
 # Change Log
 
+## 0.4.4 Oct 25th 2021
+
+- Fixed a DNSSEC validation bug on subdomains
+- Report DNSSEC algorithm and raise validation errors for weak algorithms
+- Fixed a CAA validation bug on subdomains
+- Made all messages reporting 'days ago' or similar messages consistently 'inclusive' days
+- Deprecate `util.get_dnssec` which is renamed to `util.get_dnssec_answer()` for clarity
+- Added output showing if SCSV was derived
+- Added server preferred tls protocol, via new `util.test_highest_tls_version()`
+- Show validation messages for TLS downgrade availability, but not treat as a TLS verification error
+- Fixed http_status_code to not always be `0`
+- Better messages for 'known weak X' findings
+- Added optional socket argument to `util.prepare_connection()`, when omitted previous functionality will mean it gets created for you
+- Refactored cli outputs for more granular control over word choice and color of boolean and null results
+- CLI now uses human readable text rather than code key names
+- Included verbose validation messages
+- Ignore unnecessary OpenSSL `WantRead` warnings showing at `-vv` verbosity level that are expected and not actually errors for our purposes
+
 ## 0.4.3 Oct 23rd 2021
 
 - Bump `tlstrust==1.1.0` which optionally uses SKI for Root CA matching in case Certificates aren't issued improperly, using non-unique Issuer Subject Common Name
@@ -22,7 +40,7 @@
 
 ## 0.4.0 Oct 19th 2021
 
-- Added `util.get_dnssec()` and `util.dnssec_valid()` for DNSSEC existence and validation
+- Added `util.get_dnssec_answer()` and `util.dnssec_valid()` for DNSSEC existence and validation
 - Added `util.get_caa()`, `util.caa_exist()`, and `util.caa_valid()` for CAA record existence and validation
 
 ## 0.3.7 Oct 18th 2021

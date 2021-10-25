@@ -26,9 +26,14 @@ See [Documentation](./docs/0.index.md) section of this repository
   - ✓ Session Resumption caching
   - ✓ Session Resumption tickets
   - ✓ Session Resumption ticket hint
+  - ✓ Downgrade attack detection and SCSV
 - DNS Information
-  - ✓ Certification Authority Authorization (CAA)
-  - ✓ DNSSEC
+  - ✓ Certification Authority Authorization (CAA) present
+  - ✓ CAA Valid
+  - ✓ DNSSEC present
+  - ✓ DNSSEC valid
+  - ✓ DNSSEC algorithm
+  - ✓ DNSSEC deprecated and weak algorithms
 - HTTP Information
   - ✓ HTTP/1 supported (response status and headers)
   - ✓ HTTP/1.1 supported (response status and headers)
@@ -108,7 +113,9 @@ See [Documentation](./docs/0.index.md) section of this repository
 - ✓ CLI output evaluation duration
 - ✓ OpenSSL verify errors are actually evaluated and reported instead of either terminate connection or simply ignored (default approach most use VERIFY_NONE we actually let openssl do verification and keep the connection open anyway)
 
-## Impersonation detections
+## Rationale of `possible_phish_or_malicious` feature:
+
+### Impersonation detections
 
 These are commonly used for phishing sites that are quickly deployed and are made to look like a trusted site. These are HTTPS/TLS sites and since browsers no longer show the green padlock it is harder for the layman to visually identify any problems (specifically if the domain name is visually a perfect match due to hidden and look-alike characters or other top level domains e.g. the company named "post" is `post.com` and see `post.express` and these new suffix are sso common that we are not surprised to see them so phishing sites are all too common).
 
@@ -120,7 +127,7 @@ Quick note about these webserver tools; all have 1 thing in common, they offer a
 
 **sirv** Same as above
 
-## C2 (command and control) detections
+### C2 (command and control) detections
 
 Many hacking tools (used by both ethical and malicious actors) well serve a website that communicates over HTTPS/TLS, and these tools have default behaviors and indicators that we can detect on the HTTPS/TLS layer.
 
@@ -131,7 +138,7 @@ tls-verify has default resilience to this hacking tool. The certificates used by
 
 Honorary mention; **Wireshark**. All TLS traffic that passes through this tool and read (decrypted) is unchanged and will arrive on the endpoint with no integrity compromises, therefore the use of Wireshark is undetectable and has no side effects. Wireshark takes a copy of the packets and allows them to continue on their way as-is, the copies are inspected by Wireshark, not the actual packets the endpoint receives. This is how TLS is intended to work, it provides you integrity only, not confidentiality or privacy (Don't believe everything Apple tells you on billboards and fancy ads)
 
-## Non-production grade detections
+### Non-production grade detections
 
 Other tools with shared certificates that should not be used for a production web server using TLS
 
@@ -142,7 +149,6 @@ Other tools with shared certificates that should not be used for a production we
 - Handshake Simulations
 - More impersonation detections
 - More C2 (command and control) detections
-- If OCSP stapling, ensure a response was received
 - Known RSA/DSA private keys: https://www.hdm.io/tools/debian-openssl/
 - Common DH primes and public server param (Ys) reuse - logjam
 - ECDH public server param reuse - Racoon
@@ -167,7 +173,6 @@ Other tools with shared certificates that should not be used for a production we
   - apikey
   - custom authenticator (i.e. bespoke signers and custom headers
   - HMAC [httpbis-message-signatures](https://datatracker.ietf.org/doc/draft-ietf-httpbis-message-signatures/) example custom authenticator
-- report Downgrade attack prevention
 - Certificate Summary
   - Public Key Modulus
   - Public Key SPKI SHA-256
@@ -177,7 +182,21 @@ Other tools with shared certificates that should not be used for a production we
 
 ### Rationale
 
-#### Why another python library
+#### Why another SSL/TLS scanner?
+
+Easy answer is most try to provide the **optimum** configuration, ans we would like to know what actual support is available, because an attacker will not interact with your optimal settings, they'll downgrade if they can and enumerate bugs across the entire attack surface.
+
+An existing python tool `sslyze` treats assertions as 'best configuration' and not 'what is possible and can be exploited'.
+
+Qualys SSL Labs is rarely updated, and lags significantly behind it makes their tool an embarrassing false sense of security. E.g. protocols, ciphers, and other such specifics that were deprecated 3+ years ago remain the same today when deprecated as they were when considered flawed but good enough for use. Additionally they have no concept os reality of how Root CA trust stores work, they advise trust to a fault, even when trusted Root CA Certificates have expired or violate their own constraints via TLS extensions that were never validated.
+
+The only useful tool that will look at what is possible rather than what is the best configuration is called `testssl.sh`. While I rate it highly, I require something written in python so it can be utilised in python applications that perform a TLS connection (via `requests`) and not simply evaluate the target server.
+
+#### Why use `pyOpenSSL`?
+
+Firstly, `pyOpenSSL` is stable and the only other alternative I know of is `nassl` which is experimental and created by teh same maintainers of `sslyze` because they assumed `pyOpenSSL` was insufficient. We chose `pyOpenSSL` because it not only provides a production grade when making `requests`, it also fully provides all possible low level native `OpenSSL` methods calls (contrary to `nassl` beliefs) so there is no need to reinvent the wheel or use alternatives that are not ready for production use.
+
+#### Why another python library for Certificate verification?
 
 We have several existing options in Python;
 - `pyOpenSSL` Python bindings for OpenSSL
@@ -191,7 +210,7 @@ Given `certvalidator` provide us a solution to validate the entire cert chain, I
 
 We need a simple tool that abstracts the repeatable steps, and the code bases of the above are not ideal (typical gate-keeping or procrastination in PRs and unnecessary py-golf - sorry if you're a fan of perl golf, it's not for me)
 
-#### NPN
+#### Only supporting ALPN, not NPN
 
 NPN was the TLS extension used to negotiate SPDY (and, in transition, HTTP/2). During the standardization process, NPN was replaced with ALPN, published as rfc7301 in July 2014. Chrome removed NPN and SPDY protocol.
 
@@ -199,7 +218,7 @@ Given the maker of SPDY and therefore the transitional TLS extension NPN has rem
 
 Maybe vulnerabilities in SPDY or NPN will be disclosed via UVI (Cloud Security Alliance), but UVI is not yet mainstream and is mostly unheard of in security research communities as of late 2021.
 
-#### HPKP
+#### Planning HPKP support
 
 Because browsers no longer validated HPKP, It is common knowledge that attackers were able to abuse the browser security model.
 > This only effected websites that did not have any use for HPKP
@@ -216,7 +235,7 @@ Web browsers no longer enforce HPKP, they simply ignore HPKP entirely.
 
 For this reason HPKP is still a fantastic solution for securing any TLS communication channel. The only barrier is an onus on you as an implementer of HPKP validation to make sane implementation decisions (which is precisely what you do whenever you implement anything, every time)
 
-#### Extended Validation
+#### Prefer Extended Validation
 
 Domain Validated (DV) Certificates may be growing in popularity since the browsers ceased showing the organization name along with a green padlock, but the visual change is not material to the security characteristic associated with Extended Validation (EV) Certificates. When the visual changes occurred the mainstream non-technical or the uneducated in cybersecurity masses all declared that EV Certificates are dead, but the reality and truth of the matter is EV Certificates have never been more important.
 
@@ -229,9 +248,9 @@ Let's consider some facts:
 5. The DV Certificate Issuers generally don't offer any additional features, therefore even if you attempt to use certain features like `ssl_stapling` it will simply be ignored. These Issuers, (pick on Let's Encrypt for this one) simply prefer low-barrier and ease-of-use over any and all security characteristics - so if they don't care, why would you put any trust in their DV Certificates to secure your TLS connections?
 6. An EV Certificate inherently required an out-of-band validation, that is not automated like a DV Certificate. Therefore if an ATO (Account Take-over) or DNS hijacking attack were to be successful the attacker must be persistent and sometimes be physically attacking you. Which all takes significantly more time than the near-instant time it takes for the DV Certificates to be issued. When you operate public hosted (cloud) servers, they are typically ephemeral IP Addresses. The hazard with an IP Address that changes between distinct users is there is a possibility a patient malicious actor may get assigned an IP Address previously held by a valuable customer of the service provider. The way DNS works with TTL and caches means that some requests will still attempt to connect to IP Address you now have that were intended for the previous IP Address owner. If the IP Address the malicious attacker is assigned is rDNS checked and the malicious actor doesn't find anything of value, they can easily discard the IP Address and simply request a new one over and over until they get an IP that is of value to them. This is called IP Churn, and [a paper describes how this technique](https://webcache.googleusercontent.com/search?q=cache:dQ4atOcEvWEJ:https://kevin.borgolte.me/files/pdf/ndss2018-cloud-strife.pdf+&cd=13&hl=en&ct=clnk&gl=au) that is an accepted "how things work" can be combined with DV Certificates that are also accepted as "how things work", combined allow for DNS hijacking. This is a proven attack, and the attack vectors with continue to work as long as service providers assign IP Addresses that are still fresh and DV certificates are automatically issued in nanoseconds.
 
-Put simply, DV Certificates are favored by attackers and seeing one should make you skeptical, they're issued for ease-of-use and not for security purposes, and there is a trivial DNS take-over attack that can be used for targeting if sufficiently motivated. An EV Certificate is the distinct opposite, attackers avoid using them unless they are desperate and motivated to ignore the risks to them, they are issues with security focus in spite of the time do validation which is an effective mitigation to the trivial DNS take-over attack.
+Put simply, DV Certificates are favored by attackers and seeing one should make you skeptical, they're issued for ease-of-use and not for security purposes, and there is a trivial DNS take-over attack that can be used for targeted attacks when attackers are sufficiently motivated. An EV Certificate is the distinct opposite, attackers avoid using them unless they are desperate and motivated to ignore the risks to them, they are issued with security focus in spite of the time do validation which is an effective mitigation to the trivial DNS take-over attack.
 
-#### Zero-trust
+#### Mention of Zero-trust
 
 There are far too many claims of network security vendors who claim they apply a zero-trust architecture, but have complete and blind trust in their certificates. While this is extremely negligent, I cannot blame them for not doing proper validation when there are next to no codified example of how one actually performs proper and complete TLS verification.
 
@@ -241,7 +260,7 @@ In the absence of vendors providing proper and complete TLS validation capabilit
 
 ## Non-goals
 
-Rewrite logic that is provided via existing packages int he ecosystem, currently we utilise:
+Rewrite logic that is provided via existing packages in the ecosystem, currently we utilise:
 - `pyOpenSSL` Python bindings for OpenSSL
 - `certifi` is self-explanatory
 - `cryptography` is a powerful tool that can be used for this purpose
