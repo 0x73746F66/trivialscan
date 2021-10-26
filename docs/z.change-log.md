@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.4.6 Oct 27th 2021
+
+- Documentation updates
+
 ## 0.4.5 Oct 27th 2021
 
 - Fixed a DNSSEC validation bug on subdomains

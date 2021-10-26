@@ -17,7 +17,7 @@ from . import exceptions, verify, util
 from .validator import RootCertValidator, CertValidator, PeerCertValidator, Validator
 from .transport import Transport
 
-__version__ = 'tls-verify==0.4.2'
+__version__ = 'tls-verify==0.4.6'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
