@@ -19,6 +19,8 @@ See [Documentation](./docs/0.index.md) section of this repository
 - TLS Information
   - ✓ Negotiated protocol
   - ✓ Negotiated cipher (if a strong cipher, and if Forward Anonymity)
+  - ✓ List all offered TLS versions
+  - ✓ Server preferred protocol
   - ✓ RSA private key
   - ✓ DSA private key
   - ✓ Compression supported
@@ -27,6 +29,7 @@ See [Documentation](./docs/0.index.md) section of this repository
   - ✓ Session Resumption tickets
   - ✓ Session Resumption ticket hint
   - ✓ Downgrade attack detection and SCSV
+  - ✓ TLS version intolerance
 - DNS Information
   - ✓ Certification Authority Authorization (CAA) present
   - ✓ CAA Valid

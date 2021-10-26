@@ -72,6 +72,8 @@ optional arguments:
 - TLS Information
   - ✓ Negotiated protocol
   - ✓ Negotiated cipher (if a strong cipher, and if Forward Anonymity)
+  - ✓ List all offered TLS versions
+  - ✓ Server preferred protocol
   - ✓ RSA private key
   - ✓ DSA private key
   - ✓ Compression supported
@@ -80,6 +82,7 @@ optional arguments:
   - ✓ Session Resumption tickets
   - ✓ Session Resumption ticket hint
   - ✓ Downgrade attack detection and SCSV
+  - ✓ TLS version intolerance
 - DNS Information
   - ✓ Certification Authority Authorization (CAA) present
   - ✓ CAA Valid
