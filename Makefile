@@ -19,7 +19,7 @@ test: ## run unit tests with coverage
 	coverage run -m pytest --nf
 	coverage report -m
 
-build: check test ## build wheel file
+build: check ## build wheel file
 	rm -f dist/*
 	python3 -m build
 

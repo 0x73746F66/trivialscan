@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.4.4 Oct 27th 2021
+## 0.4.5 Oct 27th 2021
 
 - Fixed a DNSSEC validation bug on subdomains
 - Report DNSSEC algorithm and raise validation errors for weak algorithms
@@ -21,6 +21,10 @@
 - List all offered TLS versions
 - Derive TLS version intolerance, and list the versions attempted by the client that did not negotiate the server supported version
 - Added arguments `max_retries` and `counter` to `util.is_connection_closed()` to handle infinity `SSL.WantReadError`
+
+## 0.4.4 Oct 26th 2021
+
+- Cache `Transport` for unit tests
 
 ## 0.4.3 Oct 23rd 2021
 
