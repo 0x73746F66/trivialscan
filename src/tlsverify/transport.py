@@ -10,7 +10,7 @@ from cryptography.x509.base import Certificate
 from cryptography.x509.ocsp import OCSPResponse, load_der_ocsp_response, OCSPResponseStatus, OCSPCertStatus, OCSPRequestBuilder
 from cryptography.hazmat.primitives.hashes import SHA1
 from cryptography.hazmat.primitives.serialization import Encoding
-from OpenSSL import SSL
+from OpenSSL import SSL, _util
 from OpenSSL.SSL import _lib as native_openssl
 from OpenSSL.crypto import X509, FILETYPE_PEM, X509Name, load_certificate
 from certifi import where
@@ -65,6 +65,9 @@ class Transport:
     client_certificate_expected :bool
     client_certificate_match :bool
     tls_downgrade :bool
+    offered_tls_versions :list
+    tls_version_intolerance :bool
+    tls_version_intolerance_versions :list
     preferred_protocol :str
     cafiles :list
     certificate_chain :list[X509]
@@ -108,6 +111,9 @@ class Transport:
         self.http2_cleartext_support = False
         self.peer_address = None
         self.tls_downgrade = None
+        self.offered_tls_versions = []
+        self.tls_version_intolerance = None
+        self.tls_version_intolerance_versions = []
         self.preferred_protocol = None
         self.ocsp_stapling = None
         self.ocsp_must_staple = None
@@ -140,21 +146,16 @@ class Transport:
         ctx.load_verify_locations(cafile=where())
         ctx.verify_mode = SSL.VERIFY_NONE
         ctx.check_hostname = False
-        sock = self.prepare_socket(ctx)
-        conn = SSL.Connection(ctx, sock)
+        conn = SSL.Connection(ctx, self.prepare_socket())
         conn.connect((self.host, self.port))
         if ssl.HAS_SNI:
             conn.set_tlsext_host_name(idna.encode(self.host))
         conn.setblocking(1)
         conn.set_connect_state()
         if isinstance(progress, Progress): progress.update(task, advance=1)
-        try:
-            conn.do_handshake()
-            self.expected_client_subjects = conn.get_client_ca_list()
-        except Exception as ex:
-            logger.warning(ex, exc_info=True)
-        finally:
-            conn.close()
+        util.do_handshake(conn)
+        self.expected_client_subjects = conn.get_client_ca_list()
+        conn.close()
         if isinstance(progress, Progress): progress.update(task, advance=1)
         if len(self.expected_client_subjects) > 0:
             logger.info('Checking client certificate')
@@ -245,7 +246,7 @@ class Transport:
             if proceed:
                 try:
                     conn.setblocking(0)
-                    conn.do_handshake()
+                    util.do_handshake(conn)
                     self.client_renegotiation = conn.total_renegotiations() > total_renegotiations
                 except SSL.ZeroReturnError: pass
                 except Exception as ex:
@@ -334,8 +335,7 @@ class Transport:
             self.ocsp_certificate_status = util.OCSP_CERT_STATUS[response.certificate_status.value]
         return response.response_status == OCSPResponseStatus.SUCCESSFUL and response.certificate_status == OCSPCertStatus.GOOD
 
-    def prepare_socket(self, ctx, timeout :int = 1):
-        ctx.check_hostname = False
+    def prepare_socket(self, timeout :int = 1):
         sock = socket(AF_INET, SOCK_STREAM)
         sock.settimeout(timeout)
         return sock
@@ -365,15 +365,16 @@ class Transport:
         ctx.check_hostname = check_hostname
         return ctx
 
-    def prepare_connection(self, context :SSL.Context, sock :socket = None) -> SSL.Connection:
-        ctx = ssl.SSLContext()
+    def prepare_connection(self, context :SSL.Context, sock :socket = None, use_sni :bool = True, protocol :int = None) -> SSL.Connection:
+        ctx = ssl.SSLContext() if protocol is None else ssl.SSLContext(protocol=protocol)
         ctx.verify_mode = ssl.CERT_NONE
+        ctx.check_hostname = False
         if sock is None:
-            sock = self.prepare_socket(ctx)
+            sock = self.prepare_socket()
         conn = SSL.Connection(context, ctx.wrap_socket(sock, do_handshake_on_connect=False))
         conn.connect((self.host, self.port))
         conn.set_connect_state()
-        if ssl.HAS_SNI is True:
+        if all([ssl.HAS_SNI, use_sni]):
             conn.set_tlsext_host_name(idna.encode(self.host))
         conn.setblocking(1)
         return conn
@@ -493,47 +494,43 @@ class Transport:
         # rfc7540 section 9.2
         ctx.set_options(ssl.OP_NO_COMPRESSION | ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1 | ssl.OP_NO_TLSv1_3)
         ctx.set_cipher_list(b"ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM:DHE+CHACHA20")
-        def _con():
-            conn = self.prepare_connection(ctx, sock=self.prepare_socket(ctx, response_wait))
-            conn.settimeout(response_wait)
-            try:
-                conn.do_handshake()
-            except SSL.WantReadError:
-                pass
-            except Exception as ex:
-                logger.warning(ex, exc_info=True)
-            return conn
-
+        conn = self.prepare_connection(context=ctx, sock=self.prepare_socket(response_wait))
+        conn.settimeout(response_wait)
+        util.do_handshake(conn)
         request = Transport.decode_http2_frame(b'\x00\x00\x13\x00\x09\x00\x00\x00\x01\x0Ahello' + b'\0' * 10)
-        resp = self._http2(_con(), request, response_wait)
+        resp = self._http2(conn, request, response_wait)
         if isinstance(resp, Frame):
             self.http2_support = True
             self.http2_response_frame = str(resp)
 
     def test_highest_tls_version(self, version, response_wait :int = 3):
+        logger.warning(DeprecationWarning('Transport.test_highest_tls_version() was deprecated in version 0.4.4 and will be removed in version 0.5.0'), exc_info=True)
+        self.test_tls_version(min_tls_version=version, response_wait=response_wait)
+
+    def test_tls_version(self, min_tls_version :int = None, max_tls_version :int = None, use_sni :bool = False, response_wait :int = 3) -> str:
+        if min_tls_version is not None and not isinstance(min_tls_version, int):
+            raise TypeError(f'min_tls_version {type(min_tls_version)}, int supported')
+        if max_tls_version is not None and not isinstance(max_tls_version, int):
+            raise TypeError(f'max_tls_version {type(max_tls_version)}, int supported')
         if not isinstance(response_wait, int):
             raise TypeError(f'response_wait {type(response_wait)}, int supported')
+        protocol = None
         ctx = self.prepare_context()
-        ctx.set_min_proto_version(version)
-        def _con():
-            try:
-                conn = self.prepare_connection(ctx, sock=self.prepare_socket(ctx, timeout=response_wait))
-                conn.settimeout(response_wait)
-                conn.setblocking(1)
-                conn.do_handshake()
-                conn.shutdown()
-                conn.close()
-                self.preferred_protocol = conn.get_protocol_version_name()
-                return True
-
-            except SSL.WantReadError:
-                sleep(0.5)
-                return _con()
-            except Exception as ex:
-                logger.warning(ex, exc_info=True)
-            return False
-
-        return _con()
+        ctx.set_options(_util.lib.SSL_OP_TLS_ROLLBACK_BUG)
+        if min_tls_version is not None:
+            logger.info(f'min protocol {util.OPENSSL_VERSION_LOOKUP[min_tls_version]}')
+            ctx.set_min_proto_version(min_tls_version)
+        if max_tls_version is not None:
+            logger.info(f'max protocol {util.OPENSSL_VERSION_LOOKUP[max_tls_version]}')
+            ctx.set_max_proto_version(max_tls_version)
+        conn = self.prepare_connection(context=ctx, sock=self.prepare_socket(timeout=response_wait), use_sni=use_sni)
+        conn.settimeout(response_wait)
+        util.do_handshake(conn)
+        protocol = conn.get_protocol_version_name()
+        logger.info(f'Negotiated {protocol}')
+        conn.shutdown()
+        conn.close()
+        return protocol
 
     def connect(self, tls_version :int, use_sni :bool = False, protocol :str = None):
         logger.info(f'Trying TLS version {util.OPENSSL_VERSION_LOOKUP[tls_version]}')
@@ -541,8 +538,8 @@ class Transport:
         ctx.set_verify(getattr(SSL, Transport.default_connect_verify_mode), self._verifier)
         ctx.set_max_proto_version(tls_version)
         ctx.set_ocsp_client_callback(self._ocsp_handler)
-        sock = self.prepare_socket(ctx)
-        conn = SSL.Connection(context=ctx, socket=sock)
+        ctx.set_options(_util.lib.SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION | _util.lib.SSL_OP_LEGACY_SERVER_CONNECT)
+        conn = SSL.Connection(context=ctx, socket=self.prepare_socket())
         conn.request_ocsp()
         if all([use_sni, ssl.HAS_SNI]):
             logger.info('using SNI')
@@ -551,9 +548,10 @@ class Transport:
             conn.connect((self.host, self.port))
             conn.set_connect_state()
             conn.setblocking(1)
-            conn.do_handshake()
+            util.do_handshake(conn)
             self.negotiated_cipher = conn.get_cipher_name()
             self.negotiated_protocol = conn.get_protocol_version_name()
+            self.offered_tls_versions.append(f'{self.negotiated_protocol} ({hex(util.PROTOCOL_VERSION[self.negotiated_protocol])})')
             self.session_cache_mode = util.SESSION_CACHE_MODE[native_openssl.SSL_CTX_get_session_cache_mode(conn._context._context)]
             self.session_tickets = native_openssl.SSL_SESSION_has_ticket(conn.get_session()._session) == 1
             self.session_ticket_hints = native_openssl.SSL_SESSION_get_ticket_lifetime_hint(conn.get_session()._session) > 0
@@ -608,9 +606,37 @@ class Transport:
                     # A connection of higher protocol indicates we have previously connected using the client fallback mechanism
                     # When a handshake is rejected (False) assume downgrade attacks were prevented
                     try:
-                        self.tls_downgrade = self.test_highest_tls_version(response_wait=1, version=tls_versions[index+1])
+                        negotiated = self.test_tls_version(min_tls_version=tls_versions[index+1], use_sni=use_sni)
+                        self.preferred_protocol = negotiated or self.negotiated_protocol
+                        self.offered_tls_versions.append(f'{self.preferred_protocol} ({hex(util.PROTOCOL_VERSION[self.preferred_protocol])})')
+                        self.tls_downgrade = negotiated is not None
                     except Exception:
                         self.tls_downgrade = False
+                    logger.info('Testing all TLS versions')
+                    fake_protos = ['TLSv1.4', 'TLSv1.8', 'TLSv2', 'TLSv2.1', 'TLSv2.3']
+                    for ver_name, tls_version in util.PROTOCOL_VERSION.items():
+                        if ver_name in fake_protos:
+                            continue
+                        try:
+                            negotiated = self.test_tls_version(max_tls_version=tls_version, use_sni=use_sni)
+                            supported = negotiated == ver_name
+                        except Exception:
+                            supported = False
+                        if supported is True:
+                            self.offered_tls_versions.append(f'{ver_name} ({hex(tls_version)})')
+                    # Protocol not understood by the server, the server should negotiate the highest protocol it knows
+                    # A rejected connection indicates TLS version intolerance, and is not rfc5246 or rfc8446 compliant
+                    logger.info('Trying to derive TLS version intolerance')
+                    for fake_proto in fake_protos:
+                        fake_ver = util.PROTOCOL_VERSION[fake_proto]
+                        try:
+                            intolerance = self.test_tls_version(min_tls_version=fake_ver, use_sni=use_sni) is None
+                            if intolerance:
+                                self.tls_version_intolerance_versions.append(f'{fake_proto} ({hex(fake_ver)})')
+                        except Exception:
+                            self.tls_version_intolerance_versions.append(f'{fake_proto} ({hex(fake_ver)})')
+                    self.tls_version_intolerance = len(self.tls_version_intolerance_versions) > 0
+
                 if isinstance(progress, Progress): progress.update(task, advance=1)
                 return res
 
@@ -627,11 +653,15 @@ class Transport:
         return True
 
     @staticmethod
-    def is_connection_closed(conn: SSL.Connection) -> bool:
+    def is_connection_closed(conn: SSL.Connection, counter :int = 0, max_retries :int = 5) -> bool:
         try:
             data = conn.recv(1, MSG_PEEK)
             if len(data) == 0:
                 return True
+        except SSL.WantReadError:
+            if counter >= max_retries: return True
+            sleep(0.5)
+            return Transport.is_connection_closed(conn, counter+1)
         except BlockingIOError:
             return False
         except SSL.ZeroReturnError:

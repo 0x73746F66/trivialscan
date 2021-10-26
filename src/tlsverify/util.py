@@ -13,6 +13,7 @@ from cryptography import x509
 from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
 from OpenSSL import SSL
 from OpenSSL.crypto import X509, FILETYPE_PEM, dump_certificate
+from retry.api import retry
 from certvalidator import CertificateValidator, ValidationContext
 from rich.style import Style
 from rich.console import Console
@@ -232,13 +233,6 @@ KNOWN_WEAK_SIGNATURE_ALGORITHMS = {
     'md5WithRSAEncryption': 'The use of MD5 with RSA Encryption is considered vulnerable. Arjen Lenstra and Benne de Weger 2005: vulnerable to hash collision attacks',
     'md2WithRSAEncryption': 'The use of MD2 with RSA Encryption is considered vulnerable. Rogier, N. and Chauvaud, P. in 1995: vulnerable to collision, later preimage resistance, and second-preimage resistance attacks were demonstrated at BlackHat 2008 by Mark Twain',
 }
-OPENSSL_VERSION_LOOKUP = {
-    768: 'SSLv3',
-    769: 'TLSv1',
-    770: 'TLSv1.1',
-    771: 'TLSv1.2',
-    772: 'TLSv1.3',
-}
 WEAK_PROTOCOL = {
     'SSLv2': 'SSLv2 Deprecated in 2011 (rfc6176) with undetectable manipulator-in-the-middle exploits',
     'SSLv3': 'SSLv3 Deprecated in 2015 (rfc7568) mainly due to POODLE, a manipulator-in-the-middle exploit',
@@ -313,6 +307,39 @@ STRONG_DNSSEC_ALGORITHMS = [
     'Ed25519',
     'Ed448',
 ]
+PROTOCOL_VERSION = {
+    'DTLSv1': 0xfeff,
+    'DTLSv1.2': 0xfefd,
+    'SSLv2': 0x02ff,
+    'SSLv3': 0x0300,
+    'TLSv1': 0x0301,
+    'TLSv1.1': 0x0302,
+    'TLSv1.2': 0x0303,
+    'TLSv1.3': 0x0304,
+    'TLSv1.3_DRAFT_14': 0x7f0e,
+    'TLSv1.3_DRAFT_15': 0x7f0f,
+    'TLSv1.3_DRAFT_16': 0x7f10,
+    'TLSv1.3_DRAFT_17': 0x7f11,
+    'TLSV1.3_DRAFT_18': 0x7f12,
+    'TLSV1.3_DRAFT_18_mozilla_pr_1092': 0x7e02,
+    'TLSv1.3_DRAFT_19': 0x7f13,
+    'TLSv1.3_DRAFT_20': 0x7f14,
+    'TLSv1.3_DRAFT_21': 0x7f15,
+    'TLSv1.3_DRAFT_22': 0x7f16,
+    'TLSv1.3_DRAFT_23': 0x7f17,
+    'TLSv1.3_DRAFT_24': 0x7f18,
+    'TLSv1.3_DRAFT_25': 0x7f19,
+    'TLSv1.3_DRAFT_26': 0x7f1a,
+    'TLSv1.3_DRAFT_27': 0x7f1b,
+    'TLSv1.3_DRAFT_28': 0x7f1c,
+    'TLSv1.4': 0x0305,
+    'TLSv1.8': 0x0309,
+    'TLSv2': 0x0400,
+    'TLSv2.1': 0x0401,
+    'TLSv2.3': 0x0404,
+    'GREASE': 0x0a0a,
+}
+OPENSSL_VERSION_LOOKUP = {int(key):value for (value, key) in PROTOCOL_VERSION.items()}
 
 def filter_valid_files_urls(inputs :list[str], tmp_path_prefix :str = '/tmp'):
     ret = set()
@@ -981,3 +1008,8 @@ def crlite_revoked(db_path :str, pem :bytes):
         logger.debug(result.print_query_result(verbose=3))
         results.append(result.is_revoked())
     return any(results)
+
+
+@retry(SSL.WantReadError, tries=5, delay=.5)
+def do_handshake(conn):
+    conn.do_handshake()

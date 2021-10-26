@@ -284,6 +284,9 @@ class CertValidator(Validator):
             self.metadata.strong_cipher = True
         self.metadata.negotiated_protocol = transport.negotiated_protocol
         self.metadata.sni_support = transport.sni_support
+        self.metadata.tls_version_intolerance = transport.tls_version_intolerance
+        self.metadata.tls_version_intolerance_versions = transport.tls_version_intolerance_versions
+        self.metadata.offered_tls_versions = list(set(transport.offered_tls_versions))
         self.metadata.session_resumption_caching = transport.session_cache_mode in ['session_resumption_both', 'session_resumption_caching']
         self.metadata.session_resumption_tickets = transport.session_tickets
         self.metadata.session_resumption_ticket_hint = transport.session_ticket_hints

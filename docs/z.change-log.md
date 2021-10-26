@@ -1,14 +1,15 @@
 # Change Log
 
-## 0.4.4 Oct 25th 2021
+## 0.4.4 Oct 27th 2021
 
 - Fixed a DNSSEC validation bug on subdomains
 - Report DNSSEC algorithm and raise validation errors for weak algorithms
 - Fixed a CAA validation bug on subdomains
 - Made all messages reporting 'days ago' or similar messages consistently 'inclusive' days
-- Deprecate `util.get_dnssec` which is renamed to `util.get_dnssec_answer()` for clarity
+- Deprecated `util.get_dnssec` which is renamed to `util.get_dnssec_answer()` for clarity
+- Deprecated `Transport.test_highest_tls_version()` which is replaced by `Transport.test_tls_version()`
 - Added output showing if SCSV was derived
-- Added server preferred tls protocol, via new `util.test_highest_tls_version()`
+- Added server preferred tls protocol, via new `Transport.test_tls_version()`
 - Show validation messages for TLS downgrade availability, but not treat as a TLS verification error
 - Fixed http_status_code to not always be `0`
 - Better messages for 'known weak X' findings
@@ -16,7 +17,10 @@
 - Refactored cli outputs for more granular control over word choice and color of boolean and null results
 - CLI now uses human readable text rather than code key names
 - Included verbose validation messages
-- Ignore unnecessary OpenSSL `WantRead` warnings showing at `-vv` verbosity level that are expected and not actually errors for our purposes
+- Ignore unnecessary OpenSSL `WantRead` warnings via `util.do_handshake()` showing at `-vv` verbosity level that are expected and not actually errors for our purposes
+- List all offered TLS versions
+- Derive TLS version intolerance, and list the versions attempted by the client that did not negotiate the server supported version
+- Added arguments `max_retries` and `counter` to `util.is_connection_closed()` to handle infinity `SSL.WantReadError`
 
 ## 0.4.3 Oct 23rd 2021
 
