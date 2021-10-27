@@ -2,6 +2,10 @@
 
 Because, no one wants to write several hundred lines of code for every project that uses micro-services, internal APIs, zero-trust, etc. where you probably should be doing more then just the basic built-in OpenSSL hostname and root trust store checks.
 
+Package `tls-verify` provides a command-line tool `tlsverify` which contacts an SSL/TLS server and obtains some information on its configuration. It aims at providing equal or better functionality of Internet-based tools like [Qualys SSL Server Test](https://www.ssllabs.com/ssltest/) without the requirement of the target server being internet connected.
+
+You can use `tlsverify` on your internal network or local computer, to test your servers while they are being developed. It is equally capable of reaching any other internet connected server also.
+
 # [Change Log](./docs/z.change-log.md)
 
 # Documentation
@@ -149,12 +153,14 @@ Other tools with shared certificates that should not be used for a production we
 
 ## ⌛ Todo
 
+- HSTS Preloading
 - Handshake Simulations
 - More impersonation detections
 - More C2 (command and control) detections
 - Known RSA/DSA private keys: https://www.hdm.io/tools/debian-openssl/
 - Common DH primes and public server param (Ys) reuse - logjam
 - ECDH public server param reuse - Racoon
+- TLS extension intolerance
 - TLS extensions
   - IssuingDistributionPoint
   - cRLDistributionPoints

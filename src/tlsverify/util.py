@@ -724,7 +724,9 @@ def styled_boolean(value :bool, represent_as :tuple[str, str] = ('True', 'False'
         console.print(val, style=Style(color=color))
     return capture.get().strip()
 
-def styled_value(value :str, color :str = 'white', bold :bool = False, crop :bool = True) -> str:
+def styled_value(value :str, color :str = 'white') -> str:
+    if value.startswith("http"):
+        return value
     console = Console()
     with console.capture() as capture:
         console.print(value, style=Style(color=color))

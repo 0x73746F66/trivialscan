@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.4.7 Oct 27th 2021
+
+- Bump `tlstrust==1.1.1` to show a more verbose platform trust store version
+
 ## 0.4.6 Oct 27th 2021
 
 - Documentation updates

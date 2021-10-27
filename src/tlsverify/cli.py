@@ -17,7 +17,7 @@ from . import exceptions, verify, util
 from .validator import RootCertValidator, CertValidator, PeerCertValidator, Validator
 from .transport import Transport
 
-__version__ = 'tls-verify==0.4.6'
+__version__ = 'tls-verify==0.4.7'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
@@ -60,7 +60,9 @@ STYLES = {
     'valid_caa': {'text': '[RULE] Certification Authority Authorization (CAA) Valid', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'ocsp_staple_satisfied': {'text': '[RULE] OCSP Staple satisfied', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'certificate_public_key_type': {'text': 'Public Key Type'},
-    'certificate_key_size': {'text': 'Public Key Size'},
+    'certificate_public_key_curve': {'text': 'Public Key Curve'},
+    'certificate_public_key_size': {'text': 'Public Key Size'},
+    'certificate_public_key_exponent': {'text': 'Public Key Exponent'},
     'certificate_private_key_pem': {'text': 'Derived private key (PEM format)'},
     'certificate_signature_algorithm': {'text': 'Signature Algorithm'},
     'certificate_pin_sha256': {'text': 'Certificate pin (sha256)'},
@@ -277,11 +279,14 @@ def _table_ext(validator :Validator, table :Table, skip :list[str]) -> Table:
             if isinstance(ext_sub, list):
                 for sub in ext_sub:
                     if isinstance(sub, str):
-                        table.add_row('', util.styled_value(sub, crop=False))
+                        table.add_row('', util.styled_value(sub))
                         continue
                     if isinstance(sub, dict):
                         for subk, subv in sub.items():
-                            table.add_row('', subk+'='+util.styled_value(subv))
+                            if subv is None:
+                                table.add_row('', util.styled_value(subk))
+                            else:
+                                table.add_row('', subk+'='+util.styled_any(subv))
                         continue
                     table.add_row('', util.styled_any(sub))
                 continue

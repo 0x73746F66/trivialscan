@@ -15,6 +15,17 @@ from dns.rrset import RRset
 from tldextract import TLDExtract
 from rich.progress import Progress, TaskID
 from tlstrust import TrustStore, context
+from tlstrust.stores.apple import __version__ as apple_version, __description__ as apple_desc
+from tlstrust.stores.ccadb import __version__ as ccadb_version
+from tlstrust.stores.java import __version__ as java_version
+from tlstrust.stores.certifi import __version__ as certifi_version
+from tlstrust.stores.linux import __version__ as linux_version
+from tlstrust.stores.android_7 import __description__ as android7_version
+from tlstrust.stores.android_8 import __description__ as android8_version
+from tlstrust.stores.android_9 import __description__ as android9_version
+from tlstrust.stores.android_10 import __description__ as android10_version
+from tlstrust.stores.android_11 import __description__ as android11_version
+from tlstrust.stores.android_12 import __description__ as android12_version
 from . import util
 from . import exceptions
 from .transport import Transport
@@ -102,14 +113,18 @@ class Validator:
         if public_key.type() == TYPE_RSA:
             self.metadata.certificate_public_key_type = 'RSA'
             self.metadata.certificate_private_key_pem = dump_privatekey(FILETYPE_PEM, public_key).decode()
+            self.metadata.certificate_public_key_exponent = x509.to_cryptography().public_key().public_numbers().e
         if public_key.type() == TYPE_DSA:
             self.metadata.certificate_public_key_type = 'DSA'
             self.metadata.certificate_private_key_pem = dump_privatekey(FILETYPE_PEM, public_key).decode()
+            self.metadata.certificate_public_key_exponent = x509.to_cryptography().public_key().public_numbers().e
         if public_key.type() == TYPE_DH:
             self.metadata.certificate_public_key_type = 'DH'
+            self.metadata.certificate_public_key_curve = x509.to_cryptography().public_key().curve.name
         if public_key.type() == TYPE_EC:
             self.metadata.certificate_public_key_type = 'EC'
-        self.metadata.certificate_key_size = public_key.bits()
+            self.metadata.certificate_public_key_curve = x509.to_cryptography().public_key().curve.name
+        self.metadata.certificate_public_key_size = public_key.bits()
         self.metadata.certificate_serial_number_decimal = x509.get_serial_number()
         self.metadata.certificate_serial_number = util.convert_decimal_to_serial_bytes(x509.get_serial_number())
         self.metadata.certificate_serial_number_hex = '{0:#0{1}x}'.format(x509.get_serial_number(), 4)
@@ -158,7 +173,7 @@ class Validator:
         self.validation_checks['avoid_known_weak_signature_algorithm'] = self.metadata.certificate_signature_algorithm not in util.KNOWN_WEAK_SIGNATURE_ALGORITHMS.keys()
         if self.validation_checks['avoid_known_weak_signature_algorithm'] is False:
             self.certificate_verify_messages.append(util.KNOWN_WEAK_SIGNATURE_ALGORITHMS[self.metadata.certificate_signature_algorithm])
-        self.validation_checks['avoid_known_weak_keys'] = self.metadata.certificate_public_key_type not in util.KNOWN_WEAK_KEYS.keys() or self.metadata.certificate_key_size > util.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
+        self.validation_checks['avoid_known_weak_keys'] = self.metadata.certificate_public_key_type not in util.KNOWN_WEAK_KEYS.keys() or self.metadata.certificate_public_key_size > util.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
         if self.validation_checks['avoid_known_weak_keys'] is False:
             self.certificate_verify_messages.append(util.KNOWN_WEAK_KEYS[self.metadata.certificate_public_key_type])
         logger.debug('Impersonation, C2, other detections')
@@ -411,9 +426,21 @@ class CertValidator(Validator):
         return self.certificate_valid
 
     def _get_root_certs(self, trust_store :TrustStore):
-        for source in [context.SOURCE_ANDROID, context.SOURCE_CCADB, context.SOURCE_JAVA, context.SOURCE_LINUX, context.SOURCE_CERTIFI]:
+        contexts = [
+            context.PLATFORM_ANDROID7,
+            context.PLATFORM_ANDROID8,
+            context.PLATFORM_ANDROID9,
+            context.PLATFORM_ANDROID10,
+            context.PLATFORM_ANDROID11,
+            context.PLATFORM_ANDROID12,
+            context.SOURCE_CCADB,
+            context.SOURCE_JAVA,
+            context.SOURCE_LINUX,
+            context.SOURCE_CERTIFI
+        ]
+        for context_type in contexts:
             try:
-                yield trust_store.get_certificate_from_store(context_type=source)
+                yield trust_store.get_certificate_from_store(context_type=context_type)
             except FileExistsError:
                 pass
 
@@ -429,43 +456,74 @@ class CertValidator(Validator):
             self._root_certs.append(cert.get_serial_number())
 
     def _root_validator(self, trust_store :TrustStore, root_validator :RootCertValidator):
-        default_status = 'Not a Trusted CA'
-        root_validator.metadata.trust_apple_legacy_status = default_status
-        root_validator.metadata.trust_ccadb_status = default_status
-        root_validator.metadata.trust_android_status = default_status
-        root_validator.metadata.trust_java_status = default_status
-        root_validator.metadata.trust_linux_status = default_status
-        root_validator.metadata.trust_certifi_status = default_status
+        DEFAULT_STATUS = 'No Root CA Certificate in the {platform} Trust Store'
+        root_validator.metadata.trust_apple_legacy_status = DEFAULT_STATUS.format(platform='Apple')
+        root_validator.metadata.trust_ccadb_status = DEFAULT_STATUS.format(platform='CCADB')
+        root_validator.metadata.trust_android_status = DEFAULT_STATUS.format(platform='Android')
+        root_validator.metadata.trust_java_status = DEFAULT_STATUS.format(platform='Java')
+        root_validator.metadata.trust_linux_status = DEFAULT_STATUS.format(platform='Linux')
+        root_validator.metadata.trust_certifi_status = DEFAULT_STATUS.format(platform='Python')
 
+        expired_text = ' EXPIRED'
         if trust_store.exists(context.SOURCE_APPLE):
-            root_validator.metadata.trust_apple_legacy_status = 'iOS, iPadOS, macOS, tvOS, and watchOS Root CA Trust Store (until April 2022)'
+            root_validator.metadata.trust_apple_legacy_status = f'{apple_desc} Root CA Trust Store {apple_version} (until April 2022)'
             if trust_store.expired_in_store(context.SOURCE_APPLE):
-                root_validator.metadata.trust_apple_legacy_status += ', Expired'
+                root_validator.metadata.trust_apple_legacy_status += expired_text
         if trust_store.exists(context.SOURCE_CCADB):
-            root_validator.metadata.trust_ccadb_status = 'In Common CA Database (Mozilla, Microsoft, and Apple from Dec 2021)'
+            root_validator.metadata.trust_ccadb_status = f'In Common CA Database {ccadb_version} (Mozilla, Microsoft, and Apple from Dec 2021)'
             if trust_store.expired_in_store(context.SOURCE_CCADB):
-                root_validator.metadata.trust_ccadb_status += ', Expired'
-        if trust_store.exists(context.SOURCE_ANDROID):
-            root_validator.metadata.trust_android_status = 'In Android Root CA Trust Store'
-            if trust_store.expired_in_store(context.SOURCE_ANDROID):
-                root_validator.metadata.trust_android_status += ', Expired'
+                root_validator.metadata.trust_ccadb_status += expired_text
         if trust_store.exists(context.SOURCE_JAVA):
-            root_validator.metadata.trust_java_status = 'In Java Root CA Trust Store'
+            root_validator.metadata.trust_java_status = f'In Java Root CA Trust Store {java_version}'
             if trust_store.expired_in_store(context.SOURCE_JAVA):
-                root_validator.metadata.trust_java_status += ', Expired'
+                root_validator.metadata.trust_java_status += expired_text
         if trust_store.exists(context.SOURCE_LINUX):
-            root_validator.metadata.trust_linux_status = 'In common Linux Root CA Trust Stores (most debian-based distributions and any other distribution that provides the ca-certificates bundle, and is installed using defaults)'
+            root_validator.metadata.trust_linux_status = f'In Linux {linux_version} Root CA Trust Store'
             if trust_store.expired_in_store(context.SOURCE_LINUX):
-                root_validator.metadata.trust_linux_status += ', Expired'
+                root_validator.metadata.trust_linux_status += expired_text
         if trust_store.exists(context.SOURCE_CERTIFI):
-            root_validator.metadata.trust_certifi_status = 'In Common Python Root CA Trust Store (Django, requests, urllib, and certifi)'
+            root_validator.metadata.trust_certifi_status = f'In Python {certifi_version} Root CA Trust Store (Django, requests, urllib, and anything based from these)'
             if trust_store.expired_in_store(context.SOURCE_CERTIFI):
-                root_validator.metadata.trust_certifi_status += ', Expired'
+                root_validator.metadata.trust_certifi_status += expired_text
+
+        android_stores = []
+        if trust_store.exists(context.PLATFORM_ANDROID7):
+            android_status = android7_version
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID7):
+                android_status += expired_text
+            android_stores.append(android_status)
+        if trust_store.exists(context.PLATFORM_ANDROID8):
+            android_status = android8_version
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID8):
+                android_status += expired_text
+            android_stores.append(android_status)
+        if trust_store.exists(context.PLATFORM_ANDROID9):
+            android_status = android9_version
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID9):
+                android_status += expired_text
+            android_stores.append(android_status)
+        if trust_store.exists(context.PLATFORM_ANDROID10):
+            android_status = android10_version
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID10):
+                android_status += expired_text
+            android_stores.append(android_status)
+        if trust_store.exists(context.PLATFORM_ANDROID11):
+            android_status = android11_version
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID11):
+                android_status += expired_text
+            android_stores.append(android_status)
+        if trust_store.exists(context.PLATFORM_ANDROID12):
+            android_status = android12_version
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID12):
+                android_status += expired_text
+            android_stores.append(android_status)
+        if android_stores:
+            root_validator.metadata.trust_android_status = "\n".join(android_stores)
 
         root_validator.metadata.trust_apple_legacy = trust_store.apple
         root_validator.metadata.trust_ccadb = trust_store.ccadb
         root_validator.metadata.trust_java = trust_store.java
-        root_validator.metadata.trust_android = trust_store.android
+        root_validator.metadata.trust_android = all([trust_store.android7, trust_store.android8, trust_store.android9, trust_store.android10, trust_store.android11, trust_store.android12])
         root_validator.metadata.trust_linux = trust_store.linux
         root_validator.metadata.trust_certifi = trust_store.certifi
         self.peer_validations.append(root_validator)
@@ -524,17 +582,19 @@ class CertValidator(Validator):
                 self._root_certs = []
                 trust_store = TrustStore(ca_common_name=cert.get_issuer().commonName, authority_key_identifier=peer_validator.metadata.certificate_authority_key_identifier)
                 self.validation_checks['trusted_ca'] = trust_store.is_trusted
-                if trust_store.exists(context.SOURCE_APPLE):
-                    self._validate_roots(trust_store)
-                if trust_store.exists(context.SOURCE_CCADB):
-                    self._validate_roots(trust_store)
-                if trust_store.exists(context.SOURCE_ANDROID):
-                    self._validate_roots(trust_store)
-                if trust_store.exists(context.SOURCE_JAVA):
-                    self._validate_roots(trust_store)
-                if trust_store.exists(context.SOURCE_LINUX):
-                    self._validate_roots(trust_store)
-                if trust_store.exists(context.SOURCE_CERTIFI):
+                if any([
+                        trust_store.exists(context.SOURCE_APPLE),
+                        trust_store.exists(context.SOURCE_CCADB),
+                        trust_store.exists(context.SOURCE_JAVA),
+                        trust_store.exists(context.SOURCE_LINUX),
+                        trust_store.exists(context.SOURCE_CERTIFI),
+                        trust_store.exists(context.PLATFORM_ANDROID7),
+                        trust_store.exists(context.PLATFORM_ANDROID8),
+                        trust_store.exists(context.PLATFORM_ANDROID9),
+                        trust_store.exists(context.PLATFORM_ANDROID10),
+                        trust_store.exists(context.PLATFORM_ANDROID11),
+                        trust_store.exists(context.PLATFORM_ANDROID12),
+                    ]):
                     self._validate_roots(trust_store)
             peer_validator.verify()
             self.validation_checks['not_revoked'] = self.validation_checks.get('not_revoked') is not False
