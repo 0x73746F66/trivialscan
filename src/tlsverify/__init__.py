@@ -28,14 +28,15 @@ def verify(host :str, port :int = 443, cafiles :list = None, use_sni :bool = Tru
     transport = Transport(host, port)
     if client_pem is not None:
         transport.pre_client_authentication_check(client_pem_path=client_pem)
+
     if not transport.connect_least_secure(cafiles=cafiles, use_sni=use_sni) or not isinstance(transport.server_certificate, X509):
         raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=host, port=port))
     if isinstance(tmp_path_prefix, str):
         validator.tmp_path_prefix = tmp_path_prefix
     validator.mount(transport)
     validator.verify()
-    validator.verify_chain()    
+    validator.verify_chain()
     results = validator.peer_validations
     results.append(validator)
-    valid = all([v.certificate_valid for v in results])
+    valid = all(v.certificate_valid for v in results)
     return valid, results

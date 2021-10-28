@@ -27,6 +27,8 @@ from . import exceptions
 __module__ = 'tlsverify.metadata'
 logger = logging.getLogger(__name__)
 
+FAKE_PROTOCOLS = ['TLSv1.4', 'TLSv1.8', 'TLSv2', 'TLSv2.1', 'TLSv2.3']
+
 class Transport:
     host :str
     port :int
@@ -68,6 +70,8 @@ class Transport:
     offered_tls_versions :list
     tls_version_intolerance :bool
     tls_version_intolerance_versions :list
+    tls_version_interference :bool
+    tls_version_interference_versions :list
     preferred_protocol :str
     cafiles :list
     certificate_chain :list[X509]
@@ -112,6 +116,8 @@ class Transport:
         self.peer_address = None
         self.tls_downgrade = None
         self.offered_tls_versions = []
+        self.tls_version_interference = None
+        self.tls_version_interference_versions = []
         self.tls_version_intolerance = None
         self.tls_version_intolerance_versions = []
         self.preferred_protocol = None
@@ -123,16 +129,14 @@ class Transport:
         self.ocsp_certificate_status = None
         self.depth = {}
 
-    def pre_client_authentication_check(self, client_pem_path :str = None, updater :tuple[Progress, TaskID] = None) -> bool:
+    def pre_client_authentication_check(self, client_pem_path :str = None, progress_bar :callable = lambda *args: None) -> bool:
         if not isinstance(self.port, int):
             raise TypeError(f"provided an invalid type {type(self.port)} for port, expected int")
         if validators.domain(self.host) is not True:
             raise ValueError(f"provided an invalid domain {self.host}")
         if not isinstance(client_pem_path, str):
             raise TypeError(f"provided an invalid type {type(client_pem_path)} for client_pem_path, expected str")
-        progress, task = (None, None)
-        if isinstance(updater, tuple):
-            progress, task = updater
+
         self.client_certificate_expected = True
         self.client_certificate_match = False
         valid_client_pem = util.filter_valid_files_urls([client_pem_path], self.tmp_path_prefix)
@@ -152,11 +156,11 @@ class Transport:
             conn.set_tlsext_host_name(idna.encode(self.host))
         conn.setblocking(1)
         conn.set_connect_state()
-        if isinstance(progress, Progress): progress.update(task, advance=1)
+        progress_bar()
         util.do_handshake(conn)
         self.expected_client_subjects = conn.get_client_ca_list()
         conn.close()
-        if isinstance(progress, Progress): progress.update(task, advance=1)
+        progress_bar()
         if len(self.expected_client_subjects) > 0:
             logger.info('Checking client certificate')
             self.client_certificate = load_certificate(FILETYPE_PEM, Path(self.client_pem_path).read_bytes())
@@ -165,7 +169,7 @@ class Transport:
                 logger.debug(f'expected subject: {check.commonName}')
                 if self.client_certificate.get_issuer().commonName == check.commonName:
                     self.client_certificate_match = True
-                    if isinstance(progress, Progress): progress.update(task, advance=1)
+                    progress_bar()
                     return True
         return False
 
@@ -574,83 +578,120 @@ class Transport:
         finally:
             conn.close()
 
-    def connect_least_secure(self, cafiles :list = None, use_sni :bool = False, updater :tuple[Progress, TaskID] = None) -> bool:
+    def test_scsv(self, tls_version :int, use_sni :bool = True):
+        """
+        A connection of higher protocol indicates we have previously connected using the client fallback mechanism
+        When a handshake is rejected (False) assume downgrade attacks were prevented
+        """
+        logger.info('Trying to derive SCSV')
+        try:
+            negotiated = self.test_tls_version(min_tls_version=tls_version, use_sni=use_sni)
+            self.preferred_protocol = negotiated or self.negotiated_protocol
+            self.offered_tls_versions.append(f'{self.preferred_protocol} ({hex(util.PROTOCOL_VERSION[self.preferred_protocol])})')
+            self.tls_downgrade = negotiated is not None
+        except Exception:
+            self.tls_downgrade = False
+
+    def test_tls_all_versions(self, use_sni :bool = True):
+        logger.info('Testing all TLS versions')
+        for ver_name, tls_version in util.PROTOCOL_VERSION.items():
+            ver_display_name = f'{ver_name} ({hex(tls_version)})'
+            if ver_name in FAKE_PROTOCOLS or ver_display_name in self.offered_tls_versions:
+                continue
+            try:
+                negotiated = self.test_tls_version(max_tls_version=tls_version, use_sni=use_sni)
+                supported = negotiated == ver_name
+            except Exception:
+                supported = False
+            if supported is True:
+                self.offered_tls_versions.append(ver_display_name)
+
+    def test_tls_version_interference(self):
+        """
+        A rejected connection (typically the oldest or latest version, currently 1.3)
+        when no mutual accepted TLS version can be negotiates is known as tls interference
+        """
+        for check_interference in ['TLSv1.3 (0x304)', 'TLSv1.2 (0x303)', 'TLSv1.1 (0x302)', 'TLSv1 (0x301)', 'SSLv3 (0x300)', 'SSLv2 (0x2ff)']:
+            if check_interference not in self.offered_tls_versions:
+                self.tls_version_interference_versions.append(check_interference)
+        self.tls_version_interference = len(self.tls_version_interference_versions) > 0
+
+    def test_tls_version_intolerance(self, use_sni :bool = True):
+        """
+        Protocol not understood by the server, the server should negotiate the highest protocol it knows
+        A rejected connection indicates TLS version intolerance, and is not rfc5246 or rfc8446 compliant
+        """
+        logger.info('Trying to derive TLS version intolerance')
+        for fake_proto in FAKE_PROTOCOLS:
+            fake_ver = util.PROTOCOL_VERSION[fake_proto]
+            try:
+                intolerance = self.test_tls_version(min_tls_version=fake_ver, use_sni=use_sni) is None
+                if intolerance:
+                    self.tls_version_intolerance_versions.append(f'{fake_proto} ({hex(fake_ver)})')
+            except Exception:
+                self.tls_version_intolerance_versions.append(f'{fake_proto} ({hex(fake_ver)})')
+        self.tls_version_intolerance = len(self.tls_version_intolerance_versions) > 0
+        self.tls_version_interference = False
+
+    def connect_least_secure(self, cafiles :list = None, use_sni :bool = False, progress_bar :callable = lambda *args: None) -> bool:
         if not isinstance(self.port, int):
             raise TypeError(f"provided an invalid type {type(self.port)} for port, expected int")
         if validators.domain(self.host) is not True:
             raise ValueError(f"provided an invalid domain {self.host}")
-        progress, task = (None, None)
-        if isinstance(updater, tuple):
-            progress, task = updater
         if cafiles is not None:
             if not isinstance(cafiles, list):
                 raise TypeError(f"provided an invalid type {type(cafiles)} for cafiles, expected list")
             valid_cafiles = util.filter_valid_files_urls(cafiles)
             if valid_cafiles is False:
                 raise AttributeError('cafiles was provided but is not a valid URLs or files do not exist')
-            if isinstance(valid_cafiles, list):
-                self.cafiles = valid_cafiles
+            if isinstance(valid_cafiles, list): self.cafiles = valid_cafiles
+
         tls_versions = [SSL.SSL3_VERSION, SSL.TLS1_VERSION, SSL.TLS1_1_VERSION, SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]
         for index, version in enumerate(tls_versions):
-            self.connect(tls_version=version, use_sni=use_sni) # No HTTP test
-            if isinstance(progress, Progress): progress.update(task, advance=1)
-            if isinstance(self.server_certificate, X509):
-                res = self._test_protocols(
-                    use_sni, version
-                )
-                if version == SSL.TLS1_3_VERSION:
-                    # Already the highest TLS protocol, no downgrade possible
-                    self.tls_downgrade = False
-                else:
-                    logger.info('Trying to derive SCSV')
-                    # A connection of higher protocol indicates we have previously connected using the client fallback mechanism
-                    # When a handshake is rejected (False) assume downgrade attacks were prevented
-                    try:
-                        negotiated = self.test_tls_version(min_tls_version=tls_versions[index+1], use_sni=use_sni)
-                        self.preferred_protocol = negotiated or self.negotiated_protocol
-                        self.offered_tls_versions.append(f'{self.preferred_protocol} ({hex(util.PROTOCOL_VERSION[self.preferred_protocol])})')
-                        self.tls_downgrade = negotiated is not None
-                    except Exception:
-                        self.tls_downgrade = False
-                    logger.info('Testing all TLS versions')
-                    fake_protos = ['TLSv1.4', 'TLSv1.8', 'TLSv2', 'TLSv2.1', 'TLSv2.3']
-                    for ver_name, tls_version in util.PROTOCOL_VERSION.items():
-                        if ver_name in fake_protos:
-                            continue
-                        try:
-                            negotiated = self.test_tls_version(max_tls_version=tls_version, use_sni=use_sni)
-                            supported = negotiated == ver_name
-                        except Exception:
-                            supported = False
-                        if supported is True:
-                            self.offered_tls_versions.append(f'{ver_name} ({hex(tls_version)})')
-                    # Protocol not understood by the server, the server should negotiate the highest protocol it knows
-                    # A rejected connection indicates TLS version intolerance, and is not rfc5246 or rfc8446 compliant
-                    logger.info('Trying to derive TLS version intolerance')
-                    for fake_proto in fake_protos:
-                        fake_ver = util.PROTOCOL_VERSION[fake_proto]
-                        try:
-                            intolerance = self.test_tls_version(min_tls_version=fake_ver, use_sni=use_sni) is None
-                            if intolerance:
-                                self.tls_version_intolerance_versions.append(f'{fake_proto} ({hex(fake_ver)})')
-                        except Exception:
-                            self.tls_version_intolerance_versions.append(f'{fake_proto} ({hex(fake_ver)})')
-                    self.tls_version_intolerance = len(self.tls_version_intolerance_versions) > 0
+            self.connect(tls_version=version, use_sni=use_sni) # Skip HTTP testing until negotiated
+            progress_bar()
+            if not isinstance(self.server_certificate, X509):
+                continue
+            progress_bar(5)
 
-                if isinstance(progress, Progress): progress.update(task, advance=1)
-                return res
+            if all([use_sni, ssl.HAS_SNI]):
+                self.sni_support = True
+            for protocol in ['HTTP/1.0', 'HTTP/1.1']:
+                self.connect(tls_version=version, use_sni=use_sni, protocol=protocol)
+                progress_bar()
+
+            self.test_h2c(response_wait=3)
+            progress_bar()
+
+            self.test_http2(response_wait=3)
+            progress_bar()
+
+            if version == SSL.TLS1_3_VERSION:
+                # Already the highest TLS protocol, no downgrade possible
+                self.tls_downgrade = False
+                # server can only prefer this too
+                self.preferred_protocol = util.OPENSSL_VERSION_LOOKUP[version]
+                self.test_tls_version_interference()
+                progress_bar(12)
+                self.test_tls_version_intolerance(use_sni) # sourcery skip: extract-duplicate-method
+                progress_bar()
+                return True
+
+            self.test_scsv(tls_versions[index+1], use_sni)
+            progress_bar()
+            
+            self.test_tls_all_versions(use_sni)
+            progress_bar()
+
+            self.test_tls_version_interference()
+            progress_bar()
+
+            self.test_tls_version_intolerance(use_sni)
+            progress_bar()
+
+            return True
 
         return False
-
-    def _test_protocols(self, use_sni, version):
-        if all([use_sni, ssl.HAS_SNI]):
-            self.sni_support = True
-        for protocol in ['HTTP/1.0', 'HTTP/1.1']:
-            self.connect(tls_version=version, use_sni=use_sni, protocol=protocol)
-        self.test_h2c(response_wait=3)
-        self.test_http2(response_wait=3)
-
-        return True
 
     @staticmethod
     def is_connection_closed(conn: SSL.Connection, counter :int = 0, max_retries :int = 5) -> bool:

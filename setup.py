@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.4.7",
+    version="0.4.8",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -83,6 +83,7 @@ optional arguments:
   - ✓ Session Resumption ticket hint
   - ✓ Downgrade attack detection and SCSV
   - ✓ TLS version intolerance
+  - ✓ TLS version interference
 - DNS Information
   - ✓ Certification Authority Authorization (CAA) present
   - ✓ CAA Valid
@@ -108,6 +109,8 @@ optional arguments:
   - ✓ Root CA
   - ✓ Intermediate CAs
   - ✓ Certificate is self signed
+  - ✓ Expired
+  - ✓ Version
   - ✓ Issuer
   - ✓ Serial Number (Hex, Decimal)
   - ✓ Certificate Pin (sha256)

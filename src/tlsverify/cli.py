@@ -2,7 +2,6 @@ import sys
 import logging
 import argparse
 from datetime import datetime
-from typing import Type
 import validators
 from OpenSSL.crypto import X509
 from rich import inspect
@@ -17,7 +16,7 @@ from . import exceptions, verify, util
 from .validator import RootCertValidator, CertValidator, PeerCertValidator, Validator
 from .transport import Transport
 
-__version__ = 'tls-verify==0.4.7'
+__version__ = 'tls-verify==0.4.8'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
@@ -42,27 +41,28 @@ STYLES = {
     'certificate_valid': {'text': 'Certificate Valid', 'represent_as': (CLI_VALUE_VALID, CLI_VALUE_NOT_VALID), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'certificate_chain_valid': {'text': 'Certificate Chain Valid', 'represent_as': (CLI_VALUE_VALID, CLI_VALUE_NOT_VALID), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'certificate_chain_validation_result': {'text': 'Certificate Chain Validation Result'},
-    'not_expired': {'text': '[RULE] Certificate is not expired', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'issued_past_tense': {'text': '[RULE] Certificate issued in the past', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'common_name_defined': {'text': '[RULE] Subject CN (Common Name) was defined', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'common_name_valid': {'text': '[RULE] Subject CN (Common Name) has valid syntax', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'match_hostname': {'text': '[RULE] Subject CN (Common Name) matches the server host name', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'not_self_signed': {'text': '[RULE] Not using a self-signed Server Certificate', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'avoid_known_weak_signature_algorithm': {'text': '[RULE] Avoid known weak signature algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'avoid_known_weak_keys': {'text': '[RULE] Avoid known weak authentication of public key exchange algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'avoid_deprecated_protocols': {'text': '[RULE] Negotiated TLS Protocol is not deprecated', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'avoid_deprecated_dnssec_algorithms': {'text': '[RULE] DNSSEC algorithm is not deprecated', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'basic_constraints_ca': {'text': '[RULE] Server Certificate is not a CA (avoid enabling trivial impersonation)', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'certificate_valid_tls_usage': {'text': '[RULE] Server Certificate includes key usage appropriate for TLS', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'not_revoked': {'text': '[RULE] No Certificates in the chain are revoked', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'trusted_ca': {'text': '[RULE] Root CA Certificate is trusted', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'valid_dnssec': {'text': '[RULE] DNSSEC Valid', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'valid_caa': {'text': '[RULE] Certification Authority Authorization (CAA) Valid', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'ocsp_staple_satisfied': {'text': '[RULE] OCSP Staple satisfied', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'not_expired': {'text': 'Certificate is not expired', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'issued_past_tense': {'text': 'Certificate issued in the past', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'common_name_defined': {'text': 'Subject CN was defined', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'common_name_valid': {'text': 'Subject CN has valid syntax', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'match_hostname': {'text': 'Subject CN matches the server host name', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'not_self_signed': {'text': 'Not a self-signed Certificate', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'avoid_known_weak_signature_algorithm': {'text': 'Avoid known weak signature algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'avoid_known_weak_keys': {'text': 'Avoid known weak public key algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'avoid_deprecated_protocols': {'text': 'Avoid deprecated TLS protocols', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'avoid_deprecated_dnssec_algorithms': {'text': 'Avoid deprecated DNSSEC algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'basic_constraints_ca': {'text': 'Avoid enabling impersonation', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'certificate_valid_tls_usage': {'text': 'Key usage appropriate for TLS', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'not_revoked': {'text': 'Certificate chain not revoked', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'trusted_ca': {'text': 'Root CA Certificate is trusted', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'valid_dnssec': {'text': 'DNSSEC Valid', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'valid_caa': {'text': 'CAA Valid', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'ocsp_staple_satisfied': {'text': 'OCSP Staple satisfied', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'certificate_version': {'text': 'Certificate Version'},
     'certificate_public_key_type': {'text': 'Public Key Type'},
-    'certificate_public_key_curve': {'text': 'Public Key Curve'},
+    'certificate_public_key_curve': {'text': 'Public Key Curve', 'null_as': 'N/A', 'null_color': CLI_COLOR_NULL},
     'certificate_public_key_size': {'text': 'Public Key Size'},
-    'certificate_public_key_exponent': {'text': 'Public Key Exponent'},
+    'certificate_public_key_exponent': {'text': 'Public Key Exponent', 'null_as': 'N/A', 'null_color': CLI_COLOR_NULL},
     'certificate_private_key_pem': {'text': 'Derived private key (PEM format)'},
     'certificate_signature_algorithm': {'text': 'Signature Algorithm'},
     'certificate_pin_sha256': {'text': 'Certificate pin (sha256)'},
@@ -82,7 +82,7 @@ STYLES = {
     'certificate_authority_key_identifier': {'text': 'Authority Key Identifier (AKI)'},
     'certificate_validation_type': {'text': 'Certificate Owner Validation Method'},
     'client_certificate_expected': {'text': 'Client Certificate Expected', 'represent_as': (CLI_VALUE_YES, CLI_VALUE_NO), 'colors': (CLI_COLOR_ALERT, CLI_COLOR_NULL)},
-    'certification_authority_authorization': {'text': 'Certification Authority Authorization (CAA)', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'certification_authority_authorization': {'text': 'CAA', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'revocation_ocsp_status': {'text': 'Revocation: OCSP'},
     'revocation_ocsp_response': {'text': 'Revocation: OCSP Response'},
     'revocation_ocsp_stapling': {'text': 'Revocation: OCSP Stapling', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
@@ -96,18 +96,20 @@ STYLES = {
     'offered_tls_versions': {'text': 'Offered TLS versions'},
     'negotiated_cipher': {'text': 'Negotiated Cipher'},
     'tls_version_intolerance': {'text': 'TLS version intolerance', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
-    'tls_version_intolerance_versions': {'text': 'TLS version intolerance version'},
-    'weak_cipher': {'text': 'Negotiated Cipher has no empirical proof', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
-    'strong_cipher': {'text': 'Negotiated strong Cipher with no known weaknesses', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_NOK), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'forward_anonymity': {'text': 'Forward Anonymity a.k.a. Perfect Forward Secrecy (FPS)', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'tls_version_intolerance_versions': {'text': 'TLS version intolerance versions'},
+    'tls_version_interference': {'text': 'TLS version interference', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
+    'tls_version_interference_versions': {'text': 'TLS version interference versions'},
+    'weak_cipher': {'text': 'Negotiated cipher is weak', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
+    'strong_cipher': {'text': 'Negotiated cipher no known weaknesses', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_NOK), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'forward_anonymity': {'text': 'Forward Anonymity (FPS)', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'session_resumption_caching': {'text': 'Session Resumption (caching)', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'session_resumption_tickets': {'text': 'Session Resumption (tickets)', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'session_resumption_ticket_hint': {'text': 'Session Resumption (ticket hint)', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'client_renegotiation': {'text': 'Insecure Client Renegotiation', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'compression_support': {'text': 'TLS Compression', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'dnssec': {'text': 'DNSSEC', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'dnssec_algorithm': {'text': 'DNSSEC Algorithm'},
-    'scsv': {'text': 'Signaling Cipher Suite Value (SCSV) TLS downgrade prevention', 'represent_as': (CLI_VALUE_OK, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'dnssec_algorithm': {'text': 'DNSSEC Algorithm', 'null_as': 'N/A', 'null_color': CLI_COLOR_NULL},
+    'scsv': {'text': 'TLS downgrade prevention (SCSV)', 'represent_as': (CLI_VALUE_OK, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'http_expect_ct_report_uri': {'text': 'Expect-CT report-uri', 'represent_as': (CLI_VALUE_OK, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'http_hsts': {'text': 'HSTS', 'represent_as': (CLI_VALUE_OK, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'http_xfo': {'text': 'X-Frame-Options (XFO)', 'represent_as': (CLI_VALUE_OK, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
@@ -148,6 +150,7 @@ NEVER_SHOW = [
     "certificate_private_key_pem",
     "subjectKeyIdentifier",
     "authorityKeyIdentifier",
+    "certificate_expired",
 ]
 SERVER_KEYS = [
     'certificate_validation_type',
@@ -184,6 +187,8 @@ SERVER_KEYS = [
     'negotiated_protocol',
     'preferred_protocol',
     'offered_tls_versions',
+    'tls_version_interference',
+    'tls_version_interference_versions',
     'peer_address',
     'negotiated_cipher',
     'weak_cipher',
@@ -237,9 +242,9 @@ FINGERPRINTS = [
 
 def _make_table(validator :Validator, title :str, caption :str) -> Table:
     title_style = Style(bold=True, color=CLI_COLOR_OK if validator.certificate_valid else CLI_COLOR_NOK)
-    table = Table(title=title, caption=caption, title_style=title_style, box=box.MINIMAL_HEAVY_HEAD)
-    table.add_column("", justify="right", style="dark_turquoise", no_wrap=False)
-    table.add_column("Result", justify="left")
+    table = Table(title=title, caption=caption, title_style=title_style, box=box.SIMPLE)
+    table.add_column("", justify="right", style="dark_turquoise", no_wrap=True)
+    table.add_column("Result", justify="left", no_wrap=False)
     return table
 
 def _table_data(validator :Validator, table :Table, skip :list[str]) -> Table:
@@ -335,6 +340,14 @@ def server_outputs(validator :CertValidator) -> Table:
     return table
 
 
+def update_bar(progress, task):
+    def progress_bar(completed :int = None):
+        if isinstance(completed, int):
+            progress.update(task, completed=completed)
+        else:
+            progress.update(task, advance=1)
+    return progress_bar
+
 def main(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', debug :bool = False) -> tuple[bool,list[Validator]]:
     if not isinstance(client_pem, str) and client_pem is not None:
         raise TypeError(f"provided an invalid type {type(client_pem)} for client_pem, expected list")
@@ -349,12 +362,9 @@ def main(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = T
     results = []
     with Progress() as progress:
         prog_client_auth = progress.add_task("[cyan]Client Authentication...", total=5*len(domains))
-        prog_tls_nego = progress.add_task("[cyan]Negotiating TLS...", total=7*len(domains))
-        prog_server_val = progress.add_task("[cyan]TLS Validation...", total=5*len(domains))
-        prog_chain_val = progress.add_task("[cyan]Certificate Chain Validation...", total=3*len(domains))
+        prog_tls = progress.add_task("[cyan]Evaluating TLS...", total=13*len(domains))
+        prog_cert_val = progress.add_task("[cyan]Certificate Chain Validation...", total=7*len(domains))
         while not progress.finished:
-            progress.update(prog_client_auth, advance=1)
-            progress.update(prog_tls_nego, advance=1)
             for host, port in domains:
                 if not isinstance(port, int):
                     raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
@@ -365,24 +375,24 @@ def main(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = T
                 if client_pem is None:
                     progress.update(prog_client_auth, visible=False)
                 else:
-                    transport.pre_client_authentication_check(client_pem_path=client_pem, updater=(progress, prog_client_auth))
-                if not transport.connect_least_secure(cafiles=cafiles, use_sni=use_sni, updater=(progress, prog_tls_nego)) or not isinstance(transport.server_certificate, X509):
+                    progress.update(prog_client_auth, advance=1)
+                    transport.pre_client_authentication_check(client_pem_path=client_pem, progress_bar=update_bar(progress, prog_client_auth))
+                    progress.update(prog_client_auth, advance=1)
+                if not transport.connect_least_secure(cafiles=cafiles, use_sni=use_sni, progress_bar=update_bar(progress, prog_tls)) or not isinstance(transport.server_certificate, X509):
                     raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=host, port=port))
-                progress.update(prog_client_auth, advance=1)
-                progress.update(prog_tls_nego, advance=1)
+                progress.update(prog_tls, advance=1)
                 if isinstance(tmp_path_prefix, str):
                     validator.tmp_path_prefix = tmp_path_prefix
                 validator.mount(transport)
-                progress.update(prog_server_val, advance=1)
-                validator.verify(updater=(progress, prog_tls_nego))
-                progress.update(prog_server_val, advance=1)
-                validator.verify_chain(updater=(progress, prog_chain_val))
+                progress.update(prog_cert_val, advance=1)
+                validator.verify()
+                progress.update(prog_cert_val, advance=1)
+                validator.verify_chain(progress_bar=update_bar(progress, prog_cert_val))
                 results += validator.peer_validations
                 results.append(validator)
             progress.update(prog_client_auth, completed=5*len(domains))
-            progress.update(prog_tls_nego, completed=7*len(domains))
-            progress.update(prog_server_val, completed=5*len(domains))
-            progress.update(prog_chain_val, completed=3*len(domains))
+            progress.update(prog_tls, completed=13*len(domains))
+            progress.update(prog_cert_val, completed=7*len(domains))
 
     console = Console()
     valid = all(v.certificate_valid for v in results)

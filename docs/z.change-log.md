@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.4.8 Oct 27th 2021
+
+- Added `Metadata.certificate_version`
+- Added `Metadata.certificate_expired` as a boolean to save computing of `notBefore`
+- Added `Metadata.tls_version_interference`
+- Added `Metadata.tls_version_interference_versions`
+- Added tls version interference tests and validation messages
+- Improved code quality of progress bars
+- Improved code quality of `Transport.connect_least_secure`, `Validator.extract_x509_metadata`, and `CertValidator.verify_chain`
+
 ## 0.4.7 Oct 27th 2021
 
 - Bump `tlstrust==1.1.1` to show a more verbose platform trust store version

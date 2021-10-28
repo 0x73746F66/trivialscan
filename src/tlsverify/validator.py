@@ -106,25 +106,11 @@ class Validator:
     def extract_x509_metadata(self, x509 :X509):
         if not hasattr(self, 'metadata') or not isinstance(self.metadata, Metadata):
             self.metadata = Metadata()
-
+        self.metadata.certificate_version = x509.get_version()
         self.metadata.certificate_extensions = util.get_certificate_extensions(self.certificate)
         self.metadata.certificate_private_key_pem = None
         public_key = x509.get_pubkey()
-        if public_key.type() == TYPE_RSA:
-            self.metadata.certificate_public_key_type = 'RSA'
-            self.metadata.certificate_private_key_pem = dump_privatekey(FILETYPE_PEM, public_key).decode()
-            self.metadata.certificate_public_key_exponent = x509.to_cryptography().public_key().public_numbers().e
-        if public_key.type() == TYPE_DSA:
-            self.metadata.certificate_public_key_type = 'DSA'
-            self.metadata.certificate_private_key_pem = dump_privatekey(FILETYPE_PEM, public_key).decode()
-            self.metadata.certificate_public_key_exponent = x509.to_cryptography().public_key().public_numbers().e
-        if public_key.type() == TYPE_DH:
-            self.metadata.certificate_public_key_type = 'DH'
-            self.metadata.certificate_public_key_curve = x509.to_cryptography().public_key().curve.name
-        if public_key.type() == TYPE_EC:
-            self.metadata.certificate_public_key_type = 'EC'
-            self.metadata.certificate_public_key_curve = x509.to_cryptography().public_key().curve.name
-        self.metadata.certificate_public_key_size = public_key.bits()
+        self._extract_public_key_info(public_key.type(), public_key, x509)
         self.metadata.certificate_serial_number_decimal = x509.get_serial_number()
         self.metadata.certificate_serial_number = util.convert_decimal_to_serial_bytes(x509.get_serial_number())
         self.metadata.certificate_serial_number_hex = '{0:#0{1}x}'.format(x509.get_serial_number(), 4)
@@ -143,6 +129,7 @@ class Validator:
         not_after = datetime.strptime(x509.get_notAfter().decode('ascii'), util.X509_DATE_FMT)
         self.metadata.certificate_not_before = not_before.isoformat()
         self.metadata.certificate_not_after = not_after.isoformat()
+        self.metadata.certificate_expired = x509.has_expired()
         self.metadata.certificate_common_name = util.extract_from_subject(self.certificate)
         self.metadata.certificate_subject_key_identifier, self.metadata.certificate_authority_key_identifier = util.get_ski_aki(self.certificate)
         if self.metadata.revocation_ocsp_must_staple is not True:
@@ -158,6 +145,16 @@ class Validator:
             if not isinstance(policy, PolicyInformation): continue
             if policy.policy_identifier._dotted_string in util.VALIDATION_OID.keys():
                 self.metadata.certificate_validation_type = util.VALIDATION_TYPES[util.VALIDATION_OID[policy.policy_identifier._dotted_string]]
+
+    def _extract_public_key_info(self, key_type, public_key, x509):
+        if key_type in [TYPE_RSA, TYPE_DSA]:
+            self.metadata.certificate_public_key_type = 'RSA' if TYPE_RSA == key_type else 'DSA'
+            self.metadata.certificate_private_key_pem = dump_privatekey(FILETYPE_PEM, public_key).decode()
+            self.metadata.certificate_public_key_exponent = x509.to_cryptography().public_key().public_numbers().e
+        if key_type in [TYPE_DH, TYPE_EC]:
+            self.metadata.certificate_public_key_type = 'EC' if key_type == TYPE_EC else 'DH'
+            self.metadata.certificate_public_key_curve = x509.to_cryptography().public_key().curve.name
+        self.metadata.certificate_public_key_size = public_key.bits()
 
     def verify(self) -> bool:
         logger.debug('Common certificate validations')
@@ -301,6 +298,8 @@ class CertValidator(Validator):
         self.metadata.sni_support = transport.sni_support
         self.metadata.tls_version_intolerance = transport.tls_version_intolerance
         self.metadata.tls_version_intolerance_versions = transport.tls_version_intolerance_versions
+        self.metadata.tls_version_interference = transport.tls_version_interference
+        self.metadata.tls_version_interference_versions = transport.tls_version_interference_versions
         self.metadata.offered_tls_versions = list(set(transport.offered_tls_versions))
         self.metadata.session_resumption_caching = transport.session_cache_mode in ['session_resumption_both', 'session_resumption_caching']
         self.metadata.session_resumption_tickets = transport.session_tickets
@@ -354,11 +353,8 @@ class CertValidator(Validator):
             if errno in exceptions.X509_MESSAGES and self.x509.get_serial_number() == cert.get_serial_number() and message not in self.certificate_verify_messages:
                 self.certificate_verify_messages.append(exceptions.X509_MESSAGES[errno])
 
-    def verify(self, updater :tuple[Progress, TaskID] = None) -> bool:
-        progress, task = (None, None)
-        if isinstance(updater, tuple): progress, task = updater
+    def verify(self) -> bool:
         super().verify()
-        if isinstance(progress, Progress): progress.update(task, advance=1)
         tldext = TLDExtract(cache_dir='/tmp')(f'http://{self.metadata.host}')
         ca = util.get_basic_constraints(self.certificate)
         logger.debug('Server certificate validations')
@@ -370,7 +366,7 @@ class CertValidator(Validator):
                 self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CLIENT_AUTHENTICATION)
         if isinstance(ca, bool) and ca is True:
             self.validation_checks['basic_constraints_ca'] = False
-            self.certificate_verify_messages.append('server certificates should not be a CA')
+            self.certificate_verify_messages.append('server certificates should not be a CA, it could enable impersonation attacks')
         self.validation_checks['certificate_valid_tls_usage'] = util.key_usage_exists(self.certificate, 'digital_signature') is True and util.key_usage_exists(self.certificate, 'serverAuth') is True
         self.validation_checks['common_name_valid'] = util.validate_common_name(self.metadata.certificate_common_name, self.metadata.host) is True
         self.validation_checks['match_hostname'] = util.match_hostname(self.metadata.host, self.certificate)
@@ -421,8 +417,19 @@ class CertValidator(Validator):
         self.validation_checks['avoid_deprecated_dnssec_algorithms'] = self.metadata.dnssec_algorithm not in util.WEAK_DNSSEC_ALGORITHMS.keys()
         if self.validation_checks['avoid_deprecated_dnssec_algorithms'] is False:
             self.certificate_verify_messages.append(util.WEAK_DNSSEC_ALGORITHMS[self.metadata.dnssec_algorithm])
+        interference_versions = ''.join(self.metadata.tls_version_interference_versions)
+        current_version = 'TLSv1.3'
+        if '0x304' in interference_versions:
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_VERSION_INTERFERENCE_CURRENT.format(current_version=current_version))
+        if '0x303' in interference_versions:
+            common_version = 'TLSv1.2'
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_VERSION_INTERFERENCE_COMMON.format(current_version=current_version, common_version=common_version))
+        if '0x302' in interference_versions:
+            old_version = 'TLSv1.1'
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_VERSION_INTERFERENCE_OLD.format(old_version=old_version))
+        elif any(['0x301' in interference_versions, '0x300' in interference_versions, '0x2ff' in interference_versions]):
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_VERSION_INTERFERENCE_OBSOLETE)
 
-        if isinstance(progress, Progress): progress.update(task, advance=1)
         return self.certificate_valid
 
     def _get_root_certs(self, trust_store :TrustStore):
@@ -528,11 +535,10 @@ class CertValidator(Validator):
         root_validator.metadata.trust_certifi = trust_store.certifi
         self.peer_validations.append(root_validator)
 
-    def verify_chain(self, updater :tuple[Progress, TaskID] = None) -> bool:
+    def verify_chain(self, progress_bar :callable = lambda *args: None) -> bool:
         if self._pem_certificate_chain is None or (isinstance(self._pem_certificate_chain, list) and len(self._pem_certificate_chain) == 0):
             return False
-        progress, task = (None, None)
-        if isinstance(updater, tuple): progress, task = updater
+
         validator_key_usage, validator_extended_key_usage = util.gather_key_usages(self.certificate)
         validation_result = f'Validated: {",".join(validator_key_usage + validator_extended_key_usage)}'
         try:
@@ -559,7 +565,10 @@ class CertValidator(Validator):
             logger.warning(ex, stack_info=True)
             validation_result = str(ex)
 
-        if isinstance(progress, Progress): progress.update(task, advance=1)
+        self.certificate_chain_validation_result = validation_result
+        self.certificate_chain_valid = self.certificate_chain_valid is not False
+
+        progress_bar()
         def map_peers(peers :list[X509]):
             peers_map = {}
             for cert in peers:
@@ -571,6 +580,7 @@ class CertValidator(Validator):
 
         peer_lookup = map_peers(self.certificate_chain)
         for cert in self.certificate_chain:
+            progress_bar()
             if cert.get_serial_number() == self.x509.get_serial_number():
                 continue
             ca, _ = util.get_basic_constraints(cert.to_cryptography())
@@ -599,12 +609,8 @@ class CertValidator(Validator):
             peer_validator.verify()
             self.validation_checks['not_revoked'] = self.validation_checks.get('not_revoked') is not False
             self.peer_validations.append(peer_validator)
-            if isinstance(progress, Progress): progress.update(task, advance=1)
 
-        self.certificate_chain_validation_result = validation_result
-        self.certificate_chain_valid = self.certificate_chain_valid is not False
-
-        return self.certificate_valid and self.certificate_chain_valid
+        return all([self.certificate_valid, self.certificate_chain_valid])
 
     def extract_x509_metadata(self, x509 :X509):
         super().extract_x509_metadata(x509)
