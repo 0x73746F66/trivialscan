@@ -554,8 +554,9 @@ class Transport:
             conn.setblocking(1)
             util.do_handshake(conn)
             self.negotiated_cipher = conn.get_cipher_name()
-            self.negotiated_protocol = conn.get_protocol_version_name()
-            self.offered_tls_versions.append(f'{self.negotiated_protocol} ({hex(util.PROTOCOL_VERSION[self.negotiated_protocol])})')
+            negotiated_protocol = conn.get_protocol_version_name()
+            self.negotiated_protocol = f'{negotiated_protocol} ({hex(util.PROTOCOL_VERSION[negotiated_protocol])})'
+            self.offered_tls_versions.append(self.negotiated_protocol)
             self.session_cache_mode = util.SESSION_CACHE_MODE[native_openssl.SSL_CTX_get_session_cache_mode(conn._context._context)]
             self.session_tickets = native_openssl.SSL_SESSION_has_ticket(conn.get_session()._session) == 1
             self.session_ticket_hints = native_openssl.SSL_SESSION_get_ticket_lifetime_hint(conn.get_session()._session) > 0
@@ -586,8 +587,11 @@ class Transport:
         logger.info('Trying to derive SCSV')
         try:
             negotiated = self.test_tls_version(min_tls_version=tls_version, use_sni=use_sni)
-            self.preferred_protocol = negotiated or self.negotiated_protocol
-            self.offered_tls_versions.append(f'{self.preferred_protocol} ({hex(util.PROTOCOL_VERSION[self.preferred_protocol])})')
+            if negotiated:    
+                self.preferred_protocol = f'{negotiated} ({hex(util.PROTOCOL_VERSION[negotiated])})'
+            else:
+                self.preferred_protocol = self.negotiated_protocol
+            self.offered_tls_versions.append(self.preferred_protocol)
             self.tls_downgrade = negotiated is not None
         except Exception:
             self.tls_downgrade = False
