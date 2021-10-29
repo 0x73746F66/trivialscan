@@ -2,8 +2,10 @@
 
 ## 0.4.10 Oct 27th 2021
 
-- Added `--json-file` as a cli argument
-- Added `--show-private-key` as a cli argument
+- Added `--json-file` cli argument
+- Added `--show-private-key` cli argument
+- Added `--hide-validation-details` cli argument
+- Renamed `'-b', '--progress-bars'` to `--hide-progress-bars` cli argument which will show progress bars by default
 
 ## 0.4.9 Oct 27th 2021
 

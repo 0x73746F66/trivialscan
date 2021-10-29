@@ -261,8 +261,9 @@ def _make_table(validator :Validator, title :str, caption :str) -> Table:
     return table
 
 def _table_data(validator :Validator, table :Table, skip :list[str]) -> Table:
-    for i, err in enumerate(validator.certificate_verify_messages):
-        table.add_row(f'Note {i+1}', err)
+    if 'verification_details' not in skip:
+        for i, err in enumerate(validator.certificate_verify_messages):
+            table.add_row(f'Note {i+1}', err)
     for key in validator.validation_checks.keys():
         table.add_row(STYLES.get(key,{}).get('text', key), util.styled_boolean(validator.validation_checks[key], STYLES[key]['represent_as'], STYLES[key]['colors']))
     for key in list(vars(validator.metadata).keys()):
@@ -382,8 +383,9 @@ def validator_data(validator :Validator, certificate_type :str, skip_keys :list)
         data['certificate_chain_validation_result'] = validator.certificate_chain_validation_result
     data['certificate_type'] = certificate_type
     data['expiry_status'] = util.date_diff(validator.certificate.not_valid_after)
-    data['verification_details'] = validator.certificate_verify_messages
     data['verification_results'] = validator.validation_checks
+    if 'verification_details' not in skip_keys:
+        data['verification_details'] = validator.certificate_verify_messages
     for key in list(vars(validator.metadata).keys()):
         if key in skip_keys and key in data:
             del data[key]
@@ -407,7 +409,7 @@ def make_json(results :list[Validator]) -> str:
             data.append(validator_data(result, 'Server Certificate', [x for x in SERVER_SKIP if x not in SERVER_JSON_ONLY]))
     return json.dumps(data, sort_keys=True, default=str)
 
-def main(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', debug :bool = False) -> list[Validator]:
+def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', debug :bool = False) -> list[Validator]:
     if not isinstance(client_pem, str) and client_pem is not None:
         raise TypeError(f"provided an invalid type {type(client_pem)} for client_pem, expected list")
     if not isinstance(cafiles, list) and cafiles is not None:
@@ -472,8 +474,9 @@ def cli():
     parser.add_argument('-t', '--tmp-path-prefix', help='local file path to use as a prefix when saving temporary files such as those being fetched for client authorization', dest='tmp_path_prefix', default='/tmp')
     parser.add_argument('--disable-sni', help='Do not negotiate SNI using INDA encoded host', dest='disable_sni', action="store_true")
     parser.add_argument('--show-private-key', help='If the private key is exposed, show it in the results', dest='show_private_key', action="store_true")
+    parser.add_argument('--hide-validation-details', help='Do not include detailed validation messages in output', dest='hide_validation_details', action="store_true")
     parser.add_argument('-j', '--json-file', help='Store to file as JSON', dest='json_file', default=None)
-    parser.add_argument('-b', '--progress-bars', help='Show task progress bars', dest='show_progress', action="store_true")
+    parser.add_argument('--hide-progress-bars', help='Hide task progress bars', dest='hide_progress_bars', action="store_true")
     parser.add_argument('-v', '--errors-only', help='set logging level to ERROR (default CRITICAL)', dest='log_level_error', action="store_true")
     parser.add_argument('-vv', '--warning', help='set logging level to WARNING (default CRITICAL)', dest='log_level_warning', action="store_true")
     parser.add_argument('-vvv', '--info', help='set logging level to INFO (default CRITICAL)', dest='log_level_info', action="store_true")
@@ -525,22 +528,17 @@ def cli():
             raise AttributeError(f'host {host} is invalid')
         domains.append((host, int(port)))
 
+    if args.hide_validation_details:
+        SERVER_SKIP.append('verification_details')
+        PEER_SKIP.append('verification_details')
+        ROOT_SKIP.append('verification_details')
     if args.show_private_key:
         SERVER_SKIP.remove('certificate_private_key_pem')
         PEER_SKIP.remove('certificate_private_key_pem')
         ROOT_SKIP.remove('certificate_private_key_pem')
 
     all_results = []
-    if args.show_progress:
-        all_results = main( # clones tlsverify.verify and only adds progress bars
-            domains=domains,
-            cafiles=args.cafiles,
-            use_sni=not args.disable_sni,
-            client_pem=args.client_pem,
-            tmp_path_prefix=args.tmp_path_prefix,
-            debug=debug
-        )
-    else:
+    if args.hide_progress_bars:
         for domain, port in domains:
             evaluation_start = datetime.utcnow()
             _, results = verify(
@@ -559,6 +557,15 @@ def cli():
         result_style = Style(color=CLI_COLOR_OK if valid else CLI_COLOR_NOK)
         console.print('Valid ✓✓✓' if valid else '\nNot Valid. There where validation errors', style=result_style)
         console.print(f'Evaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n\n')
+    else:
+        all_results = with_progress_bars( # clones tlsverify.verify and only adds progress bars
+            domains=domains,
+            cafiles=args.cafiles,
+            use_sni=not args.disable_sni,
+            client_pem=args.client_pem,
+            tmp_path_prefix=args.tmp_path_prefix,
+            debug=debug
+        )
 
     if JSON_FILE:
         json_path = Path(JSON_FILE)
