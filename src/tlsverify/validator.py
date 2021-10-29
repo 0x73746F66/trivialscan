@@ -301,6 +301,7 @@ class CertValidator(Validator):
         self.metadata.tls_version_intolerance_versions = transport.tls_version_intolerance_versions
         self.metadata.tls_version_interference = transport.tls_version_interference
         self.metadata.tls_version_interference_versions = transport.tls_version_interference_versions
+        self.metadata.tls_long_handshake_intolerance = transport.long_handshake_intolerance
         self.metadata.offered_tls_versions = list(set(transport.offered_tls_versions))
         self.metadata.session_resumption_caching = transport.session_cache_mode in ['session_resumption_both', 'session_resumption_caching']
         self.metadata.session_resumption_tickets = transport.session_tickets

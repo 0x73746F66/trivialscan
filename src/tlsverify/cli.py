@@ -20,7 +20,7 @@ from .validator import RootCertValidator, CertValidator, PeerCertValidator, Vali
 from .transport import Transport
 
 
-__version__ = 'tls-verify==0.4.10'
+__version__ = 'tls-verify==0.4.11'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
@@ -41,6 +41,7 @@ CLI_VALUE_OK = 'OK'
 CLI_VALUE_NOK = 'NOT OK'
 CLI_VALUE_REVOKED = 'Revoked'
 CLI_VALUE_NOT_REVOKED = 'Not Revoked'
+CLI_VALUE_NA = 'N/A'
 STYLES = {
     'certificate_valid': {'text': 'Certificate Valid', 'represent_as': (CLI_VALUE_VALID, CLI_VALUE_NOT_VALID), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'certificate_chain_valid': {'text': 'Certificate Chain Valid', 'represent_as': (CLI_VALUE_VALID, CLI_VALUE_NOT_VALID), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
@@ -64,9 +65,9 @@ STYLES = {
     'ocsp_staple_satisfied': {'text': 'OCSP Staple satisfied', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'certificate_version': {'text': 'Certificate Version'},
     'certificate_public_key_type': {'text': 'Public Key Type'},
-    'certificate_public_key_curve': {'text': 'Public Key Curve', 'null_as': 'N/A', 'null_color': CLI_COLOR_NULL},
+    'certificate_public_key_curve': {'text': 'Public Key Curve', 'null_as': CLI_VALUE_NA, 'null_color': CLI_COLOR_NULL},
     'certificate_public_key_size': {'text': 'Public Key Size'},
-    'certificate_public_key_exponent': {'text': 'Public Key Exponent', 'null_as': 'N/A', 'null_color': CLI_COLOR_NULL},
+    'certificate_public_key_exponent': {'text': 'Public Key Exponent', 'null_as': CLI_VALUE_NA, 'null_color': CLI_COLOR_NULL},
     'certificate_private_key_pem': {'text': 'Derived private key (PEM format)'},
     'certificate_signature_algorithm': {'text': 'Signature Algorithm'},
     'certificate_pin_sha256': {'text': 'Certificate pin (sha256)'},
@@ -103,6 +104,7 @@ STYLES = {
     'tls_version_intolerance_versions': {'text': 'TLS version intolerance versions'},
     'tls_version_interference': {'text': 'TLS version interference', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'tls_version_interference_versions': {'text': 'TLS version interference versions'},
+    'tls_long_handshake_intolerance': {'text': 'TLS long handshake intolerance', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'weak_cipher': {'text': 'Negotiated cipher is weak', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'strong_cipher': {'text': 'Negotiated cipher no known weaknesses', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_NOK), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'forward_anonymity': {'text': 'Forward Anonymity (FPS)', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
@@ -112,7 +114,7 @@ STYLES = {
     'client_renegotiation': {'text': 'Insecure Client Renegotiation', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'compression_support': {'text': 'TLS Compression', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'dnssec': {'text': 'DNSSEC', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'dnssec_algorithm': {'text': 'DNSSEC Algorithm', 'null_as': 'N/A', 'null_color': CLI_COLOR_NULL},
+    'dnssec_algorithm': {'text': 'DNSSEC Algorithm', 'null_as': CLI_VALUE_NA, 'null_color': CLI_COLOR_NULL},
     'scsv': {'text': 'TLS downgrade prevention (SCSV)', 'represent_as': (CLI_VALUE_OK, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'http_expect_ct_report_uri': {'text': 'Expect-CT report-uri', 'represent_as': (CLI_VALUE_OK, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'http_hsts': {'text': 'HSTS', 'represent_as': (CLI_VALUE_OK, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
@@ -157,7 +159,6 @@ NEVER_SHOW = [
 JSON_ONLY = [
     "certificate_expired",
     "certificate_extensions",
-    "certificate_private_key_pem",
     "certificate_is_self_signed",
 ]
 SERVER_JSON_ONLY = JSON_ONLY + [
@@ -203,6 +204,7 @@ SERVER_KEYS = [
     'offered_tls_versions',
     'tls_version_interference',
     'tls_version_interference_versions',
+    'tls_long_handshake_intolerance',
     'peer_address',
     'negotiated_cipher',
     'weak_cipher',
@@ -395,18 +397,23 @@ def validator_data(validator :Validator, certificate_type :str, skip_keys :list)
 
     return data
 
-def make_json(results :list[Validator]) -> str:
-    data = []
+def make_json(results :list[Validator], evaluation_duration_seconds :int) -> str:
+    data = {
+        'generator': __version__,
+        'date': datetime.utcnow().replace(microsecond=0).isoformat(),
+        'evaluation_duration_seconds': evaluation_duration_seconds,
+        'validations': []
+    }
     for result in results:
         if isinstance(result, RootCertValidator):
-            data.append(validator_data(result, 'Root CA', [x for x in ROOT_SKIP if x not in JSON_ONLY]))
+            data['validations'].append(validator_data(result, 'Root CA', [x for x in ROOT_SKIP if x not in JSON_ONLY]))
         if isinstance(result, PeerCertValidator):
             cert_type = 'Intermediate Certificate'
             if result.metadata.certificate_intermediate_ca:
                 cert_type = 'Intermediate CA'
-            data.append(validator_data(result, cert_type, [x for x in PEER_SKIP if x not in JSON_ONLY]))
+            data['validations'].append(validator_data(result, cert_type, [x for x in PEER_SKIP if x not in JSON_ONLY]))
         if isinstance(result, CertValidator):
-            data.append(validator_data(result, 'Server Certificate', [x for x in SERVER_SKIP if x not in SERVER_JSON_ONLY]))
+            data['validations'].append(validator_data(result, 'Server Certificate', [x for x in SERVER_SKIP if x not in SERVER_JSON_ONLY]))
     return json.dumps(data, sort_keys=True, default=str)
 
 def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', debug :bool = False) -> list[Validator]:
@@ -423,7 +430,7 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
     results = []
     with Progress() as progress:
         prog_client_auth = progress.add_task("[cyan]Client Authentication...", total=5*len(domains))
-        prog_tls = progress.add_task("[cyan]Evaluating TLS...", total=13*len(domains))
+        prog_tls = progress.add_task("[cyan]Evaluating TLS...", total=14*len(domains))
         prog_cert_val = progress.add_task("[cyan]Certificate Chain Validation...", total=7*len(domains))
         while not progress.finished:
             for host, port in domains:
@@ -452,7 +459,7 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
                 results += validator.peer_validations
                 results.append(validator)
             progress.update(prog_client_auth, completed=5*len(domains))
-            progress.update(prog_tls, completed=13*len(domains))
+            progress.update(prog_tls, completed=14*len(domains))
             progress.update(prog_cert_val, completed=7*len(domains))
 
     console = Console()
@@ -538,9 +545,9 @@ def cli():
         ROOT_SKIP.remove('certificate_private_key_pem')
 
     all_results = []
+    evaluation_start = datetime.utcnow()
     if args.hide_progress_bars:
         for domain, port in domains:
-            evaluation_start = datetime.utcnow()
             _, results = verify(
                 domain,
                 int(port),
@@ -571,4 +578,4 @@ def cli():
         json_path = Path(JSON_FILE)
         if json_path.is_file():
             json_path.unlink()
-        json_path.write_text(make_json(all_results))
+        json_path.write_text(make_json(all_results, (datetime.utcnow() - evaluation_start).total_seconds()))

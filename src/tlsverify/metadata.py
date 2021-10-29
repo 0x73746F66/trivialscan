@@ -64,6 +64,7 @@ class Metadata:
     tls_version_intolerance_versions :list = field(default_factory=list)
     tls_version_interference :bool = field(default_factory=bool)
     tls_version_interference_versions :list = field(default_factory=list)
+    tls_long_handshake_intolerance :bool = field(default_factory=bool)
     peer_address :str = field(default_factory=str)
     http_expect_ct_report_uri :bool = field(default_factory=bool)
     http_hsts :bool = field(default_factory=bool)

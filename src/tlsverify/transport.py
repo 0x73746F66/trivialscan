@@ -16,7 +16,6 @@ from OpenSSL.crypto import X509, FILETYPE_PEM, X509Name, load_certificate
 from certifi import where
 from hyperframe.frame import Frame, SettingsFrame
 from hyperframe.exceptions import InvalidFrameError
-from rich.progress import Progress, TaskID
 from requests import post
 import validators
 import idna
@@ -72,6 +71,7 @@ class Transport:
     tls_version_intolerance_versions :list
     tls_version_interference :bool
     tls_version_interference_versions :list
+    long_handshake_intolerance :bool
     preferred_protocol :str
     cafiles :list
     certificate_chain :list[X509]
@@ -120,6 +120,7 @@ class Transport:
         self.tls_version_interference_versions = []
         self.tls_version_intolerance = None
         self.tls_version_intolerance_versions = []
+        self.long_handshake_intolerance = None
         self.preferred_protocol = None
         self.ocsp_stapling = None
         self.ocsp_must_staple = None
@@ -375,7 +376,7 @@ class Transport:
         ctx.check_hostname = False
         if sock is None:
             sock = self.prepare_socket()
-        conn = SSL.Connection(context, ctx.wrap_socket(sock, do_handshake_on_connect=False))
+        conn = SSL.Connection(context, ctx.wrap_socket(sock, do_handshake_on_connect=False, server_hostname=self.host))
         conn.connect((self.host, self.port))
         conn.set_connect_state()
         if all([ssl.HAS_SNI, use_sni]):
@@ -490,7 +491,7 @@ class Transport:
         if not isinstance(response_wait, int):
             raise TypeError(f'response_wait {type(response_wait)}, int supported')
         if not isinstance(uri_path, str):
-            raise AttributeError(f'uri_path not supported')
+            raise AttributeError('uri_path not supported')
         if not uri_path.startswith('/'):
             uri_path = f'/{uri_path}'
         ctx = self.prepare_context()
@@ -610,6 +611,83 @@ class Transport:
             if supported is True:
                 self.offered_tls_versions.append(ver_display_name)
 
+    def test_tls_long_handshake_intolerance(self, version :int = None) -> bool:
+        """
+        If the Client Hello messages longer than 255 bytes and the connection fails
+        Using ALL_CIPHERS is 3458 bytes so our Client Hello will be sufficiently long
+        """
+        native_ssl_openssl_version_map = {
+            769: ssl.PROTOCOL_TLSv1,
+            770: ssl.PROTOCOL_TLSv1_1,
+            771: ssl.PROTOCOL_TLSv1_2,
+            772: ssl.PROTOCOL_TLSv1_2,
+        }
+        protocol = native_ssl_openssl_version_map[version]
+        ctx = ssl.SSLContext(protocol)
+        sock = socket(AF_INET, SOCK_STREAM)
+        context = SSL.Context(method=getattr(SSL, self.default_connect_method))
+        if version == SSL.TLS1_3_VERSION:
+            ctx.options |= ssl.OP_NO_SSLv2
+            ctx.options |= ssl.OP_NO_SSLv3
+            ctx.options |= ssl.OP_NO_TLSv1
+            ctx.options |= ssl.OP_NO_TLSv1_1
+            ctx.options |= ssl.OP_NO_TLSv1_2
+            ctx.options |= ssl.OP_NO_COMPRESSION
+            context.set_options(SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | SSL.OP_NO_TLSv1 | SSL.OP_NO_TLSv1_1 | SSL.OP_NO_TLSv1_2 | SSL.OP_NO_COMPRESSION)
+        if version == SSL.TLS1_2_VERSION:
+            ctx.options |= ssl.OP_NO_SSLv2
+            ctx.options |= ssl.OP_NO_SSLv3
+            ctx.options |= ssl.OP_NO_TLSv1
+            ctx.options |= ssl.OP_NO_TLSv1_1
+            ctx.options |= ssl.OP_NO_TLSv1_3
+            ctx.options |= ssl.OP_NO_COMPRESSION
+            context.set_options(SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | SSL.OP_NO_TLSv1 | SSL.OP_NO_TLSv1_1 | SSL.OP_NO_TLSv1_3 | SSL.OP_NO_COMPRESSION)
+        if version == SSL.TLS1_1_VERSION:
+            ctx.options |= ssl.OP_NO_SSLv2
+            ctx.options |= ssl.OP_NO_SSLv3
+            ctx.options |= ssl.OP_NO_TLSv1
+            ctx.options |= ssl.OP_NO_TLSv1_2
+            ctx.options |= ssl.OP_NO_TLSv1_3
+            ctx.options |= ssl.OP_NO_COMPRESSION
+            context.set_options(SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | SSL.OP_NO_TLSv1 | SSL.OP_NO_TLSv1_2 | SSL.OP_NO_TLSv1_3 | SSL.OP_NO_COMPRESSION)
+        if version == SSL.TLS1_VERSION:
+            ctx.options |= ssl.OP_NO_SSLv2
+            ctx.options |= ssl.OP_NO_SSLv3
+            ctx.options |= ssl.OP_NO_TLSv1_1
+            ctx.options |= ssl.OP_NO_TLSv1_2
+            ctx.options |= ssl.OP_NO_TLSv1_3
+            ctx.options |= ssl.OP_NO_COMPRESSION
+            context.set_options(SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | SSL.OP_NO_TLSv1_1 | SSL.OP_NO_TLSv1_2 | SSL.OP_NO_TLSv1_3 | SSL.OP_NO_COMPRESSION)
+
+        sock.settimeout(1)
+        ctx.verify_mode = ssl.CERT_REQUIRED
+        context.verify_mode = ssl.CERT_REQUIRED
+        context.load_verify_locations(cafile=where())
+        for cafile in self.cafiles:
+            context.load_verify_locations(cafile=cafile)
+        if self.client_certificate_expected and isinstance(self.client_pem_path, str):
+            context.use_certificate_file(certfile=self.client_pem_path, filetype=FILETYPE_PEM)
+        ctx.set_ciphers(util.ALL_CIPHERS)
+        context.set_cipher_list(util.ALL_CIPHERS.encode())
+        context.set_min_proto_version(version)
+        context.set_max_proto_version(version)
+        conn = SSL.Connection(context, ctx.wrap_socket(sock, do_handshake_on_connect=False, server_hostname=self.host))
+        negotiated_cipher = None
+        try:
+            conn.connect((self.host, self.port))
+            conn.set_connect_state()
+            if ssl.HAS_SNI:
+                conn.set_tlsext_host_name(idna.encode(self.host))
+            conn.setblocking(1)
+            util.do_handshake(conn)
+            negotiated_cipher = conn.get_cipher_name()
+            conn.shutdown()
+        except Exception as ex:
+            logger.debug(ex, exc_info=True)
+        finally:
+            conn.close()
+        return negotiated_cipher is None
+
     def test_tls_version_interference(self):
         """
         A rejected connection (typically the oldest or latest version, currently 1.3)
@@ -668,6 +746,9 @@ class Transport:
             progress_bar()
 
             self.test_http2(response_wait=3)
+            progress_bar()
+
+            self.long_handshake_intolerance = self.test_tls_long_handshake_intolerance(version)
             progress_bar()
 
             if version == SSL.TLS1_3_VERSION:

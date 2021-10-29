@@ -1,18 +1,22 @@
 # Change Log
 
-## 0.4.10 Oct 27th 2021
+## 0.4.11 Oct 30th 2021
+
+- Added TLS long handshake intolerance detection
+
+## 0.4.10 Oct 29th 2021
 
 - Added `--json-file` cli argument
 - Added `--show-private-key` cli argument
 - Added `--hide-validation-details` cli argument
 - Renamed `'-b', '--progress-bars'` to `--hide-progress-bars` cli argument which will show progress bars by default
 
-## 0.4.9 Oct 27th 2021
+## 0.4.9 Oct 29th 2021
 
 - Bump `tlstrust==2.0.0` for AKI to reduce false positives matches and false negative missing certs
 - Do not duplicate intermediate CA certs in the chain when teh server attempts to send a root CA, ignore the server cert and use the trust store copy only
 
-## 0.4.8 Oct 27th 2021
+## 0.4.8 Oct 29th 2021
 
 - Added `Metadata.certificate_version`
 - Added `Metadata.certificate_expired` as a boolean to save computing of `notBefore`
