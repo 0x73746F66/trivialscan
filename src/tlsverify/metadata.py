@@ -82,8 +82,6 @@ class Metadata:
     http2_cleartext_support :bool = field(default_factory=bool)
     port :int = 443
     possible_phish_or_malicious :bool = field(default_factory=bool)
-    trust_apple_legacy :bool = field(default_factory=bool)
-    trust_apple_legacy_status :str = field(default_factory=str)
     trust_ccadb :bool = field(default_factory=bool)
     trust_ccadb_status :str = field(default_factory=str)
     trust_java :bool = field(default_factory=bool)

@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.4.9 Oct 27th 2021
+
+- Bump `tlstrust==2.0.0` for AKI to reduce false positives matches and false negative missing certs
+
 ## 0.4.8 Oct 27th 2021
 
 - Added `Metadata.certificate_version`

@@ -13,9 +13,7 @@ from cryptography.x509 import Certificate, extensions, PolicyInformation
 from certvalidator.errors import PathValidationError, RevokedError, InvalidCertificateError, PathBuildingError
 from dns.rrset import RRset
 from tldextract import TLDExtract
-from rich.progress import Progress, TaskID
 from tlstrust import TrustStore, context
-from tlstrust.stores.apple import __version__ as apple_version, __description__ as apple_desc
 from tlstrust.stores.ccadb import __version__ as ccadb_version
 from tlstrust.stores.java import __version__ as java_version
 from tlstrust.stores.certifi import __version__ as certifi_version
@@ -177,7 +175,10 @@ class Validator:
         bad_cn = ['localhost', 'portswigger']
         bad_san = ['localhost', 'lvh.me']
         for cn in bad_cn:
-            if cn in self.metadata.certificate_common_name.lower():
+            check = self.metadata.certificate_common_name
+            if not check:
+                continue
+            if cn in check.lower():
                 self.metadata.possible_phish_or_malicious = True
         subject_ou = util.extract_from_subject(self.certificate, 'organizationalUnitName')
         if subject_ou:
@@ -464,7 +465,6 @@ class CertValidator(Validator):
 
     def _root_validator(self, trust_store :TrustStore, root_validator :RootCertValidator):
         DEFAULT_STATUS = 'No Root CA Certificate in the {platform} Trust Store'
-        root_validator.metadata.trust_apple_legacy_status = DEFAULT_STATUS.format(platform='Apple')
         root_validator.metadata.trust_ccadb_status = DEFAULT_STATUS.format(platform='CCADB')
         root_validator.metadata.trust_android_status = DEFAULT_STATUS.format(platform='Android')
         root_validator.metadata.trust_java_status = DEFAULT_STATUS.format(platform='Java')
@@ -472,12 +472,8 @@ class CertValidator(Validator):
         root_validator.metadata.trust_certifi_status = DEFAULT_STATUS.format(platform='Python')
 
         expired_text = ' EXPIRED'
-        if trust_store.exists(context.SOURCE_APPLE):
-            root_validator.metadata.trust_apple_legacy_status = f'{apple_desc} Root CA Trust Store {apple_version} (until April 2022)'
-            if trust_store.expired_in_store(context.SOURCE_APPLE):
-                root_validator.metadata.trust_apple_legacy_status += expired_text
         if trust_store.exists(context.SOURCE_CCADB):
-            root_validator.metadata.trust_ccadb_status = f'In Common CA Database {ccadb_version} (Mozilla, Microsoft, and Apple from Dec 2021)'
+            root_validator.metadata.trust_ccadb_status = f'In Common CA Database {ccadb_version} (Mozilla, Microsoft, and Apple)'
             if trust_store.expired_in_store(context.SOURCE_CCADB):
                 root_validator.metadata.trust_ccadb_status += expired_text
         if trust_store.exists(context.SOURCE_JAVA):
@@ -527,7 +523,6 @@ class CertValidator(Validator):
         if android_stores:
             root_validator.metadata.trust_android_status = "\n".join(android_stores)
 
-        root_validator.metadata.trust_apple_legacy = trust_store.apple
         root_validator.metadata.trust_ccadb = trust_store.ccadb
         root_validator.metadata.trust_java = trust_store.java
         root_validator.metadata.trust_android = all([trust_store.android7, trust_store.android8, trust_store.android9, trust_store.android10, trust_store.android11, trust_store.android12])
@@ -587,13 +582,12 @@ class CertValidator(Validator):
             peer_validator = PeerCertValidator()
             peer_validator.init_x509(cert)
             peer_validator.metadata.certificate_intermediate_ca = ca is True
-            check_root_ca = peer_validator.metadata.certificate_authority_key_identifier not in peer_lookup.keys()
-            if check_root_ca:
+            if peer_validator.metadata.certificate_authority_key_identifier not in peer_lookup.keys():
+                logger.info(f'Checking for Root CA issuer {cert.get_issuer()} with SKI {peer_validator.metadata.certificate_authority_key_identifier}')
                 self._root_certs = []
-                trust_store = TrustStore(ca_common_name=cert.get_issuer().commonName, authority_key_identifier=peer_validator.metadata.certificate_authority_key_identifier)
+                trust_store = TrustStore(authority_key_identifier=peer_validator.metadata.certificate_authority_key_identifier)
                 self.validation_checks['trusted_ca'] = trust_store.is_trusted
                 if any([
-                        trust_store.exists(context.SOURCE_APPLE),
                         trust_store.exists(context.SOURCE_CCADB),
                         trust_store.exists(context.SOURCE_JAVA),
                         trust_store.exists(context.SOURCE_LINUX),
@@ -616,7 +610,7 @@ class CertValidator(Validator):
         super().extract_x509_metadata(x509)
         self.metadata.certification_authority_authorization = util.caa_exist(self.metadata.host)
         answer :list[RRset] = util.get_dnssec_answer(self.metadata.host)
-        if answer is not None and len(answer) > 0:
+        if answer:
             self.metadata.dnssec = True
             _, _, _, _, _, _, algorithm, *rest = answer[0].to_text().split()
             self.metadata.dnssec_algorithm = util.DNSSEC_ALGORITHMS[int(algorithm)]

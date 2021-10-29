@@ -16,7 +16,7 @@ from . import exceptions, verify, util
 from .validator import RootCertValidator, CertValidator, PeerCertValidator, Validator
 from .transport import Transport
 
-__version__ = 'tls-verify==0.4.8'
+__version__ = 'tls-verify==0.4.9'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
@@ -126,8 +126,6 @@ STYLES = {
     'http2_support': {'text': 'HTTP/2', 'represent_as': (CLI_VALUE_YES, CLI_VALUE_NO), 'colors': (CLI_COLOR_ALERT, CLI_COLOR_OK)},
     'http2_cleartext_support': {'text': 'HTTP/2 Cleartext', 'represent_as': (CLI_VALUE_YES, CLI_VALUE_NO), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'possible_phish_or_malicious': {'text': 'Indicators of Phishing or Malware', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
-    'trust_apple_legacy': {'text': 'Apple (legacy)', 'represent_as': (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'trust_apple_legacy_status': {'text': ''},
     'trust_android': {'text': 'Android', 'represent_as': (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'trust_android_status': {'text': ''},
     'trust_linux': {'text': 'Linux', 'represent_as': (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
@@ -208,8 +206,6 @@ SERVER_KEYS = [
     'http_unsafe_referrer',
 ]
 TRUST_KEYS = [
-    'trust_apple_legacy',
-    'trust_apple_legacy_status',
     'trust_ccadb',
     'trust_ccadb_status',
     'trust_java',

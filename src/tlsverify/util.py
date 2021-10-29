@@ -429,12 +429,11 @@ def key_usage_exists(cert :Certificate, key :str) -> bool:
     return False
 
 def get_valid_certificate_extensions(cert :Certificate) -> list[extensions.Extension]:
-    certificate_extensions = []
-    for ext in cert.extensions:
-        if isinstance(ext.value, extensions.UnrecognizedExtension):
-            continue
-        certificate_extensions.append(ext.value)
-    return certificate_extensions
+    return [
+        ext.value
+        for ext in cert.extensions
+        if not isinstance(ext.value, extensions.UnrecognizedExtension)
+    ]
 
 def get_certificate_extensions(cert :Certificate) -> list[dict]:
     certificate_extensions = []
@@ -449,7 +448,7 @@ def get_certificate_extensions(cert :Certificate) -> list[dict]:
             data[data['name']] = ext.value.crl_number
         if isinstance(ext.value, extensions.AuthorityKeyIdentifier):
             data[data['name']] = hexlify(ext.value.key_identifier).decode('utf-8')
-            data['authority_cert_issuer'] = ', '.join([x.value for x in ext.value.authority_cert_issuer or []])
+            data['authority_cert_issuer'] = ', '.join(str(x.value) for x in ext.value.authority_cert_issuer or [])
             data['authority_cert_serial_number'] = ext.value.authority_cert_serial_number
         if isinstance(ext.value, extensions.SubjectKeyIdentifier):
             data[data['name']] = hexlify(ext.value.digest).decode('utf-8')
@@ -727,9 +726,11 @@ def styled_boolean(value :bool, represent_as :tuple[str, str] = ('True', 'False'
 def styled_value(value :str, color :str = 'white') -> str:
     if value.startswith("http"):
         return value
+    if len(value) > 70:
+        return value
     console = Console()
     with console.capture() as capture:
-        console.print(value, style=Style(color=color))
+        console.print(value, style=Style(color=color), no_wrap=True)
     return capture.get().strip()
 
 def styled_list(values :list, delimiter :str = '\n', color :str = 'bright_white') -> str:
@@ -759,16 +760,16 @@ def styled_dict(values :dict, delimiter :str = '=', colors :tuple[str, str] = ('
     pairs = []
     for key, v in values.items():
         if isinstance(v, bool):
-            pairs.append(f'{key}={styled_boolean(v)}')
+            pairs.append(f'{key}{delimiter}{styled_boolean(v)}')
             continue
         if v is None:
-            pairs.append(f'{key}={styled_value("null", color=colors[1])}')
+            pairs.append(f'{key}{delimiter}{styled_value("null", color=colors[1])}')
             continue
         if isinstance(v, list):
-            pairs.append(f'{key}={styled_list(v, color=colors[1])}')
+            pairs.append(f'{key}{delimiter}{styled_list(v, color=colors[1])}')
             continue
         if isinstance(v, dict):
-            pairs.append(f'{key}={styled_dict(v, delimiter=delimiter, colors=colors)}')
+            pairs.append(f'{key}{delimiter}{styled_dict(v, delimiter=delimiter, colors=colors)}')
             continue
         if isinstance(v, (int, float)):
             v = str(v)
