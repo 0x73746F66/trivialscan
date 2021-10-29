@@ -18,7 +18,7 @@ class TestMetadata:
         assert isinstance(self._transport.negotiated_cipher, str)
     def test_negotiated_protocol(self):
         self.setup()
-        assert self._transport.negotiated_protocol in ['TLSv1', 'TLSv1.1', 'TLSv1.2']
+        assert self._transport.negotiated_protocol in ['TLSv1 (0x301)', 'TLSv1.1 (0x302)', 'TLSv1.2 (0x303)']
     def test_sni_support(self):
         self.setup()
         assert isinstance(self._transport.sni_support, bool)

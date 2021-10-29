@@ -582,10 +582,16 @@ class CertValidator(Validator):
             peer_validator = PeerCertValidator()
             peer_validator.init_x509(cert)
             peer_validator.metadata.certificate_intermediate_ca = ca is True
-            if peer_validator.metadata.certificate_authority_key_identifier not in peer_lookup.keys():
+            trust_store = None
+            checked_peer_as_root = False
+            if peer_validator.metadata.certificate_authority_key_identifier is None:
+                trust_store = TrustStore(authority_key_identifier=peer_validator.metadata.certificate_subject_key_identifier)
+                checked_peer_as_root = True
+            elif peer_validator.metadata.certificate_authority_key_identifier not in peer_lookup.keys():
+                trust_store = TrustStore(authority_key_identifier=peer_validator.metadata.certificate_authority_key_identifier)
+            if isinstance(trust_store, TrustStore):
                 logger.info(f'Checking for Root CA issuer {cert.get_issuer()} with SKI {peer_validator.metadata.certificate_authority_key_identifier}')
                 self._root_certs = []
-                trust_store = TrustStore(authority_key_identifier=peer_validator.metadata.certificate_authority_key_identifier)
                 self.validation_checks['trusted_ca'] = trust_store.is_trusted
                 if any([
                         trust_store.exists(context.SOURCE_CCADB),
@@ -600,9 +606,15 @@ class CertValidator(Validator):
                         trust_store.exists(context.PLATFORM_ANDROID12),
                     ]):
                     self._validate_roots(trust_store)
-            peer_validator.verify()
-            self.validation_checks['not_revoked'] = self.validation_checks.get('not_revoked') is not False
-            self.peer_validations.append(peer_validator)
+                if not self.validation_checks['trusted_ca']:
+                    self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_MISSING_ROOT_CA_AKI.format(serial_number=peer_validator.metadata.certificate_serial_number_hex))
+                else:
+                    checked_peer_as_root = checked_peer_as_root is True
+
+            if not checked_peer_as_root:
+                peer_validator.verify()
+                self.validation_checks['not_revoked'] = self.validation_checks.get('not_revoked') is not False
+                self.peer_validations.append(peer_validator)
 
         return all([self.certificate_valid, self.certificate_chain_valid])
 

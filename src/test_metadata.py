@@ -38,7 +38,7 @@ class TestMetadata:
         assert isinstance(self._verify.metadata.certificate_extensions, list)
         assert isinstance(self._verify.metadata.certificate_is_self_signed, bool)
         assert isinstance(self._verify.metadata.negotiated_cipher, str)
-        assert self._verify.metadata.negotiated_protocol in ['TLSv1', 'TLSv1.1', 'TLSv1.2']
+        assert self._verify.metadata.negotiated_protocol in ['TLSv1 (0x301)', 'TLSv1.1 (0x302)', 'TLSv1.2 (0x303)']
         assert isinstance(self._verify.metadata.sni_support, bool)
         assert isinstance(self._verify.metadata.revocation_ocsp_stapling, bool)
         assert isinstance(self._verify.metadata.revocation_ocsp_must_staple, bool)
