@@ -61,7 +61,7 @@ optional arguments:
                         Do not include detailed validation messages in output
   -j JSON_FILE, --json-file JSON_FILE
                         Store to file as JSON
-  -b, --progress-bars   Show task progress bars
+  --hide-progress-bars  Hide task progress bars
   -v, --errors-only     set logging level to ERROR (default CRITICAL)
   -vv, --warning        set logging level to WARNING (default CRITICAL)
   -vvv, --info          set logging level to INFO (default CRITICAL)
