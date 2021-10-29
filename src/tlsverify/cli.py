@@ -1,7 +1,10 @@
+import json
 import sys
 import logging
 import argparse
+from pathlib import Path
 from datetime import datetime
+from dataclasses import asdict
 import validators
 from OpenSSL.crypto import X509
 from rich import inspect
@@ -16,7 +19,8 @@ from . import exceptions, verify, util
 from .validator import RootCertValidator, CertValidator, PeerCertValidator, Validator
 from .transport import Transport
 
-__version__ = 'tls-verify==0.4.9'
+
+__version__ = 'tls-verify==0.4.10'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
@@ -150,6 +154,18 @@ NEVER_SHOW = [
     "authorityKeyIdentifier",
     "certificate_expired",
 ]
+JSON_ONLY = [
+    "certificate_expired",
+    "certificate_extensions",
+    "certificate_private_key_pem",
+    "certificate_is_self_signed",
+]
+SERVER_JSON_ONLY = JSON_ONLY + [
+    'host',
+    'port',
+    "peer_address",
+    "offered_ciphers",
+]
 SERVER_KEYS = [
     'certificate_validation_type',
     'certificate_is_self_signed',
@@ -235,6 +251,7 @@ FINGERPRINTS = [
     'certificate_subject_key_identifier',
     'certificate_authority_key_identifier'
 ]
+JSON_FILE = None
 
 def _make_table(validator :Validator, title :str, caption :str) -> Table:
     title_style = Style(bold=True, color=CLI_COLOR_OK if validator.certificate_valid else CLI_COLOR_NOK)
@@ -269,14 +286,15 @@ def _table_data(validator :Validator, table :Table, skip :list[str]) -> Table:
 
 def _table_ext(validator :Validator, table :Table, skip :list[str]) -> Table:
     for v in validator.metadata.certificate_extensions:
-        ext = v['name']
-        del v['name']
+        ext_data = v.copy()
+        ext = ext_data['name']
+        del ext_data['name']
         if ext in skip:
             continue
-        if ext in v:
-            ext_sub = v[ext]
-            del v[ext]
-            table.add_row(f'Extension {ext}', util.styled_dict(v))
+        if ext in ext_data:
+            ext_sub = ext_data[ext]
+            del ext_data[ext]
+            table.add_row(f'Extension {ext}', util.styled_dict(ext_data))
             if isinstance(ext_sub, list):
                 for sub in ext_sub:
                     if isinstance(sub, str):
@@ -293,7 +311,7 @@ def _table_ext(validator :Validator, table :Table, skip :list[str]) -> Table:
                 continue
             table.add_row('', str(ext_sub))
             continue    
-        table.add_row(f'Extention {ext}', util.styled_any(v))
+        table.add_row(f'Extention {ext}', util.styled_any(ext_data))
     return table
 
 def peer_outputs(validator :PeerCertValidator) -> Table:
@@ -306,7 +324,6 @@ def peer_outputs(validator :PeerCertValidator) -> Table:
         util.date_diff(validator.certificate.not_valid_after),
     ])
     table = _make_table(validator, title, caption)
-    STYLES['certificate_valid']['represent_as']
     table.add_row(STYLES['certificate_valid']['text'], util.styled_boolean(validator.certificate_valid, STYLES['certificate_valid']['represent_as'], STYLES['certificate_valid']['colors']))
     _table_data(validator, table, PEER_SKIP)
     _table_ext(validator, table, PEER_SKIP)
@@ -335,7 +352,6 @@ def server_outputs(validator :CertValidator) -> Table:
     _table_ext(validator, table, SERVER_SKIP)
     return table
 
-
 def update_bar(progress, task):
     def progress_bar(completed :int = None):
         if isinstance(completed, int):
@@ -344,7 +360,54 @@ def update_bar(progress, task):
             progress.update(task, advance=1)
     return progress_bar
 
-def main(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', debug :bool = False) -> tuple[bool,list[Validator]]:
+def output(result, debug :bool = False):
+    console = Console()
+    if debug and hasattr(result, 'transport'):
+        inspect(result.transport, title=result.transport.negotiated_protocol)
+    if debug and hasattr(result, 'metadata'):
+        inspect(result.metadata, title=result.metadata.certificate_subject)
+    if isinstance(result, RootCertValidator):
+        console.print(root_outputs(result))
+    if isinstance(result, PeerCertValidator):
+        console.print(peer_outputs(result))
+    if isinstance(result, CertValidator):
+        console.print(server_outputs(result))
+    console.print('\n\n')
+
+def validator_data(validator :Validator, certificate_type :str, skip_keys :list) -> dict:
+    data = asdict(validator.metadata)
+    data['certificate_valid'] = validator.certificate_valid
+    if isinstance(validator, CertValidator):
+        data['certificate_chain_valid'] = validator.certificate_chain_valid
+        data['certificate_chain_validation_result'] = validator.certificate_chain_validation_result
+    data['certificate_type'] = certificate_type
+    data['expiry_status'] = util.date_diff(validator.certificate.not_valid_after)
+    data['verification_details'] = validator.certificate_verify_messages
+    data['verification_results'] = validator.validation_checks
+    for key in list(vars(validator.metadata).keys()):
+        if key in skip_keys and key in data:
+            del data[key]
+    for v in validator.metadata.certificate_extensions:
+        if v.get('name') in skip_keys:
+            data['certificate_extensions'][:] = [d for d in data['certificate_extensions'] if d.get('name') != v['name']]
+
+    return data
+
+def make_json(results :list[Validator]) -> str:
+    data = []
+    for result in results:
+        if isinstance(result, RootCertValidator):
+            data.append(validator_data(result, 'Root CA', [x for x in ROOT_SKIP if x not in JSON_ONLY]))
+        if isinstance(result, PeerCertValidator):
+            cert_type = 'Intermediate Certificate'
+            if result.metadata.certificate_intermediate_ca:
+                cert_type = 'Intermediate CA'
+            data.append(validator_data(result, cert_type, [x for x in PEER_SKIP if x not in JSON_ONLY]))
+        if isinstance(result, CertValidator):
+            data.append(validator_data(result, 'Server Certificate', [x for x in SERVER_SKIP if x not in SERVER_JSON_ONLY]))
+    return json.dumps(data, sort_keys=True, default=str)
+
+def main(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', debug :bool = False) -> list[Validator]:
     if not isinstance(client_pem, str) and client_pem is not None:
         raise TypeError(f"provided an invalid type {type(client_pem)} for client_pem, expected list")
     if not isinstance(cafiles, list) and cafiles is not None:
@@ -393,23 +456,11 @@ def main(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = T
     console = Console()
     valid = all(v.certificate_valid for v in results)
     for result in results:
-        output(debug, result, console)
+        output(result, debug=debug)
     result_style = Style(color='dark_sea_green2' if valid else 'light_coral')
     console.print('Valid ✓✓✓' if valid else '\nNot Valid. There where validation errors', style=result_style)
     console.print(f'Evaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n\n')
-
-def output(debug, result, console):
-    if debug and hasattr(result, 'transport'):
-        inspect(result.transport, title=result.transport.negotiated_protocol)
-    if debug and hasattr(result, 'metadata'):
-        inspect(result.metadata, title=result.metadata.certificate_subject)
-    if isinstance(result, RootCertValidator):
-        console.print(root_outputs(result))
-    if isinstance(result, PeerCertValidator):
-        console.print(peer_outputs(result))
-    if isinstance(result, CertValidator):
-        console.print(server_outputs(result))
-    console.print('\n\n')
+    return results
 
 def cli():
     parser = argparse.ArgumentParser()
@@ -420,6 +471,8 @@ def cli():
     parser.add_argument('-C', '--client-pem', help='path to PEM encoded client certificate, url or file path accepted', dest='client_pem', default=None)
     parser.add_argument('-t', '--tmp-path-prefix', help='local file path to use as a prefix when saving temporary files such as those being fetched for client authorization', dest='tmp_path_prefix', default='/tmp')
     parser.add_argument('--disable-sni', help='Do not negotiate SNI using INDA encoded host', dest='disable_sni', action="store_true")
+    parser.add_argument('--show-private-key', help='If the private key is exposed, show it in the results', dest='show_private_key', action="store_true")
+    parser.add_argument('-j', '--json-file', help='Store to file as JSON', dest='json_file', default=None)
     parser.add_argument('-b', '--progress-bars', help='Show task progress bars', dest='show_progress', action="store_true")
     parser.add_argument('-v', '--errors-only', help='set logging level to ERROR (default CRITICAL)', dest='log_level_error', action="store_true")
     parser.add_argument('-vv', '--warning', help='set logging level to WARNING (default CRITICAL)', dest='log_level_warning', action="store_true")
@@ -427,6 +480,7 @@ def cli():
     parser.add_argument('-vvvv', '--debug', help='set logging level to DEBUG (default CRITICAL)', dest='log_level_debug', action="store_true")
     parser.add_argument('--version', dest='show_version', action="store_true")
     args = parser.parse_args()
+    JSON_FILE = args.json_file
     log_level = logging.CRITICAL
     if args.log_level_error:
         log_level = logging.ERROR
@@ -470,8 +524,15 @@ def cli():
         if validators.domain(host) is not True:
             raise AttributeError(f'host {host} is invalid')
         domains.append((host, int(port)))
+
+    if args.show_private_key:
+        SERVER_SKIP.remove('certificate_private_key_pem')
+        PEER_SKIP.remove('certificate_private_key_pem')
+        ROOT_SKIP.remove('certificate_private_key_pem')
+
+    all_results = []
     if args.show_progress:
-        main( # clones tlsverify.verify and only adds progress bars
+        all_results = main( # clones tlsverify.verify and only adds progress bars
             domains=domains,
             cafiles=args.cafiles,
             use_sni=not args.disable_sni,
@@ -480,7 +541,6 @@ def cli():
             debug=debug
         )
     else:
-        all_results = []
         for domain, port in domains:
             evaluation_start = datetime.utcnow()
             _, results = verify(
@@ -495,7 +555,13 @@ def cli():
         console = Console()
         valid = all([v.certificate_valid for v in all_results])
         for result in all_results:
-            output(debug, result, console)
+            output(result, debug=debug)
         result_style = Style(color=CLI_COLOR_OK if valid else CLI_COLOR_NOK)
         console.print('Valid ✓✓✓' if valid else '\nNot Valid. There where validation errors', style=result_style)
         console.print(f'Evaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n\n')
+
+    if JSON_FILE:
+        json_path = Path(JSON_FILE)
+        if json_path.is_file():
+            json_path.unlink()
+        json_path.write_text(make_json(all_results))

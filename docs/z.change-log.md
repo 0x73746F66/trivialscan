@@ -1,8 +1,14 @@
 # Change Log
 
+## 0.4.10 Oct 27th 2021
+
+- Added `--json-file` as a cli argument
+- Added `--show-private-key` as a cli argument
+
 ## 0.4.9 Oct 27th 2021
 
 - Bump `tlstrust==2.0.0` for AKI to reduce false positives matches and false negative missing certs
+- Do not duplicate intermediate CA certs in the chain when teh server attempts to send a root CA, ignore the server cert and use the trust store copy only
 
 ## 0.4.8 Oct 27th 2021
 
