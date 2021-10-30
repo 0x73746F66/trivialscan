@@ -465,22 +465,26 @@ class CertValidator(Validator):
 
     def pcidss_compliant(self) -> bool:
         super().pcidss_compliant()
-        self.validation_checks[pci.VALIDATION_WEAK_CIPHER] = self.metadata.weak_cipher or self.metadata.negotiated_cipher_bits < pci.PCI_DSS_WEAK_CIPHER_BITS
+        self.validation_checks[pci.VALIDATION_WEAK_CIPHER] = not self.metadata.weak_cipher or self.metadata.negotiated_cipher_bits >= pci.PCI_DSS_WEAK_CIPHER_BITS
         if self.validation_checks[pci.VALIDATION_WEAK_CIPHER] is False:
             self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_CIPHER)
         self.validation_checks[pci.VALIDATION_WEAK_PROTOCOL] = self.metadata.negotiated_protocol not in util.WEAK_PROTOCOL.keys()
         if self.validation_checks[pci.VALIDATION_WEAK_PROTOCOL] is False:
             self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_WEAK_PROTOCOL)
-        if self.metadata.session_resumption_tickets:
-            self.validation_checks[pci.VALIDATION_KNOWN_VULN_RESUMPTION_TICKETS] = self.metadata.negotiated_protocol != util.OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION]
-        if self.metadata.session_resumption_caching:
-            self.validation_checks[pci.VALIDATION_KNOWN_VULN_RESUMPTION_CACHING] = self.metadata.negotiated_protocol != util.OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION] or self.metadata.negotiated_protocol == util.OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION]
-        self.validation_checks[pci.VALIDATION_KNOWN_VULN_RENEGOTIATION] = self.metadata.client_renegotiation is False
-        self.validation_checks[pci.VALIDATION_KNOWN_VULN_COMPRESSION] = self.metadata.compression_support is False
-        self.validation_checks[pci.VALIDATION_DEPRECATED_ALGO] = self.metadata.dnssec_algorithm not in util.WEAK_DNSSEC_ALGORITHMS.keys()
+        self.validation_checks[pci.VALIDATION_DEPRECATED_ALGO] = not self.metadata.dnssec_algorithm or self.metadata.dnssec_algorithm not in util.WEAK_DNSSEC_ALGORITHMS.keys()
         if self.validation_checks[pci.VALIDATION_DEPRECATED_ALGO] is False:
             self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_WEAK_ALGORITHMS)
-        if any([self.validation_checks[pci.VALIDATION_KNOWN_VULN_RENEGOTIATION], self.validation_checks[pci.VALIDATION_KNOWN_VULN_COMPRESSION], self.validation_checks[pci.VALIDATION_KNOWN_VULN_RESUMPTION_TICKETS], self.validation_checks[pci.VALIDATION_KNOWN_VULN_RESUMPTION_CACHING]]):
+        self.validation_checks[pci.VALIDATION_KNOWN_VULN_SESSION_RESUMPTION] = all([
+            not self.metadata.session_resumption_tickets or self.metadata.negotiated_protocol == util.OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION],
+            not self.metadata.session_resumption_caching or self.metadata.negotiated_protocol == util.OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION],
+        ])
+        self.validation_checks[pci.VALIDATION_KNOWN_VULN_RENEGOTIATION] = not self.metadata.client_renegotiation
+        self.validation_checks[pci.VALIDATION_KNOWN_VULN_COMPRESSION] = not self.metadata.compression_support
+        if any([
+                self.validation_checks[pci.VALIDATION_KNOWN_VULN_RENEGOTIATION],
+                self.validation_checks[pci.VALIDATION_KNOWN_VULN_COMPRESSION],
+                self.validation_checks[pci.VALIDATION_KNOWN_VULN_SESSION_RESUMPTION],
+            ]):
             self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_KNOWN_VULNERABILITIES)
 
     def verify(self) -> bool:

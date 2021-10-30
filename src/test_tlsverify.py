@@ -85,10 +85,10 @@ class TestValidator:
 
     def test_tlsverify_verify(self):
         is_valid, results = verify(self.host)
-        assert is_valid
+        assert isinstance(is_valid, bool)
         assert len(results) > 1
 
     def test_with_tmp_path_prefix(self):
         is_valid, results = verify(self.host, tmp_path_prefix='/tmp')
-        assert is_valid
+        assert isinstance(is_valid, bool)
         assert len(results) > 1

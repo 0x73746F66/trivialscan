@@ -19,7 +19,7 @@ from . import exceptions, verify, util, validator, pci
 from .transport import Transport
 
 
-__version__ = 'tls-verify==0.4.12'
+__version__ = 'tls-verify==0.4.13'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
@@ -72,8 +72,7 @@ STYLES = {
     pci.VALIDATION_DEPRECATED_ALGO: {'text': '[PCI] Weak algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     pci.VALIDATION_KNOWN_VULN_COMPRESSION: {'text': '[PCI] Vulnerable compression', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     pci.VALIDATION_KNOWN_VULN_RENEGOTIATION: {'text': '[PCI] Vulnerable renegotiation', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    pci.VALIDATION_KNOWN_VULN_RESUMPTION_TICKETS: {'text': '[PCI] Vulnerable session resumption (tickets)', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    pci.VALIDATION_KNOWN_VULN_RESUMPTION_CACHING: {'text': '[PCI] Vulnerable session resumption (caching)', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    pci.VALIDATION_KNOWN_VULN_SESSION_RESUMPTION: {'text': '[PCI] Vulnerable session resumption', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'certificate_version': {'text': 'Certificate Version'},
     'certificate_public_key_type': {'text': 'Public Key Type'},
     'certificate_public_key_curve': {'text': 'Public Key Curve', 'null_as': CLI_VALUE_NA, 'null_color': CLI_COLOR_NULL},
@@ -578,8 +577,7 @@ def cli():
             pci.VALIDATION_DEPRECATED_ALGO,
             pci.VALIDATION_KNOWN_VULN_COMPRESSION,
             pci.VALIDATION_KNOWN_VULN_RENEGOTIATION,
-            pci.VALIDATION_KNOWN_VULN_RESUMPTION_TICKETS,
-            pci.VALIDATION_KNOWN_VULN_RESUMPTION_CACHING
+            pci.VALIDATION_KNOWN_VULN_SESSION_RESUMPTION
         ]
         SERVER_SKIP.extend(pci_keys)
         PEER_SKIP.extend(pci_keys)
