@@ -15,12 +15,11 @@ from rich.progress import Progress
 from rich.table import Table
 from rich.style import Style
 from rich import box
-from . import exceptions, verify, util
-from .validator import RootCertValidator, CertValidator, PeerCertValidator, Validator
+from . import exceptions, verify, util, validator, pci
 from .transport import Transport
 
 
-__version__ = 'tls-verify==0.4.11'
+__version__ = 'tls-verify==0.4.12'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
@@ -46,23 +45,35 @@ STYLES = {
     'certificate_valid': {'text': 'Certificate Valid', 'represent_as': (CLI_VALUE_VALID, CLI_VALUE_NOT_VALID), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'certificate_chain_valid': {'text': 'Certificate Chain Valid', 'represent_as': (CLI_VALUE_VALID, CLI_VALUE_NOT_VALID), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'certificate_chain_validation_result': {'text': 'Certificate Chain Validation Result'},
-    'not_expired': {'text': 'Certificate is not expired', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'issued_past_tense': {'text': 'Certificate issued in the past', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'common_name_defined': {'text': 'Subject CN was defined', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'common_name_valid': {'text': 'Subject CN has valid syntax', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'match_hostname': {'text': 'Subject CN matches the server host name', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'not_self_signed': {'text': 'Not a self-signed Certificate', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'avoid_known_weak_signature_algorithm': {'text': 'Avoid known weak signature algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'avoid_known_weak_keys': {'text': 'Avoid known weak public key algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'avoid_deprecated_protocols': {'text': 'Avoid deprecated TLS protocols', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'avoid_deprecated_dnssec_algorithms': {'text': 'Avoid deprecated DNSSEC algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'basic_constraints_ca': {'text': 'Avoid enabling impersonation', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'certificate_valid_tls_usage': {'text': 'Key usage appropriate for TLS', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'not_revoked': {'text': 'Certificate chain not revoked', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'trusted_ca': {'text': 'Root CA Certificate is trusted', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'valid_dnssec': {'text': 'DNSSEC Valid', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'valid_caa': {'text': 'CAA Valid', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    'ocsp_staple_satisfied': {'text': 'OCSP Staple satisfied', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_CLIENT_AUTHENTICATION: {'text': 'Client Authentication', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_CLIENT_AUTH_USAGE: {'text': 'Provided client Certificate authentication usage', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_NOT_EXPIRED: {'text': 'Certificate is not expired', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_ISSUED_PAST_TENSE: {'text': 'Certificate issued in the past', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_SUBJECT_CN_DEFINED: {'text': 'Subject CN was defined', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_SUBJECT_CN_VALID: {'text': 'Subject CN has valid syntax', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_MATCH_HOSTNAME: {'text': 'Subject CN matches the server host name', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_NOT_SELF_SIGNED: {'text': 'Not a self-signed Certificate', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_WEAK_SIG_ALGO: {'text': 'Avoid known weak signature algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_WEAK_KEYS: {'text': 'Avoid known weak public key algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_DEPRECATED_TLS_PROTOCOLS: {'text': 'Avoid deprecated TLS protocols', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_DEPRECATED_DNSSEC_ALGO: {'text': 'Avoid deprecated DNSSEC algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_BASIC_CONSTRAINTS_CA: {'text': 'Avoid enabling impersonation', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_VALID_TLS_USAGE: {'text': 'Key usage appropriate for TLS', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_REVOCATION: {'text': 'Certificate chain not revoked', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_ROOT_CA_TRUST: {'text': 'Root CA Certificate is trusted', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_VALID_DNSSEC: {'text': 'DNSSEC Valid', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_VALID_CAA: {'text': 'CAA Valid', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_OCSP_STAPLE_SATISFIED: {'text': 'OCSP Staple satisfied', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_OCSP_MUST_STAPLE_SATISFIED: {'text': 'OCSP Must Staple satisfied', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    pci.VALIDATION_CA_TRUST: {'text': '[PCI] CA Trust', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    pci.VALIDATION_WEAK_KEY: {'text': '[PCI] Key Size', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    pci.VALIDATION_WEAK_CIPHER: {'text': '[PCI] Cipher bits', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    pci.VALIDATION_WEAK_PROTOCOL: {'text': '[PCI] Deprecated protocols', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    pci.VALIDATION_DEPRECATED_ALGO: {'text': '[PCI] Weak algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    pci.VALIDATION_KNOWN_VULN_COMPRESSION: {'text': '[PCI] Vulnerable compression', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    pci.VALIDATION_KNOWN_VULN_RENEGOTIATION: {'text': '[PCI] Vulnerable renegotiation', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    pci.VALIDATION_KNOWN_VULN_RESUMPTION_TICKETS: {'text': '[PCI] Vulnerable session resumption (tickets)', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    pci.VALIDATION_KNOWN_VULN_RESUMPTION_CACHING: {'text': '[PCI] Vulnerable session resumption (caching)', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'certificate_version': {'text': 'Certificate Version'},
     'certificate_public_key_type': {'text': 'Public Key Type'},
     'certificate_public_key_curve': {'text': 'Public Key Curve', 'null_as': CLI_VALUE_NA, 'null_color': CLI_COLOR_NULL},
@@ -100,6 +111,7 @@ STYLES = {
     'preferred_protocol': {'text': 'Server Preferred Protocol'},
     'offered_tls_versions': {'text': 'Offered TLS versions'},
     'negotiated_cipher': {'text': 'Negotiated Cipher'},
+    'negotiated_cipher_bits': {'text': 'Negotiated Cipher bits'},
     'tls_version_intolerance': {'text': 'TLS version intolerance', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'tls_version_intolerance_versions': {'text': 'TLS version intolerance versions'},
     'tls_version_interference': {'text': 'TLS version interference', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
@@ -207,6 +219,7 @@ SERVER_KEYS = [
     'tls_long_handshake_intolerance',
     'peer_address',
     'negotiated_cipher',
+    'negotiated_cipher_bits',
     'weak_cipher',
     'strong_cipher',
     'forward_anonymity',
@@ -255,18 +268,22 @@ FINGERPRINTS = [
 ]
 JSON_FILE = None
 
-def _make_table(validator :Validator, title :str, caption :str) -> Table:
+def _make_table(validator :validator.Validator, title :str, caption :str) -> Table:
     title_style = Style(bold=True, color=CLI_COLOR_OK if validator.certificate_valid else CLI_COLOR_NOK)
     table = Table(title=title, caption=caption, title_style=title_style, box=box.SIMPLE)
     table.add_column("", justify="right", style="dark_turquoise", no_wrap=True)
     table.add_column("Result", justify="left", no_wrap=False)
     return table
 
-def _table_data(validator :Validator, table :Table, skip :list[str]) -> Table:
+def _table_data(validator :validator.Validator, table :Table, skip :list[str]) -> Table:
     if 'verification_details' not in skip:
         for i, err in enumerate(validator.certificate_verify_messages):
+            if any(key.startswith('pci_') for key in skip) and err.startswith('PCI'):
+                continue
             table.add_row(f'Note {i+1}', err)
     for key in validator.validation_checks.keys():
+        if key in skip:
+            continue
         table.add_row(STYLES.get(key,{}).get('text', key), util.styled_boolean(validator.validation_checks[key], STYLES[key]['represent_as'], STYLES[key]['colors']))
     for key in list(vars(validator.metadata).keys()):
         if key in skip:
@@ -287,7 +304,7 @@ def _table_data(validator :Validator, table :Table, skip :list[str]) -> Table:
         table.add_row(STYLES.get(key,{}).get('text', key), util.styled_any(val))
     return table
 
-def _table_ext(validator :Validator, table :Table, skip :list[str]) -> Table:
+def _table_ext(validator :validator.Validator, table :Table, skip :list[str]) -> Table:
     for v in validator.metadata.certificate_extensions:
         ext_data = v.copy()
         ext = ext_data['name']
@@ -317,7 +334,7 @@ def _table_ext(validator :Validator, table :Table, skip :list[str]) -> Table:
         table.add_row(f'Extention {ext}', util.styled_any(ext_data))
     return table
 
-def peer_outputs(validator :PeerCertValidator) -> Table:
+def peer_outputs(validator :validator.PeerCertValidator) -> Table:
     peer_type = 'Intermediate Certificate'
     if validator.metadata.certificate_intermediate_ca:
         peer_type = 'Intermediate CA'
@@ -332,7 +349,7 @@ def peer_outputs(validator :PeerCertValidator) -> Table:
     _table_ext(validator, table, PEER_SKIP)
     return table
 
-def root_outputs(validator :RootCertValidator) -> Table:
+def root_outputs(validator :validator.RootCertValidator) -> Table:
     title = f'Root CA: {validator.metadata.certificate_subject}'
     caption = util.date_diff(validator.certificate.not_valid_after)
     table = _make_table(validator, title, caption)
@@ -341,7 +358,7 @@ def root_outputs(validator :RootCertValidator) -> Table:
     _table_ext(validator, table, ROOT_SKIP)
     return table
 
-def server_outputs(validator :CertValidator) -> Table:
+def server_outputs(validator :validator.CertValidator) -> Table:
     title = f'{validator.metadata.host}:{validator.metadata.port} ({validator.metadata.peer_address})'
     caption = '\n'.join([
         f'Issuer: {validator.metadata.certificate_issuer}',
@@ -369,35 +386,41 @@ def output(result, debug :bool = False):
         inspect(result.transport, title=result.transport.negotiated_protocol)
     if debug and hasattr(result, 'metadata'):
         inspect(result.metadata, title=result.metadata.certificate_subject)
-    if isinstance(result, RootCertValidator):
+    if isinstance(result, validator.RootCertValidator):
         console.print(root_outputs(result))
-    if isinstance(result, PeerCertValidator):
+    if isinstance(result, validator.PeerCertValidator):
         console.print(peer_outputs(result))
-    if isinstance(result, CertValidator):
+    if isinstance(result, validator.CertValidator):
         console.print(server_outputs(result))
     console.print('\n\n')
 
-def validator_data(validator :Validator, certificate_type :str, skip_keys :list) -> dict:
-    data = asdict(validator.metadata)
-    data['certificate_valid'] = validator.certificate_valid
-    if isinstance(validator, CertValidator):
-        data['certificate_chain_valid'] = validator.certificate_chain_valid
-        data['certificate_chain_validation_result'] = validator.certificate_chain_validation_result
+def validator_data(result :validator.Validator, certificate_type :str, skip_keys :list) -> dict:
+    data = asdict(result.metadata)
+    data['certificate_valid'] = result.certificate_valid
+    if isinstance(result, validator.CertValidator):
+        data['certificate_chain_valid'] = result.certificate_chain_valid
+        data['certificate_chain_validation_result'] = result.certificate_chain_validation_result
     data['certificate_type'] = certificate_type
-    data['expiry_status'] = util.date_diff(validator.certificate.not_valid_after)
-    data['verification_results'] = validator.validation_checks
+    data['expiry_status'] = util.date_diff(result.certificate.not_valid_after)
+    data['verification_results'] = {}
+    for key, value in result.validation_checks.items():
+        if key in skip_keys:
+            continue
+        data['verification_results'][key] = value
     if 'verification_details' not in skip_keys:
-        data['verification_details'] = validator.certificate_verify_messages
-    for key in list(vars(validator.metadata).keys()):
+        data['verification_details'] = result.certificate_verify_messages
+    if any(key.startswith('pci_') for key in skip_keys):
+        data['verification_details'] = [detail for detail in data['verification_details'] if not detail.startswith('PCI')]
+    for key in list(vars(result.metadata).keys()):
         if key in skip_keys and key in data:
             del data[key]
-    for v in validator.metadata.certificate_extensions:
+    for v in result.metadata.certificate_extensions:
         if v.get('name') in skip_keys:
             data['certificate_extensions'][:] = [d for d in data['certificate_extensions'] if d.get('name') != v['name']]
 
     return data
 
-def make_json(results :list[Validator], evaluation_duration_seconds :int) -> str:
+def make_json(results :list[validator.Validator], evaluation_duration_seconds :int) -> str:
     data = {
         'generator': __version__,
         'date': datetime.utcnow().replace(microsecond=0).isoformat(),
@@ -405,18 +428,18 @@ def make_json(results :list[Validator], evaluation_duration_seconds :int) -> str
         'validations': []
     }
     for result in results:
-        if isinstance(result, RootCertValidator):
+        if isinstance(result, validator.RootCertValidator):
             data['validations'].append(validator_data(result, 'Root CA', [x for x in ROOT_SKIP if x not in JSON_ONLY]))
-        if isinstance(result, PeerCertValidator):
+        if isinstance(result, validator.PeerCertValidator):
             cert_type = 'Intermediate Certificate'
             if result.metadata.certificate_intermediate_ca:
                 cert_type = 'Intermediate CA'
             data['validations'].append(validator_data(result, cert_type, [x for x in PEER_SKIP if x not in JSON_ONLY]))
-        if isinstance(result, CertValidator):
+        if isinstance(result, validator.CertValidator):
             data['validations'].append(validator_data(result, 'Server Certificate', [x for x in SERVER_SKIP if x not in SERVER_JSON_ONLY]))
     return json.dumps(data, sort_keys=True, default=str)
 
-def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', debug :bool = False) -> list[Validator]:
+def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', debug :bool = False) -> list[validator.Validator]:
     if not isinstance(client_pem, str) and client_pem is not None:
         raise TypeError(f"provided an invalid type {type(client_pem)} for client_pem, expected list")
     if not isinstance(cafiles, list) and cafiles is not None:
@@ -438,7 +461,7 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
                     raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
                 if validators.domain(host) is not True:
                     raise ValueError(f"provided an invalid domain {host}")
-                validator = CertValidator()
+                result = validator.CertValidator()
                 transport = Transport(host, port)
                 if client_pem is None:
                     progress.update(prog_client_auth, visible=False)
@@ -450,14 +473,15 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
                     raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=host, port=port))
                 progress.update(prog_tls, advance=1)
                 if isinstance(tmp_path_prefix, str):
-                    validator.tmp_path_prefix = tmp_path_prefix
-                validator.mount(transport)
+                    result.tmp_path_prefix = tmp_path_prefix
+                result.mount(transport)
                 progress.update(prog_cert_val, advance=1)
-                validator.verify()
+                result.verify()
                 progress.update(prog_cert_val, advance=1)
-                validator.verify_chain(progress_bar=update_bar(progress, prog_cert_val))
-                results += validator.peer_validations
-                results.append(validator)
+                result.verify_chain(progress_bar=update_bar(progress, prog_cert_val))
+                result.pcidss_compliant()
+                results += result.peer_validations
+                results.append(result)
             progress.update(prog_client_auth, completed=5*len(domains))
             progress.update(prog_tls, completed=14*len(domains))
             progress.update(prog_cert_val, completed=7*len(domains))
@@ -479,6 +503,7 @@ def cli():
     parser.add_argument('-c', '--cafiles', help='path to PEM encoded CA bundle file, url or file path accepted', dest='cafiles', default=None)
     parser.add_argument('-C', '--client-pem', help='path to PEM encoded client certificate, url or file path accepted', dest='client_pem', default=None)
     parser.add_argument('-t', '--tmp-path-prefix', help='local file path to use as a prefix when saving temporary files such as those being fetched for client authorization', dest='tmp_path_prefix', default='/tmp')
+    parser.add_argument('--pci-dss', help='Include PCI DSS requirements assertions', dest='show_pci', action="store_true")
     parser.add_argument('--disable-sni', help='Do not negotiate SNI using INDA encoded host', dest='disable_sni', action="store_true")
     parser.add_argument('--show-private-key', help='If the private key is exposed, show it in the results', dest='show_private_key', action="store_true")
     parser.add_argument('--hide-validation-details', help='Do not include detailed validation messages in output', dest='hide_validation_details', action="store_true")
@@ -543,6 +568,22 @@ def cli():
         SERVER_SKIP.remove('certificate_private_key_pem')
         PEER_SKIP.remove('certificate_private_key_pem')
         ROOT_SKIP.remove('certificate_private_key_pem')
+
+    if not args.show_pci:
+        pci_keys = [
+            pci.VALIDATION_CA_TRUST,
+            pci.VALIDATION_WEAK_KEY,
+            pci.VALIDATION_WEAK_CIPHER,
+            pci.VALIDATION_WEAK_PROTOCOL,
+            pci.VALIDATION_DEPRECATED_ALGO,
+            pci.VALIDATION_KNOWN_VULN_COMPRESSION,
+            pci.VALIDATION_KNOWN_VULN_RENEGOTIATION,
+            pci.VALIDATION_KNOWN_VULN_RESUMPTION_TICKETS,
+            pci.VALIDATION_KNOWN_VULN_RESUMPTION_CACHING
+        ]
+        SERVER_SKIP.extend(pci_keys)
+        PEER_SKIP.extend(pci_keys)
+        ROOT_SKIP.extend(pci_keys)
 
     all_results = []
     evaluation_start = datetime.utcnow()

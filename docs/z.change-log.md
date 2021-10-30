@@ -1,5 +1,16 @@
 # Change Log
 
+## 0.4.12 Oct 31st 2021
+
+- Added PCI DSS 3.2.1 assertions via `--pci-dss` on the cli and `Validator.pcidss_compliant()`
+  - CA Trust was validated
+  - RSA and DSA keys are greater than 2048 bits
+  - EC and DH keys are greater than 256 bits
+  - Ciphers are at least 128 bits
+  - Not supporting deprecated or weak protocols
+  - Not supporting deprecated or weak algorithms
+  - No known vulnerabilities, currently; compression, renegotiation, or session_resumption
+
 ## 0.4.11 Oct 30th 2021
 
 - Added TLS long handshake intolerance detection

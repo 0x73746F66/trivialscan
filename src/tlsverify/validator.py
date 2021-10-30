@@ -25,14 +25,34 @@ from tlstrust.stores.android_10 import __description__ as android10_version
 from tlstrust.stores.android_11 import __description__ as android11_version
 from tlstrust.stores.android_12 import __description__ as android12_version
 from . import util
+from . import pci
 from . import exceptions
 from .transport import Transport
 from .metadata import Metadata
 
-
 __module__ = 'tlsverify.validator'
 logger = logging.getLogger(__name__)
 
+VALIDATION_CLIENT_AUTHENTICATION = 'client_authentication'
+VALIDATION_CLIENT_AUTH_USAGE = 'client_certificate_permits_authentication_usage'
+VALIDATION_NOT_EXPIRED = 'not_expired'
+VALIDATION_ISSUED_PAST_TENSE = 'issued_past_tense'
+VALIDATION_SUBJECT_CN_DEFINED = 'common_name_defined'
+VALIDATION_SUBJECT_CN_VALID = 'common_name_valid'
+VALIDATION_MATCH_HOSTNAME = 'match_hostname'
+VALIDATION_NOT_SELF_SIGNED = 'not_self_signed'
+VALIDATION_WEAK_SIG_ALGO = 'avoid_known_weak_signature_algorithm'
+VALIDATION_WEAK_KEYS = 'avoid_known_weak_keys'
+VALIDATION_DEPRECATED_TLS_PROTOCOLS = 'avoid_deprecated_protocols'
+VALIDATION_DEPRECATED_DNSSEC_ALGO = 'avoid_deprecated_dnssec_algorithms'
+VALIDATION_BASIC_CONSTRAINTS_CA = 'basic_constraints_ca'
+VALIDATION_VALID_TLS_USAGE = 'certificate_valid_tls_usage'
+VALIDATION_REVOCATION = 'not_revoked'
+VALIDATION_ROOT_CA_TRUST = 'trusted_ca'
+VALIDATION_VALID_DNSSEC = 'valid_dnssec'
+VALIDATION_VALID_CAA = 'valid_caa'
+VALIDATION_OCSP_STAPLE_SATISFIED = 'ocsp_staple_satisfied'
+VALIDATION_OCSP_MUST_STAPLE_SATISFIED = 'ocsp_must_staple_satisfied'
 
 class Validator:
     _pem :bytes
@@ -41,6 +61,8 @@ class Validator:
     certificate :Certificate
     tmp_path_prefix :str
     metadata :Metadata
+    validation_checks :dict
+    certificate_verify_messages :list
 
     def __init__(self, tmp_path_prefix :str = '/tmp') -> None:
         if not isinstance(tmp_path_prefix, str):
@@ -60,7 +82,7 @@ class Validator:
     @property
     def certificate_valid(self):
         validations = list(self.validation_checks.values())
-        if len(validations) == 0:
+        if not validations:
             return False
         return all(validations)
 
@@ -154,22 +176,35 @@ class Validator:
             self.metadata.certificate_public_key_curve = x509.to_cryptography().public_key().curve.name
         self.metadata.certificate_public_key_size = public_key.bits()
 
+    def pcidss_compliant(self) -> bool:
+        logger.debug('PCI DSS compliance validations')
+        self.validation_checks[pci.VALIDATION_WEAK_KEY] = self.metadata.certificate_public_key_size >= pci.PCI_DSS_WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
+        if self.validation_checks[pci.VALIDATION_WEAK_KEY] is False:
+            if self.metadata.certificate_public_key_type == 'RSA':
+                self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_WEAK_KEY_RSA)
+            if self.metadata.certificate_public_key_type == 'DSA':
+                self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_WEAK_KEY_DSA)
+            if self.metadata.certificate_public_key_type == 'EC':
+                self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_WEAK_KEY_EC)
+            if self.metadata.certificate_public_key_type == 'DH':
+                self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_WEAK_KEY_DH)
+
     def verify(self) -> bool:
         logger.debug('Common certificate validations')
         not_after = datetime.fromisoformat(self.metadata.certificate_not_after)
         not_before = datetime.fromisoformat(self.metadata.certificate_not_before)
-        self.validation_checks['not_expired'] = not_after > datetime.utcnow()
-        if self.validation_checks['not_expired'] is False:
+        self.validation_checks[VALIDATION_NOT_EXPIRED] = not_after > datetime.utcnow()
+        if self.validation_checks[VALIDATION_NOT_EXPIRED] is False:
             self.certificate_verify_messages.append(util.date_diff(not_after))
-        self.validation_checks['issued_past_tense'] = not_before < datetime.utcnow()
-        if self.validation_checks['issued_past_tense'] is False:
+        self.validation_checks[VALIDATION_ISSUED_PAST_TENSE] = not_before < datetime.utcnow()
+        if self.validation_checks[VALIDATION_ISSUED_PAST_TENSE] is False:
             self.certificate_verify_messages.append(f'Will only be valid for use in {(datetime.utcnow() - self.metadata.certificate_not_before).days} days')
-        self.validation_checks['common_name_defined'] = self.metadata.certificate_common_name is not None
-        self.validation_checks['avoid_known_weak_signature_algorithm'] = self.metadata.certificate_signature_algorithm not in util.KNOWN_WEAK_SIGNATURE_ALGORITHMS.keys()
-        if self.validation_checks['avoid_known_weak_signature_algorithm'] is False:
+        self.validation_checks[VALIDATION_SUBJECT_CN_DEFINED] = self.metadata.certificate_common_name is not None
+        self.validation_checks[VALIDATION_WEAK_SIG_ALGO] = self.metadata.certificate_signature_algorithm not in util.KNOWN_WEAK_SIGNATURE_ALGORITHMS.keys()
+        if self.validation_checks[VALIDATION_WEAK_SIG_ALGO] is False:
             self.certificate_verify_messages.append(util.KNOWN_WEAK_SIGNATURE_ALGORITHMS[self.metadata.certificate_signature_algorithm])
-        self.validation_checks['avoid_known_weak_keys'] = self.metadata.certificate_public_key_type not in util.KNOWN_WEAK_KEYS.keys() or self.metadata.certificate_public_key_size > util.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
-        if self.validation_checks['avoid_known_weak_keys'] is False:
+        self.validation_checks[VALIDATION_WEAK_KEYS] = self.metadata.certificate_public_key_type not in util.KNOWN_WEAK_KEYS.keys() or self.metadata.certificate_public_key_size > util.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
+        if self.validation_checks[VALIDATION_WEAK_KEYS] is False:
             self.certificate_verify_messages.append(util.KNOWN_WEAK_KEYS[self.metadata.certificate_public_key_type])
         logger.debug('Impersonation, C2, other detections')
         bad_cn = ['localhost', 'portswigger']
@@ -192,7 +227,7 @@ class Validator:
                     self.metadata.possible_phish_or_malicious = True
         self.metadata.revocation_crlite = util.crlite_revoked(db_path=path.join(self.tmp_path_prefix, ".crlite_db"), pem=self._pem)
         if self.metadata.revocation_crlite:
-            self.validation_checks['not_revoked'] = False
+            self.validation_checks[VALIDATION_REVOCATION] = False
         if self.metadata.certificate_private_key_pem and 'BEGIN PRIVATE KEY' in self.metadata.certificate_private_key_pem:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_EXPOSED_PRIVATE_KEY)
         #TODO OneCRL
@@ -212,6 +247,78 @@ class RootCertValidator(Validator):
                '_pem=<bytes>, ' +\
                '_der=<bytes>, ' +\
                'certificate=<cryptography.x509.Certificate>)>'
+
+    def pcidss_compliant(self) -> bool:
+        super().pcidss_compliant()
+        self.validation_checks[pci.VALIDATION_CA_TRUST] = all([self.metadata.trust_ccadb, self.metadata.trust_android, self.metadata.trust_certifi, self.metadata.trust_java, self.metadata.trust_linux])
+        if self.validation_checks[pci.VALIDATION_CA_TRUST] is False:
+            self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_CA_TRUST)
+
+    def verify_trust(self, trust_store :TrustStore):
+        DEFAULT_STATUS = 'No Root CA Certificate in the {platform} Trust Store'
+        self.metadata.trust_ccadb_status = DEFAULT_STATUS.format(platform='CCADB')
+        self.metadata.trust_android_status = DEFAULT_STATUS.format(platform='Android')
+        self.metadata.trust_java_status = DEFAULT_STATUS.format(platform='Java')
+        self.metadata.trust_linux_status = DEFAULT_STATUS.format(platform='Linux')
+        self.metadata.trust_certifi_status = DEFAULT_STATUS.format(platform='Python')
+
+        expired_text = ' EXPIRED'
+        if trust_store.exists(context.SOURCE_CCADB):
+            self.metadata.trust_ccadb_status = f'In Common CA Database {ccadb_version} (Mozilla, Microsoft, and Apple)'
+            if trust_store.expired_in_store(context.SOURCE_CCADB):
+                self.metadata.trust_ccadb_status += expired_text
+        if trust_store.exists(context.SOURCE_JAVA):
+            self.metadata.trust_java_status = f'In Java Root CA Trust Store {java_version}'
+            if trust_store.expired_in_store(context.SOURCE_JAVA):
+                self.metadata.trust_java_status += expired_text
+        if trust_store.exists(context.SOURCE_LINUX):
+            self.metadata.trust_linux_status = f'In Linux {linux_version} Root CA Trust Store'
+            if trust_store.expired_in_store(context.SOURCE_LINUX):
+                self.metadata.trust_linux_status += expired_text
+        if trust_store.exists(context.SOURCE_CERTIFI):
+            self.metadata.trust_certifi_status = f'In Python {certifi_version} Root CA Trust Store (Django, requests, urllib, and anything based from these)'
+            if trust_store.expired_in_store(context.SOURCE_CERTIFI):
+                self.metadata.trust_certifi_status += expired_text
+
+        android_stores = []
+        if trust_store.exists(context.PLATFORM_ANDROID7):
+            android_status = android7_version
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID7):
+                android_status += expired_text
+            android_stores.append(android_status)
+        if trust_store.exists(context.PLATFORM_ANDROID8):
+            android_status = android8_version
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID8):
+                android_status += expired_text
+            android_stores.append(android_status)
+        if trust_store.exists(context.PLATFORM_ANDROID9):
+            android_status = android9_version
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID9):
+                android_status += expired_text
+            android_stores.append(android_status)
+        if trust_store.exists(context.PLATFORM_ANDROID10):
+            android_status = android10_version
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID10):
+                android_status += expired_text
+            android_stores.append(android_status)
+        if trust_store.exists(context.PLATFORM_ANDROID11):
+            android_status = android11_version
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID11):
+                android_status += expired_text
+            android_stores.append(android_status)
+        if trust_store.exists(context.PLATFORM_ANDROID12):
+            android_status = android12_version
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID12):
+                android_status += expired_text
+            android_stores.append(android_status)
+        if android_stores:
+            self.metadata.trust_android_status = "\n".join(android_stores)
+
+        self.metadata.trust_ccadb = trust_store.ccadb
+        self.metadata.trust_java = trust_store.java
+        self.metadata.trust_android = all([trust_store.android7, trust_store.android8, trust_store.android9, trust_store.android10, trust_store.android11, trust_store.android12])
+        self.metadata.trust_linux = trust_store.linux
+        self.metadata.trust_certifi = trust_store.certifi
 
 class PeerCertValidator(Validator):
     def __init__(self, **kwargs) -> None:
@@ -288,6 +395,7 @@ class CertValidator(Validator):
         self.metadata.revocation_ocsp_time = transport.ocsp_revocation_time
         self.metadata.offered_ciphers = transport.ciphers
         self.metadata.client_certificate_expected = transport.client_certificate_expected is True
+        self.metadata.negotiated_cipher_bits = transport.negotiated_cipher_bits
         self.metadata.negotiated_cipher = transport.negotiated_cipher
         if self.metadata.negotiated_cipher and any(self.metadata.negotiated_cipher.startswith(c) for c in ['DHE', 'ECDHE']):
             self.metadata.forward_anonymity = True
@@ -355,48 +463,68 @@ class CertValidator(Validator):
             if errno in exceptions.X509_MESSAGES and self.x509.get_serial_number() == cert.get_serial_number() and message not in self.certificate_verify_messages:
                 self.certificate_verify_messages.append(exceptions.X509_MESSAGES[errno])
 
+    def pcidss_compliant(self) -> bool:
+        super().pcidss_compliant()
+        self.validation_checks[pci.VALIDATION_WEAK_CIPHER] = self.metadata.weak_cipher or self.metadata.negotiated_cipher_bits < pci.PCI_DSS_WEAK_CIPHER_BITS
+        if self.validation_checks[pci.VALIDATION_WEAK_CIPHER] is False:
+            self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_CIPHER)
+        self.validation_checks[pci.VALIDATION_WEAK_PROTOCOL] = self.metadata.negotiated_protocol not in util.WEAK_PROTOCOL.keys()
+        if self.validation_checks[pci.VALIDATION_WEAK_PROTOCOL] is False:
+            self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_WEAK_PROTOCOL)
+        if self.metadata.session_resumption_tickets:
+            self.validation_checks[pci.VALIDATION_KNOWN_VULN_RESUMPTION_TICKETS] = self.metadata.negotiated_protocol != util.OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION]
+        if self.metadata.session_resumption_caching:
+            self.validation_checks[pci.VALIDATION_KNOWN_VULN_RESUMPTION_CACHING] = self.metadata.negotiated_protocol != util.OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION] or self.metadata.negotiated_protocol == util.OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION]
+        self.validation_checks[pci.VALIDATION_KNOWN_VULN_RENEGOTIATION] = self.metadata.client_renegotiation is False
+        self.validation_checks[pci.VALIDATION_KNOWN_VULN_COMPRESSION] = self.metadata.compression_support is False
+        self.validation_checks[pci.VALIDATION_DEPRECATED_ALGO] = self.metadata.dnssec_algorithm not in util.WEAK_DNSSEC_ALGORITHMS.keys()
+        if self.validation_checks[pci.VALIDATION_DEPRECATED_ALGO] is False:
+            self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_WEAK_ALGORITHMS)
+        if any([self.validation_checks[pci.VALIDATION_KNOWN_VULN_RENEGOTIATION], self.validation_checks[pci.VALIDATION_KNOWN_VULN_COMPRESSION], self.validation_checks[pci.VALIDATION_KNOWN_VULN_RESUMPTION_TICKETS], self.validation_checks[pci.VALIDATION_KNOWN_VULN_RESUMPTION_CACHING]]):
+            self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_KNOWN_VULNERABILITIES)
+
     def verify(self) -> bool:
         super().verify()
         tldext = TLDExtract(cache_dir='/tmp')(f'http://{self.metadata.host}')
         ca = util.get_basic_constraints(self.certificate)
         logger.debug('Server certificate validations')
-        self.validation_checks['basic_constraints_ca'] = True
+        self.validation_checks[VALIDATION_BASIC_CONSTRAINTS_CA] = True
         if self.transport.client_certificate_expected:
-            self.validation_checks['client_certificate_permits_authentication_usage'] = isinstance(self.transport.client_certificate, X509) and util.key_usage_exists(self.transport.client_certificate.to_cryptography(), 'clientAuth') is True
-            self.validation_checks['client_authentication'] = self.transport.client_certificate_match and isinstance(self.transport.client_certificate, X509) and self.transport.negotiated_protocol is not None and util.key_usage_exists(self.certificate, 'clientAuth') is True
-            if self.validation_checks['client_authentication'] is False:
+            self.validation_checks[VALIDATION_CLIENT_AUTH_USAGE] = isinstance(self.transport.client_certificate, X509) and util.key_usage_exists(self.transport.client_certificate.to_cryptography(), 'clientAuth') is True
+            self.validation_checks[VALIDATION_CLIENT_AUTHENTICATION] = self.transport.client_certificate_match and isinstance(self.transport.client_certificate, X509) and self.transport.negotiated_protocol is not None and util.key_usage_exists(self.certificate, 'clientAuth') is True
+            if self.validation_checks[VALIDATION_CLIENT_AUTHENTICATION] is False:
                 self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CLIENT_AUTHENTICATION)
         if isinstance(ca, bool) and ca is True:
-            self.validation_checks['basic_constraints_ca'] = False
+            self.validation_checks[VALIDATION_BASIC_CONSTRAINTS_CA] = False
             self.certificate_verify_messages.append('server certificates should not be a CA, it could enable impersonation attacks')
-        self.validation_checks['certificate_valid_tls_usage'] = util.key_usage_exists(self.certificate, 'digital_signature') is True and util.key_usage_exists(self.certificate, 'serverAuth') is True
-        self.validation_checks['common_name_valid'] = util.validate_common_name(self.metadata.certificate_common_name, self.metadata.host) is True
-        self.validation_checks['match_hostname'] = util.match_hostname(self.metadata.host, self.certificate)
+        self.validation_checks[VALIDATION_VALID_TLS_USAGE] = util.key_usage_exists(self.certificate, 'digital_signature') is True and util.key_usage_exists(self.certificate, 'serverAuth') is True
+        self.validation_checks[VALIDATION_SUBJECT_CN_VALID] = util.validate_common_name(self.metadata.certificate_common_name, self.metadata.host) is True
+        self.validation_checks[VALIDATION_MATCH_HOSTNAME] = util.match_hostname(self.metadata.host, self.certificate)
         self.metadata.certificate_is_self_signed = util.is_self_signed(self.certificate)
-        self.validation_checks['not_self_signed'] = self.metadata.certificate_is_self_signed is False
+        self.validation_checks[VALIDATION_NOT_SELF_SIGNED] = self.metadata.certificate_is_self_signed is False
         if self.metadata.preferred_protocol != self.metadata.negotiated_protocol:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_SCSV.format(protocol=self.metadata.preferred_protocol, fallback=self.metadata.negotiated_protocol))
         if self.metadata.certificate_is_self_signed:
-            self.validation_checks['trusted_ca'] = False
+            self.validation_checks[VALIDATION_ROOT_CA_TRUST] = False
             self.certificate_verify_messages.append('The CA is not properly imported as a trusted CA into the browser, Chrome based browsers will block visitors and show them ERR_CERT_AUTHORITY_INVALID')
-        self.validation_checks['avoid_deprecated_protocols'] = self.metadata.negotiated_protocol not in util.WEAK_PROTOCOL.keys()
-        if self.validation_checks['avoid_deprecated_protocols'] is False:
+        self.validation_checks[VALIDATION_DEPRECATED_TLS_PROTOCOLS] = self.metadata.negotiated_protocol not in util.WEAK_PROTOCOL.keys()
+        if self.validation_checks[VALIDATION_DEPRECATED_TLS_PROTOCOLS] is False:
             self.certificate_verify_messages.append(util.WEAK_PROTOCOL[self.metadata.negotiated_protocol])
         if self.metadata.revocation_ocsp_stapling is True:
-            self.validation_checks['ocsp_staple_satisfied'] = False
+            self.validation_checks[VALIDATION_OCSP_STAPLE_SATISFIED] = False
             if self.metadata.revocation_ocsp_response is not None:
-                self.validation_checks['ocsp_staple_satisfied'] = True
+                self.validation_checks[VALIDATION_OCSP_STAPLE_SATISFIED] = True
         if self.metadata.revocation_ocsp_must_staple is True:
-            self.validation_checks['ocsp_must_staple_satisfied'] = False
+            self.validation_checks[VALIDATION_OCSP_MUST_STAPLE_SATISFIED] = False
             if self.metadata.revocation_ocsp_status == util.OCSP_CERT_STATUS[0]:
-                self.validation_checks['ocsp_must_staple_satisfied'] = True
+                self.validation_checks[VALIDATION_OCSP_MUST_STAPLE_SATISFIED] = True
         if self.metadata.certification_authority_authorization:
-            self.validation_checks['valid_caa'] = util.caa_valid(self.metadata.host, self.x509, self.certificate_chain)
+            self.validation_checks[VALIDATION_VALID_CAA] = util.caa_valid(self.metadata.host, self.x509, self.certificate_chain)
         if self.metadata.dnssec:
-            self.validation_checks['valid_dnssec'] = util.dnssec_valid(self.metadata.host)
-            if self.validation_checks['valid_dnssec'] is False and tldext.registered_domain != self.metadata.host:
-                self.validation_checks['valid_dnssec'] = util.dnssec_valid(tldext.registered_domain)
-                if self.validation_checks['valid_dnssec']:
+            self.validation_checks[VALIDATION_VALID_DNSSEC] = util.dnssec_valid(self.metadata.host)
+            if self.validation_checks[VALIDATION_VALID_DNSSEC] is False and tldext.registered_domain != self.metadata.host:
+                self.validation_checks[VALIDATION_VALID_DNSSEC] = util.dnssec_valid(tldext.registered_domain)
+                if self.validation_checks[VALIDATION_VALID_DNSSEC]:
                     self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_DNSSEC_TARGET)
                 else:
                     self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_DNSSEC_REGISTERED_DOMAIN)
@@ -416,8 +544,8 @@ class CertValidator(Validator):
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CLIENT_RENEGOTIATION)
         if self.metadata.compression_support:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_COMPRESSION_SUPPORT)
-        self.validation_checks['avoid_deprecated_dnssec_algorithms'] = self.metadata.dnssec_algorithm not in util.WEAK_DNSSEC_ALGORITHMS.keys()
-        if self.validation_checks['avoid_deprecated_dnssec_algorithms'] is False:
+        self.validation_checks[VALIDATION_DEPRECATED_DNSSEC_ALGO] = self.metadata.dnssec_algorithm not in util.WEAK_DNSSEC_ALGORITHMS.keys()
+        if self.validation_checks[VALIDATION_DEPRECATED_DNSSEC_ALGO] is False:
             self.certificate_verify_messages.append(util.WEAK_DNSSEC_ALGORITHMS[self.metadata.dnssec_algorithm])
         interference_versions = ''.join(self.metadata.tls_version_interference_versions)
         current_version = 'TLSv1.3'
@@ -461,78 +589,13 @@ class CertValidator(Validator):
             root_validator.init_x509(cert)
             root_validator.metadata.certificate_root_ca = True
             root_validator.verify()
-            self._root_validator(trust_store, root_validator)
+            root_validator.verify_trust(trust_store)
+            root_validator.pcidss_compliant()
+            self.peer_validations.append(root_validator)
             self._root_certs.append(cert.get_serial_number())
 
-    def _root_validator(self, trust_store :TrustStore, root_validator :RootCertValidator):
-        DEFAULT_STATUS = 'No Root CA Certificate in the {platform} Trust Store'
-        root_validator.metadata.trust_ccadb_status = DEFAULT_STATUS.format(platform='CCADB')
-        root_validator.metadata.trust_android_status = DEFAULT_STATUS.format(platform='Android')
-        root_validator.metadata.trust_java_status = DEFAULT_STATUS.format(platform='Java')
-        root_validator.metadata.trust_linux_status = DEFAULT_STATUS.format(platform='Linux')
-        root_validator.metadata.trust_certifi_status = DEFAULT_STATUS.format(platform='Python')
-
-        expired_text = ' EXPIRED'
-        if trust_store.exists(context.SOURCE_CCADB):
-            root_validator.metadata.trust_ccadb_status = f'In Common CA Database {ccadb_version} (Mozilla, Microsoft, and Apple)'
-            if trust_store.expired_in_store(context.SOURCE_CCADB):
-                root_validator.metadata.trust_ccadb_status += expired_text
-        if trust_store.exists(context.SOURCE_JAVA):
-            root_validator.metadata.trust_java_status = f'In Java Root CA Trust Store {java_version}'
-            if trust_store.expired_in_store(context.SOURCE_JAVA):
-                root_validator.metadata.trust_java_status += expired_text
-        if trust_store.exists(context.SOURCE_LINUX):
-            root_validator.metadata.trust_linux_status = f'In Linux {linux_version} Root CA Trust Store'
-            if trust_store.expired_in_store(context.SOURCE_LINUX):
-                root_validator.metadata.trust_linux_status += expired_text
-        if trust_store.exists(context.SOURCE_CERTIFI):
-            root_validator.metadata.trust_certifi_status = f'In Python {certifi_version} Root CA Trust Store (Django, requests, urllib, and anything based from these)'
-            if trust_store.expired_in_store(context.SOURCE_CERTIFI):
-                root_validator.metadata.trust_certifi_status += expired_text
-
-        android_stores = []
-        if trust_store.exists(context.PLATFORM_ANDROID7):
-            android_status = android7_version
-            if trust_store.expired_in_store(context.PLATFORM_ANDROID7):
-                android_status += expired_text
-            android_stores.append(android_status)
-        if trust_store.exists(context.PLATFORM_ANDROID8):
-            android_status = android8_version
-            if trust_store.expired_in_store(context.PLATFORM_ANDROID8):
-                android_status += expired_text
-            android_stores.append(android_status)
-        if trust_store.exists(context.PLATFORM_ANDROID9):
-            android_status = android9_version
-            if trust_store.expired_in_store(context.PLATFORM_ANDROID9):
-                android_status += expired_text
-            android_stores.append(android_status)
-        if trust_store.exists(context.PLATFORM_ANDROID10):
-            android_status = android10_version
-            if trust_store.expired_in_store(context.PLATFORM_ANDROID10):
-                android_status += expired_text
-            android_stores.append(android_status)
-        if trust_store.exists(context.PLATFORM_ANDROID11):
-            android_status = android11_version
-            if trust_store.expired_in_store(context.PLATFORM_ANDROID11):
-                android_status += expired_text
-            android_stores.append(android_status)
-        if trust_store.exists(context.PLATFORM_ANDROID12):
-            android_status = android12_version
-            if trust_store.expired_in_store(context.PLATFORM_ANDROID12):
-                android_status += expired_text
-            android_stores.append(android_status)
-        if android_stores:
-            root_validator.metadata.trust_android_status = "\n".join(android_stores)
-
-        root_validator.metadata.trust_ccadb = trust_store.ccadb
-        root_validator.metadata.trust_java = trust_store.java
-        root_validator.metadata.trust_android = all([trust_store.android7, trust_store.android8, trust_store.android9, trust_store.android10, trust_store.android11, trust_store.android12])
-        root_validator.metadata.trust_linux = trust_store.linux
-        root_validator.metadata.trust_certifi = trust_store.certifi
-        self.peer_validations.append(root_validator)
-
     def verify_chain(self, progress_bar :callable = lambda *args: None) -> bool:
-        if self._pem_certificate_chain is None or (isinstance(self._pem_certificate_chain, list) and len(self._pem_certificate_chain) == 0):
+        if not self._pem_certificate_chain:
             return False
 
         validator_key_usage, validator_extended_key_usage = util.gather_key_usages(self.certificate)
@@ -542,7 +605,7 @@ class CertValidator(Validator):
             util.validate_certificate_chain(self._der, self._pem_certificate_chain, validator_key_usage, validator_extended_key_usage)
         except RevokedError as ex:
             logger.debug(ex, stack_info=True)
-            self.validation_checks['not_revoked'] = False
+            self.validation_checks[VALIDATION_REVOCATION] = False
             self.certificate_chain_valid = False
             validation_result = str(ex)
         except InvalidCertificateError as ex:
@@ -593,7 +656,7 @@ class CertValidator(Validator):
             if isinstance(trust_store, TrustStore):
                 logger.info(f'Checking for Root CA issuer {cert.get_issuer()} with SKI {peer_validator.metadata.certificate_authority_key_identifier}')
                 self._root_certs = []
-                self.validation_checks['trusted_ca'] = trust_store.is_trusted
+                self.validation_checks[VALIDATION_ROOT_CA_TRUST] = trust_store.is_trusted
                 if any([
                         trust_store.exists(context.SOURCE_CCADB),
                         trust_store.exists(context.SOURCE_JAVA),
@@ -607,14 +670,15 @@ class CertValidator(Validator):
                         trust_store.exists(context.PLATFORM_ANDROID12),
                     ]):
                     self._validate_roots(trust_store)
-                if not self.validation_checks['trusted_ca']:
+                if not self.validation_checks[VALIDATION_ROOT_CA_TRUST]:
                     self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_MISSING_ROOT_CA_AKI.format(serial_number=peer_validator.metadata.certificate_serial_number_hex))
                 else:
                     checked_peer_as_root = checked_peer_as_root is True
 
             if not checked_peer_as_root:
                 peer_validator.verify()
-                self.validation_checks['not_revoked'] = self.validation_checks.get('not_revoked') is not False
+                self.validation_checks[VALIDATION_REVOCATION] = self.validation_checks.get(VALIDATION_REVOCATION) is not False
+                peer_validator.pcidss_compliant()
                 self.peer_validations.append(peer_validator)
 
         return all([self.certificate_valid, self.certificate_chain_valid])

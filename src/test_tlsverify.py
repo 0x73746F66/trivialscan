@@ -8,7 +8,7 @@ from tlsverify import exceptions
 
 class TestValidator:
     _verify :CertValidator
-    host = 'apple.com'
+    host = 'commbank.com.au'
     def _setup(self):
         if not hasattr(self, '_transport'):
             self._transport = Transport(self.host)
@@ -48,13 +48,6 @@ class TestValidator:
         assert v.x509 is None
         assert v.certificate is None
  
-    def test_tlsverify_valid_chain(self):
-        want = 'Validated: digital_signature,key_agreement,server_auth'
-        self._setup()
-        self._verify.verify_chain()
-        assert self._verify.certificate_chain_valid is True
-        assert self._verify.certificate_chain_validation_result == want
-
     def test_no_host(self):
         with pytest.raises(ValueError):
             verify(host=None)

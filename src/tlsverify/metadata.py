@@ -47,6 +47,7 @@ class Metadata:
     negotiated_protocol :str = field(default_factory=str)
     offered_tls_versions :list = field(default_factory=list)
     negotiated_cipher :str = field(default_factory=str)
+    negotiated_cipher_bits :int = field(default_factory=int)
     weak_cipher :bool = field(default_factory=bool)
     strong_cipher :bool = field(default_factory=bool)
     forward_anonymity :bool = field(default_factory=bool)

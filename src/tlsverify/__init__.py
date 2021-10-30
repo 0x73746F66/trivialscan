@@ -36,6 +36,7 @@ def verify(host :str, port :int = 443, cafiles :list = None, use_sni :bool = Tru
     validator.mount(transport)
     validator.verify()
     validator.verify_chain()
+    validator.pcidss_compliant()
     results = validator.peer_validations
     results.append(validator)
     valid = all(v.certificate_valid for v in results)

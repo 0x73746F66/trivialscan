@@ -34,6 +34,7 @@ class Transport:
     client_pem_path :str
     negotiated_protocol :str
     negotiated_cipher :str
+    negotiated_cipher_bits :int
     peer_address :str
     sni_support :bool
     http2_support :bool
@@ -94,6 +95,7 @@ class Transport:
         self.client_pem_path = None
         self.negotiated_protocol = None
         self.negotiated_cipher = None
+        self.negotiated_cipher_bits = None
         self.ciphers = []
         self.client_renegotiation = None
         self.compression = None
@@ -555,6 +557,7 @@ class Transport:
             conn.setblocking(1)
             util.do_handshake(conn)
             self.negotiated_cipher = conn.get_cipher_name()
+            self.negotiated_cipher_bits = conn.get_cipher_bits()
             negotiated_protocol = conn.get_protocol_version_name()
             self.negotiated_protocol = f'{negotiated_protocol} ({hex(util.PROTOCOL_VERSION[negotiated_protocol])})'
             self.offered_tls_versions.append(self.negotiated_protocol)
