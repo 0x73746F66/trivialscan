@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.4.12 Oct 31st 2021
+## 0.4.13 Oct 31st 2021
 
 - Added PCI DSS 3.2.1 assertions via `--pci-dss` on the cli and `Validator.pcidss_compliant()`
   - CA Trust was validated
