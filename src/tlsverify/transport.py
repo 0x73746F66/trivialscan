@@ -716,7 +716,6 @@ class Transport:
             except Exception:
                 self.tls_version_intolerance_versions.append(f'{fake_proto} ({hex(fake_ver)})')
         self.tls_version_intolerance = len(self.tls_version_intolerance_versions) > 0
-        self.tls_version_interference = False
 
     def connect_least_secure(self, cafiles :list = None, use_sni :bool = False, progress_bar :callable = lambda *args: None) -> bool:
         if not isinstance(self.port, int):
