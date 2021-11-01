@@ -15,11 +15,11 @@ from rich.progress import Progress
 from rich.table import Table
 from rich.style import Style
 from rich import box
-from . import exceptions, verify, util, validator, pci
+from . import exceptions, verify, util, validator, pci, nist, fips
 from .transport import Transport
 
 
-__version__ = 'tls-verify==0.4.13'
+__version__ = 'tls-verify==0.4.14'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
@@ -59,7 +59,7 @@ STYLES = {
     validator.VALIDATION_WEAK_KEYS: {'text': 'Avoid known weak public key algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     validator.VALIDATION_DEPRECATED_TLS_PROTOCOLS: {'text': 'Avoid deprecated TLS protocols', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     validator.VALIDATION_DEPRECATED_DNSSEC_ALGO: {'text': 'Avoid deprecated DNSSEC algorithms', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
-    validator.VALIDATION_BASIC_CONSTRAINTS_CA: {'text': 'Avoid enabling impersonation', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    validator.VALIDATION_BASIC_CONSTRAINTS_CA: {'text': 'Leaf is not a CA', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     validator.VALIDATION_VALID_TLS_USAGE: {'text': 'Key usage appropriate for TLS', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     validator.VALIDATION_REVOCATION: {'text': 'Certificate chain not revoked', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     validator.VALIDATION_ROOT_CA_TRUST: {'text': 'Root CA Certificate is trusted', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
@@ -75,6 +75,16 @@ STYLES = {
     pci.VALIDATION_KNOWN_VULN_COMPRESSION: {'text': '[PCI] Vulnerable compression', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     pci.VALIDATION_KNOWN_VULN_RENEGOTIATION: {'text': '[PCI] Vulnerable renegotiation', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     pci.VALIDATION_KNOWN_VULN_SESSION_RESUMPTION: {'text': '[PCI] Vulnerable session resumption', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    nist.VALIDATION_CA_TRUST: {'text': '[NIST] CA Trust', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    nist.VALIDATION_WEAK_KEY: {'text': '[NIST] Key Size', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    nist.VALIDATION_WEAK_CIPHER: {'text': '[NIST] Cipher bits', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    nist.VALIDATION_WEAK_PROTOCOL: {'text': '[NIST] Deprecated protocols', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    nist.VALIDATION_MTLS: {'text': '[NIST] Require ClientAuth', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    fips.VALIDATION_CA_TRUST: {'text': '[FIPS] CA Trust', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    fips.VALIDATION_WEAK_KEY: {'text': '[FIPS] Key Size', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    fips.VALIDATION_WEAK_CIPHER: {'text': '[FIPS] Cipher bits', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    fips.VALIDATION_WEAK_PROTOCOL: {'text': '[FIPS] Deprecated protocols', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    fips.VALIDATION_MTLS: {'text': '[FIPS] No ClientAuth for TLS1.0/1.1', 'represent_as': (CLI_VALUE_PASS, CLI_VALUE_FAIL), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'certificate_version': {'text': 'Certificate Version'},
     'certificate_public_key_type': {'text': 'Public Key Type'},
     'certificate_public_key_curve': {'text': 'Public Key Curve', 'null_as': CLI_VALUE_NA, 'null_color': CLI_COLOR_NULL},
@@ -281,6 +291,10 @@ def _table_data(validator :validator.Validator, table :Table, skip :list[str]) -
         for i, err in enumerate(validator.certificate_verify_messages):
             if any(key.startswith('pci_') for key in skip) and err.startswith('PCI'):
                 continue
+            if any(key.startswith('fips_') for key in skip) and err.startswith('FIPS'):
+                continue
+            if any(key.startswith('nist_') for key in skip) and err.startswith('NIST'):
+                continue
             table.add_row(f'Note {i+1}', err)
     for key in validator.validation_checks.keys():
         if key in skip:
@@ -360,7 +374,7 @@ def root_outputs(validator :validator.RootCertValidator) -> Table:
     return table
 
 def server_outputs(validator :validator.CertValidator) -> Table:
-    title = f'{validator.metadata.host}:{validator.metadata.port} ({validator.metadata.peer_address})'
+    title = f'Leaf Certificate {validator.metadata.host}:{validator.metadata.port} ({validator.metadata.peer_address})'
     caption = '\n'.join([
         f'Issuer: {validator.metadata.certificate_issuer}',
         util.date_diff(validator.certificate.not_valid_after),
@@ -412,6 +426,10 @@ def validator_data(result :validator.Validator, certificate_type :str, skip_keys
         data['verification_details'] = result.certificate_verify_messages
     if any(key.startswith('pci_') for key in skip_keys):
         data['verification_details'] = [detail for detail in data['verification_details'] if not detail.startswith('PCI')]
+    if any(key.startswith('nist_') for key in skip_keys):
+        data['verification_details'] = [detail for detail in data['verification_details'] if not detail.startswith('NIST')]
+    if any(key.startswith('fips_') for key in skip_keys):
+        data['verification_details'] = [detail for detail in data['verification_details'] if not detail.startswith('FIPS')]
     for key in list(vars(result.metadata).keys()):
         if key in skip_keys and key in data:
             del data[key]
@@ -437,7 +455,7 @@ def make_json(results :list[validator.Validator], evaluation_duration_seconds :i
                 cert_type = 'Intermediate CA'
             data['validations'].append(validator_data(result, cert_type, [x for x in PEER_SKIP if x not in JSON_ONLY]))
         if isinstance(result, validator.CertValidator):
-            data['validations'].append(validator_data(result, 'Server Certificate', [x for x in SERVER_SKIP if x not in SERVER_JSON_ONLY]))
+            data['validations'].append(validator_data(result, 'Leaf Certificate', [x for x in SERVER_SKIP if x not in SERVER_JSON_ONLY]))
     return json.dumps(data, sort_keys=True, default=str)
 
 def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', debug :bool = False) -> list[validator.Validator]:
@@ -481,6 +499,8 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
                 progress.update(prog_cert_val, advance=1)
                 result.verify_chain(progress_bar=update_bar(progress, prog_cert_val))
                 result.pcidss_compliant()
+                result.fips_compliant()
+                result.nist_compliant()
                 results += result.peer_validations
                 results.append(result)
             progress.update(prog_client_auth, completed=5*len(domains))
@@ -505,6 +525,8 @@ def cli():
     parser.add_argument('-C', '--client-pem', help='path to PEM encoded client certificate, url or file path accepted', dest='client_pem', default=None)
     parser.add_argument('-t', '--tmp-path-prefix', help='local file path to use as a prefix when saving temporary files such as those being fetched for client authorization', dest='tmp_path_prefix', default='/tmp')
     parser.add_argument('--pci-dss', help='Include PCI DSS requirements assertions', dest='show_pci', action="store_true")
+    parser.add_argument('--nist-strict-mode', help='Include NIST SP800-131A strict mode assertions', dest='show_nist', action="store_true")
+    parser.add_argument('--fips-nist-transition-mode', help='Include FIPS 140-2 transition to NIST SP800-131A assertions', dest='show_fips', action="store_true")
     parser.add_argument('--disable-sni', help='Do not negotiate SNI using INDA encoded host', dest='disable_sni', action="store_true")
     parser.add_argument('--show-private-key', help='If the private key is exposed, show it in the results', dest='show_private_key', action="store_true")
     parser.add_argument('--hide-validation-details', help='Do not include detailed validation messages in output', dest='hide_validation_details', action="store_true")
@@ -569,6 +591,30 @@ def cli():
         SERVER_SKIP.remove('certificate_private_key_pem')
         PEER_SKIP.remove('certificate_private_key_pem')
         ROOT_SKIP.remove('certificate_private_key_pem')
+
+    if not args.show_nist:
+        nist_keys = [
+            nist.VALIDATION_CA_TRUST,
+            nist.VALIDATION_WEAK_KEY,
+            nist.VALIDATION_WEAK_CIPHER,
+            nist.VALIDATION_WEAK_PROTOCOL,
+            nist.VALIDATION_MTLS,
+        ]
+        SERVER_SKIP.extend(nist_keys)
+        PEER_SKIP.extend(nist_keys)
+        ROOT_SKIP.extend(nist_keys)
+
+    if not args.show_fips:
+        fips_keys = [
+            fips.VALIDATION_CA_TRUST,
+            fips.VALIDATION_WEAK_KEY,
+            fips.VALIDATION_WEAK_CIPHER,
+            fips.VALIDATION_WEAK_PROTOCOL,
+            fips.VALIDATION_MTLS,
+        ]
+        SERVER_SKIP.extend(fips_keys)
+        PEER_SKIP.extend(fips_keys)
+        ROOT_SKIP.extend(fips_keys)
 
     if not args.show_pci:
         pci_keys = [

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.4.13",
+    version="0.4.14",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -37,8 +37,9 @@ produces:
 
 ```
 usage: tlsverify [-h] [-H HOST] [-p PORT] [-c CAFILES] [-C CLIENT_PEM] [-t TMP_PATH_PREFIX] [--pci-dss]
-               [--disable-sni] [--show-private-key] [--hide-validation-details] [-j JSON_FILE]
-               [--hide-progress-bars] [-v] [-vv] [-vvv] [-vvvv] [--version]
+               [--nist-strict-mode] [--fips-nist-transition-mode] [--disable-sni] [--show-private-key]
+               [--hide-validation-details] [-j JSON_FILE] [--hide-progress-bars] [-v] [-vv] [-vvv] [-vvvv]
+               [--version]
                [targets ...]
 
 positional arguments:
@@ -57,6 +58,9 @@ optional arguments:
                         local file path to use as a prefix when saving temporary files such as those being fetched
                         for client authorization
   --pci-dss             Include PCI DSS requirements assertions
+  --nist-strict-mode    Include NIST SP800-131A strict mode assertions
+  --fips-nist-transition-mode
+                        Include FIPS 140-2 transition to NIST SP800-131A assertions
   --disable-sni         Do not negotiate SNI using INDA encoded host
   --show-private-key    If the private key is exposed, show it in the results
   --hide-validation-details
@@ -73,6 +77,10 @@ optional arguments:
 
 ## Features
 
+- Compliance
+  - PCI DSS 3.2.1
+  - NIST SP800-131A (strict mode)
+  - FIPS 140-2 (NIST SP800-131A transition mode)
 - Certificate Formats
   - ✓ plaintext
   - ✓ PEM

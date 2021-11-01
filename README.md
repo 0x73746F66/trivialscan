@@ -14,6 +14,10 @@ See [Documentation](./docs/0.index.md) section of this repository
 
 ## Features
 
+- Compliance
+  - PCI DSS 3.2.1
+  - NIST SP800-131A (strict mode)
+  - FIPS 140-2 (NIST SP800-131A transition mode)
 - Certificate Formats
   - ✓ plaintext
   - ✓ PEM

@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.4.14 Nov 1st 2021
+
+- Added support for FIPS 140-2 transition to NIST SP800-131A assertions via `--fips-nist-transition-mode`
+- Added support for NIST SP800-131A strict mode assertions via `--nist-strict-mode`
+- Changed some CLI outputs to be more concise
+- Bug fix for TLS version interference detection
+- Bug fix for weak protocol detection
+
 ## 0.4.13 Oct 31st 2021
 
 - Added PCI DSS 3.2.1 assertions via `--pci-dss` on the cli and `Validator.pcidss_compliant()`
