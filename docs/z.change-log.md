@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.4.15 Nov 1st 2021
+
+- bump `tlstrust==2.0.1` for more android version support
+- Android Trust Store status improved
+
 ## 0.4.14 Nov 1st 2021
 
 - Added support for FIPS 140-2 transition to NIST SP800-131A assertions via `--fips-nist-transition-mode`

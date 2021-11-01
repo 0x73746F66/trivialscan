@@ -18,6 +18,11 @@ from tlstrust.stores.ccadb import __version__ as ccadb_version
 from tlstrust.stores.java import __version__ as java_version
 from tlstrust.stores.certifi import __version__ as certifi_version
 from tlstrust.stores.linux import __version__ as linux_version
+from tlstrust.stores.android_2_2 import __description__ as android2_2_version
+from tlstrust.stores.android_2_3 import __description__ as android2_3_version
+from tlstrust.stores.android_3 import __description__ as android3_version
+from tlstrust.stores.android_4 import __description__ as android4_version
+from tlstrust.stores.android_4_4 import __description__ as android4_4_version
 from tlstrust.stores.android_7 import __description__ as android7_version
 from tlstrust.stores.android_8 import __description__ as android8_version
 from tlstrust.stores.android_9 import __description__ as android9_version
@@ -317,39 +322,78 @@ class RootCertValidator(Validator):
                 self.metadata.trust_certifi_status += expired_text
 
         android_stores = []
+        if trust_store.exists(context.PLATFORM_ANDROID2_2):
+            android_status = f'{android2_2_version} {"Trusted" if trust_store.android2_2 else "Not Trusted"}'
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID2_2):
+                android_status += expired_text
+            android_stores.append(android_status)
+        else:
+            android_stores.append(f'{android2_2_version} Not Present')
+        if trust_store.exists(context.PLATFORM_ANDROID2_3):
+            android_status = f'{android2_3_version} {"Trusted" if trust_store.android2_3 else "Not Trusted"}'
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID2_3):
+                android_status += expired_text
+            android_stores.append(android_status)
+        else:
+            android_stores.append(f'{android2_3_version} Not Present')
+        if trust_store.exists(context.PLATFORM_ANDROID3):
+            android_status = f'{android3_version} {"Trusted" if trust_store.android3 else "Not Trusted"}'
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID3):
+                android_status += expired_text
+            android_stores.append(android_status)
+        else:
+            android_stores.append(f'{android3_version} Not Present')
+        if trust_store.exists(context.PLATFORM_ANDROID4_4):
+            android_status = f'{android4_4_version} {"Trusted" if trust_store.android4_4 else "Not Trusted"}'
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID4_4):
+                android_status += expired_text
+            android_stores.append(android_status)
+        else:
+            android_stores.append(f'{android4_4_version} Not Present')
         if trust_store.exists(context.PLATFORM_ANDROID7):
-            android_status = android7_version
+            android_status = f'{android7_version} {"Trusted" if trust_store.android7 else "Not Trusted"}'
             if trust_store.expired_in_store(context.PLATFORM_ANDROID7):
                 android_status += expired_text
             android_stores.append(android_status)
+        else:
+            android_stores.append(f'{android7_version} Not Present')
         if trust_store.exists(context.PLATFORM_ANDROID8):
-            android_status = android8_version
+            android_status = f'{android8_version} {"Trusted" if trust_store.android8 else "Not Trusted"}'
             if trust_store.expired_in_store(context.PLATFORM_ANDROID8):
                 android_status += expired_text
             android_stores.append(android_status)
+        else:
+            android_stores.append(f'{android8_version} Not Present')
         if trust_store.exists(context.PLATFORM_ANDROID9):
-            android_status = android9_version
+            android_status = f'{android9_version} {"Trusted" if trust_store.android9 else "Not Trusted"}'
             if trust_store.expired_in_store(context.PLATFORM_ANDROID9):
                 android_status += expired_text
             android_stores.append(android_status)
+        else:
+            android_stores.append(f'{android9_version} Not Present')
         if trust_store.exists(context.PLATFORM_ANDROID10):
-            android_status = android10_version
+            android_status = f'{android10_version} {"Trusted" if trust_store.android10 else "Not Trusted"}'
             if trust_store.expired_in_store(context.PLATFORM_ANDROID10):
                 android_status += expired_text
             android_stores.append(android_status)
+        else:
+            android_stores.append(f'{android10_version} Not Present')
         if trust_store.exists(context.PLATFORM_ANDROID11):
-            android_status = android11_version
+            android_status = f'{android11_version} {"Trusted" if trust_store.android11 else "Not Trusted"}'
             if trust_store.expired_in_store(context.PLATFORM_ANDROID11):
                 android_status += expired_text
             android_stores.append(android_status)
+        else:
+            android_stores.append(f'{android11_version} Not Present')
         if trust_store.exists(context.PLATFORM_ANDROID12):
-            android_status = android12_version
+            android_status = f'{android12_version} {"Trusted" if trust_store.android12 else "Not Trusted"}'
             if trust_store.expired_in_store(context.PLATFORM_ANDROID12):
                 android_status += expired_text
             android_stores.append(android_status)
-        if android_stores:
-            self.metadata.trust_android_status = "\n".join(android_stores)
+        else:
+            android_stores.append(f'{android12_version} Not Present')
 
+        self.metadata.trust_android_status = "\n".join(android_stores)
         self.metadata.trust_ccadb = trust_store.ccadb
         self.metadata.trust_java = trust_store.java
         self.metadata.trust_android = all([trust_store.android7, trust_store.android8, trust_store.android9, trust_store.android10, trust_store.android11, trust_store.android12])

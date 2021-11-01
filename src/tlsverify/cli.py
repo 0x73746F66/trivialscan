@@ -19,7 +19,7 @@ from . import exceptions, verify, util, validator, pci, nist, fips
 from .transport import Transport
 
 
-__version__ = 'tls-verify==0.4.14'
+__version__ = 'tls-verify==0.4.15'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
