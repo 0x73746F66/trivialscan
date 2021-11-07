@@ -1,118 +1,32 @@
 import logging
 import string
-from datetime import datetime
 import random
+from io import BytesIO
+from datetime import datetime, timedelta
 from urllib.request import urlretrieve
+from urllib.parse import urlparse
 from binascii import hexlify
 from pathlib import Path
+import requests
+import validators
 from cryptography import x509
 from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
 from OpenSSL import SSL
 from OpenSSL.crypto import X509, FILETYPE_PEM, dump_certificate
+from retry.api import retry
 from certvalidator import CertificateValidator, ValidationContext
-import validators
-
+from rich.style import Style
+from rich.console import Console
+from dns import resolver, dnssec, rdatatype, message, query, name as dns_name
+from dns.exception import DNSException, Timeout as DNSTimeoutError
+from dns.resolver import NoAnswer
+from tldextract import TLDExtract
+from crlite_query import CRLiteDB, IntermediatesDB, CRLiteQuery
+from . import constants
 
 __module__ = 'tlsverify.util'
 
 logger = logging.getLogger(__name__)
-
-VALIDATION_OID = {
-    '2.16.840.1.114414.1.7.23.1': 'DV',
-    '1.3.6.1.4.1.46222.1.10': 'DV',
-    '1.3.6.1.4.1.34697.1.1': 'EV',
-    '2.16.840.1.113839.0.6.3': 'EV',
-    '2.16.792.3.0.3.1.1.5': 'EV',
-    '1.3.6.1.4.1.5237.1.1.3': 'EV',
-    '2.16.840.1.101.3.2.1.1.5': 'EV',
-    '1.3.6.1.4.1.30360.3.3.3.3.4.4.3.0': 'EV',
-    '1.3.6.1.4.1.46222.1.1': 'EV',
-    '1.3.6.1.4.1.311.60': 'EV',
-    '1.3.6.1.4.1.48679.100': 'EV',
-    '1.3.6.1.4.1.55594.1.1.1': 'EV',
-    '1.3.6.1.4.1.4788.2.200.1': 'EV',
-    '1.3.6.1.4.1.4788.2.202.1': 'EV',
-    '1.3.6.1.4.1.31247.1.3': 'EV',
-    '1.3.6.1.4.1.52331.2': 'EV',
-    '2.16.840.1.114414.1.7.23.2': 'OV',
-    '2.16.792.3.0.3.1.1.2': 'OV',
-    '1.3.6.1.4.1.46222.1.20': 'OV',
-    '2.23.140.1.2.1': 'DV',
-    '2.23.140.1.2.2': 'OV',
-    '2.23.140.1.2.3': 'EV',
-}
-X509_DATE_FMT = r'%Y%m%d%H%M%SZ'
-WEAK_KEY_SIZE = {
-    'RSA': 1024,
-    'DSA': 2048,
-    'EC': 160,
-}
-KNOWN_WEAK_KEYS = {
-    'RSA': '2000: Factorization of a 512-bit RSA Modulus, essentially derive a private key knowing only the public key. Verified bt EFF in 2001. Later in 2009 factorization of up to 1024-bit keys',
-    'DSA': '1999: HPL Laboratories demonstrated lattice attacks on DSA, a non-trivial example of the known message attack that is a total break and message forgery technique. 2010 Dimitrios Poulakis demonstrated a lattice reduction technique for single or multiple message forgery',
-    'EC': '2010 Dimitrios Poulakis demonstrated a lattice reduction technique to attack ECDSA for single or multiple message forgery',
-}
-KNOWN_WEAK_SIGNATURE_ALGORITHMS = {
-    'sha1WithRSAEncryption': 'Macquarie University Australia 2009: identified vulnerabilities to collision attacks, later in 2017 Marc Stevens demonstrated collision proofs',
-    'md5WithRSAEncryption': 'Arjen Lenstra and Benne de Weger 2005: vulnerable to hash collision attacks',
-    'md2WithRSAEncryption': 'Rogier, N. and Chauvaud, P. in 1995: vulnerable to collision, later preimage resistance, and second-preimage resistance attacks were demonstrated at BlackHat 2008 by Mark Twain',
-}
-OPENSSL_VERSION_LOOKUP = {
-    768: 'SSLv3',
-    769: 'TLSv1',
-    770: 'TLSv1.1',
-    771: 'TLSv1.2',
-    772: 'TLSv1.3',
-}
-WEAK_PROTOCOL = {
-    'SSLv2': 'SSLv2 Deprecated in 2011 (rfc6176) with undetectable manipulator-in-the-middle exploits',
-    'SSLv3': 'SSLv3 Deprecated in 2015 (rfc7568) mainly due to POODLE, a manipulator-in-the-middle exploit',
-    'TLSv1': 'TLSv1 2018 deprecated by PCI Council. Also in 2018, Apple, Google, Microsoft, and Mozilla jointly announced deprecation. Officially deprecated in 2020 (rfc8996)',
-    'TLSv1.1': 'TLSv1.1 No longer supported by Firefox 24 or newer and Chrome 29 or newer. Deprecated in 2020 (rfc8996)',
-}
-OCSP_RESP_STATUS = {
-    0: 'Successful',
-    1: 'Malformed Request',
-    2: 'Internal Error',
-    3: 'Try Later',
-    4: 'Signature Required',
-    5: 'Unauthorized',
-}
-OCSP_CERT_STATUS = {
-    0: 'Good',
-    1: 'Revoked',
-    2: 'Unknown',
-}
-SESSION_CACHE_MODE = {
-    SSL.SESS_CACHE_OFF: 'no caching',
-    SSL.SESS_CACHE_CLIENT: 'session_resumption_tickets',
-    SSL.SESS_CACHE_SERVER: 'session_resumption_caching',
-    SSL.SESS_CACHE_BOTH: 'session_resumption_both',
-}
-NOT_KNOWN_WEAK_CIPHERS = [
-    'ECDHE-RSA-AES256-GCM-SHA384',
-    'ECDHE-RSA-AES256-SHA384',
-    'ECDHE-RSA-AES128-GCM-SHA256',
-    'ECDHE-RSA-AES128-SHA256',
-    'ECDHE-ECDSA-AES256-GCM-SHA384',
-    'ECDHE-ECDSA-AES256-SHA384',
-    'ECDHE-ECDSA-AES128-GCM-SHA256',
-    'ECDHE-ECDSA-AES128-SHA256',
-    'DHE-DSS-AES256-GCM-SHA384',
-    'DHE-RSA-AES256-GCM-SHA384',
-    'DHE-RSA-AES256-SHA256',
-    'DHE-DSS-AES256-SHA256',
-    'DHE-DSS-AES128-GCM-SHA256',
-    'DHE-RSA-AES128-GCM-SHA256',
-    'DHE-RSA-AES128-SHA256',
-    'DHE-DSS-AES128-SHA256',
-]
-STRONG_CIPHERS = [
-    'TLS_CHACHA20_POLY1305_SHA256',
-    'TLS_AES_128_CCM_8_SHA256',
-    'TLS_AES_128_CCM_SHA2',
-]
-
 
 def filter_valid_files_urls(inputs :list[str], tmp_path_prefix :str = '/tmp'):
     ret = set()
@@ -202,12 +116,11 @@ def key_usage_exists(cert :Certificate, key :str) -> bool:
     return False
 
 def get_valid_certificate_extensions(cert :Certificate) -> list[extensions.Extension]:
-    certificate_extensions = []
-    for ext in cert.extensions:
-        if isinstance(ext.value, extensions.UnrecognizedExtension):
-            continue
-        certificate_extensions.append(ext.value)
-    return certificate_extensions
+    return [
+        ext.value
+        for ext in cert.extensions
+        if not isinstance(ext.value, extensions.UnrecognizedExtension)
+    ]
 
 def get_certificate_extensions(cert :Certificate) -> list[dict]:
     certificate_extensions = []
@@ -222,7 +135,7 @@ def get_certificate_extensions(cert :Certificate) -> list[dict]:
             data[data['name']] = ext.value.crl_number
         if isinstance(ext.value, extensions.AuthorityKeyIdentifier):
             data[data['name']] = hexlify(ext.value.key_identifier).decode('utf-8')
-            data['authority_cert_issuer'] = ', '.join([x.value for x in ext.value.authority_cert_issuer or []])
+            data['authority_cert_issuer'] = ', '.join(str(x.value) for x in ext.value.authority_cert_issuer or [])
             data['authority_cert_serial_number'] = ext.value.authority_cert_serial_number
         if isinstance(ext.value, extensions.SubjectKeyIdentifier):
             data[data['name']] = hexlify(ext.value.digest).decode('utf-8')
@@ -343,38 +256,39 @@ def gather_key_usages(cert :Certificate) -> tuple[list, list]:
     for ext in get_valid_certificate_extensions(cert):
         if isinstance(ext, extensions.UnrecognizedExtension):
             continue
-        ext_name = ext.oid._name
         if isinstance(ext, extensions.ExtendedKeyUsage):
             extended_usages = [x._name for x in ext or []] # pylint: disable=protected-access
             if 'serverAuth' in extended_usages:
                 validator_extended_key_usage.append('server_auth')
         if isinstance(ext, extensions.TLSFeature):
             for feature in ext:
-                if feature.value == 5:
-                    validator_extended_key_usage.append('ocsp_signing')
-                if feature.value == 17:
+                if feature.value in [5, 17]:
                     validator_extended_key_usage.append('ocsp_signing')
         if isinstance(ext, extensions.KeyUsage):
-            if ext.digital_signature:
-                validator_key_usage.append('digital_signature')
-            if ext.content_commitment:
-                validator_key_usage.append('content_commitment')
-            if ext.key_encipherment:
-                validator_key_usage.append('key_encipherment')
-            if ext.data_encipherment:
-                validator_key_usage.append('data_encipherment')
-            if ext.key_agreement:
-                validator_key_usage.append('key_agreement')
-                if ext.decipher_only:
-                    validator_key_usage.append('decipher_only')
-                if ext.encipher_only:
-                    validator_key_usage.append('encipher_only')
-            if ext.key_cert_sign:
-                validator_key_usage.append('key_cert_sign')
-            if ext.crl_sign:
-                validator_key_usage.append('crl_sign')
-
+            validator_key_usage += _extract_key_usage(ext)
     return validator_key_usage, validator_extended_key_usage
+
+def _extract_key_usage(ext):
+    validator_key_usage = []
+    if ext.digital_signature:
+        validator_key_usage.append('digital_signature')
+    if ext.content_commitment:
+        validator_key_usage.append('content_commitment')
+    if ext.key_encipherment:
+        validator_key_usage.append('key_encipherment')
+    if ext.data_encipherment:
+        validator_key_usage.append('data_encipherment')
+    if ext.key_agreement:
+        validator_key_usage.append('key_agreement')
+        if ext.decipher_only:
+            validator_key_usage.append('decipher_only')
+        if ext.encipher_only:
+            validator_key_usage.append('encipher_only')
+    if ext.key_cert_sign:
+        validator_key_usage.append('key_cert_sign')
+    if ext.crl_sign:
+        validator_key_usage.append('crl_sign')
+    return validator_key_usage
 
 def get_ski_aki(cert :Certificate) -> tuple[str, str]:
     ski = None
@@ -450,6 +364,15 @@ def validate_certificate_chain(der :bytes, pem_certificate_chain :list, validato
         extended_key_usage=set(validator_extended_key_usage),
     )
 
+def issuer_from_chain(certificate :X509, chain :list[X509]) -> Certificate:
+    issuer = None
+    issuer_name = certificate.get_issuer().CN.strip()
+    for peer in chain:
+        if peer.get_subject().CN.strip() == issuer_name:
+            issuer = peer
+            break
+    return issuer
+
 def str_n_split(input :str, n :int = 2, delimiter :str = ' '):
     if not isinstance(input, str): return input
     return delimiter.join([input[i:i+n] for i in range(0, len(input), n)])
@@ -467,7 +390,7 @@ def date_diff(comparer :datetime) -> str:
     if interval.days < -1:
         return f"Expired {int(abs(interval.days))} days ago"
     if interval.days == -1:
-        return f"Expired yesterday"
+        return "Expired yesterday"
     if interval.days == 0:
         return "Expires today"
     if interval.days == 1:
@@ -476,3 +399,310 @@ def date_diff(comparer :datetime) -> str:
         return f"Expires in {interval.days} days ({int(round(interval.days/365))} years)"
     if interval.days > 1:
         return f"Expires in {interval.days} days"
+
+def styled_boolean(value :bool, represent_as :tuple[str, str] = ('True', 'False'), colors :tuple[str, str] = ('dark_sea_green2', 'light_coral')) -> str:
+    console = Console()
+    if not isinstance(value, bool):
+        raise TypeError(f'{type(value)} provided')
+    val = represent_as[0] if value else represent_as[1]
+    color = colors[0] if value else colors[1]
+    with console.capture() as capture:
+        console.print(val, style=Style(color=color))
+    return capture.get().strip()
+
+def styled_value(value :str, color :str = 'white') -> str:
+    if value.startswith("http"):
+        return value
+    if len(value) > 70:
+        return value
+    console = Console()
+    with console.capture() as capture:
+        console.print(value, style=Style(color=color), no_wrap=True)
+    return capture.get().strip()
+
+def styled_list(values :list, delimiter :str = '\n', color :str = 'bright_white') -> str:
+    styled_values = []
+    for value in values:
+        if value is None:
+            styled_values.append(styled_value('Unknown', 'cornflower_blue'))
+            continue
+        if isinstance(value, bool):
+            styled_values.append(styled_boolean(value, colors=(color, color)))
+            continue
+        if isinstance(value, list):
+            styled_values.append(styled_list(value, delimiter, color))
+            continue
+        if isinstance(value, dict):
+            styled_values.append(styled_dict(value, delimiter, colors=(color, color)))
+            continue
+        if isinstance(value, bytes):
+            value = value.decode()
+        if isinstance(value, datetime):
+            value = value.isoformat()
+        styled_values.append(styled_value(str(value), color=color))
+
+    return delimiter.join(styled_values)
+
+def styled_dict(values :dict, delimiter :str = '=', colors :tuple[str, str] = ('bright_white', 'bright_white')) -> str:
+    pairs = []
+    for key, v in values.items():
+        if isinstance(v, bool):
+            pairs.append(f'{key}{delimiter}{styled_boolean(v)}')
+            continue
+        if v is None:
+            pairs.append(f'{key}{delimiter}{styled_value("null", color=colors[1])}')
+            continue
+        if isinstance(v, list):
+            pairs.append(f'{key}{delimiter}{styled_list(v, color=colors[1])}')
+            continue
+        if isinstance(v, dict):
+            pairs.append(f'{key}{delimiter}{styled_dict(v, delimiter=delimiter, colors=colors)}')
+            continue
+        if isinstance(v, (int, float)):
+            v = str(v)
+        if isinstance(v, bytes):
+            v = v.decode()
+        if isinstance(v, datetime):
+            v = v.isoformat()
+        if isinstance(v, str):
+            pairs.append(f'{key}{delimiter}{styled_value(v, color=colors[1])}')
+    return '\n'.join(pairs)
+
+def styled_any(value, dict_delimiter='=', list_delimiter='\n', color :str = 'bright_white') -> str:
+    if isinstance(value, list) and len(value) == 1:
+        value = value[0]
+    if isinstance(value, (str, int)):
+        return str(value)
+    if value is None:
+        return styled_value('None', color=color)
+    if isinstance(value, bool):
+        return styled_boolean(value)
+    if isinstance(value, dict):
+        return styled_dict(value, delimiter=dict_delimiter)
+    if isinstance(value, list):
+        return styled_list(value, delimiter=list_delimiter, color=color)
+    if isinstance(value, bytes):
+        return styled_value(value.decode(), color=color)
+    if isinstance(value, datetime):
+        return styled_value(value.isoformat(), color=color)
+    return styled_value(value, color=color)
+
+def get_dnssec(domain_name :str):
+    logger.warning(DeprecationWarning('util.get_dnssec() was deprecated in version 0.4.3 and will be removed in version 0.5.0'), exc_info=True)
+    return get_dnssec_answer(domain_name)
+
+def get_dnssec_answer(domain_name :str):
+    logger.info(f'Trying to resolve DNSSEC for {domain_name}')
+    dns_resolver = resolver.Resolver(configure=False)
+    dns_resolver.lifetime = 5
+    tldext = TLDExtract(cache_dir='/tmp')(f'http://{domain_name}')
+    answers = []
+    try:
+        response = resolver.query(domain_name, rdatatype.NS)
+    except NoAnswer:
+        return get_dnssec_answer(tldext.registered_domain) if tldext.registered_domain != domain_name else None
+    except DNSTimeoutError:
+        logger.warning('DNS Timeout')
+        return None
+    except DNSException as ex:
+        logger.warning(ex, exc_info=True)
+        return None
+    except ConnectionResetError:
+        logger.warning('Connection reset by peer')
+        return None
+    except ConnectionError:
+        logger.warning('Name or service not known')
+        return None
+    dns_resolver.nameservers = ['1.1.1.1', '8.8.8.8', '9.9.9.9']
+    nameservers = []
+    for ns in [i.to_text() for i in response.rrset]:
+        logger.info(f'Checking A for {ns}')
+        try:
+            response = dns_resolver.query(ns, rdtype=rdatatype.A)
+        except DNSTimeoutError:
+            logger.warning(f'DNS Timeout {ns} A')
+            continue
+        except DNSException as ex:
+            logger.warning(ex, exc_info=True)
+            continue
+        except ConnectionResetError:
+            logger.warning(f'Connection reset by peer {ns} A')
+            continue
+        except ConnectionError:
+            logger.warning(f'Name or service not known {ns} A')
+            continue
+        nameservers += [i.to_text() for i in response.rrset]
+    if not nameservers:
+        logger.warning('No nameservers found')
+        return None
+    for ns in nameservers:
+        logger.info(f'Trying to resolve DNSKEY using NS {ns}')
+        try:
+            request = message.make_query(domain_name, rdatatype.DNSKEY, want_dnssec=True)
+            response = query.udp(request, ns, timeout=2)
+        except DNSTimeoutError:
+            logger.warning('DNSKEY DNS Timeout')
+            continue
+        except DNSException as ex:
+            logger.warning(ex, exc_info=True)
+            continue
+        except ConnectionResetError:
+            logger.warning('DNSKEY Connection reset by peer')
+            continue
+        except ConnectionError:
+            logger.warning('DNSKEY Name or service not known')
+            continue
+        if response.rcode() != 0:
+            logger.warning('No DNSKEY record')
+            continue
+
+        logger.info(f'{ns} answered {response.answer}')
+        if len(response.answer) == 2:
+            return response.answer
+        answers += response.answer
+        if len(answers) == 2:
+            return answers
+
+    return get_dnssec_answer(tldext.registered_domain) if tldext.registered_domain != domain_name else None
+
+def dnssec_valid(domain_name) -> bool:
+    answer = get_dnssec_answer(domain_name)
+    if answer is None:
+        return False
+    if len(answer) != 2:
+        logger.warning(f'DNSKEY answer too many values {len(answer)}')
+        return False
+    name = dns_name.from_text(domain_name)
+    try:
+        dnssec.validate(answer[0], answer[1], {name: answer[0]})
+    except dnssec.ValidationFailure as err:
+        logger.warning(err, exc_info=True)
+        return False
+    return True
+
+def get_caa(domain_name :str):
+    tldext = TLDExtract(cache_dir='/tmp')(f'http://{domain_name}')
+    try_apex = tldext.registered_domain != domain_name
+    response = None
+    dns_resolver = resolver.Resolver(configure=False)
+    dns_resolver.lifetime = 5
+    try:
+        response = resolver.query(domain_name, rdatatype.CAA)
+    except DNSTimeoutError:
+        logger.warning('DNS Timeout')
+    except DNSException as ex:
+        logger.warning(ex, exc_info=True)
+    except ConnectionResetError:
+        logger.warning('Connection reset by peer')
+    except ConnectionError:
+        logger.warning('Name or service not known')
+    if not response and try_apex:
+        logger.info(f'Trying to resolve CAA for {tldext.registered_domain}')
+        return get_caa(tldext.registered_domain)
+    if not response:
+        return None
+    return response
+
+def caa_exist(domain_name :str) -> bool:
+    logger.info(f'Trying to resolve CAA for {domain_name}')
+    response = get_caa(domain_name)
+    if response is None:
+        logger.info('No CAA records')
+        return False
+    issuers = set()
+    for rdata in response:
+        common_name, *rest = rdata.value.decode().split(';')
+        issuers.add(common_name.strip())
+
+    return len(issuers) > 0
+
+def caa_valid(domain_name :str, cert :X509, certificate_chain :list[X509]) -> bool:
+    extractor = TLDExtract(cache_dir='/tmp')
+    response = get_caa(domain_name)
+    if response is None:
+        return False
+    wild_issuers = set()
+    issuers = set()
+    for rdata in response:
+        caa, *_ = rdata.value.decode().split(';')
+        if 'issuewild' in rdata.to_text():
+            wild_issuers.add(caa.strip())
+    for rdata in response:
+        caa, *_ = rdata.value.decode().split(';')
+        # issuewild tags take precedence over issue tags when specified.
+        if caa not in wild_issuers:
+            issuers.add(caa.strip())
+
+    issuer = issuer_from_chain(cert, certificate_chain)
+    if not isinstance(issuer, X509):
+        logger.warning('Issuer certificate not found in chain')
+        return False
+    
+    common_name = cert.get_subject().CN
+    issuer_cn = issuer.get_subject().O
+    for caa in wild_issuers:
+        issuer_common_names :list[str] = constants.CAA_DOMAINS.get(caa, [])
+        if not issuer_common_names:
+            issuer_ext = extractor(f'http://{caa}')
+            issuer_apex = issuer_ext.registered_domain
+            issuer_common_names = constants.CAA_DOMAINS.get(issuer_apex, [])
+        if issuer_cn in issuer_common_names:
+            return True
+
+    if common_name.startswith('*.'):
+        return False
+
+    for caa in issuers:
+        issuer_common_names :list[str] = constants.CAA_DOMAINS.get(caa, [])
+        if not issuer_common_names:
+            issuer_ext = extractor(f'http://{caa}')
+            issuer_apex = issuer_ext.registered_domain
+            issuer_common_names = constants.CAA_DOMAINS.get(issuer_apex, [])
+        if issuer_cn in issuer_common_names:
+            return True
+
+    return False
+
+def crlite_revoked(db_path :str, pem :bytes):
+    def find_attachments_base_url():
+        url = urlparse(constants.CRLITE_URL)
+        base_rsp = requests.get(f"{url.scheme}://{url.netloc}/v1/")
+        return base_rsp.json()["capabilities"]["attachments"]["base_url"]
+
+    db_dir = Path(db_path)
+    if not db_dir.is_dir():
+        db_dir.mkdir()
+
+    last_updated = None
+    last_updated_file = (db_dir / ".last_updated")
+    if last_updated_file.is_file():
+        last_updated = datetime.fromtimestamp(last_updated_file.stat().st_mtime)
+    grace_time = datetime.utcnow() - timedelta(hours=6)
+    update = True
+    if last_updated is not None and last_updated > grace_time:
+        logger.info(f"Database was updated at {last_updated}, skipping.")
+        update = False
+    crlite_db = CRLiteDB(db_path=db_path)
+    if update:
+        crlite_db.update(
+            collection_url=constants.CRLITE_URL,
+            attachments_base_url=find_attachments_base_url(),
+        )
+        crlite_db.cleanup()
+        last_updated_file.touch()
+        logger.info(f"Status: {crlite_db}")
+    query = CRLiteQuery(crlite_db=crlite_db, intermediates_db=IntermediatesDB(db_path=db_path, download_pems=False))
+    results = []
+    for result in query.query(name='peer', generator=query.gen_from_pem(BytesIO(pem))):
+        logger.info(result.print_query_result(verbose=1))
+        logger.debug(result.print_query_result(verbose=3))
+        results.append(result.is_revoked())
+    return any(results)
+
+
+@retry(SSL.WantReadError, tries=5, delay=.5)
+def do_handshake(conn):
+    try:
+        conn.do_handshake()
+    except SSL.SysCallError:
+        pass
