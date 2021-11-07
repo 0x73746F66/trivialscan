@@ -1,8 +1,10 @@
 .venv/
 .vscode/
 .lh/
+build/
 dist/
 src/tls_verify.egg-info/
 .pypirc
 **/__pycache__/
 .coverage
+.pytest_cache/

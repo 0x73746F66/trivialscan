@@ -7,10 +7,10 @@ help: ## This help.
 .DEFAULT_GOAL := help
 
 install-deps: ## setup for development of this project
-	pip install -q -U pip setuptools wheel semgrep pylint pytest build twine coverage
+	pip install -U --progress-bar off pip setuptools wheel semgrep pylint pytest build twine coverage
 
 install: build ## Install the package
-	pip install -q -U --no-cache-dir --force-reinstall dist/tls_verify-$(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')-py2.py3-none-any.whl
+	pip install -U --progress-bar off --no-cache-dir --force-reinstall dist/tls_verify-$(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')-py2.py3-none-any.whl
 
 check: ## check build
 	python3 setup.py check
@@ -19,9 +19,9 @@ test: ## run unit tests with coverage
 	coverage run -m pytest --nf
 	coverage report -m
 
-build: check test ## build wheel file
+build: check ## build wheel file
 	rm -f dist/*
-	python3 -m build
+	python3 -m build -nx
 
 publish: build ## upload to pypi.org
 	git tag $(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')
