@@ -543,8 +543,10 @@ class CertValidator(Validator):
             if errno in exceptions.X509_MESSAGES and self.x509.get_serial_number() == cert.get_serial_number() and message not in self.certificate_verify_messages:
                 self.certificate_verify_messages.append(exceptions.X509_MESSAGES[errno])
 
-    def pcidss_compliant(self) -> bool:
+    def pcidss_compliant(self):
         super().pcidss_compliant()
+        if self.metadata.negotiated_protocol is None:
+            return
         self.compliance_checks[pci.VALIDATION_WEAK_CIPHER] = not self.metadata.weak_cipher or self.metadata.negotiated_cipher_bits >= pci.WEAK_CIPHER_BITS
         if self.compliance_checks[pci.VALIDATION_WEAK_CIPHER] is False:
             self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_CIPHER)
@@ -567,8 +569,10 @@ class CertValidator(Validator):
             ]):
             self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_KNOWN_VULNERABILITIES)
 
-    def fips_compliant(self) -> bool:
+    def fips_compliant(self):
         super().fips_compliant()
+        if self.metadata.negotiated_protocol is None:
+            return
         if constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] not in [SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]:
             self.compliance_checks[fips.VALIDATION_MTLS] = not self.metadata.client_certificate_expected
 
@@ -587,10 +591,12 @@ class CertValidator(Validator):
             if self.compliance_checks[fips.VALIDATION_WEAK_CIPHER] is False:
                 self.certificate_verify_messages.append(fips.FIPS_NON_COMPLIANCE_CIPHER)
 
-    def nist_compliant(self) -> bool:
+    def nist_compliant(self):
         # sourcery skip: extract-duplicate-method, extract-method, remove-redundant-if, split-or-ifs
         # sourcery will add bloat here, this is massively more concise logic then theirs
         super().nist_compliant()
+        if self.metadata.negotiated_protocol is None:
+            return
         if constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] in [SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]:
             self.compliance_checks[nist.VALIDATION_WEAK_PROTOCOL] = True
             self.compliance_checks[nist.VALIDATION_MTLS] = self.metadata.client_certificate_expected
@@ -625,14 +631,6 @@ class CertValidator(Validator):
         self.validation_checks[VALIDATION_MATCH_HOSTNAME] = util.match_hostname(self.metadata.host, self.certificate)
         self.metadata.certificate_is_self_signed = util.is_self_signed(self.certificate)
         self.validation_checks[VALIDATION_NOT_SELF_SIGNED] = self.metadata.certificate_is_self_signed is False
-        if self.metadata.preferred_protocol != self.metadata.negotiated_protocol:
-            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_SCSV.format(protocol=self.metadata.preferred_protocol, fallback=self.metadata.negotiated_protocol))
-        if self.metadata.certificate_is_self_signed:
-            self.validation_checks[VALIDATION_ROOT_CA_TRUST] = False
-            self.certificate_verify_messages.append('The CA is not properly imported as a trusted CA into the browser, Chrome based browsers will block visitors and show them ERR_CERT_AUTHORITY_INVALID')
-        self.validation_checks[VALIDATION_DEPRECATED_TLS_PROTOCOLS] = self.metadata.negotiated_protocol not in constants.WEAK_PROTOCOL.keys()
-        if self.validation_checks[VALIDATION_DEPRECATED_TLS_PROTOCOLS] is False:
-            self.certificate_verify_messages.append(constants.WEAK_PROTOCOL[self.metadata.negotiated_protocol])
         if self.metadata.revocation_ocsp_stapling is True:
             self.validation_checks[VALIDATION_OCSP_STAPLE_SATISFIED] = False
             if self.metadata.revocation_ocsp_response is not None:
@@ -653,10 +651,27 @@ class CertValidator(Validator):
                     self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_DNSSEC_REGISTERED_DOMAIN)
         else:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_DNSSEC_MISSING)
+        self.validation_checks[VALIDATION_DEPRECATED_DNSSEC_ALGO] = self.metadata.dnssec_algorithm not in constants.WEAK_DNSSEC_ALGORITHMS.keys()
+        if self.validation_checks[VALIDATION_DEPRECATED_DNSSEC_ALGO] is False:
+            self.certificate_verify_messages.append(constants.WEAK_DNSSEC_ALGORITHMS[self.metadata.dnssec_algorithm])
         if self.metadata.certificate_validation_type == constants.VALIDATION_TYPES['DV']:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CERTIFICATE_VALIDATION_TYPE)
         if not self.metadata.certification_authority_authorization:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CERTIFICATION_AUTHORITY_AUTHORIZATION)
+        self.verify_negotiated_tls()
+        return self.certificate_valid
+
+    def verify_negotiated_tls(self):
+        if self.metadata.negotiated_protocol is None:
+            return
+        if self.metadata.preferred_protocol != self.metadata.negotiated_protocol:
+            self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_SCSV.format(protocol=self.metadata.preferred_protocol, fallback=self.metadata.negotiated_protocol))
+        if self.metadata.certificate_is_self_signed:
+            self.validation_checks[VALIDATION_ROOT_CA_TRUST] = False
+            self.certificate_verify_messages.append('The CA is not properly imported as a trusted CA into the browser, Chrome based browsers will block visitors and show them ERR_CERT_AUTHORITY_INVALID')
+        self.validation_checks[VALIDATION_DEPRECATED_TLS_PROTOCOLS] = self.metadata.negotiated_protocol not in constants.WEAK_PROTOCOL.keys()
+        if self.validation_checks[VALIDATION_DEPRECATED_TLS_PROTOCOLS] is False:
+            self.certificate_verify_messages.append(constants.WEAK_PROTOCOL[self.metadata.negotiated_protocol])
         if self.metadata.session_resumption_caching and constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] != SSL.TLS1_3_VERSION:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_SESSION_RESUMPTION_CACHING)
         if self.metadata.session_resumption_caching and constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] == SSL.TLS1_3_VERSION:
@@ -667,9 +682,6 @@ class CertValidator(Validator):
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CLIENT_RENEGOTIATION)
         if self.metadata.compression_support:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_COMPRESSION_SUPPORT)
-        self.validation_checks[VALIDATION_DEPRECATED_DNSSEC_ALGO] = self.metadata.dnssec_algorithm not in constants.WEAK_DNSSEC_ALGORITHMS.keys()
-        if self.validation_checks[VALIDATION_DEPRECATED_DNSSEC_ALGO] is False:
-            self.certificate_verify_messages.append(constants.WEAK_DNSSEC_ALGORITHMS[self.metadata.dnssec_algorithm])
         interference_versions = ''.join(self.metadata.tls_version_interference_versions)
         current_version = 'TLSv1.3'
         if '0x304' in interference_versions:
@@ -682,8 +694,6 @@ class CertValidator(Validator):
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_VERSION_INTERFERENCE_OLD.format(old_version=old_version))
         elif any(['0x301' in interference_versions, '0x300' in interference_versions, '0x2ff' in interference_versions]):
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_VERSION_INTERFERENCE_OBSOLETE)
-
-        return self.certificate_valid
 
     def _get_root_certs(self, trust_store :TrustStore):
         contexts = [
