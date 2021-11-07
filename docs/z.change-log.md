@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.0.1 Nov 6th 2021
+
+- Compliance checks no longer prevent displaying validation results when negotiating TLS fails
+
 ## 1.0.0 Nov 6th 2021
 
 - Compliance checks no longer influence validation result
