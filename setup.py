@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="0.4.15",
+    version="1.0.0",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -12,6 +12,8 @@ setup(
 Validate the security of your TLS connections so that they deserve your trust.
 
 ## [Documentation](https://gitlab.com/chrislangton/py-tls-veryify/-/blob/main/docs/0.index.md)
+
+![Leaf cba.com.au](https://gitlab.com/chrislangton/py-tls-veryify/-/raw/main/docs/images/leaf-cba.com.au.png)
 
 ## Basic Usage
 
@@ -36,15 +38,12 @@ tlsverify --help
 produces:
 
 ```
-usage: tlsverify [-h] [-H HOST] [-p PORT] [-c CAFILES] [-C CLIENT_PEM] [-t TMP_PATH_PREFIX] [--pci-dss]
-               [--nist-strict-mode] [--fips-nist-transition-mode] [--disable-sni] [--show-private-key]
-               [--hide-validation-details] [-j JSON_FILE] [--hide-progress-bars] [-v] [-vv] [-vvv] [-vvvv]
-               [--version]
+usage: tlsverify [-h] [-H HOST] [-p PORT] [-c CAFILES] [-C CLIENT_PEM] [-t TMP_PATH_PREFIX] [--pci-dss] [--nist-strict-mode] [--fips-nist-transition-mode] [--disable-sni]
+               [--show-private-key] [-s] [--hide-validation-details] [-j JSON_FILE] [--hide-progress-bars] [-v] [-vv] [-vvv] [-vvvv] [--version]
                [targets ...]
 
 positional arguments:
-  targets               All unnamed arguments are hosts (and ports) targets to test. ~$ tlsverify google.com:443
-                        github.io owasp.org:80
+  targets               All unnamed arguments are hosts (and ports) targets to test. ~$ tlsverify google.com:443 github.io owasp.org:80
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -55,14 +54,14 @@ optional arguments:
   -C CLIENT_PEM, --client-pem CLIENT_PEM
                         path to PEM encoded client certificate, url or file path accepted
   -t TMP_PATH_PREFIX, --tmp-path-prefix TMP_PATH_PREFIX
-                        local file path to use as a prefix when saving temporary files such as those being fetched
-                        for client authorization
+                        local file path to use as a prefix when saving temporary files such as those being fetched for client authorization
   --pci-dss             Include PCI DSS requirements assertions
   --nist-strict-mode    Include NIST SP800-131A strict mode assertions
   --fips-nist-transition-mode
                         Include FIPS 140-2 transition to NIST SP800-131A assertions
   --disable-sni         Do not negotiate SNI using INDA encoded host
   --show-private-key    If the private key is exposed, show it in the results
+  -s, --summary-only    Do not include informational details, show only validation outcomes
   --hide-validation-details
                         Do not include detailed validation messages in output
   -j JSON_FILE, --json-file JSON_FILE
@@ -223,7 +222,7 @@ optional arguments:
         'dnspython==2.1.0',
         'tldextract==3.1.2',
         'moz-crlite-query==0.4.2',
-        'tlstrust==2.0.1'
+        'tlstrust==2.0.2'
     ],
     entry_points = {
         'console_scripts': ['tlsverify=tlsverify.cli:cli'],

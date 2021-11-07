@@ -122,6 +122,7 @@ See [Documentation](./docs/0.index.md) section of this repository
   - ✓ Server certificates should not be a CA
   - ✓ When client certificate presented, check cert usage permits clientAuth
   - ✓ Certificate is not self signed
+  - ✓ Known compromised Certificates
 - Authentication
   - ✓ clientAuth
 - ✓ CLI output evaluation duration

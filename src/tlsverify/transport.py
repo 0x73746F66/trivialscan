@@ -19,8 +19,7 @@ from hyperframe.exceptions import InvalidFrameError
 from requests import post
 import validators
 import idna
-from . import util
-from . import exceptions
+from . import exceptions, util, constants
 
 
 __module__ = 'tlsverify.metadata'
@@ -336,10 +335,10 @@ class Transport:
             self.ocsp_revocation_reason = response.revocation_reason.value
         if response.revocation_time:
             self.ocsp_revocation_time = response.revocation_time.value
-        if response.response_status.value in util.OCSP_RESP_STATUS:
-            self.ocsp_response_status = util.OCSP_RESP_STATUS[response.response_status.value]
-        if response.certificate_status.value in util.OCSP_CERT_STATUS:
-            self.ocsp_certificate_status = util.OCSP_CERT_STATUS[response.certificate_status.value]
+        if response.response_status.value in constants.OCSP_RESP_STATUS:
+            self.ocsp_response_status = constants.OCSP_RESP_STATUS[response.response_status.value]
+        if response.certificate_status.value in constants.OCSP_CERT_STATUS:
+            self.ocsp_certificate_status = constants.OCSP_CERT_STATUS[response.certificate_status.value]
         return response.response_status == OCSPResponseStatus.SUCCESSFUL and response.certificate_status == OCSPCertStatus.GOOD
 
     def prepare_socket(self, timeout :int = 1):
@@ -525,10 +524,10 @@ class Transport:
         ctx = self.prepare_context()
         ctx.set_options(_util.lib.SSL_OP_TLS_ROLLBACK_BUG)
         if min_tls_version is not None:
-            logger.info(f'min protocol {util.OPENSSL_VERSION_LOOKUP[min_tls_version]}')
+            logger.info(f'min protocol {constants.OPENSSL_VERSION_LOOKUP[min_tls_version]}')
             ctx.set_min_proto_version(min_tls_version)
         if max_tls_version is not None:
-            logger.info(f'max protocol {util.OPENSSL_VERSION_LOOKUP[max_tls_version]}')
+            logger.info(f'max protocol {constants.OPENSSL_VERSION_LOOKUP[max_tls_version]}')
             ctx.set_max_proto_version(max_tls_version)
         conn = self.prepare_connection(context=ctx, sock=self.prepare_socket(timeout=response_wait), use_sni=use_sni)
         conn.settimeout(response_wait)
@@ -540,7 +539,7 @@ class Transport:
         return protocol
 
     def connect(self, tls_version :int, use_sni :bool = False, protocol :str = None):
-        logger.info(f'Trying TLS version {util.OPENSSL_VERSION_LOOKUP[tls_version]}')
+        logger.info(f'Trying TLS version {constants.OPENSSL_VERSION_LOOKUP[tls_version]}')
         ctx = self.prepare_context()
         ctx.set_verify(getattr(SSL, Transport.default_connect_verify_mode), self._verifier)
         ctx.set_max_proto_version(tls_version)
@@ -559,9 +558,9 @@ class Transport:
             self.negotiated_cipher = conn.get_cipher_name()
             self.negotiated_cipher_bits = conn.get_cipher_bits()
             negotiated_protocol = conn.get_protocol_version_name()
-            self.negotiated_protocol = f'{negotiated_protocol} ({hex(util.PROTOCOL_VERSION[negotiated_protocol])})'
+            self.negotiated_protocol = f'{negotiated_protocol} ({hex(constants.PROTOCOL_VERSION[negotiated_protocol])})'
             self.offered_tls_versions.append(self.negotiated_protocol)
-            self.session_cache_mode = util.SESSION_CACHE_MODE[native_openssl.SSL_CTX_get_session_cache_mode(conn._context._context)]
+            self.session_cache_mode = constants.SESSION_CACHE_MODE[native_openssl.SSL_CTX_get_session_cache_mode(conn._context._context)]
             self.session_tickets = native_openssl.SSL_SESSION_has_ticket(conn.get_session()._session) == 1
             self.session_ticket_hints = native_openssl.SSL_SESSION_get_ticket_lifetime_hint(conn.get_session()._session) > 0
             self.peer_address, _ = conn.getpeername()
@@ -592,7 +591,7 @@ class Transport:
         try:
             negotiated = self.test_tls_version(min_tls_version=tls_version, use_sni=use_sni)
             if negotiated:    
-                self.preferred_protocol = f'{negotiated} ({hex(util.PROTOCOL_VERSION[negotiated])})'
+                self.preferred_protocol = f'{negotiated} ({hex(constants.PROTOCOL_VERSION[negotiated])})'
             else:
                 self.preferred_protocol = self.negotiated_protocol
             self.offered_tls_versions.append(self.preferred_protocol)
@@ -602,7 +601,7 @@ class Transport:
 
     def test_tls_all_versions(self, use_sni :bool = True):
         logger.info('Testing all TLS versions')
-        for ver_name, tls_version in util.PROTOCOL_VERSION.items():
+        for ver_name, tls_version in constants.PROTOCOL_VERSION.items():
             ver_display_name = f'{ver_name} ({hex(tls_version)})'
             if ver_name in FAKE_PROTOCOLS or ver_display_name in self.offered_tls_versions:
                 continue
@@ -670,8 +669,8 @@ class Transport:
             context.load_verify_locations(cafile=cafile)
         if self.client_certificate_expected and isinstance(self.client_pem_path, str):
             context.use_certificate_file(certfile=self.client_pem_path, filetype=FILETYPE_PEM)
-        ctx.set_ciphers(util.ALL_CIPHERS)
-        context.set_cipher_list(util.ALL_CIPHERS.encode())
+        ctx.set_ciphers(constants.ALL_CIPHERS)
+        context.set_cipher_list(constants.ALL_CIPHERS.encode())
         context.set_min_proto_version(version)
         context.set_max_proto_version(version)
         conn = SSL.Connection(context, ctx.wrap_socket(sock, do_handshake_on_connect=False, server_hostname=self.host))
@@ -708,7 +707,7 @@ class Transport:
         """
         logger.info('Trying to derive TLS version intolerance')
         for fake_proto in FAKE_PROTOCOLS:
-            fake_ver = util.PROTOCOL_VERSION[fake_proto]
+            fake_ver = constants.PROTOCOL_VERSION[fake_proto]
             try:
                 intolerance = self.test_tls_version(min_tls_version=fake_ver, use_sni=use_sni) is None
                 if intolerance:
@@ -757,7 +756,7 @@ class Transport:
                 # Already the highest TLS protocol, no downgrade possible
                 self.tls_downgrade = False
                 # server can only prefer this too
-                self.preferred_protocol = util.OPENSSL_VERSION_LOOKUP[version]
+                self.preferred_protocol = constants.OPENSSL_VERSION_LOOKUP[version]
                 self.test_tls_version_interference()
                 progress_bar(12)
                 self.test_tls_version_intolerance(use_sni) # sourcery skip: extract-duplicate-method

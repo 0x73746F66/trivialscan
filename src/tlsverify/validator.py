@@ -29,7 +29,7 @@ from tlstrust.stores.android_9 import __description__ as android9_version
 from tlstrust.stores.android_10 import __description__ as android10_version
 from tlstrust.stores.android_11 import __description__ as android11_version
 from tlstrust.stores.android_12 import __description__ as android12_version
-from . import exceptions, util, pci, fips, nist
+from . import exceptions, util, constants, pci, fips, nist
 from .transport import Transport
 from .metadata import Metadata
 
@@ -64,6 +64,7 @@ class Validator:
     certificate :Certificate
     tmp_path_prefix :str
     metadata :Metadata
+    compliance_checks :dict
     validation_checks :dict
     certificate_verify_messages :list
 
@@ -74,6 +75,7 @@ class Validator:
         if not tmp_path.is_dir():
             raise AttributeError(f'tmp_path_prefix {tmp_path_prefix} is not a directory')
         self.tmp_path_prefix = tmp_path_prefix
+        self.compliance_checks = {}
         self.validation_checks = {}
         self.certificate_verify_messages = []
         self._pem = None
@@ -91,39 +93,26 @@ class Validator:
 
     def init_der(self, der :bytes):
         self._der = der
-        logger.debug('added ASN1/DER bytes')
         self.x509 = load_certificate(FILETYPE_ASN1, der)
-        logger.debug('added pyOpenSSL x509')
         self._pem = dump_certificate(FILETYPE_PEM, self.x509)
-        logger.debug('added PEM bytes')
         self.certificate = self.x509.to_cryptography()
-        logger.debug('added lib cryptography object')
         self.extract_x509_metadata(self.x509)
 
     def init_pem(self, pem :bytes):
         self._pem = pem
-        logger.debug('added PEM bytes')
         self.x509 = load_certificate(FILETYPE_PEM, pem)
-        logger.debug('added pyOpenSSL x509')
         self._der = PEM_cert_to_DER_cert(self._pem.decode())
-        logger.debug('added ASN1/DER bytes')
         self.certificate = self.x509.to_cryptography()
-        logger.debug('added lib cryptography object')
         self.extract_x509_metadata(self.x509)
 
     def init_x509(self, x509 :X509):
         self.x509 = x509
-        logger.debug('added pyOpenSSL x509')
         self._pem = dump_certificate(FILETYPE_PEM, x509)
-        logger.debug('added PEM bytes')
         self._der = PEM_cert_to_DER_cert(self._pem.decode())
-        logger.debug('added ASN1/DER bytes')
         self.certificate = x509.to_cryptography()
-        logger.debug('added lib cryptography object')
         self.extract_x509_metadata(self.x509)
 
     def cert_to_text(self) -> str:
-        logger.debug('dump_certificate x509 FILETYPE_TEXT')
         return dump_certificate(FILETYPE_TEXT, self.x509).decode()
 
     def extract_x509_metadata(self, x509 :X509):
@@ -148,8 +137,8 @@ class Validator:
         self.metadata.certificate_sha1_fingerprint = hashlib.sha1(self._der).hexdigest()
         self.metadata.certificate_md5_fingerprint = hashlib.md5(self._der).hexdigest()
         self.metadata.certificate_san = util.get_san(self.certificate)
-        not_before = datetime.strptime(x509.get_notBefore().decode('ascii'), util.X509_DATE_FMT)
-        not_after = datetime.strptime(x509.get_notAfter().decode('ascii'), util.X509_DATE_FMT)
+        not_before = datetime.strptime(x509.get_notBefore().decode('ascii'), constants.X509_DATE_FMT)
+        not_after = datetime.strptime(x509.get_notAfter().decode('ascii'), constants.X509_DATE_FMT)
         self.metadata.certificate_not_before = not_before.isoformat()
         self.metadata.certificate_not_after = not_after.isoformat()
         self.metadata.certificate_expired = x509.has_expired()
@@ -166,8 +155,8 @@ class Validator:
             pass
         for policy in policies:
             if not isinstance(policy, PolicyInformation): continue
-            if policy.policy_identifier._dotted_string in util.VALIDATION_OID.keys():
-                self.metadata.certificate_validation_type = util.VALIDATION_TYPES[util.VALIDATION_OID[policy.policy_identifier._dotted_string]]
+            if policy.policy_identifier._dotted_string in constants.VALIDATION_OID.keys():
+                self.metadata.certificate_validation_type = constants.VALIDATION_TYPES[constants.VALIDATION_OID[policy.policy_identifier._dotted_string]]
 
     def _extract_public_key_info(self, key_type, public_key, x509):
         if key_type in [TYPE_RSA, TYPE_DSA]:
@@ -181,8 +170,8 @@ class Validator:
 
     def pcidss_compliant(self) -> bool:
         logger.debug('PCI DSS compliance validations')
-        self.validation_checks[pci.VALIDATION_WEAK_KEY] = self.metadata.certificate_public_key_size >= pci.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
-        if self.validation_checks[pci.VALIDATION_WEAK_KEY] is False:
+        self.compliance_checks[pci.VALIDATION_WEAK_KEY] = self.metadata.certificate_public_key_size >= pci.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
+        if self.compliance_checks[pci.VALIDATION_WEAK_KEY] is False:
             if self.metadata.certificate_public_key_type == 'RSA':
                 self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_WEAK_KEY_RSA)
             if self.metadata.certificate_public_key_type == 'DSA':
@@ -194,8 +183,8 @@ class Validator:
 
     def fips_compliant(self) -> bool:
         logger.debug('FIPS compliance validations')
-        self.validation_checks[fips.VALIDATION_WEAK_KEY] = self.metadata.certificate_public_key_size >= fips.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
-        if self.validation_checks[fips.VALIDATION_WEAK_KEY] is False:
+        self.compliance_checks[fips.VALIDATION_WEAK_KEY] = self.metadata.certificate_public_key_size >= fips.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
+        if self.compliance_checks[fips.VALIDATION_WEAK_KEY] is False:
             if self.metadata.certificate_public_key_type == 'RSA':
                 self.certificate_verify_messages.append(fips.FIPS_NON_COMPLIANCE_WEAK_KEY_RSA)
             if self.metadata.certificate_public_key_type == 'DSA':
@@ -207,8 +196,8 @@ class Validator:
 
     def nist_compliant(self) -> bool:
         logger.debug('NIST compliance validations')
-        self.validation_checks[nist.VALIDATION_WEAK_KEY] = self.metadata.certificate_public_key_size >= nist.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
-        if self.validation_checks[nist.VALIDATION_WEAK_KEY] is False:
+        self.compliance_checks[nist.VALIDATION_WEAK_KEY] = self.metadata.certificate_public_key_size >= nist.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
+        if self.compliance_checks[nist.VALIDATION_WEAK_KEY] is False:
             if self.metadata.certificate_public_key_type == 'RSA':
                 self.certificate_verify_messages.append(nist.NIST_NON_COMPLIANCE_WEAK_KEY_RSA)
             if self.metadata.certificate_public_key_type == 'DSA':
@@ -229,12 +218,16 @@ class Validator:
         if self.validation_checks[VALIDATION_ISSUED_PAST_TENSE] is False:
             self.certificate_verify_messages.append(f'Will only be valid for use in {(datetime.utcnow() - self.metadata.certificate_not_before).days} days')
         self.validation_checks[VALIDATION_SUBJECT_CN_DEFINED] = self.metadata.certificate_common_name is not None
-        self.validation_checks[VALIDATION_WEAK_SIG_ALGO] = self.metadata.certificate_signature_algorithm not in util.KNOWN_WEAK_SIGNATURE_ALGORITHMS.keys()
+        self.validation_checks[VALIDATION_WEAK_SIG_ALGO] = self.metadata.certificate_signature_algorithm not in constants.KNOWN_WEAK_SIGNATURE_ALGORITHMS.keys()
         if self.validation_checks[VALIDATION_WEAK_SIG_ALGO] is False:
-            self.certificate_verify_messages.append(util.KNOWN_WEAK_SIGNATURE_ALGORITHMS[self.metadata.certificate_signature_algorithm])
-        self.validation_checks[VALIDATION_WEAK_KEYS] = self.metadata.certificate_public_key_type not in util.KNOWN_WEAK_KEYS.keys() or self.metadata.certificate_public_key_size > util.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
+            self.certificate_verify_messages.append(constants.KNOWN_WEAK_SIGNATURE_ALGORITHMS[self.metadata.certificate_signature_algorithm])
+        self.validation_checks[VALIDATION_WEAK_KEYS] = self.metadata.certificate_public_key_type not in constants.KNOWN_WEAK_KEYS.keys() or self.metadata.certificate_public_key_size > constants.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
         if self.validation_checks[VALIDATION_WEAK_KEYS] is False:
-            self.certificate_verify_messages.append(util.KNOWN_WEAK_KEYS[self.metadata.certificate_public_key_type])
+            self.certificate_verify_messages.append(constants.KNOWN_WEAK_KEYS[self.metadata.certificate_public_key_type])
+        self.possible_phish_or_malicious()
+        self.known_compromise()
+
+    def possible_phish_or_malicious(self) -> bool:
         logger.debug('Impersonation, C2, other detections')
         bad_cn = ['localhost', 'portswigger']
         bad_san = ['localhost', 'lvh.me']
@@ -259,7 +252,14 @@ class Validator:
             self.validation_checks[VALIDATION_REVOCATION] = False
         if self.metadata.certificate_private_key_pem and 'BEGIN PRIVATE KEY' in self.metadata.certificate_private_key_pem:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_EXPOSED_PRIVATE_KEY)
-        #TODO OneCRL
+        return self.metadata.possible_phish_or_malicious
+
+    def known_compromise(self) -> bool:
+        logger.debug('Check known compromised certificates')
+        self.metadata.certificate_known_compromised = False
+        if self.metadata.certificate_sha1_fingerprint.upper() in constants.COMPROMISED_SHA1.keys():
+            self.metadata.certificate_known_compromised = True
+        return self.metadata.certificate_known_compromised
 
 class RootCertValidator(Validator):
     def __init__(self, **kwargs) -> None:
@@ -279,20 +279,20 @@ class RootCertValidator(Validator):
 
     def pcidss_compliant(self) -> bool:
         super().pcidss_compliant()
-        self.validation_checks[pci.VALIDATION_CA_TRUST] = all([self.metadata.trust_ccadb, self.metadata.trust_android, self.metadata.trust_certifi, self.metadata.trust_java, self.metadata.trust_linux])
-        if self.validation_checks[pci.VALIDATION_CA_TRUST] is False:
+        self.compliance_checks[pci.VALIDATION_CA_TRUST] = all([self.metadata.trust_ccadb, self.metadata.trust_android, self.metadata.trust_certifi, self.metadata.trust_java, self.metadata.trust_linux])
+        if self.compliance_checks[pci.VALIDATION_CA_TRUST] is False:
             self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_CA_TRUST)
 
     def fips_compliant(self) -> bool:
         super().fips_compliant()
-        self.validation_checks[fips.VALIDATION_CA_TRUST] = all([self.metadata.trust_ccadb, self.metadata.trust_android, self.metadata.trust_certifi, self.metadata.trust_java, self.metadata.trust_linux])
-        if self.validation_checks[fips.VALIDATION_CA_TRUST] is False:
+        self.compliance_checks[fips.VALIDATION_CA_TRUST] = all([self.metadata.trust_ccadb, self.metadata.trust_android, self.metadata.trust_certifi, self.metadata.trust_java, self.metadata.trust_linux])
+        if self.compliance_checks[fips.VALIDATION_CA_TRUST] is False:
             self.certificate_verify_messages.append(fips.FIPS_NON_COMPLIANCE_CA_TRUST)
 
     def nist_compliant(self) -> bool:
         super().nist_compliant()
-        self.validation_checks[nist.VALIDATION_CA_TRUST] = all([self.metadata.trust_ccadb, self.metadata.trust_android, self.metadata.trust_certifi, self.metadata.trust_java, self.metadata.trust_linux])
-        if self.validation_checks[nist.VALIDATION_CA_TRUST] is False:
+        self.compliance_checks[nist.VALIDATION_CA_TRUST] = all([self.metadata.trust_ccadb, self.metadata.trust_android, self.metadata.trust_certifi, self.metadata.trust_java, self.metadata.trust_linux])
+        if self.compliance_checks[nist.VALIDATION_CA_TRUST] is False:
             self.certificate_verify_messages.append(nist.NIST_NON_COMPLIANCE_CA_TRUST)
 
     def verify_trust(self, trust_store :TrustStore):
@@ -479,9 +479,9 @@ class CertValidator(Validator):
         self.metadata.negotiated_cipher = transport.negotiated_cipher
         if self.metadata.negotiated_cipher and any(self.metadata.negotiated_cipher.startswith(c) for c in ['DHE', 'ECDHE']):
             self.metadata.forward_anonymity = True
-        if self.metadata.negotiated_cipher not in util.NOT_KNOWN_WEAK_CIPHERS:
+        if self.metadata.negotiated_cipher not in constants.NOT_KNOWN_WEAK_CIPHERS:
             self.metadata.weak_cipher = True
-        if self.metadata.negotiated_cipher in util.STRONG_CIPHERS:
+        if self.metadata.negotiated_cipher in constants.STRONG_CIPHERS:
             self.metadata.strong_cipher = True
         self.metadata.negotiated_protocol = transport.negotiated_protocol
         self.metadata.sni_support = transport.sni_support
@@ -545,65 +545,65 @@ class CertValidator(Validator):
 
     def pcidss_compliant(self) -> bool:
         super().pcidss_compliant()
-        self.validation_checks[pci.VALIDATION_WEAK_CIPHER] = not self.metadata.weak_cipher or self.metadata.negotiated_cipher_bits >= pci.WEAK_CIPHER_BITS
-        if self.validation_checks[pci.VALIDATION_WEAK_CIPHER] is False:
+        self.compliance_checks[pci.VALIDATION_WEAK_CIPHER] = not self.metadata.weak_cipher or self.metadata.negotiated_cipher_bits >= pci.WEAK_CIPHER_BITS
+        if self.compliance_checks[pci.VALIDATION_WEAK_CIPHER] is False:
             self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_CIPHER)
-        self.validation_checks[pci.VALIDATION_WEAK_PROTOCOL] = self.metadata.negotiated_protocol not in util.WEAK_PROTOCOL.keys()
-        if self.validation_checks[pci.VALIDATION_WEAK_PROTOCOL] is False:
+        self.compliance_checks[pci.VALIDATION_WEAK_PROTOCOL] = self.metadata.negotiated_protocol not in constants.WEAK_PROTOCOL.keys()
+        if self.compliance_checks[pci.VALIDATION_WEAK_PROTOCOL] is False:
             self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_WEAK_PROTOCOL)
-        self.validation_checks[pci.VALIDATION_DEPRECATED_ALGO] = not self.metadata.dnssec_algorithm or self.metadata.dnssec_algorithm not in util.WEAK_DNSSEC_ALGORITHMS.keys()
-        if self.validation_checks[pci.VALIDATION_DEPRECATED_ALGO] is False:
+        self.compliance_checks[pci.VALIDATION_DEPRECATED_ALGO] = not self.metadata.dnssec_algorithm or self.metadata.dnssec_algorithm not in constants.WEAK_DNSSEC_ALGORITHMS.keys()
+        if self.compliance_checks[pci.VALIDATION_DEPRECATED_ALGO] is False:
             self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_WEAK_ALGORITHMS)
-        self.validation_checks[pci.VALIDATION_KNOWN_VULN_SESSION_RESUMPTION] = all([
-            not self.metadata.session_resumption_tickets or util.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] == SSL.TLS1_3_VERSION,
-            not self.metadata.session_resumption_caching or util.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] == SSL.TLS1_3_VERSION,
+        self.compliance_checks[pci.VALIDATION_KNOWN_VULN_SESSION_RESUMPTION] = all([
+            not self.metadata.session_resumption_tickets or constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] == SSL.TLS1_3_VERSION,
+            not self.metadata.session_resumption_caching or constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] == SSL.TLS1_3_VERSION,
         ])
-        self.validation_checks[pci.VALIDATION_KNOWN_VULN_RENEGOTIATION] = not self.metadata.client_renegotiation
-        self.validation_checks[pci.VALIDATION_KNOWN_VULN_COMPRESSION] = not self.metadata.compression_support
+        self.compliance_checks[pci.VALIDATION_KNOWN_VULN_RENEGOTIATION] = not self.metadata.client_renegotiation
+        self.compliance_checks[pci.VALIDATION_KNOWN_VULN_COMPRESSION] = not self.metadata.compression_support
         if any([
-                self.validation_checks[pci.VALIDATION_KNOWN_VULN_RENEGOTIATION],
-                self.validation_checks[pci.VALIDATION_KNOWN_VULN_COMPRESSION],
-                self.validation_checks[pci.VALIDATION_KNOWN_VULN_SESSION_RESUMPTION],
+                self.compliance_checks[pci.VALIDATION_KNOWN_VULN_RENEGOTIATION],
+                self.compliance_checks[pci.VALIDATION_KNOWN_VULN_COMPRESSION],
+                self.compliance_checks[pci.VALIDATION_KNOWN_VULN_SESSION_RESUMPTION],
             ]):
             self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_KNOWN_VULNERABILITIES)
 
     def fips_compliant(self) -> bool:
         super().fips_compliant()
-        if util.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] not in [SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]:
-            self.validation_checks[fips.VALIDATION_MTLS] = not self.metadata.client_certificate_expected
+        if constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] not in [SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]:
+            self.compliance_checks[fips.VALIDATION_MTLS] = not self.metadata.client_certificate_expected
 
-        self.validation_checks[fips.VALIDATION_WEAK_PROTOCOL] = self.metadata.negotiated_protocol not in ['SSLv2 (0x02ff)', 'SSLv3 (0x0300)']
-        if self.validation_checks[fips.VALIDATION_WEAK_PROTOCOL] is False:
+        self.compliance_checks[fips.VALIDATION_WEAK_PROTOCOL] = self.metadata.negotiated_protocol not in ['SSLv2 (0x02ff)', 'SSLv3 (0x0300)']
+        if self.compliance_checks[fips.VALIDATION_WEAK_PROTOCOL] is False:
             self.certificate_verify_messages.append(fips.FIPS_NON_COMPLIANCE_WEAK_PROTOCOL)
-            self.validation_checks[fips.VALIDATION_WEAK_CIPHER] = False
+            self.compliance_checks[fips.VALIDATION_WEAK_CIPHER] = False
             self.certificate_verify_messages.append(fips.FIPS_NON_COMPLIANCE_CIPHER)
         else:
             ok_cipher = self.metadata.negotiated_cipher_bits >= fips.WEAK_CIPHER_BITS
-            if ok_cipher and util.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] == SSL.TLS1_2_VERSION:
+            if ok_cipher and constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] == SSL.TLS1_2_VERSION:
                 ok_cipher = all(c in self.metadata.negotiated_cipher for c in fips.ALLOWED_CIPHERS)
-            if ok_cipher and util.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] in [SSL.TLS1_VERSION, SSL.TLS1_1_VERSION]:
+            if ok_cipher and constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] in [SSL.TLS1_VERSION, SSL.TLS1_1_VERSION]:
                 ok_cipher = all(c in self.metadata.negotiated_cipher for c in fips.ALLOWED_DEPRECATED_TLS_CIPHERS)
-            self.validation_checks[fips.VALIDATION_WEAK_CIPHER] = ok_cipher
-            if self.validation_checks[fips.VALIDATION_WEAK_CIPHER] is False:
+            self.compliance_checks[fips.VALIDATION_WEAK_CIPHER] = ok_cipher
+            if self.compliance_checks[fips.VALIDATION_WEAK_CIPHER] is False:
                 self.certificate_verify_messages.append(fips.FIPS_NON_COMPLIANCE_CIPHER)
 
     def nist_compliant(self) -> bool:
         # sourcery skip: extract-duplicate-method, extract-method, remove-redundant-if, split-or-ifs
         # sourcery will add bloat here, this is massively more concise logic then theirs
         super().nist_compliant()
-        if util.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] in [SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]:
-            self.validation_checks[nist.VALIDATION_WEAK_PROTOCOL] = True
-            self.validation_checks[nist.VALIDATION_MTLS] = self.metadata.client_certificate_expected
+        if constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] in [SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]:
+            self.compliance_checks[nist.VALIDATION_WEAK_PROTOCOL] = True
+            self.compliance_checks[nist.VALIDATION_MTLS] = self.metadata.client_certificate_expected
             ok_cipher = self.metadata.negotiated_cipher_bits >= nist.WEAK_CIPHER_BITS
-            if ok_cipher and util.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] == SSL.TLS1_2_VERSION:
+            if ok_cipher and constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] == SSL.TLS1_2_VERSION:
                 ok_cipher = all(c in self.metadata.negotiated_cipher for c in nist.ALLOWED_CIPHERS)
-            self.validation_checks[nist.VALIDATION_WEAK_CIPHER] = ok_cipher
-            if self.validation_checks[nist.VALIDATION_WEAK_CIPHER] is False:
+            self.compliance_checks[nist.VALIDATION_WEAK_CIPHER] = ok_cipher
+            if self.compliance_checks[nist.VALIDATION_WEAK_CIPHER] is False:
                 self.certificate_verify_messages.append(nist.NIST_NON_COMPLIANCE_CIPHER)
         else:
-            self.validation_checks[nist.VALIDATION_WEAK_PROTOCOL] = False
+            self.compliance_checks[nist.VALIDATION_WEAK_PROTOCOL] = False
             self.certificate_verify_messages.append(nist.NIST_NON_COMPLIANCE_WEAK_PROTOCOL)
-            self.validation_checks[nist.VALIDATION_WEAK_CIPHER] = False
+            self.compliance_checks[nist.VALIDATION_WEAK_CIPHER] = False
             self.certificate_verify_messages.append(nist.NIST_NON_COMPLIANCE_CIPHER)
 
     def verify(self) -> bool:
@@ -630,9 +630,9 @@ class CertValidator(Validator):
         if self.metadata.certificate_is_self_signed:
             self.validation_checks[VALIDATION_ROOT_CA_TRUST] = False
             self.certificate_verify_messages.append('The CA is not properly imported as a trusted CA into the browser, Chrome based browsers will block visitors and show them ERR_CERT_AUTHORITY_INVALID')
-        self.validation_checks[VALIDATION_DEPRECATED_TLS_PROTOCOLS] = self.metadata.negotiated_protocol not in util.WEAK_PROTOCOL.keys()
+        self.validation_checks[VALIDATION_DEPRECATED_TLS_PROTOCOLS] = self.metadata.negotiated_protocol not in constants.WEAK_PROTOCOL.keys()
         if self.validation_checks[VALIDATION_DEPRECATED_TLS_PROTOCOLS] is False:
-            self.certificate_verify_messages.append(util.WEAK_PROTOCOL[self.metadata.negotiated_protocol])
+            self.certificate_verify_messages.append(constants.WEAK_PROTOCOL[self.metadata.negotiated_protocol])
         if self.metadata.revocation_ocsp_stapling is True:
             self.validation_checks[VALIDATION_OCSP_STAPLE_SATISFIED] = False
             if self.metadata.revocation_ocsp_response is not None:
@@ -653,23 +653,23 @@ class CertValidator(Validator):
                     self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_DNSSEC_REGISTERED_DOMAIN)
         else:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_DNSSEC_MISSING)
-        if self.metadata.certificate_validation_type == util.VALIDATION_TYPES['DV']:
+        if self.metadata.certificate_validation_type == constants.VALIDATION_TYPES['DV']:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CERTIFICATE_VALIDATION_TYPE)
         if not self.metadata.certification_authority_authorization:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CERTIFICATION_AUTHORITY_AUTHORIZATION)
-        if self.metadata.session_resumption_caching and util.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] != SSL.TLS1_3_VERSION:
+        if self.metadata.session_resumption_caching and constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] != SSL.TLS1_3_VERSION:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_SESSION_RESUMPTION_CACHING)
-        if self.metadata.session_resumption_caching and util.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] == SSL.TLS1_3_VERSION:
+        if self.metadata.session_resumption_caching and constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] == SSL.TLS1_3_VERSION:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_SESSION_RESUMPTION_CACHING_TLS1_3)
-        if self.metadata.session_resumption_tickets and util.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] != SSL.TLS1_3_VERSION:
+        if self.metadata.session_resumption_tickets and constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] != SSL.TLS1_3_VERSION:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_SESSION_RESUMPTION_TICKETS)
         if self.metadata.client_renegotiation:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CLIENT_RENEGOTIATION)
         if self.metadata.compression_support:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_COMPRESSION_SUPPORT)
-        self.validation_checks[VALIDATION_DEPRECATED_DNSSEC_ALGO] = self.metadata.dnssec_algorithm not in util.WEAK_DNSSEC_ALGORITHMS.keys()
+        self.validation_checks[VALIDATION_DEPRECATED_DNSSEC_ALGO] = self.metadata.dnssec_algorithm not in constants.WEAK_DNSSEC_ALGORITHMS.keys()
         if self.validation_checks[VALIDATION_DEPRECATED_DNSSEC_ALGO] is False:
-            self.certificate_verify_messages.append(util.WEAK_DNSSEC_ALGORITHMS[self.metadata.dnssec_algorithm])
+            self.certificate_verify_messages.append(constants.WEAK_DNSSEC_ALGORITHMS[self.metadata.dnssec_algorithm])
         interference_versions = ''.join(self.metadata.tls_version_interference_versions)
         current_version = 'TLSv1.3'
         if '0x304' in interference_versions:
@@ -817,4 +817,4 @@ class CertValidator(Validator):
         if answer:
             self.metadata.dnssec = True
             _, _, _, _, _, _, algorithm, *rest = answer[0].to_text().split()
-            self.metadata.dnssec_algorithm = util.DNSSEC_ALGORITHMS[int(algorithm)]
+            self.metadata.dnssec_algorithm = constants.DNSSEC_ALGORITHMS[int(algorithm)]

@@ -24,6 +24,7 @@ class TestValidator:
         v = CertValidator()
         assert v.certificate_valid is False
         assert v.validation_checks == {}
+        assert v.compliance_checks == {}
         assert v.certificate_verify_messages == []
         assert v.certificate_chain_valid is None
         assert v.certificate_chain_validation_result is None
@@ -41,6 +42,7 @@ class TestValidator:
         v = PeerCertValidator()
         assert v.certificate_valid is False
         assert v.validation_checks == {}
+        assert v.compliance_checks == {}
         assert v.certificate_verify_messages == []
         assert v.metadata is None
         assert v._pem is None

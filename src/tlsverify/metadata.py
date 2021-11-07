@@ -36,6 +36,7 @@ class Metadata:
     client_certificate_expected :bool = field(default_factory=bool)
     certificate_validation_type :str = field(default_factory=str)
     certification_authority_authorization :bool = field(default_factory=bool)
+    certificate_known_compromised :bool = field(default_factory=bool)
     revocation_ocsp_stapling :bool = field(default_factory=bool)
     revocation_ocsp_must_staple :bool = field(default_factory=bool)
     revocation_ocsp_status :str = field(default_factory=str)

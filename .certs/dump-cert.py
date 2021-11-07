@@ -20,3 +20,5 @@ if __name__ == "__main__":
         print(
             dump_certificate(FILETYPE_TEXT, cert).decode()
         )
+        print(f'    SHA1 Fingerprint\n       {cert.digest("SHA1").decode()}')
+        print(f'    SHA256 Fingerprint\n       {cert.digest("SHA256").decode()}')

@@ -22,387 +22,11 @@ from dns.exception import DNSException, Timeout as DNSTimeoutError
 from dns.resolver import NoAnswer
 from tldextract import TLDExtract
 from crlite_query import CRLiteDB, IntermediatesDB, CRLiteQuery
-
+from . import constants
 
 __module__ = 'tlsverify.util'
 
 logger = logging.getLogger(__name__)
-
-CRLITE_URL = "https://firefox.settings.services.mozilla.com/v1/buckets/security-state/collections/cert-revocations/records" # https://github.com/mozilla/moz_crlite_query/blob/main/crlite_query/query_cli.py
-VALIDATION_OID = {
-    """
-    https://opensource.apple.com/source/security_certificates/security_certificates-55024.2/evroot.config
-    https://src.chromium.org/viewvc/chrome/trunk/src/net/cert/ev_root_ca_metadata.cc?view=markup
-    https://certs.opera.com/03/ev-oids.xml
-    https://searchfox.org/mozilla-central/source/security/certverifier/ExtendedValidation.cpp
-    """
-    '2.16.840.1.114414.1.7.23.1': 'DV',
-    '1.3.6.1.4.1.46222.1.10': 'DV',
-    '1.3.6.1.4.1.34697.1.1': 'EV',
-    '1.3.6.1.4.1.29836.1.10': 'EV',
-    '2.16.840.1.114412.1.3.0.2': 'EV',
-    '1.3.6.1.4.1.14370.1.6': 'EV',
-    '1.3.6.1.4.1.4146.1.1': 'EV',
-    '2.16.840.1.114414.1.7.24.3': 'EV',
-    '1.3.6.1.4.1.14777.6.1.1': 'EV',
-    '1.3.6.1.4.1.22234.2.5.2.3.1': 'EV',
-    '1.3.6.1.4.1.23223.2': 'EV',
-    '1.3.6.1.4.1.23223.1.1.1': 'EV',
-    '1.2.276.0.44.1.1.1.4': 'EV',
-    '2.16.840.1.113733.1.7.48.1': 'EV',
-    '2.16.840.1.113733.1.7.23.6': 'EV',
-    '2.16.840.1.114171.500.9': 'EV',
-    '1.3.6.1.4.1.17326.10.14.2.1.2': 'EV',
-    '1.3.6.1.4.1.17326.10.14.2.2.2': 'EV',
-    '1.3.6.1.4.1.17326.10.8.12.1.2': 'EV',
-    '1.3.6.1.4.1.17326.10.8.12.2.2': 'EV',
-    '2.16.840.1.114404.1.1.2.4.1': 'EV',
-    '1.3.6.1.4.1.7879.13.24.1': 'EV',
-    '2.16.792.3.0.4.1.1.4': 'EV',
-    '1.3.6.1.4.1.34697.2.1': 'EV',
-    '1.2.616.1.113527.2.5.1.1': 'EV',
-    '2.16.756.1.89.1.2.1.1': 'EV',
-    '2.16.840.1.114412.2.1': 'EV',
-    '2.16.578.1.26.1.3.3': 'EV',
-    '1.3.6.1.4.1.34697.2.2': 'EV',
-    '1.2.156.112559.1.1.6.1': 'EV',
-    '2.16.156.112554.3': 'EV',
-    '1.3.6.1.4.1.34697.2.4': 'EV',
-    '1.3.6.1.4.1.40869.1.1.22.3': 'EV',
-    '1.3.159.1.17.1': 'EV',
-    '2.16.840.1.114413.1.7.23.3': 'EV',
-    '1.2.392.200091.100.721.1': 'EV',
-    '2.16.756.5.14.7.4.8': 'EV',
-    '2.23.140.1.1': 'EV',
-    '1.3.6.1.4.1.13177.10.1.3.10': 'EV',
-    '2.16.840.1.114028.10.1.2': 'EV',
-    '1.3.6.1.4.1.6449.1.2.1.5.1': 'EV',
-    '1.3.6.1.4.1.8024.0.2.100.1.2': 'EV',
-    '2.16.528.1.1003.1.2.7': 'EV',
-    '1.3.6.1.4.1.782.1.2.1.8.1': 'EV',
-    '1.3.6.1.4.1.6334.1.100.1': 'EV',
-    '2.16.840.1.114414.1.7.23.3': 'EV',
-    '1.3.6.1.4.1.14777.6.1.2': 'EV',
-    '1.3.6.1.4.1.34697.2.3': 'EV',
-    '1.3.6.1.4.1.13769.666.666.666.1.500.9.1': 'EV',
-    '2.16.840.1.113839.0.6.3': 'EV',
-    '2.16.792.3.0.3.1.1.5': 'EV',
-    '1.3.6.1.4.1.5237.1.1.3': 'EV',
-    '2.16.840.1.101.3.2.1.1.5': 'EV',
-    '1.3.6.1.4.1.30360.3.3.3.3.4.4.3.0': 'EV',
-    '1.3.6.1.4.1.46222.1.1': 'EV',
-    '1.3.6.1.4.1.311.60': 'EV',
-    '1.3.6.1.4.1.48679.100': 'EV',
-    '1.3.6.1.4.1.55594.1.1.1': 'EV',
-    '1.3.6.1.4.1.4788.2.200.1': 'EV',
-    '1.3.6.1.4.1.4788.2.202.1': 'EV',
-    '1.3.6.1.4.1.31247.1.3': 'EV',
-    '1.3.6.1.4.1.52331.2': 'EV',
-    '2.16.840.1.114414.1.7.23.2': 'OV',
-    '2.16.792.3.0.3.1.1.2': 'OV',
-    '1.3.6.1.4.1.46222.1.20': 'OV',
-    '2.23.140.1.2.1': 'DV',
-    '2.23.140.1.2.2': 'OV',
-    '2.23.140.1.2.3': 'EV',
-}
-# https://ccadb-public.secure.force.com/ccadb/AllCAAIdentifiersReport
-CAA_DOMAINS = {
-    "camerfirma.com": ["AC Camerfirma, S.A."],
-    "actalis.it": ["Actalis"],
-    "amazon.com": ["Amazon Trust Services"],
-    "amazontrust.com": ["Amazon Trust Services"],
-    "awstrust.com": ["Amazon Trust Services"],
-    "amazonaws.com": ["Amazon Trust Services"],
-    "aws.amazon.com": ["Amazon Trust Services"],
-    "pki.apple.com": ["Apple Public Server ECC CA 11 - G1","Apple Public Server ECC CA 12 - G1","Apple Public Server RSA CA 11 - G1","Apple Public Server RSA CA 12 - G1"],
-    "certum.pl": ["Asseco Data Systems S.A. (previously Unizeto Certum)"],
-    "certum.eu": ["Asseco Data Systems S.A. (previously Unizeto Certum)"],
-    "yandex.ru": ["Asseco Data Systems S.A. (previously Unizeto Certum)"],
-    "atos.net": ["Atos"],
-    "firmaprofesional.com": ["Autoridad de Certificacion Firmaprofesional"],
-    "anf.es": ["Autoridad de Certificación (ANF AC)"],
-    "buypass.com": ["Buypass"],
-    "buypass.no": ["Buypass"],
-    "certicamara.com": ["Certicámara"],
-    "certigna.fr": ["Dhimyotis / Certigna","Certigna Entity Code Signing CA","Certigna Identity CA","Certigna Identity Plus CA","Certigna Services CA"],
-    "www.certinomis.com": ["Certinomis / Docapost"],
-    "www.certinomis.fr": ["Certinomis / Docapost"],
-    "certsign.ro": ["certSIGN"],
-    "cfca.com.cn": ["China Financial Certification Authority (CFCA)"],
-    "pki.hinet.net": ["Chunghwa Telecom"],
-    "tls.hinet.net": ["Chunghwa Telecom"],
-    "eca.hinet.net": ["Chunghwa Telecom"],
-    "epki.com.tw": ["Chunghwa Telecom"],
-    "publicca.hinet.net": ["Chunghwa Telecom"],
-    "cisco.com": ["Cisco","Cisco XSSL-R2"],
-    "Comsign.co.il": ["ComSign"],
-    "Comsign.co.uk": ["ComSign"],
-    "Comsigneurope.com": ["ComSign"],
-    "aoc.cat": ["Consorci Administració Oberta de Catalunya (Consorci AOC, CATCert)"],
-    "jcsinc.co.jp": ["Cybertrust Japan / JCSI","Cybertrust Japan SureCode CA G1","Cybertrust Japan SureCode CA G2","Cybertrust Japan SureCode CA G3","Cybertrust Japan SureCode CA G4","Cybertrust Japan SureCode EV CA G1","Cybertrust Japan SureCode EV CA G2","Cybertrust Japan SureCode EV CA G3","Cybertrust Japan SureCode EV CA G4","Cybertrust Japan SureMail CA G5","Cybertrust Japan SureMail CA G6","Cybertrust Japan SureServer CA G4","Cybertrust Japan SureServer CA G5","Cybertrust Japan SureServer CA G6","Cybertrust Japan SureServer CA G7","Cybertrust Japan SureServer CA G8","Cybertrust Japan SureServer EV CA G3","Cybertrust Japan SureServer EV CA G4","Cybertrust Japan SureServer EV CA G5","Cybertrust Japan SureServer EV CA G6","Cybertrust Japan SureServer EV CA G7","Cybertrust Japan SureServer EV CA G8","Cybertrust Japan SureServer EV CA G9","Cybertrust Japan SureTime CA G1","Cybertrust Japan SureTime CA G2","Cybertrust Japan SureTime CA G3","Cybertrust Japan SureTime CA G4"],
-    "dtrust.de": ["D-TRUST"],
-    "d-trust.de": ["D-TRUST"],
-    "dtrust.net": ["D-TRUST"],
-    "d-trust.net": ["D-TRUST"],
-    "telesec.de": ["Deutsche Telekom Security GmbH"],
-    "pki.dfn.de": ["Deutsche Telekom Security GmbH"],
-    "dfn.de": ["Deutsche Telekom Security GmbH"],
-    "digicert.com": ["QuoVadis","Symantec","Symantec / GeoTrust","Symantec / VeriSign","DigiCert", "DigiCert Inc"],
-    "geotrust.com": ["Symantec","Symantec / GeoTrust","Symantec / VeriSign","QuoVadis","DigiCert", "DigiCert Inc"],
-    "rapidssl.com": ["DigiCert","QuoVadis","Symantec","Symantec / GeoTrust","Symantec / VeriSign", "DigiCert Inc"],
-    "digitalcertvalidation.com": ["Symantec","Symantec / GeoTrust","Symantec / VeriSign","QuoVadis","DigiCert", "DigiCert Inc"],
-    "volusion.digitalcertvalidation.com": ["Symantec","Symantec / GeoTrust","Symantec / VeriSign","DigiCert", "DigiCert Inc"],
-    "stratossl.digitalcertvalidation.com": ["Symantec","Symantec / GeoTrust","Symantec / VeriSign","DigiCert", "DigiCert Inc"],
-    "intermediatecertificate.digitalcertvalidation.com": ["DigiCert","Symantec","Symantec / GeoTrust","Symantec / VeriSign", "DigiCert Inc"],
-    "1and1.digitalcertvalidation.com": ["Symantec","Symantec / GeoTrust","Symantec / VeriSign","DigiCert","Digidentity B.V.", "DigiCert Inc"],
-    "digidentity.com": ["Digidentity BV PKIoverheid Burger CA - 2021","Digidentity BV PKIoverheid Organisatie Server CA - G3","Digidentity BV PKIoverheid Organisatie Server CA - G3","Digidentity BV PKIoverheid Organisatie Services CA - 2021","Digidentity Organisatie CA - G2","Digidentity PKIoverheid Organisatie Server CA - G3","Digidentity PKIoverheid Server CA 2020"],
-    "disig.sk": ["Disig, a.s."],
-    "globaltrust.eu": ["e-commerce monitoring GmbH"],
-    "e-tugra.com.tr": ["E-Tugra"],
-    "e-tugra.com": ["E-Tugra"],
-    "etugra.com": ["E-Tugra"],
-    "etugra.com.tr": ["E-Tugra"],
-    "edicomgroup.com": ["EDICOM"],
-    "emsign.com": ["eMudhra Technologies Limited"],
-    "entrust.net": ["Entrust"],
-    "affirmtrust.com": ["Entrust"],
-    "fina.hr": ["Financijska agencija (Fina)"],
-    "gdca.com.cn": ["Global Digital Cybersecurity Authority Co., Ltd. (Formerly Guang Dong Certificate Authority (GDCA))"],
-    "globalsign.com": ["GlobalSign nv-sa"],
-    "godaddy.com": ["GoDaddy"],
-    "starfieldtech.com": ["GoDaddy"],
-    "pki.goog": ["Google Trust Services LLC"],
-    "google.com": ["Google Trust Services LLC"],
-    "eCert.gov.hk": ["Government of Hong Kong (SAR), Hongkong Post, Certizen"],
-    "hongkongpost.gov.hk": ["Government of Hong Kong (SAR), Hongkong Post, Certizen"],
-    "gpki.go.kr": ["Government of Korea, KLID"],
-    "accv.es": ["Government of Spain, Autoritat de Certificació de la Comunitat Valenciana (ACCV)"],
-    "fnmt.es": ["Government of Spain, Fábrica Nacional de Moneda y Timbre (FNMT)"],
-    "efos.se": ["Government of Sweden (Försäkringskassan)"],
-    "myndighetsca.se": ["Government of Sweden (Försäkringskassan)"],
-    "gca.nat.gov.tw": ["Government of Taiwan, Government Root Certification Authority (GRCA)"],
-    "www.pkioverheid.nl": ["Staat der Nederlanden Domein Server CA 2020","Government of The Netherlands, PKIoverheid (Logius)","QuoVadis CSP - PKI Overheid CA - G2","QuoVadis PKIoverheid EV CA","QuoVadis PKIoverheid Organisatie Server CA - G3","QuoVadis PKIoverheid Organisatie Server CA - G3","QuoVadis PKIoverheid Server CA 2020","QuoVadis PKIoverheid Server CA 2020"],
-    "tuntrust.tn": ["Government of Tunisia, Agence National de Certification Electronique / National Digital Certification Agency (ANCE/NDCA)"],
-    "kamusm.gov.tr": ["Government of Turkey, Kamu Sertifikasyon Merkezi (Kamu SM)"],
-    "harica.gr": ["HARICA"],
-    "identrust.com": ["IdenTrust Commercial Root CA 1","IdenTrust Services, LLC"],
-    "letsencrypt.org": ["R3", "R4", "Internet Security Research Group","ISRG Root X1"],
-    "izenpe.com": ["CA de Certificados SSL EV","Izenpe S.A."],
-    "izenpe.eus": ["CA de Certificados SSL EV","Izenpe S.A."],
-    "jprs.jp": ["JPRS Domain Validation Authority - G3","JPRS Domain Validation Authority - G3","JPRS Domain Validation Authority - G3","JPRS Domain Validation Authority - G4","JPRS Organization Validation Authority - G3","JPRS Organization Validation Authority - G3","JPRS Organization Validation Authority - G3","JPRS Organization Validation Authority - G4","KPN BV PKIoverheid Organisatie Server CA - G3"],
-    "kpn.com": ["KPN BV PKIoverheid Organisatie Server CA - G3","KPN CM PKIoverheid EV CA","KPN Corporate Market CSP Organisatie CA - G2","KPN Corporate Market CSP Organisatie Services CA - G3","KPN PKIoverheid EV CA","KPN PKIoverheid EV CA","KPN PKIoverheid Organisatie CA - G2","KPN PKIoverheid Organisatie CA - G2","KPN PKIoverheid Organisatie CA - G2","KPN PKIoverheid Organisatie Persoon CA - G3","KPN PKIoverheid Organisatie Persoon CA - G3","KPN PKIoverheid Organisatie Server CA - G3","KPN PKIoverheid Organisatie Server CA - G3","KPN PKIoverheid Organisatie Services CA - G3","KPN PKIoverheid Organisatie Services CA - G3","KPN PKIoverheid Server CA 2020","KPN PKIoverheid Server CA 2020"],
-    "elektronicznypodpis.pl": ["Krajowa Izba Rozliczeniowa S.A. (KIR)"],
-    "e-szigno.hu": ["Microsec Ltd."],
-    "microsoft.com": ["Microsoft Corporation","Microsoft RSA TLS Issuing AOC CA 02"],
-    "multicert.com": ["MULTICERT"],
-    "certificate.naver.com": ["NAVER Cloud"],
-    "netlock.hu": ["NETLOCK Kft."],
-    "netlock.net": ["NETLOCK Kft."],
-    "netlock.eu": ["NETLOCK Kft."],
-    "web.com": ["Network Solutions","Network Solutions Certificate Authority"],
-    "networksolutions.com": ["Network Solutions","Network Solutions Certificate Authority"],
-    "wisekey.com": ["OISTE"],
-    "hightrusted.com": ["OISTE"],
-    "certifyid.com": ["OISTE"],
-    "oiste.org": ["OISTE"],
-    "oaticerts.com": ["Open Access Technology International, Inc. (OATI)"],
-    "quovadisglobal.com": ["QuoVadis","QuoVadis CSP - PKI Overheid EV CA","QuoVadis CSP - PKI Overheid CA - G2","QuoVadis PKIoverheid EV CA","QuoVadis PKIoverheid Organisatie Server CA - G3","QuoVadis PKIoverheid Organisatie Server CA - G3","QuoVadis PKIoverheid Organisatie Services CA - G3","QuoVadis PKIoverheid Server CA 2020","QuoVadis PKIoverheid Server CA 2020"],
-    "digicert.ne.jp": ["QuoVadis"],
-    "cybertrust.ne.jp": ["QuoVadis","Cybertrust Japan / JCSI","Cybertrust Japan SureCode CA G1","Cybertrust Japan SureCode CA G2","Cybertrust Japan SureCode CA G3","Cybertrust Japan SureCode CA G4","Cybertrust Japan SureCode EV CA G1","Cybertrust Japan SureCode EV CA G2","Cybertrust Japan SureCode EV CA G3","Cybertrust Japan SureCode EV CA G4","Cybertrust Japan SureMail CA G5","Cybertrust Japan SureMail CA G6","Cybertrust Japan SureServer CA G4","Cybertrust Japan SureServer CA G5","Cybertrust Japan SureServer CA G6","Cybertrust Japan SureServer CA G7","Cybertrust Japan SureServer CA G8","Cybertrust Japan SureServer EV CA G3","Cybertrust Japan SureServer EV CA G4","Cybertrust Japan SureServer EV CA G5","Cybertrust Japan SureServer EV CA G6","Cybertrust Japan SureServer EV CA G7","Cybertrust Japan SureServer EV CA G8","Cybertrust Japan SureServer EV CA G9","Cybertrust Japan SureTime CA G1","Cybertrust Japan SureTime CA G2","Cybertrust Japan SureTime CA G3","Cybertrust Japan SureTime CA G4"],
-    "symantec.com": ["QuoVadis","DigiCert","Symantec","Symantec / GeoTrust","Symantec / VeriSign", "DigiCert Inc"],
-    "thawte.com": ["QuoVadis","Symantec","Symantec / GeoTrust","Symantec / VeriSign","DigiCert", "DigiCert Inc"],
-    "secomtrust.net": ["SECOM Trust Systems CO., LTD."],
-    "sectigo.com": ["Sectigo"],
-    "comodo.com": ["Sectigo"],
-    "comodoca.com": ["Sectigo"],
-    "usertrust.com": ["Sectigo"],
-    "trust-provider.com": ["Sectigo"],
-    "trustwave.com": ["SecureTrust"],
-    "securetrust.com": ["SecureTrust"],
-    "sheca.com": ["Shanghai Electronic Certification Authority Co., Ltd."],
-    "imtrust.cn": ["Shanghai Electronic Certification Authority Co., Ltd."],
-    "wwwtrust.cn": ["Shanghai Electronic Certification Authority Co., Ltd."],
-    "skidsolutions.eu": ["SK ID Solutions AS"],
-    "ssl.com": ["SSL.com"],
-    "pkioverheid.nl": ["Staat der Nederlanden Domein Server CA 2020"],
-    "admin.ch": ["Swiss BIT, Swiss Federal Office of Information Technology, Systems and Telecommunication (FOITT)"],
-    "swisssign.com": ["SwissSign AG"],
-    "swisssign.net": ["SwissSign AG"],
-    "swissign.com": ["SwissSign AG"],
-    "swisssign.ch": ["SwissSign AG"],
-    "swisssign.li": ["SwissSign AG"],
-    "swissign.li": ["SwissSign AG"],
-    "swisssign.org": ["SwissSign AG"],
-    "swisssign.biz": ["SwissSign AG"],
-    "swisstsa.ch": ["SwissSign AG"],
-    "swisstsa.li": ["SwissSign AG"],
-    "digitalid.ch": ["SwissSign AG"],
-    "digital-id.ch": ["SwissSign AG"],
-    "zert.ch": ["SwissSign AG"],
-    "rootsigning.com": ["SwissSign AG"],
-    "root-signing.ch": ["SwissSign AG"],
-    "ssl-certificate.ch": ["SwissSign AG"],
-    "managed-pki.ch": ["SwissSign AG"],
-    "managed-pki.de": ["SwissSign AG"],
-    "swissstick.com": ["SwissSign AG"],
-    "swisssigner.ch": ["SwissSign AG"],
-    "pki-posta.ch": ["SwissSign AG"],
-    "pki-poste.ch": ["SwissSign AG"],
-    "pki-post.ch": ["SwissSign AG"],
-    "trustdoc.ch": ["SwissSign AG"],
-    "trustsign.ch": ["SwissSign AG"],
-    "swisssigner.com": ["SwissSign AG"],
-    "postsuisseid.ch": ["SwissSign AG"],
-    "suisseid-service.ch": ["SwissSign AG"],
-    "signdemo.com": ["SwissSign AG"],
-    "sirb.com": ["SwissSign AG"],
-    "twca.com.tw": ["Taiwan-CA Inc. (TWCA)"],
-    "telia.com": ["Telia Company"],
-    "telia.fi": ["Telia Company"],
-    "telia.se": ["Telia Company"],
-    "trustcor.ca": ["TrustCor Systems"],
-    "trustfactory.net": ["TrustFactory Client Issuing Certificate Authority","TrustFactory SSL Issuing Certificate Authority","TrustFactory(Pty)Ltd"],
-    "gtlsca.nat.gov.tw": ["行政院/政府伺服器數位憑證管理中心 - G1"]
-}
-VALIDATION_TYPES = {
-    'DV': 'Domain Validation (DV)',
-    'OV': 'Organization Validation (OV)',
-    'EV': 'Extended Validation (EV)',
-}
-X509_DATE_FMT = r'%Y%m%d%H%M%SZ'
-WEAK_KEY_SIZE = {
-    'RSA': 1024,
-    'DSA': 2048,
-    'EC': 160,
-}
-KNOWN_WEAK_KEYS = {
-    'RSA': 'The use RSA Encryption is considered vulnerable in certain context. 2000: Factorization of a 512-bit RSA Modulus, essentially derive a private key knowing only the public key. Verified bt EFF in 2001. Later in 2009 factorization of up to 1024-bit keys',
-    'DSA': 'The use DSA Encryption is considered vulnerable. 1999: HPL Laboratories demonstrated lattice attacks on DSA, a non-trivial example of the known message attack that is a total break and message forgery technique. 2010 Dimitrios Poulakis demonstrated a lattice reduction technique for single or multiple message forgery',
-    'EC': 'The use Elliptic-curve Encryption is considered vulnerable in certain context. 2010 Dimitrios Poulakis demonstrated a lattice reduction technique to attack ECDSA for single or multiple message forgery',
-}
-KNOWN_WEAK_SIGNATURE_ALGORITHMS = {
-    'sha1WithRSAEncryption': 'The use of SHA1 with RSA Encryption is considered vulnerable. Macquarie University Australia 2009: identified vulnerabilities to collision attacks, later in 2017 Marc Stevens demonstrated collision proofs',
-    'md5WithRSAEncryption': 'The use of MD5 with RSA Encryption is considered vulnerable. Arjen Lenstra and Benne de Weger 2005: vulnerable to hash collision attacks',
-    'md2WithRSAEncryption': 'The use of MD2 with RSA Encryption is considered vulnerable. Rogier, N. and Chauvaud, P. in 1995: vulnerable to collision, later preimage resistance, and second-preimage resistance attacks were demonstrated at BlackHat 2008 by Mark Twain',
-}
-WEAK_PROTOCOL = {
-    'SSLv2 (0x2ff)': 'SSLv2 (0x02ff) Deprecated in 2011 (rfc6176) with undetectable manipulator-in-the-middle exploits',
-    'SSLv3 (0x300)': 'SSLv3 (0x0300) Deprecated in 2015 (rfc7568) mainly due to POODLE, a manipulator-in-the-middle exploit',
-    'TLSv1 (0x301)': 'TLSv1 (0x0301) 2018 deprecated by PCI Council. Also in 2018, Apple, Google, Microsoft, and Mozilla jointly announced deprecation. Officially deprecated in 2020 (rfc8996)',
-    'TLSv1.1 (0x302)': 'TLSv1.1 (0x0302) No longer supported by Firefox 24 or newer and Chrome 29 or newer. Deprecated in 2020 (rfc8996)',
-}
-OCSP_RESP_STATUS = {
-    0: 'Successful',
-    1: 'Malformed Request',
-    2: 'Internal Error',
-    3: 'Try Later',
-    4: 'Signature Required',
-    5: 'Unauthorized',
-}
-OCSP_CERT_STATUS = {
-    0: 'Good',
-    1: 'Revoked',
-    2: 'Unknown',
-}
-SESSION_CACHE_MODE = {
-    SSL.SESS_CACHE_OFF: 'no caching',
-    SSL.SESS_CACHE_CLIENT: 'session_resumption_tickets',
-    SSL.SESS_CACHE_SERVER: 'session_resumption_caching',
-    SSL.SESS_CACHE_BOTH: 'session_resumption_both',
-}
-NOT_KNOWN_WEAK_CIPHERS = [
-    'ECDHE-RSA-AES256-GCM-SHA384',
-    'ECDHE-RSA-AES256-SHA384',
-    'ECDHE-RSA-AES128-GCM-SHA256',
-    'ECDHE-RSA-AES128-SHA256',
-    'ECDHE-ECDSA-AES256-GCM-SHA384',
-    'ECDHE-ECDSA-AES256-SHA384',
-    'ECDHE-ECDSA-AES128-GCM-SHA256',
-    'ECDHE-ECDSA-AES128-SHA256',
-    'DHE-DSS-AES256-GCM-SHA384',
-    'DHE-RSA-AES256-GCM-SHA384',
-    'DHE-RSA-AES256-SHA256',
-    'DHE-DSS-AES256-SHA256',
-    'DHE-DSS-AES128-GCM-SHA256',
-    'DHE-RSA-AES128-GCM-SHA256',
-    'DHE-RSA-AES128-SHA256',
-    'DHE-DSS-AES128-SHA256',
-]
-STRONG_CIPHERS = [
-    'TLS_CHACHA20_POLY1305_SHA256',
-    'TLS_AES_128_CCM_8_SHA256',
-    'TLS_AES_128_CCM_SHA2',
-]
-DNSSEC_ALGORITHMS = {
-    1: 'RSA/MD5',
-    3: 'DSA/SHA-1',
-    5: 'RSA/SHA-1',
-    6: 'DSA-NSEC3-SHA1',
-    7: 'RSASHA1-NSEC3-SHA1',
-    8: 'RSA/SHA-256',
-    10: 'RSA/SHA-512',
-    12: 'GOST R 34.10-2001',
-    13: 'ECDSA/SHA-256',
-    14: 'ECDSA/SHA-384',
-    15: 'Ed25519',
-    16: 'Ed448',
-}
-WEAK_DNSSEC_ALGORITHMS = {
-    'RSA/MD5': 'DNSSEC Algorithm RSA/MD5 was deprecated in 2005',
-    'DSA/SHA-1': 'DNSSEC Algorithm DSA/SHA-1 was deprecated in 2004',
-    'RSA/SHA-1': KNOWN_WEAK_SIGNATURE_ALGORITHMS['sha1WithRSAEncryption'],
-    'DSA-NSEC3-SHA1': 'DNSSEC Algorithm was DSA-NSEC3-SHA1 deprecated in 2008',
-    'GOST R 34.10-2001': 'DNSSEC Algorithm GOST R 34.10-2001 was deprecated in 2010',
-}
-STRONG_DNSSEC_ALGORITHMS = [
-    'ECDSA/SHA-384',
-    'Ed25519',
-    'Ed448',
-]
-PROTOCOL_VERSION = {
-    'DTLSv1': 0xfeff,
-    'DTLSv1.2': 0xfefd,
-    'SSLv2': 0x02ff,
-    'SSLv3': 0x0300,
-    'TLSv1': 0x0301,
-    'TLSv1.1': 0x0302,
-    'TLSv1.2': 0x0303,
-    'TLSv1.3': 0x0304,
-    'TLSv1.3_DRAFT_14': 0x7f0e,
-    'TLSv1.3_DRAFT_15': 0x7f0f,
-    'TLSv1.3_DRAFT_16': 0x7f10,
-    'TLSv1.3_DRAFT_17': 0x7f11,
-    'TLSV1.3_DRAFT_18': 0x7f12,
-    'TLSV1.3_DRAFT_18_mozilla_pr_1092': 0x7e02,
-    'TLSv1.3_DRAFT_19': 0x7f13,
-    'TLSv1.3_DRAFT_20': 0x7f14,
-    'TLSv1.3_DRAFT_21': 0x7f15,
-    'TLSv1.3_DRAFT_22': 0x7f16,
-    'TLSv1.3_DRAFT_23': 0x7f17,
-    'TLSv1.3_DRAFT_24': 0x7f18,
-    'TLSv1.3_DRAFT_25': 0x7f19,
-    'TLSv1.3_DRAFT_26': 0x7f1a,
-    'TLSv1.3_DRAFT_27': 0x7f1b,
-    'TLSv1.3_DRAFT_28': 0x7f1c,
-    'TLSv1.4': 0x0305,
-    'TLSv1.8': 0x0309,
-    'TLSv2': 0x0400,
-    'TLSv2.1': 0x0401,
-    'TLSv2.3': 0x0404,
-    'GREASE': 0x0a0a,
-}
-OPENSSL_VERSION_LOOKUP = {int(key):value for (value, key) in PROTOCOL_VERSION.items()}
-PROTOCOL_TEXT_MAP = {
-    'DTLSv1 (0xfeff)': 0xfeff,
-    'DTLSv1.2 (0xfefd)': 0xfefd,
-    'SSLv2 (0x2ff)': 0x02ff,
-    'SSLv3 (0x300)': 0x0300,
-    'TLSv1 (0x301)': 0x0301,
-    'TLSv1.1 (0x302)': 0x0302,
-    'TLSv1.2 (0x303)': 0x0303,
-    'TLSv1.3 (0x304)': 0x0304,
-}
-ALL_CIPHERS = 'DHE-RSA-AES128-CCM:ECDHE-ECDSA-CHACHA20-POLY1305:DHE-PSK-CAMELLIA128-SHA256:SRP-3DES-EDE-CBC-SHA:AES256-SHA:RSA-PSK-3DES-EDE-CBC-SHA:DHE-PSK-AES128-GCM-SHA256:ADH-AES256-SHA:CAMELLIA128-SHA:RSA-PSK-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA:IDEA-CBC-SHA:DHE-PSK-NULL-SHA256:CAMELLIA128-SHA256:ECDHE-PSK-CAMELLIA256-SHA384:DHE-RSA-AES256-SHA256:RSA-PSK-AES256-CBC-SHA:AES128-SHA:PSK-AES256-CBC-SHA384:DHE-DSS-SEED-SHA:DHE-RSA-AES256-CCM:SRP-AES-128-CBC-SHA:AES128-CCM:AES256-CCM:AES128-SHA256:ECDHE-RSA-AES128-SHA:RSA-PSK-CAMELLIA128-SHA256:ADH-CAMELLIA128-SHA256:DHE-DSS-AES128-SHA256:ECDHE-ECDSA-AES256-SHA:DHE-PSK-AES128-CCM8:ECDHE-RSA-DES-CBC3-SHA:DHE-RSA-CAMELLIA256-SHA256:NULL-SHA256:RSA-PSK-CAMELLIA256-SHA384:PSK-NULL-SHA384:DHE-DSS-DES-CBC3-SHA:DHE-RSA-CAMELLIA128-SHA:CAMELLIA256-SHA:ECDHE-RSA-CAMELLIA128-SHA256:PSK-AES256-CBC-SHA:SRP-RSA-AES-256-CBC-SHA:ECDHE-ECDSA-CAMELLIA128-SHA256:DHE-RSA-DES-CBC3-SHA:DHE-DSS-AES128-GCM-SHA256:PSK-CHACHA20-POLY1305:ADH-AES256-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-CAMELLIA256-SHA384:SRP-AES-256-CBC-SHA:ECDHE-PSK-NULL-SHA:PSK-AES128-CCM8:SRP-DSS-3DES-EDE-CBC-SHA:RSA-PSK-NULL-SHA:TLS_AES_128_GCM_SHA256:CAMELLIA256-SHA256:AES256-CCM8:SRP-RSA-AES-128-CBC-SHA:DHE-PSK-AES256-GCM-SHA384:DHE-PSK-AES128-CBC-SHA:DHE-RSA-AES256-SHA:DHE-RSA-SEED-SHA:DHE-PSK-AES256-CCM8:DHE-RSA-AES128-CCM8:AECDH-DES-CBC3-SHA:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-PSK-AES256-CBC-SHA384:ECDHE-ECDSA-AES256-SHA384:ADH-AES128-SHA256:ECDHE-PSK-AES128-CBC-SHA:DHE-PSK-AES128-CCM:RSA-PSK-NULL-SHA384:TLS_AES_256_GCM_SHA384:DHE-RSA-AES128-SHA:DHE-PSK-NULL-SHA384:ADH-CAMELLIA128-SHA:AES128-CCM8:ADH-AES128-GCM-SHA256:DHE-RSA-CAMELLIA256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-PSK-CAMELLIA128-SHA256:DHE-RSA-AES128-GCM-SHA256:ECDHE-PSK-CHACHA20-POLY1305:DHE-RSA-AES128-SHA256:DHE-PSK-CHACHA20-POLY1305:DHE-DSS-CAMELLIA128-SHA256:DHE-RSA-AES256-CCM8:PSK-AES128-CCM:DHE-DSS-AES256-SHA256:ADH-CAMELLIA256-SHA:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-CCM:ADH-CAMELLIA256-SHA256:ECDHE-PSK-3DES-EDE-CBC-SHA:PSK-NULL-SHA:DHE-PSK-CAMELLIA256-SHA384:ECDHE-ECDSA-NULL-SHA:ECDHE-RSA-AES256-SHA384:SRP-DSS-AES-256-CBC-SHA:ECDHE-PSK-AES256-CBC-SHA384:PSK-AES128-CBC-SHA:ECDHE-RSA-AES256-SHA:PSK-AES128-CBC-SHA256:NULL-MD5:ECDHE-ECDSA-AES128-GCM-SHA256:DHE-DSS-CAMELLIA256-SHA:RSA-PSK-AES128-CBC-SHA256:SRP-RSA-3DES-EDE-CBC-SHA:ADH-AES256-GCM-SHA384:DHE-PSK-3DES-EDE-CBC-SHA:DHE-PSK-AES256-CCM:TLS_AES_128_CCM_SHA256:ECDHE-RSA-AES128-SHA256:DHE-PSK-AES128-CBC-SHA256:ADH-AES128-SHA:PSK-CAMELLIA256-SHA384:ECDHE-ECDSA-AES128-CCM8:DHE-PSK-NULL-SHA:ECDHE-PSK-AES128-CBC-SHA256:DHE-DSS-CAMELLIA256-SHA256:ADH-SEED-SHA:DHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES256-GCM-SHA384:RSA-PSK-AES128-CBC-SHA:PSK-3DES-EDE-CBC-SHA:PSK-NULL-SHA256:AECDH-AES128-SHA:RSA-PSK-AES256-GCM-SHA384:AECDH-NULL-SHA:RSA-PSK-AES256-CBC-SHA384:AECDH-AES256-SHA:DHE-RSA-CAMELLIA128-SHA256:ECDHE-RSA-NULL-SHA:PSK-CAMELLIA128-SHA256:RSA-PSK-CHACHA20-POLY1305:ECDHE-RSA-CAMELLIA256-SHA384:AES256-SHA256:DHE-DSS-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-CCM8:SRP-DSS-AES-128-CBC-SHA:ECDHE-PSK-NULL-SHA384:DHE-DSS-CAMELLIA128-SHA:DHE-DSS-AES128-SHA:DHE-DSS-AES256-SHA:DHE-PSK-AES256-CBC-SHA:ECDHE-RSA-CHACHA20-POLY1305:PSK-AES128-GCM-SHA256:PSK-AES256-GCM-SHA384:AES256-GCM-SHA384:ADH-DES-CBC3-SHA:RSA-PSK-NULL-SHA256:ECDHE-PSK-NULL-SHA256:SEED-SHA:ECDHE-ECDSA-AES128-CCM:PSK-AES256-CCM:ECDHE-RSA-AES128-GCM-SHA256:DES-CBC3-SHA:ECDHE-PSK-AES256-CBC-SHA:PSK-AES256-CCM8:AES128-GCM-SHA256:NULL-SHA'
 
 def filter_valid_files_urls(inputs :list[str], tmp_path_prefix :str = '/tmp'):
     ret = set()
@@ -1000,11 +624,11 @@ def caa_valid(domain_name :str, cert :X509, certificate_chain :list[X509]) -> bo
     wild_issuers = set()
     issuers = set()
     for rdata in response:
-        caa, *rest = rdata.value.decode().split(';')
+        caa, *_ = rdata.value.decode().split(';')
         if 'issuewild' in rdata.to_text():
             wild_issuers.add(caa.strip())
     for rdata in response:
-        caa, *rest = rdata.value.decode().split(';')
+        caa, *_ = rdata.value.decode().split(';')
         # issuewild tags take precedence over issue tags when specified.
         if caa not in wild_issuers:
             issuers.add(caa.strip())
@@ -1017,11 +641,11 @@ def caa_valid(domain_name :str, cert :X509, certificate_chain :list[X509]) -> bo
     common_name = cert.get_subject().CN
     issuer_cn = issuer.get_subject().O
     for caa in wild_issuers:
-        issuer_common_names :list[str] = CAA_DOMAINS.get(caa, [])
+        issuer_common_names :list[str] = constants.CAA_DOMAINS.get(caa, [])
         if not issuer_common_names:
             issuer_ext = extractor(f'http://{caa}')
             issuer_apex = issuer_ext.registered_domain
-            issuer_common_names = CAA_DOMAINS.get(issuer_apex, [])
+            issuer_common_names = constants.CAA_DOMAINS.get(issuer_apex, [])
         if issuer_cn in issuer_common_names:
             return True
 
@@ -1029,11 +653,11 @@ def caa_valid(domain_name :str, cert :X509, certificate_chain :list[X509]) -> bo
         return False
 
     for caa in issuers:
-        issuer_common_names :list[str] = CAA_DOMAINS.get(caa, [])
+        issuer_common_names :list[str] = constants.CAA_DOMAINS.get(caa, [])
         if not issuer_common_names:
             issuer_ext = extractor(f'http://{caa}')
             issuer_apex = issuer_ext.registered_domain
-            issuer_common_names = CAA_DOMAINS.get(issuer_apex, [])
+            issuer_common_names = constants.CAA_DOMAINS.get(issuer_apex, [])
         if issuer_cn in issuer_common_names:
             return True
 
@@ -1041,7 +665,7 @@ def caa_valid(domain_name :str, cert :X509, certificate_chain :list[X509]) -> bo
 
 def crlite_revoked(db_path :str, pem :bytes):
     def find_attachments_base_url():
-        url = urlparse(CRLITE_URL)
+        url = urlparse(constants.CRLITE_URL)
         base_rsp = requests.get(f"{url.scheme}://{url.netloc}/v1/")
         return base_rsp.json()["capabilities"]["attachments"]["base_url"]
 
@@ -1061,7 +685,7 @@ def crlite_revoked(db_path :str, pem :bytes):
     crlite_db = CRLiteDB(db_path=db_path)
     if update:
         crlite_db.update(
-            collection_url=CRLITE_URL,
+            collection_url=constants.CRLITE_URL,
             attachments_base_url=find_attachments_base_url(),
         )
         crlite_db.cleanup()
@@ -1078,4 +702,7 @@ def crlite_revoked(db_path :str, pem :bytes):
 
 @retry(SSL.WantReadError, tries=5, delay=.5)
 def do_handshake(conn):
-    conn.do_handshake()
+    try:
+        conn.do_handshake()
+    except SSL.SysCallError:
+        pass

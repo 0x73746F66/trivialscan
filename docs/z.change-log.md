@@ -1,5 +1,12 @@
 # Change Log
 
+## 1.0.0 Nov 6th 2021
+
+- Compliance checks no longer influence validation result
+- Added cli option `--summary-only` to not include informational details, show only important validation outcomes
+- Completed compromised certificate checking
+- Moved constants in `tlsverify.util` to `tlsverify.constants`
+
 ## 0.4.15 Nov 1st 2021
 
 - bump `tlstrust==2.0.1` for more android version support

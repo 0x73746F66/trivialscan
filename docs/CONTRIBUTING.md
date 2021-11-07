@@ -39,7 +39,7 @@ What to contribute?
 
 Anything you want, or one of these:
 
-⌛⌛ Todo List ⌛⌛
+⌛⌛ 2.0 Todo List ⌛⌛
 
 - HSTS Preloading
 - Handshake Simulations
@@ -75,4 +75,3 @@ Anything you want, or one of these:
   - Public Key SPKI SHA-256
   - deep link https://crt.sh/?sha1=
   - Certificate Transparency
-  - OneCRL

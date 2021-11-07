@@ -19,7 +19,7 @@ from . import exceptions, verify, util, validator, pci, nist, fips
 from .transport import Transport
 
 
-__version__ = 'tls-verify==0.4.15'
+__version__ = 'tls-verify==1.0.0'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
@@ -108,6 +108,7 @@ STYLES = {
     'certificate_subject_key_identifier': {'text': 'Subject Key Identifier (SKI)'},
     'certificate_authority_key_identifier': {'text': 'Authority Key Identifier (AKI)'},
     'certificate_validation_type': {'text': 'Certificate Owner Validation Method'},
+    'certificate_known_compromised': {'text': 'Compromised Certificate', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'client_certificate_expected': {'text': 'Client Certificate Expected', 'represent_as': (CLI_VALUE_YES, CLI_VALUE_NO), 'colors': (CLI_COLOR_ALERT, CLI_COLOR_NULL)},
     'certification_authority_authorization': {'text': 'CAA', 'represent_as': (CLI_VALUE_PRESENT, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'revocation_ocsp_status': {'text': 'Revocation: OCSP'},
@@ -270,6 +271,78 @@ SERVER_SKIP = NEVER_SHOW + TRUST_KEYS + [
     "certificate_root_ca",
     "certificate_intermediate_ca",
 ]
+SUMMARY_SKIP = [
+    'certificate_is_self_signed',
+    'certificate_subject',
+    'certificate_issuer',
+    'certificate_common_name',
+    'certificate_intermediate_ca',
+    'certificate_root_ca',
+    'certificate_signature_algorithm',
+    'certificate_pin_sha256',
+    'certificate_public_key_type',
+    'certificate_public_key_curve',
+    'certificate_public_key_size',
+    'certificate_public_key_exponent',
+    'certificate_version',
+    'certificate_issuer',
+    'certificate_issuer_country',
+    'certificate_serial_number',
+    'certificate_serial_number_decimal',
+    'certificate_serial_number_hex',
+    'certificate_not_before',
+    'certificate_not_after',
+    'subjectKeyIdentifier',
+    'authorityKeyIdentifier',
+    'revocation_ocsp_response',
+    'revocation_ocsp_reason',
+    'revocation_ocsp_time',
+    'revocation_ocsp_stapling',
+    'revocation_ocsp_must_staple',
+    'client_certificate_expected',
+    'scsv',
+    'compression_support',
+    'tls_version_intolerance',
+    'tls_version_intolerance_versions',
+    'http1_support',
+    'http1_1_support',
+    'http2_support',
+    'http2_cleartext_support',
+    'sni_support',
+    'offered_tls_versions',
+    'tls_version_interference',
+    'tls_version_interference_versions',
+    'tls_long_handshake_intolerance',
+    'peer_address',
+    'strong_cipher',
+    'forward_anonymity',
+    'session_resumption_caching',
+    'session_resumption_tickets',
+    'session_resumption_ticket_hint',
+    'client_renegotiation',
+    'http_expect_ct_report_uri',
+    'http_xss_protection',
+    'http_hsts',
+    'http_xfo',
+    'http_csp',
+    'http_coep',
+    'http_coop',
+    'http_corp',
+    'http_nosniff',
+    'http_unsafe_referrer',
+    'trust_ccadb_status',
+    'trust_java_status',
+    'trust_android_status',
+    'trust_linux_status',
+    'trust_certifi_status',
+    'certificate_sha256_fingerprint',
+    'certificate_sha1_fingerprint',
+    'certificate_md5_fingerprint',
+    'certificate_subject_key_identifier',
+    'certificate_authority_key_identifier',
+    'verification_details',
+    'extensions'
+]
 FINGERPRINTS = [
     'certificate_sha256_fingerprint',
     'certificate_sha1_fingerprint',
@@ -300,6 +373,10 @@ def _table_data(validator :validator.Validator, table :Table, skip :list[str]) -
         if key in skip:
             continue
         table.add_row(STYLES.get(key,{}).get('text', key), util.styled_boolean(validator.validation_checks[key], STYLES[key]['represent_as'], STYLES[key]['colors']))
+    for key in validator.compliance_checks.keys():
+        if key in skip:
+            continue
+        table.add_row(STYLES.get(key,{}).get('text', key), util.styled_boolean(validator.compliance_checks[key], STYLES[key]['represent_as'], STYLES[key]['colors']))
     for key in list(vars(validator.metadata).keys()):
         if key in skip:
             continue
@@ -320,6 +397,8 @@ def _table_data(validator :validator.Validator, table :Table, skip :list[str]) -
     return table
 
 def _table_ext(validator :validator.Validator, table :Table, skip :list[str]) -> Table:
+    if 'extensions' in skip:
+        return table
     for v in validator.metadata.certificate_extensions:
         ext_data = v.copy()
         ext = ext_data['name']
@@ -422,6 +501,10 @@ def validator_data(result :validator.Validator, certificate_type :str, skip_keys
         if key in skip_keys:
             continue
         data['verification_results'][key] = value
+    for key, value in result.compliance_checks.items():
+        if key in skip_keys:
+            continue
+        data['compliance_results'][key] = value
     if 'verification_details' not in skip_keys:
         data['verification_details'] = result.certificate_verify_messages
     if any(key.startswith('pci_') for key in skip_keys):
@@ -433,6 +516,8 @@ def validator_data(result :validator.Validator, certificate_type :str, skip_keys
     for key in list(vars(result.metadata).keys()):
         if key in skip_keys and key in data:
             del data[key]
+    if 'extensions' in skip_keys:
+        return data
     for v in result.metadata.certificate_extensions:
         if v.get('name') in skip_keys:
             data['certificate_extensions'][:] = [d for d in data['certificate_extensions'] if d.get('name') != v['name']]
@@ -529,6 +614,7 @@ def cli():
     parser.add_argument('--fips-nist-transition-mode', help='Include FIPS 140-2 transition to NIST SP800-131A assertions', dest='show_fips', action="store_true")
     parser.add_argument('--disable-sni', help='Do not negotiate SNI using INDA encoded host', dest='disable_sni', action="store_true")
     parser.add_argument('--show-private-key', help='If the private key is exposed, show it in the results', dest='show_private_key', action="store_true")
+    parser.add_argument('-s', '--summary-only', help='Do not include informational details, show only validation outcomes', dest='summary_only', action="store_true")
     parser.add_argument('--hide-validation-details', help='Do not include detailed validation messages in output', dest='hide_validation_details', action="store_true")
     parser.add_argument('-j', '--json-file', help='Store to file as JSON', dest='json_file', default=None)
     parser.add_argument('--hide-progress-bars', help='Hide task progress bars', dest='hide_progress_bars', action="store_true")
@@ -630,6 +716,11 @@ def cli():
         SERVER_SKIP.extend(pci_keys)
         PEER_SKIP.extend(pci_keys)
         ROOT_SKIP.extend(pci_keys)
+
+    if args.summary_only:
+        SERVER_SKIP.extend(SUMMARY_SKIP)
+        PEER_SKIP.extend(SUMMARY_SKIP)
+        ROOT_SKIP.extend(SUMMARY_SKIP)
 
     all_results = []
     evaluation_start = datetime.utcnow()
