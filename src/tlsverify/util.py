@@ -122,6 +122,12 @@ def get_valid_certificate_extensions(cert :Certificate) -> list[extensions.Exten
         if not isinstance(ext.value, extensions.UnrecognizedExtension)
     ]
 
+def get_extensions_by_oid(cert :Certificate, oid :str) -> extensions.Extension:
+    for ext in cert.extensions:
+        if ext.oid._dotted_string == oid:
+            return ext
+    return None
+
 def get_certificate_extensions(cert :Certificate) -> list[dict]:
     certificate_extensions = []
     for ext in cert.extensions:
@@ -366,11 +372,15 @@ def validate_certificate_chain(der :bytes, pem_certificate_chain :list, validato
 
 def issuer_from_chain(certificate :X509, chain :list[X509]) -> Certificate:
     issuer = None
-    issuer_name = certificate.get_issuer().CN.strip()
-    for peer in chain:
-        if peer.get_subject().CN.strip() == issuer_name:
-            issuer = peer
-            break
+    issuer_name = certificate.get_issuer().CN
+    if issuer_name:
+        for peer in chain:
+            peer_name = peer.get_subject().CN
+            if not peer_name:
+                continue
+            if peer_name.strip() == issuer_name.strip():
+                issuer = peer
+                break
     return issuer
 
 def str_n_split(input :str, n :int = 2, delimiter :str = ' '):
@@ -491,6 +501,54 @@ def get_dnssec(domain_name :str):
     logger.warning(DeprecationWarning('util.get_dnssec() was deprecated in version 0.4.3 and will be removed in version 0.5.0'), exc_info=True)
     return get_dnssec_answer(domain_name)
 
+def get_txt_answer(domain_name :str) -> resolver.Answer:
+    logger.info(f'Trying to resolve TXT for {domain_name}')
+    dns_resolver = resolver.Resolver(configure=False)
+    dns_resolver.lifetime = 5
+    try:
+        response = resolver.query(domain_name, rdatatype.TXT)
+    except NoAnswer:
+        logger.warning('DNS NoAnswer')
+        return None
+    except DNSTimeoutError:
+        logger.warning('DNS Timeout')
+        return None
+    except DNSException as ex:
+        logger.warning(ex, exc_info=True)
+        return None
+    except ConnectionResetError:
+        logger.warning('Connection reset by peer')
+        return None
+    except ConnectionError:
+        logger.warning('Name or service not known')
+        return None
+    logger.info(f'answered {response.answer}')
+    return response.answer
+
+def get_tlsa_answer(domain_name :str) -> resolver.Answer:
+    logger.info(f'Trying to resolve TLSA for {domain_name}')
+    dns_resolver = resolver.Resolver(configure=False)
+    dns_resolver.lifetime = 5
+    try:
+        response = resolver.query(domain_name, rdatatype.TLSA)
+    except NoAnswer:
+        logger.warning('DNS NoAnswer')
+        return None
+    except DNSTimeoutError:
+        logger.warning('DNS Timeout')
+        return None
+    except DNSException as ex:
+        logger.warning(ex, exc_info=True)
+        return None
+    except ConnectionResetError:
+        logger.warning('Connection reset by peer')
+        return None
+    except ConnectionError:
+        logger.warning('Name or service not known')
+        return None
+    logger.info(f'answered {response.answer}')
+    return response.answer
+
 def get_dnssec_answer(domain_name :str):
     logger.info(f'Trying to resolve DNSSEC for {domain_name}')
     dns_resolver = resolver.Resolver(configure=False)
@@ -578,6 +636,9 @@ def dnssec_valid(domain_name) -> bool:
     except dnssec.ValidationFailure as err:
         logger.warning(err, exc_info=True)
         return False
+    except AttributeError as err:
+        logger.warning(err, exc_info=True)
+        return False
     return True
 
 def get_caa(domain_name :str):
@@ -639,6 +700,8 @@ def caa_valid(domain_name :str, cert :X509, certificate_chain :list[X509]) -> bo
         return False
     
     common_name = cert.get_subject().CN
+    if not common_name:
+        return False
     issuer_cn = issuer.get_subject().O
     for caa in wild_issuers:
         issuer_common_names :list[str] = constants.CAA_DOMAINS.get(caa, [])

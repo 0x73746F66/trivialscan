@@ -309,6 +309,7 @@ STRONG_CIPHERS = [
 ]
 DNSSEC_ALGORITHMS = {
     1: 'RSA/MD5',
+    2: 'DH',
     3: 'DSA/SHA-1',
     5: 'RSA/SHA-1',
     6: 'DSA-NSEC3-SHA1',
@@ -320,6 +321,8 @@ DNSSEC_ALGORITHMS = {
     14: 'ECDSA/SHA-384',
     15: 'Ed25519',
     16: 'Ed448',
+    253: 'private algorithm DNS',
+    254: 'private algorithm OID',
 }
 WEAK_DNSSEC_ALGORITHMS = {
     'RSA/MD5': 'DNSSEC Algorithm RSA/MD5 was deprecated in 2005',
@@ -333,6 +336,7 @@ STRONG_DNSSEC_ALGORITHMS = [
     'Ed25519',
     'Ed448',
 ]
+TLSA_EXTENSION_OID = "1.3.6.1.4.1.11129.2.1.4"
 PROTOCOL_VERSION = {
     'DTLSv1': 0xfeff,
     'DTLSv1.2': 0xfefd,

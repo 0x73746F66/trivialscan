@@ -478,7 +478,10 @@ class Transport:
             logger.warning(ex, exc_info=True)
         
         response = _read(sock)
-        logger.info(f'HTTP/2 clear text Response,\n{response.decode()}')
+        try:
+            logger.info(f'HTTP/2 clear text Response,\n{response.decode("utf8")}')
+        except UnicodeDecodeError:
+            logger.info(f'HTTP/2 clear text Response,\n{response.decode("ISO-8859-1")}')
         if b'\r\n\r\n' in response:
             headers, _ = response.split(b'\r\n\r\n', 1)
             split_headers = headers.split()
