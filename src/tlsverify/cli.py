@@ -19,7 +19,7 @@ from . import exceptions, verify, util, validator, pci, nist, fips
 from .transport import Transport
 
 
-__version__ = 'tls-verify==1.1.0'
+__version__ = 'tls-verify==1.1.1'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
@@ -499,6 +499,7 @@ def validator_data(result :validator.Validator, certificate_type :str, skip_keys
     data['certificate_type'] = certificate_type
     data['expiry_status'] = util.date_diff(result.certificate.not_valid_after)
     data['verification_results'] = {}
+    data['compliance_results'] = {}
     for key, value in result.validation_checks.items():
         if key in skip_keys:
             continue

@@ -1,6 +1,10 @@
 # Change Log
 
-## 1.1.0 Nov 6th 2021
+## 1.1.1 Nov 22nd 2021
+
+- Bug fix for JSON output
+
+## 1.1.0 Nov 22nd 2021
 
 - `CertValidator` renamed to `LeafCertValidator`
 - Added TLSA/DANE detection via `util.get_tlsa_answer()`
