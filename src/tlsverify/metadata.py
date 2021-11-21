@@ -57,6 +57,7 @@ class Metadata:
     session_resumption_tickets :bool = field(default_factory=bool)
     session_resumption_ticket_hint :bool = field(default_factory=bool)
     client_renegotiation :bool = field(default_factory=bool)
+    tlsa :bool = field(default_factory=bool)
     dnssec :bool = field(default_factory=bool)
     dnssec_algorithm :str = field(default_factory=str)
     scsv :bool = field(default_factory=bool)

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+if [ "$(which deactivate)" != "deactivate not found" ]; then
+  deactivate
+fi
+reset

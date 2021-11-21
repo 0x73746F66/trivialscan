@@ -1,5 +1,17 @@
 # Change Log
 
+## 1.1.0 Nov 6th 2021
+
+- `CertValidator` renamed to `LeafCertValidator`
+- Added TLSA/DANE detection via `util.get_tlsa_answer()`
+- Fixed HTTP/2 crashing when it encounters `ISO-8859-1` encoding
+- Bug fixes for cases where common names in issuer and cert subjects are missing
+- Fixed CAA check that failed due to missing common names in subjects
+- Added `private algorithm` and `EC` algorithm for DNSSEC
+- Fixed DNSSEC checks that failed due to unknown algorithms
+- Added `util.get_extensions_by_oid()`
+- Added `util.get_txt_answer()`
+
 ## 1.0.1 Nov 6th 2021
 
 - Compliance checks no longer prevent displaying validation results when negotiating TLS fails
