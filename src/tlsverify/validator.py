@@ -416,7 +416,7 @@ class PeerCertValidator(Validator):
                '_der=<bytes>, ' +\
                'certificate=<cryptography.x509.Certificate>)>'
 
-class CertValidator(Validator):
+class LeafCertValidator(Validator):
     _pem_certificate_chain :list
     peer_validations :list[PeerCertValidator]
     certificate_chain :list[X509]
@@ -627,7 +627,7 @@ class CertValidator(Validator):
             self.validation_checks[VALIDATION_BASIC_CONSTRAINTS_CA] = False
             self.certificate_verify_messages.append('Server (leaf) certificates should not be a CA, it could enable impersonation attacks')
         self.validation_checks[VALIDATION_VALID_TLS_USAGE] = util.key_usage_exists(self.certificate, 'digital_signature') is True and util.key_usage_exists(self.certificate, 'serverAuth') is True
-        self.validation_checks[VALIDATION_SUBJECT_CN_VALID] = util.validate_common_name(self.metadata.certificate_common_name, self.metadata.host) is True
+        self.validation_checks[VALIDATION_SUBJECT_CN_VALID] = False if not self.metadata.certificate_common_name else util.validate_common_name(self.metadata.certificate_common_name, self.metadata.host) is True
         self.validation_checks[VALIDATION_MATCH_HOSTNAME] = util.match_hostname(self.metadata.host, self.certificate)
         self.metadata.certificate_is_self_signed = util.is_self_signed(self.certificate)
         self.validation_checks[VALIDATION_NOT_SELF_SIGNED] = self.metadata.certificate_is_self_signed is False
@@ -822,9 +822,12 @@ class CertValidator(Validator):
 
     def extract_x509_metadata(self, x509 :X509):
         super().extract_x509_metadata(x509)
+        tlsa_ext = util.get_extensions_by_oid(self.x509.to_cryptography(), constants.TLSA_EXTENSION_OID)
+        tlsa_dns = util.get_tlsa_answer(self.metadata.host)
+        self.metadata.tlsa = isinstance(tlsa_ext, extensions.Extension) or tlsa_dns is not None
         self.metadata.certification_authority_authorization = util.caa_exist(self.metadata.host)
         answer :list[RRset] = util.get_dnssec_answer(self.metadata.host)
         if answer:
             self.metadata.dnssec = True
             _, _, _, _, _, _, algorithm, *rest = answer[0].to_text().split()
-            self.metadata.dnssec_algorithm = constants.DNSSEC_ALGORITHMS[int(algorithm)]
+            self.metadata.dnssec_algorithm = algorithm if int(algorithm) not in constants.DNSSEC_ALGORITHMS else constants.DNSSEC_ALGORITHMS[int(algorithm)]

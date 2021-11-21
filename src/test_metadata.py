@@ -1,16 +1,16 @@
 from datetime import datetime
 from tlsverify.metadata import Metadata
 from tlsverify.transport import Transport
-from tlsverify.validator import CertValidator
+from tlsverify.validator import LeafCertValidator
 
 class TestMetadata:
-    _verify :CertValidator
+    _verify :LeafCertValidator
     host = 'http2.github.io'
     def setup(self):
         if not hasattr(self, '_transport'):
             self._transport = Transport(self.host)
             self._transport.connect_least_secure()
-            self._verify = CertValidator()
+            self._verify = LeafCertValidator()
             self._verify.mount(self._transport)
 
     def test_metadata(self):

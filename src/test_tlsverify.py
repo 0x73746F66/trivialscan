@@ -2,18 +2,18 @@ from pathlib import Path
 import pytest
 from OpenSSL import SSL
 from tlsverify import verify
-from tlsverify.validator import CertValidator, PeerCertValidator
+from tlsverify.validator import LeafCertValidator, PeerCertValidator
 from tlsverify.transport import Transport
 from tlsverify import exceptions
 
 class TestValidator:
-    _verify :CertValidator
+    _verify :LeafCertValidator
     host = 'commbank.com.au'
     def _setup(self):
         if not hasattr(self, '_transport'):
             self._transport = Transport(self.host)
             self._transport.connect_least_secure()
-            self._verify = CertValidator()
+            self._verify = LeafCertValidator()
             self._verify.mount(self._transport)
 
     def test_tranport_mount(self):
@@ -21,7 +21,7 @@ class TestValidator:
         assert isinstance(self._verify.transport, Transport)
 
     def test_cert_validator_no_args(self):
-        v = CertValidator()
+        v = LeafCertValidator()
         assert v.certificate_valid is False
         assert v.validation_checks == {}
         assert v.compliance_checks == {}

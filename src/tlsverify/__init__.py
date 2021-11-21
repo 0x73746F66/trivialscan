@@ -3,7 +3,7 @@ import validators
 from OpenSSL.crypto import X509
 from . import exceptions
 from .transport import Transport
-from .validator import Validator, CertValidator
+from .validator import Validator, LeafCertValidator
 
 
 __module__ = 'tlsverify'
@@ -24,7 +24,7 @@ def verify(host :str, port :int = 443, cafiles :list = None, use_sni :bool = Tru
     if not isinstance(tmp_path_prefix, str):
         raise TypeError(f"provided an invalid type {type(tmp_path_prefix)} for tmp_path_prefix, expected str")
 
-    validator = CertValidator()
+    validator = LeafCertValidator()
     transport = Transport(host, port)
     if client_pem is not None:
         transport.pre_client_authentication_check(client_pem_path=client_pem)

@@ -19,7 +19,7 @@ from . import exceptions, verify, util, validator, pci, nist, fips
 from .transport import Transport
 
 
-__version__ = 'tls-verify==1.0.1'
+__version__ = 'tls-verify==1.1.0'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
@@ -129,7 +129,7 @@ STYLES = {
     'tls_version_interference': {'text': 'TLS version interference', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'tls_version_interference_versions': {'text': 'TLS version interference versions'},
     'tls_long_handshake_intolerance': {'text': 'TLS long handshake intolerance', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
-    'weak_cipher': {'text': 'Negotiated cipher is weak', 'represent_as': (CLI_VALUE_PRESENT, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
+    'weak_cipher': {'text': 'Weak negotiated cipher', 'represent_as': (CLI_VALUE_PRESENT, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'strong_cipher': {'text': 'Strong negotiated cipher', 'represent_as': (CLI_VALUE_PRESENT, CLI_VALUE_NOK), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'forward_anonymity': {'text': 'Forward Anonymity (FPS)', 'represent_as': (CLI_VALUE_PRESENT, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'session_resumption_caching': {'text': 'Session Resumption (caching)', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
@@ -137,6 +137,7 @@ STYLES = {
     'session_resumption_ticket_hint': {'text': 'Session Resumption (ticket hint)', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'client_renegotiation': {'text': 'Insecure Client Renegotiation', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'compression_support': {'text': 'TLS Compression', 'represent_as': (CLI_VALUE_PRESENT, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
+    'tlsa': {'text': 'TLSA/DANE', 'represent_as': (CLI_VALUE_PRESENT, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'dnssec': {'text': 'DNSSEC', 'represent_as': (CLI_VALUE_PRESENT, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'dnssec_algorithm': {'text': 'DNSSEC Algorithm', 'null_as': CLI_VALUE_NA, 'null_color': CLI_COLOR_NULL},
     'scsv': {'text': 'TLS downgrade prevention (SCSV)', 'represent_as': (CLI_VALUE_PRESENT, CLI_VALUE_INEFFECTIVE), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
@@ -209,6 +210,7 @@ SERVER_KEYS = [
     'revocation_ocsp_must_staple',
     'client_certificate_expected',
     'certification_authority_authorization',
+    'tlsa',
     'dnssec',
     'dnssec_algorithm',
     'scsv',
@@ -452,7 +454,7 @@ def root_outputs(validator :validator.RootCertValidator) -> Table:
     _table_ext(validator, table, ROOT_SKIP)
     return table
 
-def server_outputs(validator :validator.CertValidator) -> Table:
+def server_outputs(validator :validator.LeafCertValidator) -> Table:
     title = f'Leaf Certificate {validator.metadata.host}:{validator.metadata.port} ({validator.metadata.peer_address})'
     caption = '\n'.join([
         f'Issuer: {validator.metadata.certificate_issuer}',
@@ -484,14 +486,14 @@ def output(result, debug :bool = False):
         console.print(root_outputs(result))
     if isinstance(result, validator.PeerCertValidator):
         console.print(peer_outputs(result))
-    if isinstance(result, validator.CertValidator):
+    if isinstance(result, validator.LeafCertValidator):
         console.print(server_outputs(result))
     console.print('\n\n')
 
 def validator_data(result :validator.Validator, certificate_type :str, skip_keys :list) -> dict:
     data = asdict(result.metadata)
     data['certificate_valid'] = result.certificate_valid
-    if isinstance(result, validator.CertValidator):
+    if isinstance(result, validator.LeafCertValidator):
         data['certificate_chain_valid'] = result.certificate_chain_valid
         data['certificate_chain_validation_result'] = result.certificate_chain_validation_result
     data['certificate_type'] = certificate_type
@@ -539,7 +541,7 @@ def make_json(results :list[validator.Validator], evaluation_duration_seconds :i
             if result.metadata.certificate_intermediate_ca:
                 cert_type = 'Intermediate CA'
             data['validations'].append(validator_data(result, cert_type, [x for x in PEER_SKIP if x not in JSON_ONLY]))
-        if isinstance(result, validator.CertValidator):
+        if isinstance(result, validator.LeafCertValidator):
             data['validations'].append(validator_data(result, 'Leaf Certificate', [x for x in SERVER_SKIP if x not in SERVER_JSON_ONLY]))
     return json.dumps(data, sort_keys=True, default=str)
 
@@ -565,7 +567,7 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
                     raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
                 if validators.domain(host) is not True:
                     raise ValueError(f"provided an invalid domain {host}")
-                result = validator.CertValidator()
+                result = validator.LeafCertValidator()
                 transport = Transport(host, port)
                 if client_pem is None:
                     progress.update(prog_client_auth, visible=False)
