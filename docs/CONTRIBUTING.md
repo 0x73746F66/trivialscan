@@ -39,7 +39,7 @@ What to contribute?
 
 Anything you want, or one of these:
 
-⌛⌛ 2.0 Todo List ⌛⌛
+⌛⌛ 2.0.0 Todo List ⌛⌛
 
 - HSTS Preloading
 - Handshake Simulations
@@ -55,11 +55,6 @@ Anything you want, or one of these:
   - signedCertificateTimestampList (CT)
   - OCSPNonce reuse
 - Timestamps are valid using NTP
-- compromised private keys (pwnedkeys.com to start)
-- compromised intermediate certs;
-  - Lenovo Superfish
-  - Dell eDellRoot
-  - Dell DSD Test Provider
 - Issuer match (If the server is owned or operated by you, a Zero-trust requirement)
 - if CT expected (Zero-trust requirement), Certificate Transparency resolves
 - if HPKP is still present and expected, validate per the policy
@@ -72,6 +67,5 @@ Anything you want, or one of these:
   - HMAC [httpbis-message-signatures](https://datatracker.ietf.org/doc/draft-ietf-httpbis-message-signatures/) example custom authenticator
 - Certificate Summary
   - Public Key Modulus
-  - Public Key SPKI SHA-256
   - deep link https://crt.sh/?sha1=
   - Certificate Transparency

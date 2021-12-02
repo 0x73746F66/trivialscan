@@ -5,10 +5,11 @@ from os import path
 from base64 import b64encode
 from datetime import datetime
 from pathlib import Path
-import asn1crypto
+import requests
 from ssl import PEM_cert_to_DER_cert
 from OpenSSL import SSL
 from OpenSSL.crypto import X509,  X509Name, dump_privatekey, dump_certificate, load_certificate, FILETYPE_PEM, FILETYPE_ASN1, FILETYPE_TEXT, TYPE_RSA, TYPE_DSA, TYPE_DH, TYPE_EC
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from cryptography.x509 import Certificate, extensions, PolicyInformation
 from certvalidator.errors import PathValidationError, RevokedError, InvalidCertificateError, PathBuildingError
 from dns.rrset import RRset
@@ -132,10 +133,10 @@ class Validator:
         self.metadata.certificate_issuer = issuer.commonName
         self.metadata.certificate_issuer_country = issuer.countryName
         self.metadata.certificate_signature_algorithm = x509.get_signature_algorithm().decode('ascii')
-        self.metadata.certificate_pin_sha256 = b64encode(hashlib.sha256(asn1crypto.x509.Certificate.load(self._der).public_key.dump()).digest()).decode()
         self.metadata.certificate_sha256_fingerprint = hashlib.sha256(self._der).hexdigest()
         self.metadata.certificate_sha1_fingerprint = hashlib.sha1(self._der).hexdigest()
         self.metadata.certificate_md5_fingerprint = hashlib.md5(self._der).hexdigest()
+        self.metadata.certificate_spki_fingerprint = hashlib.sha256(self.x509.to_cryptography().public_key().public_bytes(Encoding.DER, PublicFormat.SubjectPublicKeyInfo)).hexdigest()
         self.metadata.certificate_san = util.get_san(self.certificate)
         not_before = datetime.strptime(x509.get_notBefore().decode('ascii'), constants.X509_DATE_FMT)
         not_after = datetime.strptime(x509.get_notAfter().decode('ascii'), constants.X509_DATE_FMT)
@@ -226,6 +227,7 @@ class Validator:
             self.certificate_verify_messages.append(constants.KNOWN_WEAK_KEYS[self.metadata.certificate_public_key_type])
         self.possible_phish_or_malicious()
         self.known_compromise()
+        self.pwnedkeys()
 
     def possible_phish_or_malicious(self) -> bool:
         logger.debug('Impersonation, C2, other detections')
@@ -260,6 +262,17 @@ class Validator:
         if self.metadata.certificate_sha1_fingerprint.upper() in constants.COMPROMISED_SHA1.keys():
             self.metadata.certificate_known_compromised = True
         return self.metadata.certificate_known_compromised
+
+    def pwnedkeys(self) -> bool:
+        url = f"https://v1.pwnedkeys.com/{self.metadata.certificate_spki_fingerprint.lower()}.jws"
+        logger.info(f'Check {url}')
+        resp = requests.get(url)
+        logger.debug(resp.text)
+        if 'That key does not appear to be pwned' in resp.text:
+            self.metadata.certificate_key_compromised = False
+        if resp.status_code == 200:
+            self.metadata.certificate_key_compromised = True
+        return self.metadata.certificate_key_compromised
 
 class RootCertValidator(Validator):
     def __init__(self, **kwargs) -> None:

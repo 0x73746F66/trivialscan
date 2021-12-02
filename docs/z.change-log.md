@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.1.2 Dec 2nd 2021
+
+- renamed `certificate_pin_sha256` to `certificate_spki_fingerprint`
+- added pwnedkeys.com check
+
 ## 1.1.1 Nov 22nd 2021
 
 - Bug fix for JSON output

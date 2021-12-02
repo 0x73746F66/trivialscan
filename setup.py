@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="1.1.1",
+    version="1.1.2",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -101,6 +101,8 @@ optional arguments:
   - ✓ Downgrade attack detection and SCSV
   - ✓ TLS version intolerance
   - ✓ TLS version interference
+  - ✓ TLS long handshake intolerance detection
+  - ✓ TLSA/DANE detection 
 - DNS Information
   - ✓ Certification Authority Authorization (CAA) present
   - ✓ CAA Valid
@@ -184,6 +186,8 @@ optional arguments:
   - ✓ Server certificates should not be a CA
   - ✓ When client certificate presented, check cert usage permits clientAuth
   - ✓ Certificate is not self signed
+  - ✓ Compromised Certificate
+  - ✓ Compromised Private Key
 - Authentication
   - ✓ clientAuth
 - ✓ CLI output evaluation duration

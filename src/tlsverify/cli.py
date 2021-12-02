@@ -19,7 +19,7 @@ from . import exceptions, verify, util, validator, pci, nist, fips
 from .transport import Transport
 
 
-__version__ = 'tls-verify==1.1.1'
+__version__ = 'tls-verify==1.1.2'
 __module__ = 'tlsverify.cli'
 
 CLI_COLOR_OK = 'dark_sea_green2'
@@ -92,10 +92,10 @@ STYLES = {
     'certificate_public_key_exponent': {'text': 'Public Key Exponent', 'null_as': CLI_VALUE_NA, 'null_color': CLI_COLOR_NULL},
     'certificate_private_key_pem': {'text': 'Derived private key (PEM format)'},
     'certificate_signature_algorithm': {'text': 'Signature Algorithm'},
-    'certificate_pin_sha256': {'text': 'Certificate pin (sha256)'},
     'certificate_sha256_fingerprint': {'text': 'Fingerprint (sha256)'},
     'certificate_sha1_fingerprint': {'text': 'Fingerprint (sha1)'},
     'certificate_md5_fingerprint': {'text': 'Fingerprint (md5)'},
+    'certificate_spki_fingerprint': {'text': 'Fingerprint (SPKI)'},
     'certificate_serial_number': {'text': 'Serial'},
     'certificate_serial_number_decimal': {'text': 'Serial (decimal)'},
     'certificate_serial_number_hex': {'text': 'Serial (hex)'},
@@ -109,6 +109,7 @@ STYLES = {
     'certificate_authority_key_identifier': {'text': 'Authority Key Identifier (AKI)'},
     'certificate_validation_type': {'text': 'Certificate Owner Validation Method'},
     'certificate_known_compromised': {'text': 'Compromised Certificate', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
+    'certificate_key_compromised': {'text': 'Compromised Private Key', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'client_certificate_expected': {'text': 'Client Certificate Expected', 'represent_as': (CLI_VALUE_YES, CLI_VALUE_NO), 'colors': (CLI_COLOR_ALERT, CLI_COLOR_NULL)},
     'certification_authority_authorization': {'text': 'CAA', 'represent_as': (CLI_VALUE_PRESENT, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'revocation_ocsp_status': {'text': 'Revocation: OCSP'},
@@ -281,7 +282,6 @@ SUMMARY_SKIP = [
     'certificate_intermediate_ca',
     'certificate_root_ca',
     'certificate_signature_algorithm',
-    'certificate_pin_sha256',
     'certificate_public_key_type',
     'certificate_public_key_curve',
     'certificate_public_key_size',
@@ -340,6 +340,7 @@ SUMMARY_SKIP = [
     'certificate_sha256_fingerprint',
     'certificate_sha1_fingerprint',
     'certificate_md5_fingerprint',
+    'certificate_spki_fingerprint',
     'certificate_subject_key_identifier',
     'certificate_authority_key_identifier',
     'verification_details',
@@ -349,6 +350,7 @@ FINGERPRINTS = [
     'certificate_sha256_fingerprint',
     'certificate_sha1_fingerprint',
     'certificate_md5_fingerprint',
+    'certificate_spki_fingerprint',
     'certificate_subject_key_identifier',
     'certificate_authority_key_identifier'
 ]
