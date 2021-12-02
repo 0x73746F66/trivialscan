@@ -579,8 +579,7 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
                 if not transport.connect_least_secure(cafiles=cafiles, use_sni=use_sni, progress_bar=update_bar(progress, prog_tls)) or not isinstance(transport.server_certificate, X509):
                     raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=host, port=port))
                 progress.update(prog_tls, advance=1)
-                if isinstance(tmp_path_prefix, str):
-                    result.tmp_path_prefix = tmp_path_prefix
+                result.tmp_path_prefix = tmp_path_prefix
                 result.mount(transport)
                 progress.update(prog_cert_val, advance=1)
                 result.verify()

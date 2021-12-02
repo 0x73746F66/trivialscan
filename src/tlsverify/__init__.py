@@ -31,8 +31,7 @@ def verify(host :str, port :int = 443, cafiles :list = None, use_sni :bool = Tru
 
     if not transport.connect_least_secure(cafiles=cafiles, use_sni=use_sni) or not isinstance(transport.server_certificate, X509):
         raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=host, port=port))
-    if isinstance(tmp_path_prefix, str):
-        validator.tmp_path_prefix = tmp_path_prefix
+    validator.tmp_path_prefix = tmp_path_prefix
     validator.mount(transport)
     validator.verify()
     validator.verify_chain()

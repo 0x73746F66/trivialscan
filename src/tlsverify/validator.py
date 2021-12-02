@@ -829,5 +829,5 @@ class LeafCertValidator(Validator):
         answer :list[RRset] = util.get_dnssec_answer(self.metadata.host)
         if answer:
             self.metadata.dnssec = True
-            _, _, _, _, _, _, algorithm, *rest = answer[0].to_text().split()
-            self.metadata.dnssec_algorithm = algorithm if int(algorithm) not in constants.DNSSEC_ALGORITHMS else constants.DNSSEC_ALGORITHMS[int(algorithm)]
+            algorithm = int(answer[0].to_text().split()[6])
+            self.metadata.dnssec_algorithm = algorithm if algorithm not in constants.DNSSEC_ALGORITHMS else constants.DNSSEC_ALGORITHMS[algorithm]

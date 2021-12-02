@@ -188,7 +188,7 @@ class Transport:
         if protocol.upper() not in ['HTTP/1.0', 'HTTP/1.1']:
             raise AttributeError(f'protocol {protocol} not supported')
         if not isinstance(uri_path, str):
-            raise AttributeError(f'uri_path not supported')
+            raise AttributeError('uri_path not supported')
         if not uri_path.startswith('/'):
             uri_path = f'/{uri_path}'
 
@@ -578,7 +578,14 @@ class Transport:
                 self._protocol_handler(conn, protocol)
             conn.shutdown()
         except SSL.Error as err:
-            if not any(x in str(err) for x in ['no protocols available', 'alert protocol', 'shutdown while in init']):
+            if all(
+                x not in str(err)
+                for x in [
+                    'no protocols available',
+                    'alert protocol',
+                    'shutdown while in init',
+                ]
+            ):
                 logger.warning(err, exc_info=True)
         except Exception as ex:
             logger.warning(ex, exc_info=True)
