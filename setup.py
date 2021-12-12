@@ -193,14 +193,14 @@ optional arguments:
 - ✓ CLI output evaluation duration
 - ✓ OpenSSL verify errors are actually evaluated and reported instead of either terminate connection or simply ignored (default approach most use VERIFY_NONE we actually let openssl do verification and keep the connection open anyway)
 
-## [Change Log](https://gitlab.com/chrislangton/py-tls-veryify/-/blob/main/docs/z.change-log.md)
+## [Change Log](https://gitlab.com/trivialsec/tlsverify/-/blob/main/docs/z.change-log.md)
     """,
     long_description_content_type="text/markdown",
-    url="https://gitlab.com/chrislangton/py-tls-veryify",
+    url="https://gitlab.com/trivialsec/py-tls-veryify",
     project_urls={
-        "Source": "https://gitlab.com/chrislangton/py-tls-veryify",
-        "Documentation": "https://gitlab.com/chrislangton/py-tls-veryify/-/blob/main/docs/0.index.md",
-        "Tracker": "https://gitlab.com/chrislangton/py-tls-veryify/-/issues",
+        "Source": "https://gitlab.com/trivialsec/tlsverify",
+        "Documentation": "https://gitlab.com/trivialsec/tlsverify/-/blob/main/docs/0.index.md",
+        "Tracker": "https://gitlab.com/trivialsec/tlsverify/-/issues",
     },
     classifiers=[
         "Operating System :: OS Independent",
