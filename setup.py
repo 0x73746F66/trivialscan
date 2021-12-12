@@ -11,9 +11,9 @@ setup(
 
 Validate the security of your TLS connections so that they deserve your trust.
 
-## [Documentation](https://gitlab.com/chrislangton/py-tls-veryify/-/blob/main/docs/0.index.md)
+## [Documentation](https://gitlab.com/trivialsec/tlsveryify/-/blob/main/docs/0.index.md)
 
-![Leaf cba.com.au](https://gitlab.com/chrislangton/py-tls-veryify/-/raw/main/docs/images/leaf-cba.com.au.png)
+![Leaf cba.com.au](https://gitlab.com/trivialsec/tlsveryify/-/raw/main/docs/images/leaf-cba.com.au.png)
 
 ## Basic Usage
 
@@ -189,14 +189,14 @@ optional arguments:
 - ✓ CLI output evaluation duration
 - ✓ OpenSSL verify errors are actually evaluated and reported instead of either terminate connection or simply ignored (default approach most use VERIFY_NONE we actually let openssl do verification and keep the connection open anyway)
 
-## [Change Log](https://gitlab.com/chrislangton/py-tls-veryify/-/blob/main/docs/z.change-log.md)
+## [Change Log](https://gitlab.com/trivialsec/tlsveryify/-/blob/main/docs/z.change-log.md)
     """,
     long_description_content_type="text/markdown",
-    url="https://gitlab.com/chrislangton/py-tls-veryify",
+    url="https://gitlab.com/trivialsec/tlsveryify",
     project_urls={
-        "Source": "https://gitlab.com/chrislangton/py-tls-veryify",
-        "Documentation": "https://gitlab.com/chrislangton/py-tls-veryify/-/blob/main/docs/0.index.md",
-        "Tracker": "https://gitlab.com/chrislangton/py-tls-veryify/-/issues",
+        "Source": "https://gitlab.com/trivialsec/tlsveryify",
+        "Documentation": "https://gitlab.com/trivialsec/tlsveryify/-/blob/main/docs/0.index.md",
+        "Tracker": "https://gitlab.com/trivialsec/tlsveryify/-/issues",
     },
     classifiers=[
         "Operating System :: OS Independent",
