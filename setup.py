@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="1.1.2",
+    version="1.1.3",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -11,9 +11,9 @@ setup(
 
 Validate the security of your TLS connections so that they deserve your trust.
 
-## [Documentation](https://gitlab.com/chrislangton/py-tls-veryify/-/blob/main/docs/0.index.md)
+## [Documentation](https://gitlab.com/trivialsec/tlsverify/-/blob/main/docs/0.index.md)
 
-![Leaf cba.com.au](https://gitlab.com/chrislangton/py-tls-veryify/-/raw/main/docs/images/leaf-cba.com.au.png)
+![Leaf cba.com.au](https://gitlab.com/trivialsec/tlsverify/-/raw/main/docs/images/leaf-cba.com.au.png)
 
 ## Basic Usage
 
@@ -226,7 +226,7 @@ optional arguments:
         'dnspython==2.1.0',
         'tldextract==3.1.2',
         'moz-crlite-query==0.4.2',
-        'tlstrust==2.0.2'
+        'tlstrust==2.0.3'
     ],
     entry_points = {
         'console_scripts': ['tlsverify=tlsverify.cli:cli'],

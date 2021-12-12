@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.1.3 Dec 2nd 2021
+
+- bump `tlstrust==2.0.3` for more android version support
+- updated repo paths
+
 ## 1.1.2 Dec 2nd 2021
 
 - renamed `certificate_pin_sha256` to `certificate_spki_fingerprint`
