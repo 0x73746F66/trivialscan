@@ -15,12 +15,13 @@ from rich.progress import Progress
 from rich.table import Table
 from rich.style import Style
 from rich import box
-from . import exceptions, verify, util, validator, pci, nist, fips
+from . import __version__, exceptions, verify, util, validator, pci, nist, fips
 from .transport import Transport
 
 
-__version__ = 'tls-verify==1.1.3'
 __module__ = 'tlsverify.cli'
+
+assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 
 CLI_COLOR_OK = 'dark_sea_green2'
 CLI_COLOR_NOK = 'light_coral'
@@ -579,6 +580,9 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
                     transport.pre_client_authentication_check(client_pem_path=client_pem, progress_bar=update_bar(progress, prog_client_auth))
                     progress.update(prog_client_auth, advance=1)
                 if not transport.connect_least_secure(cafiles=cafiles, use_sni=use_sni, progress_bar=update_bar(progress, prog_tls)) or not isinstance(transport.server_certificate, X509):
+                    progress.update(prog_client_auth, visible=False)
+                    progress.update(prog_tls, visible=False)
+                    progress.update(prog_cert_val, visible=False)
                     raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=host, port=port))
                 progress.update(prog_tls, advance=1)
                 result.tmp_path_prefix = tmp_path_prefix
@@ -728,33 +732,37 @@ def cli():
 
     all_results = []
     evaluation_start = datetime.utcnow()
-    if args.hide_progress_bars:
-        for domain, port in domains:
-            _, results = verify(
-                domain,
-                int(port),
+    console = Console()
+    try:
+        if args.hide_progress_bars:
+            for domain, port in domains:
+                _, results = verify(
+                    domain,
+                    int(port),
+                    cafiles=args.cafiles,
+                    use_sni=not args.disable_sni,
+                    client_pem=args.client_pem,
+                    tmp_path_prefix=args.tmp_path_prefix,
+                )
+                all_results += results
+            valid = all([v.certificate_valid for v in all_results])
+            for result in all_results:
+                output(result, debug=debug)
+            result_style = Style(color=CLI_COLOR_OK if valid else CLI_COLOR_NOK)
+            console.print('Valid ✓✓✓' if valid else '\nNot Valid. There where validation errors', style=result_style)
+            console.print(f'Evaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n\n')
+        else:
+            all_results = with_progress_bars( # clones tlsverify.verify and only adds progress bars
+                domains=domains,
                 cafiles=args.cafiles,
                 use_sni=not args.disable_sni,
                 client_pem=args.client_pem,
                 tmp_path_prefix=args.tmp_path_prefix,
+                debug=debug
             )
-            all_results += results
-        console = Console()
-        valid = all([v.certificate_valid for v in all_results])
-        for result in all_results:
-            output(result, debug=debug)
-        result_style = Style(color=CLI_COLOR_OK if valid else CLI_COLOR_NOK)
-        console.print('Valid ✓✓✓' if valid else '\nNot Valid. There where validation errors', style=result_style)
-        console.print(f'Evaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n\n')
-    else:
-        all_results = with_progress_bars( # clones tlsverify.verify and only adds progress bars
-            domains=domains,
-            cafiles=args.cafiles,
-            use_sni=not args.disable_sni,
-            client_pem=args.client_pem,
-            tmp_path_prefix=args.tmp_path_prefix,
-            debug=debug
-        )
+    except exceptions.ValidationError as ex:
+        console.print(str(ex))
+        return
 
     if JSON_FILE:
         json_path = Path(JSON_FILE)

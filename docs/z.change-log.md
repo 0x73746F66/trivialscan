@@ -1,5 +1,14 @@
 # Change Log
 
+## 1.1.5 Jan 16th 2022
+
+- When using CLI or setting any validator property `use_sqlite` to False; Mozilla CRLite will not cache and make all checks on-demand
+- Handle TLS connection fail better for cli
+
+## 1.1.4 Dec 2nd 2021
+
+- added `normalise` and `to_dict` to produce identical data structure as JSON from the CLI
+
 ## 1.1.3 Dec 2nd 2021
 
 - bump `tlstrust==2.0.3` for more android version support

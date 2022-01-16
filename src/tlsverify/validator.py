@@ -2,7 +2,6 @@ import json
 import hashlib
 import logging
 from os import path
-from base64 import b64encode
 from datetime import datetime
 from pathlib import Path
 import requests
@@ -68,14 +67,16 @@ class Validator:
     compliance_checks :dict
     validation_checks :dict
     certificate_verify_messages :list
+    use_sqlite :bool
 
-    def __init__(self, tmp_path_prefix :str = '/tmp') -> None:
+    def __init__(self, tmp_path_prefix :str = '/tmp', use_sqlite :bool = True) -> None:
         if not isinstance(tmp_path_prefix, str):
             raise TypeError(f'tmp_path_prefix of type {type(tmp_path_prefix)} not supported, str expected')
         tmp_path = Path(tmp_path_prefix)
         if not tmp_path.is_dir():
             raise AttributeError(f'tmp_path_prefix {tmp_path_prefix} is not a directory')
         self.tmp_path_prefix = tmp_path_prefix
+        self.use_sqlite = use_sqlite
         self.compliance_checks = {}
         self.validation_checks = {}
         self.certificate_verify_messages = []
@@ -228,6 +229,9 @@ class Validator:
         self.possible_phish_or_malicious()
         self.known_compromise()
         self.pwnedkeys()
+        self.metadata.revocation_crlite = util.crlite_revoked(db_path=path.join(self.tmp_path_prefix, ".crlite_db"), pem=self._pem, use_sqlite=self.use_sqlite)
+        if self.metadata.revocation_crlite:
+            self.validation_checks[VALIDATION_REVOCATION] = False
 
     def possible_phish_or_malicious(self) -> bool:
         logger.debug('Impersonation, C2, other detections')
@@ -249,9 +253,6 @@ class Validator:
             for san in self.metadata.certificate_san:
                 if bad in san:
                     self.metadata.possible_phish_or_malicious = True
-        self.metadata.revocation_crlite = util.crlite_revoked(db_path=path.join(self.tmp_path_prefix, ".crlite_db"), pem=self._pem)
-        if self.metadata.revocation_crlite:
-            self.validation_checks[VALIDATION_REVOCATION] = False
         if self.metadata.certificate_private_key_pem and 'BEGIN PRIVATE KEY' in self.metadata.certificate_private_key_pem:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_EXPOSED_PRIVATE_KEY)
         return self.metadata.possible_phish_or_malicious

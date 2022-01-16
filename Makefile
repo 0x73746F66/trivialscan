@@ -6,7 +6,7 @@ help: ## This help.
 
 .DEFAULT_GOAL := help
 
-install-deps: ## setup for development of this project
+setup: ## setup for development of this project
 	pip install -U --progress-bar off pip setuptools wheel semgrep pylint pytest build twine coverage
 
 install: build ## Install the package
@@ -24,7 +24,7 @@ build: check ## build wheel file
 	python3 -m build -nx
 
 publish: build ## upload to pypi.org
-	git tag $(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')
+	git tag -f $(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')
 	git push -u origin --tags
 	python3 -m twine upload dist/*
 
