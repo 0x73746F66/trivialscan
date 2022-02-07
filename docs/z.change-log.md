@@ -1,6 +1,6 @@
 # Change Log
 
-## 1.1.6 Feb 8th 2022
+## 1.1.7 Feb 8th 2022
 
 - update dns resolver to eliminate deprecation warnings
 - bump `tlstrust==2.1.1`

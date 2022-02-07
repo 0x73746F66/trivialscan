@@ -10,7 +10,7 @@ from .transport import Transport
 from .validator import Validator, LeafCertValidator, RootCertValidator, PeerCertValidator
 
 
-__version__ = 'tls-verify==1.1.6'
+__version__ = 'tls-verify==1.1.7'
 __module__ = 'tlsverify'
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
