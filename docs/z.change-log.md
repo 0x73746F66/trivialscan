@@ -3,7 +3,8 @@
 ## 1.1.7 Feb 8th 2022
 
 - update dns resolver to eliminate deprecation warnings
-- bump `tlstrust==2.1.1`
+- bump `idna`
+- bump `tlstrust`
 
 ## 1.1.5 Jan 16th 2022
 
