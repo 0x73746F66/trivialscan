@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tls-verify",
-    version="1.1.5",
+    version="1.1.6",
     author='Christopher Langton',
     author_email='chris@langton.cloud',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -218,7 +218,7 @@ optional arguments:
         'pyOpenSSL==21.0.0',
         'validators==0.18.2',
         'idna==3.2',
-        'rich==10.12.0',
+        'rich==11.0.0',
         'hyperframe==6.0.1',
         'retry==0.9.2',
         'urllib3==1.26.7',
@@ -226,7 +226,7 @@ optional arguments:
         'dnspython==2.1.0',
         'tldextract==3.1.2',
         'moz-crlite-query==0.4.2',
-        'tlstrust==2.0.4'
+        'tlstrust==2.1.1'
     ],
     entry_points = {
         'console_scripts': ['tlsverify=tlsverify.cli:cli'],

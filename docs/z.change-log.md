@@ -1,5 +1,10 @@
 # Change Log
 
+## 1.1.6 Feb 8th 2022
+
+- update dns resolver to eliminate deprecation warnings
+- bump `tlstrust==2.1.1`
+
 ## 1.1.5 Jan 16th 2022
 
 - When using CLI or setting any validator property `use_sqlite` to False; Mozilla CRLite will not cache and make all checks on-demand

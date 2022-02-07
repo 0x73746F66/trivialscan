@@ -505,7 +505,7 @@ def get_txt_answer(domain_name :str) -> resolver.Answer:
     dns_resolver = resolver.Resolver(configure=False)
     dns_resolver.lifetime = 5
     try:
-        response = resolver.query(domain_name, rdatatype.TXT)
+        response = dns_resolver.resolve(domain_name, rdatatype.TXT)
     except NoAnswer:
         logger.warning('DNS NoAnswer')
         return None
@@ -529,7 +529,7 @@ def get_tlsa_answer(domain_name :str) -> resolver.Answer:
     dns_resolver = resolver.Resolver(configure=False)
     dns_resolver.lifetime = 5
     try:
-        response = resolver.query(domain_name, rdatatype.TLSA)
+        response = dns_resolver.resolve(domain_name, rdatatype.TLSA)
     except NoAnswer:
         logger.warning('DNS NoAnswer')
         return None
@@ -555,7 +555,7 @@ def get_dnssec_answer(domain_name :str):
     tldext = TLDExtract(cache_dir='/tmp')(f'http://{domain_name}')
     answers = []
     try:
-        response = resolver.query(domain_name, rdatatype.NS)
+        response = dns_resolver.resolve(domain_name, rdatatype.NS)
     except NoAnswer:
         return get_dnssec_answer(tldext.registered_domain) if tldext.registered_domain != domain_name else None
     except DNSTimeoutError:
@@ -575,7 +575,7 @@ def get_dnssec_answer(domain_name :str):
     for ns in [i.to_text() for i in response.rrset]:
         logger.info(f'Checking A for {ns}')
         try:
-            response = dns_resolver.query(ns, rdtype=rdatatype.A)
+            response = dns_resolver.resolve(ns, rdtype=rdatatype.A)
         except DNSTimeoutError:
             logger.warning(f'DNS Timeout {ns} A')
             continue
@@ -647,7 +647,7 @@ def get_caa(domain_name :str):
     dns_resolver = resolver.Resolver(configure=False)
     dns_resolver.lifetime = 5
     try:
-        response = resolver.query(domain_name, rdatatype.CAA)
+        response = resolver.resolve(domain_name, rdatatype.CAA)
     except DNSTimeoutError:
         logger.warning('DNS Timeout')
     except DNSException as ex:

@@ -775,7 +775,7 @@ class Transport:
 
             self.test_scsv(tls_versions[index+1], use_sni)
             progress_bar()
-            
+
             self.test_tls_all_versions(use_sni)
             progress_bar()
 
