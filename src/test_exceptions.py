@@ -1,5 +1,5 @@
 import pytest
-import .exceptions
+from trivialscan import exceptions
 
 def test_openssl_errno():
     openssl_errno = 18
