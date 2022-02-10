@@ -1,7 +1,7 @@
 from datetime import datetime
-from tlsverify.metadata import Metadata
-from tlsverify.transport import Transport
-from tlsverify.validator import LeafCertValidator
+from trivialscan.metadata import Metadata
+from trivialscan.transport import Transport
+from trivialscan.validator import LeafCertValidator
 
 class TestMetadata:
     _verify :LeafCertValidator

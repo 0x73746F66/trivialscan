@@ -10,8 +10,8 @@ from .transport import Transport
 from .validator import Validator, LeafCertValidator, RootCertValidator, PeerCertValidator
 
 
-__version__ = 'tls-verify==1.1.7'
-__module__ = 'tlsverify'
+__version__ = 'trivialscan==2.0.0'
+__module__ = 'trivialscan'
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 logger = logging.getLogger(__name__)

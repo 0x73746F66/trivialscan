@@ -23,7 +23,7 @@ from dns.resolver import NoAnswer
 from tldextract import TLDExtract
 from . import constants
 
-__module__ = 'tlsverify.util'
+__module__ = 'trivialscan.util'
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ def filter_valid_files_urls(inputs :list[str], tmp_path_prefix :str = '/tmp'):
             continue
         if validators.url(test) is True:
             r = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
-            local_path = f'{tmp_path_prefix}/tlsverify-{r}'
+            local_path = f'{tmp_path_prefix}/trivialscan-{r}'
             try:
                 urlretrieve(test, local_path)
             except Exception as ex:
@@ -697,7 +697,7 @@ def caa_valid(domain_name :str, cert :X509, certificate_chain :list[X509]) -> bo
     if not isinstance(issuer, X509):
         logger.warning('Issuer certificate not found in chain')
         return False
-    
+
     common_name = cert.get_subject().CN
     if not common_name:
         return False

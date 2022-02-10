@@ -7,6 +7,7 @@ from datetime import datetime
 from dataclasses import asdict
 import validators
 from OpenSSL.crypto import X509
+from tlstrust import TrustStore
 from rich import inspect
 from rich.console import Console
 from rich.style import Style
@@ -19,7 +20,7 @@ from . import __version__, exceptions, verify, util, validator, pci, nist, fips
 from .transport import Transport
 
 
-__module__ = 'tlsverify.cli'
+__module__ = 'trivialscan.cli'
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 
@@ -429,7 +430,7 @@ def _table_ext(validator :validator.Validator, table :Table, skip :list[str]) ->
                     table.add_row('', util.styled_any(sub))
                 continue
             table.add_row('', str(ext_sub))
-            continue    
+            continue
         table.add_row(f'Extention {ext}', util.styled_any(ext_data))
     return table
 
@@ -535,11 +536,15 @@ def make_json(results :list[validator.Validator], evaluation_duration_seconds :i
         'generator': __version__,
         'date': datetime.utcnow().replace(microsecond=0).isoformat(),
         'evaluation_duration_seconds': evaluation_duration_seconds,
+        'trust': [],
         'validations': []
     }
     for result in results:
         if isinstance(result, validator.RootCertValidator):
             data['validations'].append(validator_data(result, 'Root CA', [x for x in ROOT_SKIP if x not in JSON_ONLY]))
+            trust_store = TrustStore(result.metadata.certificate_authority_key_identifier)
+            for name, is_trusted in trust_store.all_results.items():
+                data['trust'].append({'trust_store': name, 'is_trusted': is_trusted})
         if isinstance(result, validator.PeerCertValidator):
             cert_type = 'Intermediate Certificate'
             if result.metadata.certificate_intermediate_ca:
@@ -611,7 +616,7 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
 
 def cli():
     parser = argparse.ArgumentParser()
-    parser.add_argument("targets", nargs="*", help='All unnamed arguments are hosts (and ports) targets to test. ~$ tlsverify google.com:443 github.io owasp.org:80')
+    parser.add_argument("targets", nargs="*", help='All unnamed arguments are hosts (and ports) targets to test. ~$ trivialscan google.com:443 github.io owasp.org:80')
     parser.add_argument('-H', '--host', help='single host to check', dest='host', default=None)
     parser.add_argument('-p', '--port', help='TLS port of host', dest='port', default=443)
     parser.add_argument('-c', '--cafiles', help='path to PEM encoded CA bundle file, url or file path accepted', dest='cafiles', default=None)
@@ -624,7 +629,7 @@ def cli():
     parser.add_argument('--show-private-key', help='If the private key is exposed, show it in the results', dest='show_private_key', action="store_true")
     parser.add_argument('-s', '--summary-only', help='Do not include informational details, show only validation outcomes', dest='summary_only', action="store_true")
     parser.add_argument('--hide-validation-details', help='Do not include detailed validation messages in output', dest='hide_validation_details', action="store_true")
-    parser.add_argument('-j', '--json-file', help='Store to file as JSON', dest='json_file', default=None)
+    parser.add_argument('-O', '--json-file', help='Store to file as JSON', dest='json_file', default=None)
     parser.add_argument('--hide-progress-bars', help='Hide task progress bars', dest='hide_progress_bars', action="store_true")
     parser.add_argument('-v', '--errors-only', help='set logging level to ERROR (default CRITICAL)', dest='log_level_error', action="store_true")
     parser.add_argument('-vv', '--warning', help='set logging level to WARNING (default CRITICAL)', dest='log_level_warning', action="store_true")
@@ -752,7 +757,7 @@ def cli():
             console.print('Valid ✓✓✓' if valid else '\nNot Valid. There where validation errors', style=result_style)
             console.print(f'Evaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n\n')
         else:
-            all_results = with_progress_bars( # clones tlsverify.verify and only adds progress bars
+            all_results = with_progress_bars( # clones trivialscan.verify and only adds progress bars
                 domains=domains,
                 cafiles=args.cafiles,
                 use_sni=not args.disable_sni,

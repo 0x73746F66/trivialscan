@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-__module__ = 'tlsverify.metadata'
+__module__ = 'trivialscan.metadata'
 
 @dataclass
 class Metadata:

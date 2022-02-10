@@ -1,10 +1,9 @@
 from pathlib import Path
 import pytest
 from OpenSSL import SSL
-from tlsverify import verify
-from tlsverify.validator import LeafCertValidator, PeerCertValidator
-from tlsverify.transport import Transport
-from tlsverify import exceptions
+from trivialscan.validator import LeafCertValidator, PeerCertValidator
+from trivialscan.transport import Transport
+from trivialscan import verify, exceptions
 
 class TestValidator:
     _verify :LeafCertValidator
@@ -49,7 +48,7 @@ class TestValidator:
         assert v._der is None
         assert v.x509 is None
         assert v.certificate is None
- 
+
     def test_no_host(self):
         with pytest.raises(ValueError):
             verify(host=None)
@@ -85,7 +84,7 @@ class TestValidator:
         with pytest.raises(exceptions.ValidationError):
             verify(host='not-a-real.site')
 
-    def test_tlsverify_verify(self):
+    def test_verify_helper(self):
         is_valid, results = verify(self.host)
         assert isinstance(is_valid, bool)
         assert len(results) > 1

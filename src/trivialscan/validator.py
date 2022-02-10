@@ -33,7 +33,7 @@ from . import exceptions, util, constants, pci, fips, nist
 from .transport import Transport
 from .metadata import Metadata
 
-__module__ = 'tlsverify.validator'
+__module__ = 'trivialscan.validator'
 logger = logging.getLogger(__name__)
 
 VALIDATION_CLIENT_AUTHENTICATION = 'client_authentication'
@@ -85,7 +85,7 @@ class Validator:
         self.x509 = None
         self.certificate = None
         self.metadata = None
-    
+
     @property
     def certificate_valid(self):
         validations = list(self.validation_checks.values())
@@ -285,7 +285,7 @@ class RootCertValidator(Validator):
         return f'<Validator(certificate_valid={self.certificate_valid}, ' +\
               f'certificate_verify_messages=["{certificate_verify_messages}"]", ' +\
               f'validation_checks={validation_checks}, ' +\
-               'metadata=<tlsverify.metadata.Metadata>, ' +\
+               'metadata=<trivialscan.metadata.Metadata>, ' +\
                'x509=<OpenSSL.crypto.X509>, ' +\
                '_pem=<bytes>, ' +\
                '_der=<bytes>, ' +\
@@ -424,7 +424,7 @@ class PeerCertValidator(Validator):
         return f'<Validator(certificate_valid={self.certificate_valid}, ' +\
               f'certificate_verify_messages=["{certificate_verify_messages}"]", ' +\
               f'validation_checks={validation_checks}, ' +\
-               'metadata=<tlsverify.metadata.Metadata>, ' +\
+               'metadata=<trivialscan.metadata.Metadata>, ' +\
                'x509=<OpenSSL.crypto.X509>, ' +\
                '_pem=<bytes>, ' +\
                '_der=<bytes>, ' +\
@@ -455,8 +455,8 @@ class LeafCertValidator(Validator):
             + f'certificate_chain_validation_result={self.certificate_chain_validation_result}, '
             + f'certificate_verify_messages=["{certificate_verify_messages}"]", '
             + f'validation_checks={validation_checks}, '
-            + 'metadata=<tlsverify.metadata.Metadata>, '
-            + 'transport=<tlsverify.transport.Transport>, '
+            + 'metadata=<trivialscan.metadata.Metadata>, '
+            + 'transport=<trivialscan.transport.Transport>, '
             + 'x509=<OpenSSL.crypto.X509>, '
             + '_pem=<bytes>, '
             + '_der=<bytes>, '
@@ -465,7 +465,7 @@ class LeafCertValidator(Validator):
 
     def mount(self, transport :Transport):
         if not isinstance(transport, Transport):
-            raise TypeError(f"provided an invalid type {type(transport)} for transport, expected an instance of <tlsverify.transport.Transport>")
+            raise TypeError(f"provided an invalid type {type(transport)} for transport, expected an instance of <trivialscan.transport.Transport>")
         self.transport = transport
         self.extract_transport_metadata(transport)
         if isinstance(transport.server_certificate, X509):

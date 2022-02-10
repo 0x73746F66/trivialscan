@@ -1,49 +1,49 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="tls-verify",
-    version="1.1.7",
+    name="trivialscan",
+    version="2.0.0",
     author='Christopher Langton',
-    author_email='chris@langton.cloud',
+    author_email='chris@trivialsec.com',
     description="Validate the security of your TLS connections so that they deserve your trust.",
     long_description="""
-# tls-verify
+# Trivial Scanner
 
 Validate the security of your TLS connections so that they deserve your trust.
 
-## [Documentation](https://gitlab.com/trivialsec/tlsverify/-/blob/main/docs/0.index.md)
+## [Documentation](https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/0.index.md)
 
-![Leaf cba.com.au](https://gitlab.com/trivialsec/tlsverify/-/raw/main/docs/images/leaf-cba.com.au.png)
+![Leaf cba.com.au](https://gitlab.com/trivialsec/trivialscan/-/raw/main/docs/images/leaf-cba.com.au.png)
 
 ## Basic Usage
 
-`python3 -m pip install -U tls-verify`
+`python3 -m pip install -U trivialscan`
 
 ```py
-import tlsverify
+import trivialscan
 
 host = 'google.com'
-is_valid, results = tlsverify.verify(host)
+is_valid, results = trivialscan.verify(host)
 print('\nValid ✓✓✓' if is_valid else '\nNot Valid. There where validation errors')
 ```
 
-`python3 -m pip install pipx && pipx install tls-verify`
+`python3 -m pip install pipx && pipx install trivialscan`
 
 On the command-line:
 
 ```sh
-tlsverify --help
+trivialscan --help
 ```
 
 produces:
 
 ```
-usage: tlsverify [-h] [-H HOST] [-p PORT] [-c CAFILES] [-C CLIENT_PEM] [-t TMP_PATH_PREFIX] [--pci-dss] [--nist-strict-mode] [--fips-nist-transition-mode] [--disable-sni]
-               [--show-private-key] [-s] [--hide-validation-details] [-j JSON_FILE] [--hide-progress-bars] [-v] [-vv] [-vvv] [-vvvv] [--version]
+usage: trivialscan [-h] [-H HOST] [-p PORT] [-c CAFILES] [-C CLIENT_PEM] [-t TMP_PATH_PREFIX] [--pci-dss] [--nist-strict-mode] [--fips-nist-transition-mode] [--disable-sni]
+               [--show-private-key] [-s] [--hide-validation-details] [-O JSON_FILE] [--hide-progress-bars] [-v] [-vv] [-vvv] [-vvvv] [--version]
                [targets ...]
 
 positional arguments:
-  targets               All unnamed arguments are hosts (and ports) targets to test. ~$ tlsverify google.com:443 github.io owasp.org:80
+  targets               All unnamed arguments are hosts (and ports) targets to test. ~$ trivialscan google.com:443 github.io owasp.org:80
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -64,7 +64,7 @@ optional arguments:
   -s, --summary-only    Do not include informational details, show only validation outcomes
   --hide-validation-details
                         Do not include detailed validation messages in output
-  -j JSON_FILE, --json-file JSON_FILE
+  -O JSON_FILE, --json-file JSON_FILE
                         Store to file as JSON
   --hide-progress-bars  Hide task progress bars
   -v, --errors-only     set logging level to ERROR (default CRITICAL)
@@ -102,7 +102,7 @@ optional arguments:
   - ✓ TLS version intolerance
   - ✓ TLS version interference
   - ✓ TLS long handshake intolerance detection
-  - ✓ TLSA/DANE detection 
+  - ✓ TLSA/DANE detection
 - DNS Information
   - ✓ Certification Authority Authorization (CAA) present
   - ✓ CAA Valid
@@ -193,14 +193,14 @@ optional arguments:
 - ✓ CLI output evaluation duration
 - ✓ OpenSSL verify errors are actually evaluated and reported instead of either terminate connection or simply ignored (default approach most use VERIFY_NONE we actually let openssl do verification and keep the connection open anyway)
 
-## [Change Log](https://gitlab.com/trivialsec/tlsverify/-/blob/main/docs/z.change-log.md)
+## [Change Log](https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/z.change-log.md)
     """,
     long_description_content_type="text/markdown",
     url="https://gitlab.com/trivialsec/py-tls-veryify",
     project_urls={
-        "Source": "https://gitlab.com/trivialsec/tlsverify",
-        "Documentation": "https://gitlab.com/trivialsec/tlsverify/-/blob/main/docs/0.index.md",
-        "Tracker": "https://gitlab.com/trivialsec/tlsverify/-/issues",
+        "Source": "https://gitlab.com/trivialsec/trivialscan",
+        "Documentation": "https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/0.index.md",
+        "Tracker": "https://gitlab.com/trivialsec/trivialscan/-/issues",
     },
     classifiers=[
         "Operating System :: OS Independent",
@@ -226,10 +226,10 @@ optional arguments:
         'dnspython==2.1.0',
         'tldextract==3.1.2',
         'moz-crlite-query==0.4.2',
-        'tlstrust>=2.1.1'
+        'tlstrust>=2.1.2'
     ],
     entry_points = {
-        'console_scripts': ['tlsverify=tlsverify.cli:cli'],
+        'console_scripts': ['trivialscan=trivialscan.cli:cli'],
     },
     packages=find_packages(where="src"),
     package_dir={"": "src"},

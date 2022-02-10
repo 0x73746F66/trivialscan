@@ -1,6 +1,6 @@
 from OpenSSL import SSL
 
-__module__ = 'tlsverify.constants'
+__module__ = 'trivialscan.constants'
 
 CRLITE_URL = "https://firefox.settings.services.mozilla.com/v1/buckets/security-state/collections/cert-revocations/records" # https://github.com/mozilla/moz_crlite_query/blob/main/crlite_query/query_cli.py
 VALIDATION_OID = {

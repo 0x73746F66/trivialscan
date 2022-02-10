@@ -1,4 +1,4 @@
-__module__ = 'tlsverify.fips'
+__module__ = 'trivialscan.fips'
 __version__ = 'FIPS 140-2 (NIST SP800-131A transition mode)'
 
 WEAK_KEY_SIZE = {

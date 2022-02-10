@@ -1,4 +1,4 @@
-__module__ = 'tlsverify.pci'
+__module__ = 'trivialscan.pci'
 __version__ = '3.2.1'
 
 WEAK_KEY_SIZE = {

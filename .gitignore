@@ -3,7 +3,7 @@
 .lh/
 build/
 dist/
-src/tls_verify.egg-info/
+src/trivialscan.egg-info/
 .pypirc
 **/__pycache__/
 .coverage
