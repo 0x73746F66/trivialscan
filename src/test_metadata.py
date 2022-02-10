@@ -1,7 +1,7 @@
 from datetime import datetime
-from tlsverify.metadata import Metadata
-from tlsverify.transport import Transport
-from tlsverify.validator import LeafCertValidator
+from trivialscan.metadata import Metadata
+from trivialscan.transport import Transport
+from trivialscan.validator import LeafCertValidator
 
 class TestMetadata:
     _verify :LeafCertValidator
@@ -26,7 +26,7 @@ class TestMetadata:
         assert isinstance(self._verify.metadata.certificate_issuer, str)
         assert isinstance(self._verify.metadata.certificate_issuer_country, str)
         assert isinstance(self._verify.metadata.certificate_signature_algorithm, str)
-        assert isinstance(self._verify.metadata.certificate_pin_sha256, str)
+        assert isinstance(self._verify.metadata.certificate_spki_fingerprint, str)
         assert len(self._verify.metadata.certificate_sha256_fingerprint) == 64
         assert len(self._verify.metadata.certificate_sha1_fingerprint) == 40
         assert len(self._verify.metadata.certificate_md5_fingerprint) == 32

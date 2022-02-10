@@ -1,6 +1,6 @@
 # Compromised Certificates
 
-Not all compromised certificates are necessary to be noted by `tls-verify` because they may already appear in CRLite or be revoked via OCSP, therefore many known compromised certificates will not be reported as 'compromised' using `tls-verify` (they will show as revoked though).
+Not all compromised certificates are necessary to be noted by `trivialscan` because they may already appear in CRLite or be revoked via OCSP, therefore many known compromised certificates will not be reported as 'compromised' using `trivialscan` (they will show as revoked though).
 
 ## Research
 
@@ -19,7 +19,7 @@ Captured [in bugzilla](https://wiki.mozilla.org/CA/Responding_To_An_Incident#Inc
 
 ### Symantec 2017
 
-The [Symantec](https://groups.google.com/a/chromium.org/g/blink-dev/c/eUAKwjihhBs/m/El1mH8S6AwAJ) trust issue included 2k certificates that were not associated with registered domains, therefore many were not considered a risk to the browsers! Even though each of them are capable of being used maliciously, they simply can't be a server 'leaf' Certificate, so for the purposes of `tls-verify` we will need to distrust any that appear in a certificate chain.
+The [Symantec](https://groups.google.com/a/chromium.org/g/blink-dev/c/eUAKwjihhBs/m/El1mH8S6AwAJ) trust issue included 2k certificates that were not associated with registered domains, therefore many were not considered a risk to the browsers! Even though each of them are capable of being used maliciously, they simply can't be a server 'leaf' Certificate, so for the purposes of `trivialscan` we will need to distrust any that appear in a certificate chain.
 
 Results:
 - Appear as a Root CA; Root stores have all revoked the Symantec so our use of `tlstrust` will uncover these

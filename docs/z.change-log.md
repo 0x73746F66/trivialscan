@@ -1,6 +1,40 @@
 # Change Log
 
-## 1.1.0 Nov 6th 2021
+## 1.1.8 Feb 11th 2022
+
+- bump version of `tlstrust`
+- Added `trust` list to json output to cover all trust store contexts
+
+## 1.1.7 Feb 8th 2022
+
+- update dns resolver to eliminate deprecation warnings
+- bump `idna`
+- bump `tlstrust`
+
+## 1.1.5 Jan 16th 2022
+
+- When using CLI or setting any validator property `use_sqlite` to False; Mozilla CRLite will not cache and make all checks on-demand
+- Handle TLS connection fail better for cli
+
+## 1.1.4 Dec 2nd 2021
+
+- added `normalise` and `to_dict` to produce identical data structure as JSON from the CLI
+
+## 1.1.3 Dec 2nd 2021
+
+- bump `tlstrust==2.0.3` for more android version support
+- updated repo paths
+
+## 1.1.2 Dec 2nd 2021
+
+- renamed `certificate_pin_sha256` to `certificate_spki_fingerprint`
+- added pwnedkeys.com check
+
+## 1.1.1 Nov 22nd 2021
+
+- Bug fix for JSON output
+
+## 1.1.0 Nov 22nd 2021
 
 - `CertValidator` renamed to `LeafCertValidator`
 - Added TLSA/DANE detection via `util.get_tlsa_answer()`
@@ -21,7 +55,7 @@
 - Compliance checks no longer influence validation result
 - Added cli option `--summary-only` to not include informational details, show only important validation outcomes
 - Completed compromised certificate checking
-- Moved constants in `tlsverify.util` to `tlsverify.constants`
+- Moved constants in `trivialscan.util` to `trivialscan.constants`
 
 ## 0.4.15 Nov 1st 2021
 
@@ -118,7 +152,7 @@
 - Added Mozilla CRLite Revocation
 - Added `tlstrust` library to verify Root CA Trust Stores (starting with 6 stores; Apple legacy, Android, Java, Linux, CCADB, and Python)
 - Root CA is added to the chain and validated like any other certificate (though browsers ignore this, it is a TLS requirement)
-- Show `tls-verify` version on cli `--version`
+- Show `trivialscan` version on cli `--version`
 - Bug fix to avoid fatal errors and just show output we have for sites that don't fully negotiate TLS
 
 ## 0.4.1 Oct 19th 2021
@@ -175,10 +209,10 @@
 - Improved cli outputs
 - Renamed cli argument `--sni` to `--disable-sni`
 - Added cli argument to enable progress bars
-- Simplified `tlsverify.verify` helper function
-- New `Transport` class `tlsverify.transport.Transport` for all transport related functionality
-- Moved `Metadata` class from `tlsverify.util.Metadata` to `tlsverify.metadata.Metadata`
-- Moved `Validator` class from `tlsverify.Validator` to `tlsverify.validator.Validator`
+- Simplified `trivialscan.verify` helper function
+- New `Transport` class `trivialscan.transport.Transport` for all transport related functionality
+- Moved `Metadata` class from `trivialscan.util.Metadata` to `trivialscan.metadata.Metadata`
+- Moved `Validator` class from `trivialscan.Validator` to `trivialscan.validator.Validator`
 - Validator class refactored to remove all transport related functionality, it now mounts a `Transport` instance for validation purposes
 - Removed `Validator.extract_metadata`, which is now split into; `extract_x509_metadata` and `extract_transport_metadata` and called privately when needed
 - Removed `Validator.client_authentication` which is not part of the `Transport` class

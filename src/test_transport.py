@@ -1,4 +1,4 @@
-from tlsverify.transport import Transport
+from trivialscan.transport import Transport
 
 class TestMetadata:
     host = 'http2.github.io'

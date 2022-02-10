@@ -2,13 +2,13 @@ import json
 import hashlib
 import logging
 from os import path
-from base64 import b64encode
 from datetime import datetime
 from pathlib import Path
-import asn1crypto
+import requests
 from ssl import PEM_cert_to_DER_cert
 from OpenSSL import SSL
 from OpenSSL.crypto import X509,  X509Name, dump_privatekey, dump_certificate, load_certificate, FILETYPE_PEM, FILETYPE_ASN1, FILETYPE_TEXT, TYPE_RSA, TYPE_DSA, TYPE_DH, TYPE_EC
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from cryptography.x509 import Certificate, extensions, PolicyInformation
 from certvalidator.errors import PathValidationError, RevokedError, InvalidCertificateError, PathBuildingError
 from dns.rrset import RRset
@@ -33,7 +33,7 @@ from . import exceptions, util, constants, pci, fips, nist
 from .transport import Transport
 from .metadata import Metadata
 
-__module__ = 'tlsverify.validator'
+__module__ = 'trivialscan.validator'
 logger = logging.getLogger(__name__)
 
 VALIDATION_CLIENT_AUTHENTICATION = 'client_authentication'
@@ -67,14 +67,16 @@ class Validator:
     compliance_checks :dict
     validation_checks :dict
     certificate_verify_messages :list
+    use_sqlite :bool
 
-    def __init__(self, tmp_path_prefix :str = '/tmp') -> None:
+    def __init__(self, tmp_path_prefix :str = '/tmp', use_sqlite :bool = True) -> None:
         if not isinstance(tmp_path_prefix, str):
             raise TypeError(f'tmp_path_prefix of type {type(tmp_path_prefix)} not supported, str expected')
         tmp_path = Path(tmp_path_prefix)
         if not tmp_path.is_dir():
             raise AttributeError(f'tmp_path_prefix {tmp_path_prefix} is not a directory')
         self.tmp_path_prefix = tmp_path_prefix
+        self.use_sqlite = use_sqlite
         self.compliance_checks = {}
         self.validation_checks = {}
         self.certificate_verify_messages = []
@@ -83,7 +85,7 @@ class Validator:
         self.x509 = None
         self.certificate = None
         self.metadata = None
-    
+
     @property
     def certificate_valid(self):
         validations = list(self.validation_checks.values())
@@ -132,10 +134,10 @@ class Validator:
         self.metadata.certificate_issuer = issuer.commonName
         self.metadata.certificate_issuer_country = issuer.countryName
         self.metadata.certificate_signature_algorithm = x509.get_signature_algorithm().decode('ascii')
-        self.metadata.certificate_pin_sha256 = b64encode(hashlib.sha256(asn1crypto.x509.Certificate.load(self._der).public_key.dump()).digest()).decode()
         self.metadata.certificate_sha256_fingerprint = hashlib.sha256(self._der).hexdigest()
         self.metadata.certificate_sha1_fingerprint = hashlib.sha1(self._der).hexdigest()
         self.metadata.certificate_md5_fingerprint = hashlib.md5(self._der).hexdigest()
+        self.metadata.certificate_spki_fingerprint = hashlib.sha256(self.x509.to_cryptography().public_key().public_bytes(Encoding.DER, PublicFormat.SubjectPublicKeyInfo)).hexdigest()
         self.metadata.certificate_san = util.get_san(self.certificate)
         not_before = datetime.strptime(x509.get_notBefore().decode('ascii'), constants.X509_DATE_FMT)
         not_after = datetime.strptime(x509.get_notAfter().decode('ascii'), constants.X509_DATE_FMT)
@@ -226,6 +228,10 @@ class Validator:
             self.certificate_verify_messages.append(constants.KNOWN_WEAK_KEYS[self.metadata.certificate_public_key_type])
         self.possible_phish_or_malicious()
         self.known_compromise()
+        self.pwnedkeys()
+        self.metadata.revocation_crlite = util.crlite_revoked(db_path=path.join(self.tmp_path_prefix, ".crlite_db"), pem=self._pem, use_sqlite=self.use_sqlite)
+        if self.metadata.revocation_crlite:
+            self.validation_checks[VALIDATION_REVOCATION] = False
 
     def possible_phish_or_malicious(self) -> bool:
         logger.debug('Impersonation, C2, other detections')
@@ -247,9 +253,6 @@ class Validator:
             for san in self.metadata.certificate_san:
                 if bad in san:
                     self.metadata.possible_phish_or_malicious = True
-        self.metadata.revocation_crlite = util.crlite_revoked(db_path=path.join(self.tmp_path_prefix, ".crlite_db"), pem=self._pem)
-        if self.metadata.revocation_crlite:
-            self.validation_checks[VALIDATION_REVOCATION] = False
         if self.metadata.certificate_private_key_pem and 'BEGIN PRIVATE KEY' in self.metadata.certificate_private_key_pem:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_EXPOSED_PRIVATE_KEY)
         return self.metadata.possible_phish_or_malicious
@@ -261,6 +264,17 @@ class Validator:
             self.metadata.certificate_known_compromised = True
         return self.metadata.certificate_known_compromised
 
+    def pwnedkeys(self) -> bool:
+        url = f"https://v1.pwnedkeys.com/{self.metadata.certificate_spki_fingerprint.lower()}.jws"
+        logger.info(f'Check {url}')
+        resp = requests.get(url)
+        logger.debug(resp.text)
+        if 'That key does not appear to be pwned' in resp.text:
+            self.metadata.certificate_key_compromised = False
+        if resp.status_code == 200:
+            self.metadata.certificate_key_compromised = True
+        return self.metadata.certificate_key_compromised
+
 class RootCertValidator(Validator):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -271,7 +285,7 @@ class RootCertValidator(Validator):
         return f'<Validator(certificate_valid={self.certificate_valid}, ' +\
               f'certificate_verify_messages=["{certificate_verify_messages}"]", ' +\
               f'validation_checks={validation_checks}, ' +\
-               'metadata=<tlsverify.metadata.Metadata>, ' +\
+               'metadata=<trivialscan.metadata.Metadata>, ' +\
                'x509=<OpenSSL.crypto.X509>, ' +\
                '_pem=<bytes>, ' +\
                '_der=<bytes>, ' +\
@@ -410,7 +424,7 @@ class PeerCertValidator(Validator):
         return f'<Validator(certificate_valid={self.certificate_valid}, ' +\
               f'certificate_verify_messages=["{certificate_verify_messages}"]", ' +\
               f'validation_checks={validation_checks}, ' +\
-               'metadata=<tlsverify.metadata.Metadata>, ' +\
+               'metadata=<trivialscan.metadata.Metadata>, ' +\
                'x509=<OpenSSL.crypto.X509>, ' +\
                '_pem=<bytes>, ' +\
                '_der=<bytes>, ' +\
@@ -441,8 +455,8 @@ class LeafCertValidator(Validator):
             + f'certificate_chain_validation_result={self.certificate_chain_validation_result}, '
             + f'certificate_verify_messages=["{certificate_verify_messages}"]", '
             + f'validation_checks={validation_checks}, '
-            + 'metadata=<tlsverify.metadata.Metadata>, '
-            + 'transport=<tlsverify.transport.Transport>, '
+            + 'metadata=<trivialscan.metadata.Metadata>, '
+            + 'transport=<trivialscan.transport.Transport>, '
             + 'x509=<OpenSSL.crypto.X509>, '
             + '_pem=<bytes>, '
             + '_der=<bytes>, '
@@ -451,7 +465,7 @@ class LeafCertValidator(Validator):
 
     def mount(self, transport :Transport):
         if not isinstance(transport, Transport):
-            raise TypeError(f"provided an invalid type {type(transport)} for transport, expected an instance of <tlsverify.transport.Transport>")
+            raise TypeError(f"provided an invalid type {type(transport)} for transport, expected an instance of <trivialscan.transport.Transport>")
         self.transport = transport
         self.extract_transport_metadata(transport)
         if isinstance(transport.server_certificate, X509):
@@ -829,5 +843,5 @@ class LeafCertValidator(Validator):
         answer :list[RRset] = util.get_dnssec_answer(self.metadata.host)
         if answer:
             self.metadata.dnssec = True
-            _, _, _, _, _, _, algorithm, *rest = answer[0].to_text().split()
-            self.metadata.dnssec_algorithm = algorithm if int(algorithm) not in constants.DNSSEC_ALGORITHMS else constants.DNSSEC_ALGORITHMS[int(algorithm)]
+            algorithm = int(answer[0].to_text().split()[6])
+            self.metadata.dnssec_algorithm = algorithm if algorithm not in constants.DNSSEC_ALGORITHMS else constants.DNSSEC_ALGORITHMS[algorithm]

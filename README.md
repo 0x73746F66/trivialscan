@@ -1,10 +1,14 @@
-# tls-verify
+# Trivial Scanner
+
+[pypi.org/project/trivialscan](https://pypi.org/project/trivialscan)
+
+Validate the security of your TLS connections so that they deserve your trust.
 
 Because, no one wants to write several hundred lines of code for every project that uses micro-services, internal APIs, zero-trust, etc. where you probably should be doing more then just the basic built-in OpenSSL hostname and root trust store checks.
 
-Package `tls-verify` provides a command-line tool `tlsverify` which contacts an SSL/TLS server and obtains some information on its configuration. It aims at providing equal or better functionality of Internet-based tools like [Qualys SSL Server Test](https://www.ssllabs.com/ssltest/) without the requirement of the target server being internet connected.
+Package `trivialscan` provides a command-line tool `trivialscan` which contacts an SSL/TLS server and obtains some information on its configuration. It aims at providing equal or better functionality of Internet-based tools like [Qualys SSL Server Test](https://www.ssllabs.com/ssltest/) without the requirement of the target server being internet connected.
 
-You can use `tlsverify` on your internal network or local computer, to test your servers while they are being developed. It is equally capable of reaching any other internet connected server also.
+You can use `trivialscan` on your internal network or local computer, to test your servers while they are being developed. It is equally capable of reaching any other internet connected server also.
 
 ## [Change Log](./docs/z.change-log.md)
 

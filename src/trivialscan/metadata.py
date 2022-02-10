@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-__module__ = 'tlsverify.metadata'
+__module__ = 'trivialscan.metadata'
 
 @dataclass
 class Metadata:
@@ -20,10 +20,10 @@ class Metadata:
     certificate_issuer :str = field(default_factory=str)
     certificate_issuer_country :str = field(default_factory=str)
     certificate_signature_algorithm :str = field(default_factory=str)
-    certificate_pin_sha256 :str = field(default_factory=str)
     certificate_sha256_fingerprint :str = field(default_factory=str)
     certificate_sha1_fingerprint :str = field(default_factory=str)
     certificate_md5_fingerprint :str = field(default_factory=str)
+    certificate_spki_fingerprint :str = field(default_factory=str)
     certificate_not_before :str = field(default_factory=str)
     certificate_not_after :str = field(default_factory=str)
     certificate_expired :bool = field(default_factory=bool)
@@ -37,6 +37,7 @@ class Metadata:
     certificate_validation_type :str = field(default_factory=str)
     certification_authority_authorization :bool = field(default_factory=bool)
     certificate_known_compromised :bool = field(default_factory=bool)
+    certificate_key_compromised :bool = field(default_factory=bool)
     revocation_ocsp_stapling :bool = field(default_factory=bool)
     revocation_ocsp_must_staple :bool = field(default_factory=bool)
     revocation_ocsp_status :str = field(default_factory=str)

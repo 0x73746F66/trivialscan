@@ -1,4 +1,4 @@
-__module__ = 'tlsverify.exceptions'
+__module__ = 'trivialscan.exceptions'
 
 X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT = 18
 X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT = 2

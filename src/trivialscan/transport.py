@@ -22,7 +22,7 @@ import idna
 from . import exceptions, util, constants
 
 
-__module__ = 'tlsverify.metadata'
+__module__ = 'trivialscan.metadata'
 logger = logging.getLogger(__name__)
 
 FAKE_PROTOCOLS = ['TLSv1.4', 'TLSv1.8', 'TLSv2', 'TLSv2.1', 'TLSv2.3']
@@ -188,7 +188,7 @@ class Transport:
         if protocol.upper() not in ['HTTP/1.0', 'HTTP/1.1']:
             raise AttributeError(f'protocol {protocol} not supported')
         if not isinstance(uri_path, str):
-            raise AttributeError(f'uri_path not supported')
+            raise AttributeError('uri_path not supported')
         if not uri_path.startswith('/'):
             uri_path = f'/{uri_path}'
 
@@ -199,7 +199,7 @@ class Transport:
             "Cache-Control: max-age=0",
             "Connection: close",
             "Content-Length: 0",
-            "User-Agent: pypi.org/project/tls-verify/",
+            "User-Agent: pypi.org/project/trivialscan",
         ]
         if request_compression is True:
             request.append("Accept-Encoding: compress, gzip")
@@ -467,7 +467,7 @@ class Transport:
         sock = socket(AF_INET, SOCK_STREAM)
         sock.settimeout(response_wait)
         try:
-            sock.connect((self.host, 80 if self.port == 443 else self.port))            
+            sock.connect((self.host, 80 if self.port == 443 else self.port))
             sock.sendall(preamble)
             logger.info(f'HTTP/2 clear text Request,\n{request}')
             sock.sendall(request.encode())
@@ -476,7 +476,7 @@ class Transport:
                 sock.sendall(settings_frame.serialize())
         except Exception as ex:
             logger.warning(ex, exc_info=True)
-        
+
         response = _read(sock)
         try:
             logger.info(f'HTTP/2 clear text Response,\n{response.decode("utf8")}')
@@ -578,7 +578,14 @@ class Transport:
                 self._protocol_handler(conn, protocol)
             conn.shutdown()
         except SSL.Error as err:
-            if not any(x in str(err) for x in ['no protocols available', 'alert protocol', 'shutdown while in init']):
+            if all(
+                x not in str(err)
+                for x in [
+                    'no protocols available',
+                    'alert protocol',
+                    'shutdown while in init',
+                ]
+            ):
                 logger.warning(err, exc_info=True)
         except Exception as ex:
             logger.warning(ex, exc_info=True)
@@ -593,7 +600,7 @@ class Transport:
         logger.info('Trying to derive SCSV')
         try:
             negotiated = self.test_tls_version(min_tls_version=tls_version, use_sni=use_sni)
-            if negotiated:    
+            if negotiated:
                 self.preferred_protocol = f'{negotiated} ({hex(constants.PROTOCOL_VERSION[negotiated])})'
             else:
                 self.preferred_protocol = self.negotiated_protocol
@@ -768,7 +775,7 @@ class Transport:
 
             self.test_scsv(tls_versions[index+1], use_sni)
             progress_bar()
-            
+
             self.test_tls_all_versions(use_sni)
             progress_bar()
 

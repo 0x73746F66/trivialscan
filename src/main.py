@@ -1,6 +1,6 @@
-from tlsverify.cli import cli
+from trivialscan.cli import cli
 
-__module__ = 'tlsverify.main'
+__module__ = 'trivialscan.main'
 
 if __name__ == "__main__":
     cli()

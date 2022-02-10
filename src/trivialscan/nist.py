@@ -1,4 +1,4 @@
-__module__ = 'tlsverify.nist'
+__module__ = 'trivialscan.nist'
 __version__ = 'NIST SP800-131A (strict mode)'
 
 WEAK_KEY_SIZE = {

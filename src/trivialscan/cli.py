@@ -7,6 +7,7 @@ from datetime import datetime
 from dataclasses import asdict
 import validators
 from OpenSSL.crypto import X509
+from tlstrust import TrustStore
 from rich import inspect
 from rich.console import Console
 from rich.style import Style
@@ -15,12 +16,13 @@ from rich.progress import Progress
 from rich.table import Table
 from rich.style import Style
 from rich import box
-from . import exceptions, verify, util, validator, pci, nist, fips
+from . import __version__, exceptions, verify, util, validator, pci, nist, fips
 from .transport import Transport
 
 
-__version__ = 'tls-verify==1.1.0'
-__module__ = 'tlsverify.cli'
+__module__ = 'trivialscan.cli'
+
+assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 
 CLI_COLOR_OK = 'dark_sea_green2'
 CLI_COLOR_NOK = 'light_coral'
@@ -92,10 +94,10 @@ STYLES = {
     'certificate_public_key_exponent': {'text': 'Public Key Exponent', 'null_as': CLI_VALUE_NA, 'null_color': CLI_COLOR_NULL},
     'certificate_private_key_pem': {'text': 'Derived private key (PEM format)'},
     'certificate_signature_algorithm': {'text': 'Signature Algorithm'},
-    'certificate_pin_sha256': {'text': 'Certificate pin (sha256)'},
     'certificate_sha256_fingerprint': {'text': 'Fingerprint (sha256)'},
     'certificate_sha1_fingerprint': {'text': 'Fingerprint (sha1)'},
     'certificate_md5_fingerprint': {'text': 'Fingerprint (md5)'},
+    'certificate_spki_fingerprint': {'text': 'Fingerprint (SPKI)'},
     'certificate_serial_number': {'text': 'Serial'},
     'certificate_serial_number_decimal': {'text': 'Serial (decimal)'},
     'certificate_serial_number_hex': {'text': 'Serial (hex)'},
@@ -109,6 +111,7 @@ STYLES = {
     'certificate_authority_key_identifier': {'text': 'Authority Key Identifier (AKI)'},
     'certificate_validation_type': {'text': 'Certificate Owner Validation Method'},
     'certificate_known_compromised': {'text': 'Compromised Certificate', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
+    'certificate_key_compromised': {'text': 'Compromised Private Key', 'represent_as': (CLI_VALUE_DETECTED, CLI_VALUE_OK), 'colors': (CLI_COLOR_NOK, CLI_COLOR_OK)},
     'client_certificate_expected': {'text': 'Client Certificate Expected', 'represent_as': (CLI_VALUE_YES, CLI_VALUE_NO), 'colors': (CLI_COLOR_ALERT, CLI_COLOR_NULL)},
     'certification_authority_authorization': {'text': 'CAA', 'represent_as': (CLI_VALUE_PRESENT, CLI_VALUE_ABSENT), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'revocation_ocsp_status': {'text': 'Revocation: OCSP'},
@@ -281,7 +284,6 @@ SUMMARY_SKIP = [
     'certificate_intermediate_ca',
     'certificate_root_ca',
     'certificate_signature_algorithm',
-    'certificate_pin_sha256',
     'certificate_public_key_type',
     'certificate_public_key_curve',
     'certificate_public_key_size',
@@ -340,6 +342,7 @@ SUMMARY_SKIP = [
     'certificate_sha256_fingerprint',
     'certificate_sha1_fingerprint',
     'certificate_md5_fingerprint',
+    'certificate_spki_fingerprint',
     'certificate_subject_key_identifier',
     'certificate_authority_key_identifier',
     'verification_details',
@@ -349,6 +352,7 @@ FINGERPRINTS = [
     'certificate_sha256_fingerprint',
     'certificate_sha1_fingerprint',
     'certificate_md5_fingerprint',
+    'certificate_spki_fingerprint',
     'certificate_subject_key_identifier',
     'certificate_authority_key_identifier'
 ]
@@ -426,7 +430,7 @@ def _table_ext(validator :validator.Validator, table :Table, skip :list[str]) ->
                     table.add_row('', util.styled_any(sub))
                 continue
             table.add_row('', str(ext_sub))
-            continue    
+            continue
         table.add_row(f'Extention {ext}', util.styled_any(ext_data))
     return table
 
@@ -499,6 +503,7 @@ def validator_data(result :validator.Validator, certificate_type :str, skip_keys
     data['certificate_type'] = certificate_type
     data['expiry_status'] = util.date_diff(result.certificate.not_valid_after)
     data['verification_results'] = {}
+    data['compliance_results'] = {}
     for key, value in result.validation_checks.items():
         if key in skip_keys:
             continue
@@ -531,11 +536,15 @@ def make_json(results :list[validator.Validator], evaluation_duration_seconds :i
         'generator': __version__,
         'date': datetime.utcnow().replace(microsecond=0).isoformat(),
         'evaluation_duration_seconds': evaluation_duration_seconds,
+        'trust': [],
         'validations': []
     }
     for result in results:
         if isinstance(result, validator.RootCertValidator):
             data['validations'].append(validator_data(result, 'Root CA', [x for x in ROOT_SKIP if x not in JSON_ONLY]))
+            trust_store = TrustStore(result.metadata.certificate_authority_key_identifier)
+            for name, is_trusted in trust_store.all_results.items():
+                data['trust'].append({'trust_store': name, 'is_trusted': is_trusted})
         if isinstance(result, validator.PeerCertValidator):
             cert_type = 'Intermediate Certificate'
             if result.metadata.certificate_intermediate_ca:
@@ -576,10 +585,12 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
                     transport.pre_client_authentication_check(client_pem_path=client_pem, progress_bar=update_bar(progress, prog_client_auth))
                     progress.update(prog_client_auth, advance=1)
                 if not transport.connect_least_secure(cafiles=cafiles, use_sni=use_sni, progress_bar=update_bar(progress, prog_tls)) or not isinstance(transport.server_certificate, X509):
+                    progress.update(prog_client_auth, visible=False)
+                    progress.update(prog_tls, visible=False)
+                    progress.update(prog_cert_val, visible=False)
                     raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=host, port=port))
                 progress.update(prog_tls, advance=1)
-                if isinstance(tmp_path_prefix, str):
-                    result.tmp_path_prefix = tmp_path_prefix
+                result.tmp_path_prefix = tmp_path_prefix
                 result.mount(transport)
                 progress.update(prog_cert_val, advance=1)
                 result.verify()
@@ -605,7 +616,7 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
 
 def cli():
     parser = argparse.ArgumentParser()
-    parser.add_argument("targets", nargs="*", help='All unnamed arguments are hosts (and ports) targets to test. ~$ tlsverify google.com:443 github.io owasp.org:80')
+    parser.add_argument("targets", nargs="*", help='All unnamed arguments are hosts (and ports) targets to test. ~$ trivialscan google.com:443 github.io owasp.org:80')
     parser.add_argument('-H', '--host', help='single host to check', dest='host', default=None)
     parser.add_argument('-p', '--port', help='TLS port of host', dest='port', default=443)
     parser.add_argument('-c', '--cafiles', help='path to PEM encoded CA bundle file, url or file path accepted', dest='cafiles', default=None)
@@ -618,7 +629,7 @@ def cli():
     parser.add_argument('--show-private-key', help='If the private key is exposed, show it in the results', dest='show_private_key', action="store_true")
     parser.add_argument('-s', '--summary-only', help='Do not include informational details, show only validation outcomes', dest='summary_only', action="store_true")
     parser.add_argument('--hide-validation-details', help='Do not include detailed validation messages in output', dest='hide_validation_details', action="store_true")
-    parser.add_argument('-j', '--json-file', help='Store to file as JSON', dest='json_file', default=None)
+    parser.add_argument('-O', '--json-file', help='Store to file as JSON', dest='json_file', default=None)
     parser.add_argument('--hide-progress-bars', help='Hide task progress bars', dest='hide_progress_bars', action="store_true")
     parser.add_argument('-v', '--errors-only', help='set logging level to ERROR (default CRITICAL)', dest='log_level_error', action="store_true")
     parser.add_argument('-vv', '--warning', help='set logging level to WARNING (default CRITICAL)', dest='log_level_warning', action="store_true")
@@ -726,33 +737,37 @@ def cli():
 
     all_results = []
     evaluation_start = datetime.utcnow()
-    if args.hide_progress_bars:
-        for domain, port in domains:
-            _, results = verify(
-                domain,
-                int(port),
+    console = Console()
+    try:
+        if args.hide_progress_bars:
+            for domain, port in domains:
+                _, results = verify(
+                    domain,
+                    int(port),
+                    cafiles=args.cafiles,
+                    use_sni=not args.disable_sni,
+                    client_pem=args.client_pem,
+                    tmp_path_prefix=args.tmp_path_prefix,
+                )
+                all_results += results
+            valid = all([v.certificate_valid for v in all_results])
+            for result in all_results:
+                output(result, debug=debug)
+            result_style = Style(color=CLI_COLOR_OK if valid else CLI_COLOR_NOK)
+            console.print('Valid ✓✓✓' if valid else '\nNot Valid. There where validation errors', style=result_style)
+            console.print(f'Evaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n\n')
+        else:
+            all_results = with_progress_bars( # clones trivialscan.verify and only adds progress bars
+                domains=domains,
                 cafiles=args.cafiles,
                 use_sni=not args.disable_sni,
                 client_pem=args.client_pem,
                 tmp_path_prefix=args.tmp_path_prefix,
+                debug=debug
             )
-            all_results += results
-        console = Console()
-        valid = all([v.certificate_valid for v in all_results])
-        for result in all_results:
-            output(result, debug=debug)
-        result_style = Style(color=CLI_COLOR_OK if valid else CLI_COLOR_NOK)
-        console.print('Valid ✓✓✓' if valid else '\nNot Valid. There where validation errors', style=result_style)
-        console.print(f'Evaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n\n')
-    else:
-        all_results = with_progress_bars( # clones tlsverify.verify and only adds progress bars
-            domains=domains,
-            cafiles=args.cafiles,
-            use_sni=not args.disable_sni,
-            client_pem=args.client_pem,
-            tmp_path_prefix=args.tmp_path_prefix,
-            debug=debug
-        )
+    except exceptions.ValidationError as ex:
+        console.print(str(ex))
+        return
 
     if JSON_FILE:
         json_path = Path(JSON_FILE)

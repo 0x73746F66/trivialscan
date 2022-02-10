@@ -21,10 +21,9 @@ from dns import resolver, dnssec, rdatatype, message, query, name as dns_name
 from dns.exception import DNSException, Timeout as DNSTimeoutError
 from dns.resolver import NoAnswer
 from tldextract import TLDExtract
-from crlite_query import CRLiteDB, IntermediatesDB, CRLiteQuery
 from . import constants
 
-__module__ = 'tlsverify.util'
+__module__ = 'trivialscan.util'
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ def filter_valid_files_urls(inputs :list[str], tmp_path_prefix :str = '/tmp'):
             continue
         if validators.url(test) is True:
             r = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
-            local_path = f'{tmp_path_prefix}/tlsverify-{r}'
+            local_path = f'{tmp_path_prefix}/trivialscan-{r}'
             try:
                 urlretrieve(test, local_path)
             except Exception as ex:
@@ -506,7 +505,7 @@ def get_txt_answer(domain_name :str) -> resolver.Answer:
     dns_resolver = resolver.Resolver(configure=False)
     dns_resolver.lifetime = 5
     try:
-        response = resolver.query(domain_name, rdatatype.TXT)
+        response = dns_resolver.resolve(domain_name, rdatatype.TXT)
     except NoAnswer:
         logger.warning('DNS NoAnswer')
         return None
@@ -530,7 +529,7 @@ def get_tlsa_answer(domain_name :str) -> resolver.Answer:
     dns_resolver = resolver.Resolver(configure=False)
     dns_resolver.lifetime = 5
     try:
-        response = resolver.query(domain_name, rdatatype.TLSA)
+        response = dns_resolver.resolve(domain_name, rdatatype.TLSA)
     except NoAnswer:
         logger.warning('DNS NoAnswer')
         return None
@@ -556,7 +555,7 @@ def get_dnssec_answer(domain_name :str):
     tldext = TLDExtract(cache_dir='/tmp')(f'http://{domain_name}')
     answers = []
     try:
-        response = resolver.query(domain_name, rdatatype.NS)
+        response = dns_resolver.resolve(domain_name, rdatatype.NS)
     except NoAnswer:
         return get_dnssec_answer(tldext.registered_domain) if tldext.registered_domain != domain_name else None
     except DNSTimeoutError:
@@ -576,7 +575,7 @@ def get_dnssec_answer(domain_name :str):
     for ns in [i.to_text() for i in response.rrset]:
         logger.info(f'Checking A for {ns}')
         try:
-            response = dns_resolver.query(ns, rdtype=rdatatype.A)
+            response = dns_resolver.resolve(ns, rdtype=rdatatype.A)
         except DNSTimeoutError:
             logger.warning(f'DNS Timeout {ns} A')
             continue
@@ -648,7 +647,7 @@ def get_caa(domain_name :str):
     dns_resolver = resolver.Resolver(configure=False)
     dns_resolver.lifetime = 5
     try:
-        response = resolver.query(domain_name, rdatatype.CAA)
+        response = resolver.resolve(domain_name, rdatatype.CAA)
     except DNSTimeoutError:
         logger.warning('DNS Timeout')
     except DNSException as ex:
@@ -698,7 +697,7 @@ def caa_valid(domain_name :str, cert :X509, certificate_chain :list[X509]) -> bo
     if not isinstance(issuer, X509):
         logger.warning('Issuer certificate not found in chain')
         return False
-    
+
     common_name = cert.get_subject().CN
     if not common_name:
         return False
@@ -726,7 +725,25 @@ def caa_valid(domain_name :str, cert :X509, certificate_chain :list[X509]) -> bo
 
     return False
 
-def crlite_revoked(db_path :str, pem :bytes):
+def crlite_revoked(db_path :str, pem :bytes, use_sqlite :bool = True):
+    if use_sqlite:
+        from crlite_query import IntermediatesDB
+    else:
+        import sqlite3
+        sqlite3.sqlite_version_info = (3, 37, 2)
+        class IntermediatesDB(object):
+            def __init__(self, *, db_path, download_pems=False):
+                pass
+            def __len__(self):
+                return 0
+            def __str__(self):
+                return f"{len(self)} Intermediates"
+            def update(self, *, collection_url, attachments_base_url):
+                pass
+            def issuer_by_DN(self, distinguishedName):
+                return None
+    from crlite_query import CRLiteDB, CRLiteQuery
+
     def find_attachments_base_url():
         url = urlparse(constants.CRLITE_URL)
         base_rsp = requests.get(f"{url.scheme}://{url.netloc}/v1/")
@@ -754,6 +771,7 @@ def crlite_revoked(db_path :str, pem :bytes):
         crlite_db.cleanup()
         last_updated_file.touch()
         logger.info(f"Status: {crlite_db}")
+
     query = CRLiteQuery(crlite_db=crlite_db, intermediates_db=IntermediatesDB(db_path=db_path, download_pems=False))
     results = []
     for result in query.query(name='peer', generator=query.gen_from_pem(BytesIO(pem))):
