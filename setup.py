@@ -193,16 +193,6 @@ optional arguments:
 - ✓ CLI output evaluation duration
 - ✓ OpenSSL verify errors are actually evaluated and reported instead of either terminate connection or simply ignored (default approach most use VERIFY_NONE we actually let openssl do verification and keep the connection open anyway)
 
-<<<<<<< HEAD
-## [Change Log](https://gitlab.com/trivialsec/tlsveryify/-/blob/main/docs/z.change-log.md)
-    """,
-    long_description_content_type="text/markdown",
-    url="https://gitlab.com/trivialsec/tlsveryify",
-    project_urls={
-        "Source": "https://gitlab.com/trivialsec/tlsveryify",
-        "Documentation": "https://gitlab.com/trivialsec/tlsveryify/-/blob/main/docs/0.index.md",
-        "Tracker": "https://gitlab.com/trivialsec/tlsveryify/-/issues",
-=======
 ## [Change Log](https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/z.change-log.md)
     """,
     long_description_content_type="text/markdown",
@@ -211,7 +201,6 @@ optional arguments:
         "Source": "https://gitlab.com/trivialsec/trivialscan",
         "Documentation": "https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/0.index.md",
         "Tracker": "https://gitlab.com/trivialsec/trivialscan/-/issues",
->>>>>>> devel
     },
     classifiers=[
         "Operating System :: OS Independent",
