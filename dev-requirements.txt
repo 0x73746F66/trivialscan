@@ -1,0 +1,10 @@
+setuptools
+wheel
+semgrep>=0.82.0
+bandit>=1.7.2
+autopep8>=1.6.0
+pylint>=2.12.2
+pytest>=7.0.0
+build>=0.7.0
+twine>=3.8.0
+coverage>=6.3.1

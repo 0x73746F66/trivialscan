@@ -39,7 +39,7 @@ What to contribute?
 
 Anything you want, or one of these:
 
-⌛⌛ 2.0.0 Todo List ⌛⌛
+⌛⌛ 3.0.0 Todo List ⌛⌛
 
 - HSTS Preloading
 - Handshake Simulations

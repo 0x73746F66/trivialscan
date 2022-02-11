@@ -8,9 +8,10 @@ from dataclasses import asdict
 import validators
 from OpenSSL.crypto import X509
 from tlstrust import TrustStore
+from tlstrust.context import SOURCES, PLATFORMS, BROWSERS, LANGUAGES
+from tlstrust.stores import VERSIONS
 from rich import inspect
 from rich.console import Console
-from rich.style import Style
 from rich.logging import RichHandler
 from rich.progress import Progress
 from rich.table import Table
@@ -536,15 +537,16 @@ def make_json(results :list[validator.Validator], evaluation_duration_seconds :i
         'generator': __version__,
         'date': datetime.utcnow().replace(microsecond=0).isoformat(),
         'evaluation_duration_seconds': evaluation_duration_seconds,
-        'trust': [],
+        'certificate_trust': [],
         'validations': []
     }
     for result in results:
         if isinstance(result, validator.RootCertValidator):
             data['validations'].append(validator_data(result, 'Root CA', [x for x in ROOT_SKIP if x not in JSON_ONLY]))
+            contexts = {**SOURCES, **PLATFORMS, **BROWSERS, **LANGUAGES}
             trust_store = TrustStore(result.metadata.certificate_authority_key_identifier)
             for name, is_trusted in trust_store.all_results.items():
-                data['trust'].append({'trust_store': name, 'is_trusted': is_trusted})
+                data['certificate_trust'].append({'trust_store': name, 'is_trusted': is_trusted, 'version': VERSIONS[contexts[name]]})
         if isinstance(result, validator.PeerCertValidator):
             cert_type = 'Intermediate Certificate'
             if result.metadata.certificate_intermediate_ca:

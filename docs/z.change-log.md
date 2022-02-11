@@ -1,8 +1,17 @@
 # Change Log
 
+## 2.0.1 Feb 11th 2022
+
+- bump version of `tlstrust==2.1.3`
+- Added trust store version information to json output
+
+## 2.0.0 Feb 11th 2022
+
+- First release rebranded as `trivialscan`
+
 ## 1.1.8 Feb 11th 2022
 
-- bump version of `tlstrust`
+- bump version of `tlstrust==2.1.2`
 - Added `trust` list to json output to cover all trust store contexts
 
 ## 1.1.7 Feb 8th 2022

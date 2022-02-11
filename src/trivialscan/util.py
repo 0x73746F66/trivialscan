@@ -496,10 +496,6 @@ def styled_any(value, dict_delimiter='=', list_delimiter='\n', color :str = 'bri
         return styled_value(value.isoformat(), color=color)
     return styled_value(value, color=color)
 
-def get_dnssec(domain_name :str):
-    logger.warning(DeprecationWarning('util.get_dnssec() was deprecated in version 0.4.3 and will be removed in version 0.5.0'), exc_info=True)
-    return get_dnssec_answer(domain_name)
-
 def get_txt_answer(domain_name :str) -> resolver.Answer:
     logger.info(f'Trying to resolve TXT for {domain_name}')
     dns_resolver = resolver.Resolver(configure=False)
@@ -587,6 +583,23 @@ def get_dnssec_answer(domain_name :str):
             continue
         except ConnectionError:
             logger.warning(f'Name or service not known {ns} A')
+            continue
+        nameservers += [i.to_text() for i in response.rrset]
+    for ns in [i.to_text() for i in response.rrset]:
+        logger.info(f'Checking AAAA for {ns}')
+        try:
+            response = dns_resolver.resolve(ns, rdtype=rdatatype.AAAA)
+        except DNSTimeoutError:
+            logger.warning(f'DNS Timeout {ns} AAAA')
+            continue
+        except DNSException as ex:
+            logger.warning(ex, exc_info=True)
+            continue
+        except ConnectionResetError:
+            logger.warning(f'Connection reset by peer {ns} AAAA')
+            continue
+        except ConnectionError:
+            logger.warning(f'Name or service not known {ns} AAAA')
             continue
         nameservers += [i.to_text() for i in response.rrset]
     if not nameservers:

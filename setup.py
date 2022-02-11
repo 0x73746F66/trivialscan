@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="trivialscan",
-    version="2.0.0",
+    version="2.0.1",
     author='Christopher Langton',
     author_email='chris@trivialsec.com',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -226,7 +226,7 @@ optional arguments:
         'dnspython==2.1.0',
         'tldextract==3.1.2',
         'moz-crlite-query==0.4.2',
-        'tlstrust>=2.1.2'
+        'tlstrust>=2.1.3'
     ],
     entry_points = {
         'console_scripts': ['trivialscan=trivialscan.cli:cli'],

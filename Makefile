@@ -7,7 +7,8 @@ help: ## This help.
 .DEFAULT_GOAL := help
 
 setup: ## setup for development of this project
-	pip install -U --progress-bar off pip setuptools wheel semgrep bandit pylint pytest build twine coverage
+	pip install --progress-bar off -U pip
+	pip install --progress-bar off -U -r dev-requirements.txt
 
 install: build ## Install the package
 	pip install -U --progress-bar off --no-cache-dir --force-reinstall dist/trivialscan-$(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')-py2.py3-none-any.whl
@@ -39,6 +40,9 @@ semgrep-sast-ci: ## run core semgrep rules for CI
 	semgrep --disable-version-check -q --strict --error -o semgrep-ci.json --json --timeout=0 --config=p/r2c-ci --lang=py src/**/*.py
 
 test-all: semgrep-sast-ci pylint-ci ## Run all CI tests
+
+run-json: ## www.trivialsec.com
+	@python src/main.py www.trivialsec.com -O trivialscan_www.trivialsec.com.json
 
 run-valid: ## google.com
 	@python src/main.py -H google.com
