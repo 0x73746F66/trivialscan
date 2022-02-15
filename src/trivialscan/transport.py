@@ -402,11 +402,11 @@ class Transport:
         except SSL.WantReadError:
             sleep(0.5)
             return self._http2(conn, request, response_wait)
+        except SSL.ZeroReturnError:
+            pass
         except SSL.Error as err:
             if 'protocol is shutdown' not in str(err):
                 logger.warning(err, exc_info=True)
-        except SSL.ZeroReturnError:
-            pass
         resp = None
         start = datetime.utcnow()
         frame_data = b''
@@ -526,12 +526,16 @@ class Transport:
         protocol = None
         ctx = self.prepare_context()
         ctx.set_options(_util.lib.SSL_OP_TLS_ROLLBACK_BUG)
-        if min_tls_version is not None:
-            logger.info(f'min protocol {constants.OPENSSL_VERSION_LOOKUP[min_tls_version]}')
-            ctx.set_min_proto_version(min_tls_version)
-        if max_tls_version is not None:
-            logger.info(f'max protocol {constants.OPENSSL_VERSION_LOOKUP[max_tls_version]}')
-            ctx.set_max_proto_version(max_tls_version)
+        try:
+            if min_tls_version is not None:
+                logger.info(f'min protocol {constants.OPENSSL_VERSION_LOOKUP[min_tls_version]}')
+                ctx.set_min_proto_version(min_tls_version)
+            if max_tls_version is not None:
+                logger.info(f'max protocol {constants.OPENSSL_VERSION_LOOKUP[max_tls_version]}')
+                ctx.set_max_proto_version(max_tls_version)
+        except SSL.Error as ex:
+            logger.warning(ex, exc_info=True)
+            return protocol
         conn = self.prepare_connection(context=ctx, sock=self.prepare_socket(timeout=response_wait), use_sni=use_sni)
         try:
             conn.settimeout(response_wait)
@@ -539,6 +543,8 @@ class Transport:
             protocol = conn.get_protocol_version_name()
             logger.info(f'Negotiated {protocol}')
             conn.shutdown()
+        except SSL.Error as ex:
+            logger.warning(ex, exc_info=True)
         finally:
             conn.close()
         return protocol
