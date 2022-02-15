@@ -312,9 +312,9 @@ class Score:
         if not_after < now or not_before > now:
             return ISSUE_MOD
         difference = not_after - not_before
-        if difference.days + difference.seconds / 86400.0 <= 365.2425:
+        if difference.days <= 365:
             return MAJOR_MOD
-        if 2 <= (difference.days + difference.seconds/86400.0)/365.2425 <= 5:
+        if 366 <= difference.year <= 1825:
             return MINOR_MOD
         return WEAKNESS_MOD
 
