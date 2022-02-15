@@ -533,12 +533,14 @@ class Transport:
             logger.info(f'max protocol {constants.OPENSSL_VERSION_LOOKUP[max_tls_version]}')
             ctx.set_max_proto_version(max_tls_version)
         conn = self.prepare_connection(context=ctx, sock=self.prepare_socket(timeout=response_wait), use_sni=use_sni)
-        conn.settimeout(response_wait)
-        util.do_handshake(conn)
-        protocol = conn.get_protocol_version_name()
-        logger.info(f'Negotiated {protocol}')
-        conn.shutdown()
-        conn.close()
+        try:
+            conn.settimeout(response_wait)
+            util.do_handshake(conn)
+            protocol = conn.get_protocol_version_name()
+            logger.info(f'Negotiated {protocol}')
+            conn.shutdown()
+        finally:
+            conn.close()
         return protocol
 
     def connect(self, tls_version :int, use_sni :bool = False, protocol :str = None):
@@ -598,16 +600,13 @@ class Transport:
         When a handshake is rejected (False) assume downgrade attacks were prevented
         """
         logger.info('Trying to derive SCSV')
-        try:
-            negotiated = self.test_tls_version(min_tls_version=tls_version, use_sni=use_sni)
-            if negotiated:
-                self.preferred_protocol = f'{negotiated} ({hex(constants.PROTOCOL_VERSION[negotiated])})'
-            else:
-                self.preferred_protocol = self.negotiated_protocol
-            self.offered_tls_versions.append(self.preferred_protocol)
-            self.tls_downgrade = negotiated is not None
-        except Exception:
-            self.tls_downgrade = False
+        negotiated = self.test_tls_version(min_tls_version=tls_version, use_sni=use_sni)
+        if negotiated:
+            self.preferred_protocol = f'{negotiated} ({hex(constants.PROTOCOL_VERSION[negotiated])})'
+        else:
+            self.preferred_protocol = self.negotiated_protocol
+        self.offered_tls_versions.append(self.preferred_protocol)
+        self.tls_downgrade = negotiated is not None
 
     def test_tls_all_versions(self, use_sni :bool = True):
         logger.info('Testing all TLS versions')
@@ -615,12 +614,9 @@ class Transport:
             ver_display_name = f'{ver_name} ({hex(tls_version)})'
             if ver_name in FAKE_PROTOCOLS or ver_display_name in self.offered_tls_versions:
                 continue
-            try:
-                negotiated = self.test_tls_version(max_tls_version=tls_version, use_sni=use_sni)
-                supported = negotiated == ver_name
-            except Exception:
-                supported = False
-            if supported is True:
+            negotiated = self.test_tls_version(max_tls_version=tls_version, use_sni=use_sni)
+            supported = negotiated == ver_name
+            if supported:
                 self.offered_tls_versions.append(ver_display_name)
 
     def test_tls_long_handshake_intolerance(self, version :int = None) -> bool:

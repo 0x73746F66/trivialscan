@@ -1,5 +1,10 @@
 # Change Log
 
+## 2.0.3 Feb 11th 2022
+
+- Addressed `ResourceWarning` bugs
+- Lock requirements for faster install
+
 ## 2.0.2 Feb 11th 2022
 
 - Added check for self signed intermediate certificates
