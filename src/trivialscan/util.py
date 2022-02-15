@@ -411,6 +411,8 @@ def date_diff(comparer :datetime) -> str:
 
 def styled_boolean(value :bool, represent_as :tuple[str, str] = ('True', 'False'), colors :tuple[str, str] = ('dark_sea_green2', 'light_coral')) -> str:
     console = Console()
+    if value is None:
+        value = False
     if not isinstance(value, bool):
         raise TypeError(f'{type(value)} provided')
     val = represent_as[0] if value else represent_as[1]
@@ -800,3 +802,6 @@ def do_handshake(conn):
         conn.do_handshake()
     except SSL.SysCallError:
         pass
+
+def average(values :list):
+    return sum(values) / len(values)

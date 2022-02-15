@@ -1,5 +1,12 @@
 # Change Log
 
+## 2.0.2 Feb 11th 2022
+
+- Added check for self signed intermediate certificates
+- opt-in for sqlite usage by crlite library
+- Added `certificate_validation_oid` to `Metadata`
+- Implemented a security score card
+
 ## 2.0.1 Feb 11th 2022
 
 - bump version of `tlstrust==2.1.3`

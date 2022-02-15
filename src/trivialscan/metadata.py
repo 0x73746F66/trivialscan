@@ -35,6 +35,7 @@ class Metadata:
     certificate_is_self_signed :bool = field(default_factory=bool)
     client_certificate_expected :bool = field(default_factory=bool)
     certificate_validation_type :str = field(default_factory=str)
+    certificate_validation_oid :str = field(default_factory=str)
     certification_authority_authorization :bool = field(default_factory=bool)
     certificate_known_compromised :bool = field(default_factory=bool)
     certificate_key_compromised :bool = field(default_factory=bool)

@@ -57,6 +57,29 @@ VALIDATION_VALID_CAA = 'valid_caa'
 VALIDATION_OCSP_STAPLE_SATISFIED = 'ocsp_staple_satisfied'
 VALIDATION_OCSP_MUST_STAPLE_SATISFIED = 'ocsp_must_staple_satisfied'
 
+VALIDATION_MESSAGES = {
+    VALIDATION_CLIENT_AUTHENTICATION: 'Client Authentication required',
+    VALIDATION_CLIENT_AUTH_USAGE: 'Client Certificate does not permit Authentication',
+    VALIDATION_NOT_EXPIRED: 'Certificate Expired',
+    VALIDATION_ISSUED_PAST_TENSE: 'Certificate Issuance is future dated',
+    VALIDATION_SUBJECT_CN_DEFINED: 'Certificate Subject missing common name',
+    VALIDATION_SUBJECT_CN_VALID: 'malformed certificate common name',
+    VALIDATION_MATCH_HOSTNAME: 'Certificate hostname mismatch',
+    VALIDATION_NOT_SELF_SIGNED: 'Certificate is self signed',
+    VALIDATION_WEAK_SIG_ALGO: 'Weak signature algorithm',
+    VALIDATION_WEAK_KEYS: 'Known weak key',
+    VALIDATION_DEPRECATED_TLS_PROTOCOLS: 'Deprecated protocols',
+    VALIDATION_DEPRECATED_DNSSEC_ALGO: 'Deprecated DNSSEC algorithms',
+    VALIDATION_BASIC_CONSTRAINTS_CA: 'Basic constraint (CA) violation',
+    VALIDATION_VALID_TLS_USAGE: 'Certificate not valid for TLS usage',
+    VALIDATION_REVOCATION: 'Certificate is revoked',
+    VALIDATION_ROOT_CA_TRUST: 'Certificate not trusted',
+    VALIDATION_VALID_DNSSEC: 'Invalid DNSSEC',
+    VALIDATION_VALID_CAA: 'Invalid CAA',
+    VALIDATION_OCSP_STAPLE_SATISFIED: 'OCSP staple expected',
+    VALIDATION_OCSP_MUST_STAPLE_SATISFIED: 'OCSP must staple flag set and not satisfied',
+}
+
 class Validator:
     _pem :bytes
     _der :bytes
@@ -78,7 +101,6 @@ class Validator:
         self.tmp_path_prefix = tmp_path_prefix
         self.use_sqlite = use_sqlite
         self.compliance_checks = {}
-        self.validation_checks = {}
         self.certificate_verify_messages = []
         self._pem = None
         self._der = None
@@ -158,7 +180,8 @@ class Validator:
         for policy in policies:
             if not isinstance(policy, PolicyInformation): continue
             if policy.policy_identifier._dotted_string in constants.VALIDATION_OID.keys():
-                self.metadata.certificate_validation_type = constants.VALIDATION_TYPES[constants.VALIDATION_OID[policy.policy_identifier._dotted_string]]
+                self.metadata.certificate_validation_oid = policy.policy_identifier._dotted_string
+                self.metadata.certificate_validation_type = constants.VALIDATION_TYPES[constants.VALIDATION_OID[self.metadata.certificate_validation_oid]]
 
     def _extract_public_key_info(self, key_type, public_key, x509):
         if key_type in [TYPE_RSA, TYPE_DSA]:
@@ -278,6 +301,14 @@ class Validator:
 class RootCertValidator(Validator):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        self.validation_checks = {
+            VALIDATION_NOT_EXPIRED: None,
+            VALIDATION_ISSUED_PAST_TENSE: None,
+            VALIDATION_SUBJECT_CN_DEFINED: None,
+            VALIDATION_WEAK_SIG_ALGO: None,
+            VALIDATION_WEAK_KEYS: None,
+            VALIDATION_REVOCATION: None,
+        }
 
     def __repr__(self) -> str:
         certificate_verify_messages = '", "'.join(self.certificate_verify_messages)
@@ -316,7 +347,6 @@ class RootCertValidator(Validator):
         self.metadata.trust_java_status = DEFAULT_STATUS.format(platform='Java')
         self.metadata.trust_linux_status = DEFAULT_STATUS.format(platform='Linux')
         self.metadata.trust_certifi_status = DEFAULT_STATUS.format(platform='Python')
-
         expired_text = ' EXPIRED'
         if trust_store.exists(context.SOURCE_CCADB):
             self.metadata.trust_ccadb_status = f'In Common CA Database {ccadb_version} (Mozilla, Microsoft, and Apple)'
@@ -417,6 +447,15 @@ class RootCertValidator(Validator):
 class PeerCertValidator(Validator):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        self.validation_checks = {
+            VALIDATION_NOT_EXPIRED: None,
+            VALIDATION_ISSUED_PAST_TENSE: None,
+            VALIDATION_SUBJECT_CN_DEFINED: None,
+            VALIDATION_NOT_SELF_SIGNED: None,
+            VALIDATION_WEAK_SIG_ALGO: None,
+            VALIDATION_WEAK_KEYS: None,
+            VALIDATION_REVOCATION: None,
+        }
 
     def __repr__(self) -> str:
         certificate_verify_messages = '", "'.join(self.certificate_verify_messages)
@@ -429,6 +468,10 @@ class PeerCertValidator(Validator):
                '_pem=<bytes>, ' +\
                '_der=<bytes>, ' +\
                'certificate=<cryptography.x509.Certificate>)>'
+
+    def verify(self) -> bool:
+        super().verify()
+        self.validation_checks[VALIDATION_NOT_SELF_SIGNED] = self.metadata.certificate_is_self_signed is False
 
 class LeafCertValidator(Validator):
     _pem_certificate_chain :list
@@ -445,6 +488,22 @@ class LeafCertValidator(Validator):
         self._pem_certificate_chain = []
         self.peer_validations = []
         self.certificate_chain = []
+        self.validation_checks = {
+            VALIDATION_NOT_EXPIRED: None,
+            VALIDATION_ISSUED_PAST_TENSE: None,
+            VALIDATION_SUBJECT_CN_DEFINED: None,
+            VALIDATION_SUBJECT_CN_VALID: None,
+            VALIDATION_MATCH_HOSTNAME: None,
+            VALIDATION_NOT_SELF_SIGNED: None,
+            VALIDATION_WEAK_SIG_ALGO: None,
+            VALIDATION_WEAK_KEYS: None,
+            VALIDATION_DEPRECATED_TLS_PROTOCOLS: None,
+            VALIDATION_DEPRECATED_DNSSEC_ALGO: None,
+            VALIDATION_BASIC_CONSTRAINTS_CA: None,
+            VALIDATION_VALID_TLS_USAGE: None,
+            VALIDATION_REVOCATION: None,
+            VALIDATION_ROOT_CA_TRUST: None,
+        }
 
     def __repr__(self) -> str:
         certificate_verify_messages = '", "'.join(self.certificate_verify_messages)
@@ -590,7 +649,7 @@ class LeafCertValidator(Validator):
         if constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] not in [SSL.TLS1_2_VERSION, SSL.TLS1_3_VERSION]:
             self.compliance_checks[fips.VALIDATION_MTLS] = not self.metadata.client_certificate_expected
 
-        self.compliance_checks[fips.VALIDATION_WEAK_PROTOCOL] = self.metadata.negotiated_protocol not in ['SSLv2 (0x02ff)', 'SSLv3 (0x0300)']
+        self.compliance_checks[fips.VALIDATION_WEAK_PROTOCOL] = self.metadata.negotiated_protocol not in [constants.SSL2_LABEL, constants.SSL3_LABEL]
         if self.compliance_checks[fips.VALIDATION_WEAK_PROTOCOL] is False:
             self.certificate_verify_messages.append(fips.FIPS_NON_COMPLIANCE_WEAK_PROTOCOL)
             self.compliance_checks[fips.VALIDATION_WEAK_CIPHER] = False
@@ -651,7 +710,7 @@ class LeafCertValidator(Validator):
                 self.validation_checks[VALIDATION_OCSP_STAPLE_SATISFIED] = True
         if self.metadata.revocation_ocsp_must_staple is True:
             self.validation_checks[VALIDATION_OCSP_MUST_STAPLE_SATISFIED] = False
-            if self.metadata.revocation_ocsp_status == util.OCSP_CERT_STATUS[0]:
+            if self.metadata.revocation_ocsp_status == constants.OCSP_CERT_STATUS[0]:
                 self.validation_checks[VALIDATION_OCSP_MUST_STAPLE_SATISFIED] = True
         if self.metadata.certification_authority_authorization:
             self.validation_checks[VALIDATION_VALID_CAA] = util.caa_valid(self.metadata.host, self.x509, self.certificate_chain)
@@ -696,17 +755,17 @@ class LeafCertValidator(Validator):
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_CLIENT_RENEGOTIATION)
         if self.metadata.compression_support:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_COMPRESSION_SUPPORT)
-        interference_versions = ''.join(self.metadata.tls_version_interference_versions)
+
         current_version = 'TLSv1.3'
-        if '0x304' in interference_versions:
+        if constants.TLS1_3_LABEL in self.metadata.tls_version_interference_versions:
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_VERSION_INTERFERENCE_CURRENT.format(current_version=current_version))
-        if '0x303' in interference_versions:
+        if constants.TLS1_2_LABEL in self.metadata.tls_version_interference_versions:
             common_version = 'TLSv1.2'
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_VERSION_INTERFERENCE_COMMON.format(current_version=current_version, common_version=common_version))
-        if '0x302' in interference_versions:
+        if constants.TLS1_1_LABEL in self.metadata.tls_version_interference_versions:
             old_version = 'TLSv1.1'
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_VERSION_INTERFERENCE_OLD.format(old_version=old_version))
-        elif any(['0x301' in interference_versions, '0x300' in interference_versions, '0x2ff' in interference_versions]):
+        elif any([constants.TLS1_0_LABEL in self.metadata.tls_version_interference_versions, constants.SSL3_LABEL in self.metadata.tls_version_interference_versions, constants.SSL2_LABEL in self.metadata.tls_version_interference_versions]):
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_VERSION_INTERFERENCE_OBSOLETE)
 
     def _get_root_certs(self, trust_store :TrustStore):
@@ -732,7 +791,7 @@ class LeafCertValidator(Validator):
         for cert in self._get_root_certs(trust_store):
             if cert.get_serial_number() in self._root_certs:
                 continue
-            root_validator = RootCertValidator()
+            root_validator = RootCertValidator(use_sqlite=self.use_sqlite)
             root_validator.init_x509(cert)
             root_validator.metadata.certificate_root_ca = True
             root_validator.verify()
@@ -792,16 +851,16 @@ class LeafCertValidator(Validator):
             if cert.get_serial_number() == self.x509.get_serial_number():
                 continue
             ca, _ = util.get_basic_constraints(cert.to_cryptography())
-            peer_validator = PeerCertValidator()
+            peer_validator = PeerCertValidator(use_sqlite=self.use_sqlite)
             peer_validator.init_x509(cert)
             peer_validator.metadata.certificate_intermediate_ca = ca is True
             trust_store = None
             checked_peer_as_root = False
             if peer_validator.metadata.certificate_authority_key_identifier is None:
-                trust_store = TrustStore(authority_key_identifier=peer_validator.metadata.certificate_subject_key_identifier)
+                trust_store = TrustStore(peer_validator.metadata.certificate_subject_key_identifier)
                 checked_peer_as_root = True
             elif peer_validator.metadata.certificate_authority_key_identifier not in peer_lookup.keys():
-                trust_store = TrustStore(authority_key_identifier=peer_validator.metadata.certificate_authority_key_identifier)
+                trust_store = TrustStore(peer_validator.metadata.certificate_authority_key_identifier)
             if isinstance(trust_store, TrustStore):
                 logger.info(f'Checking for Root CA issuer {cert.get_issuer()} with SKI {peer_validator.metadata.certificate_authority_key_identifier}')
                 self._root_certs = []

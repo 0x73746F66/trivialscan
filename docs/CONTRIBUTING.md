@@ -50,22 +50,20 @@ Anything you want, or one of these:
 - ECDH public server param reuse - Racoon
 - TLS extension intolerance
 - TLS extensions
-  - IssuingDistributionPoint
-  - cRLDistributionPoints
+  - nameConstraints [oid 2.5.29.30](https://www.alvestrand.no/objectid/2.5.29.30.html) [rfc5280](https://datatracker.ietf.org/doc/html/rfc5280#section-4.2.1.10) [ref1](https://netflixtechblog.com/bettertls-c9915cd255c0#8498) [ref2](https://docs.aws.amazon.com/acm-pca/latest/userguide/name_constraints.html)
   - signedCertificateTimestampList (CT)
   - OCSPNonce reuse
 - Timestamps are valid using NTP
-- Issuer match (If the server is owned or operated by you, a Zero-trust requirement)
+- Expected Issuer public key match (If the server is owned or operated by you, a Zero-trust requirement)
 - if CT expected (Zero-trust requirement), Certificate Transparency resolves
 - if HPKP is still present and expected, validate per the policy
-- Proxy support
-- Authentication
+- Scanner proxy support
+- Scanner Authentication
   - proxy auth
-  - basic authentication
-  - apikey
-  - custom authenticator (i.e. bespoke signers and custom headers
-  - HMAC [httpbis-message-signatures](https://datatracker.ietf.org/doc/draft-ietf-httpbis-message-signatures/) example custom authenticator
-- Certificate Summary
+  - custom authenticator (i.e. pass the request object to modify with bespoke signers, custom headers, query string params, etc.)
+- Informational Outputs
   - Public Key Modulus
   - deep link https://crt.sh/?sha1=
   - Certificate Transparency
+  - Trust Rating
+  - Risk Score (A+ to F)

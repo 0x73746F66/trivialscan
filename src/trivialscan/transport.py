@@ -705,7 +705,7 @@ class Transport:
         A rejected connection (typically the oldest or latest version, currently 1.3)
         when no mutual accepted TLS version can be negotiates is known as tls interference
         """
-        for check_interference in ['TLSv1.3 (0x304)', 'TLSv1.2 (0x303)', 'TLSv1.1 (0x302)', 'TLSv1 (0x301)', 'SSLv3 (0x300)', 'SSLv2 (0x2ff)']:
+        for check_interference in [constants.TLS1_3_LABEL, constants.TLS1_2_LABEL, constants.TLS1_1_LABEL, constants.TLS1_0_LABEL, constants.SSL3_LABEL, constants.SSL2_LABEL]:
             if check_interference not in self.offered_tls_versions:
                 self.tls_version_interference_versions.append(check_interference)
         self.tls_version_interference = len(self.tls_version_interference_versions) > 0

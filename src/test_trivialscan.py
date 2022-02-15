@@ -22,7 +22,6 @@ class TestValidator:
     def test_cert_validator_no_args(self):
         v = LeafCertValidator()
         assert v.certificate_valid is False
-        assert v.validation_checks == {}
         assert v.compliance_checks == {}
         assert v.certificate_verify_messages == []
         assert v.certificate_chain_valid is None
@@ -40,7 +39,6 @@ class TestValidator:
     def test_peer_cert_validator_no_args(self):
         v = PeerCertValidator()
         assert v.certificate_valid is False
-        assert v.validation_checks == {}
         assert v.compliance_checks == {}
         assert v.certificate_verify_messages == []
         assert v.metadata is None

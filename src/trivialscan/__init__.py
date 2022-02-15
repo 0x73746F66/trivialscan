@@ -10,14 +10,14 @@ from .transport import Transport
 from .validator import Validator, LeafCertValidator, RootCertValidator, PeerCertValidator
 
 
-__version__ = 'trivialscan==2.0.1'
+__version__ = 'trivialscan==2.0.2'
 __module__ = 'trivialscan'
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 logger = logging.getLogger(__name__)
 
 # When chaning this ensure cli.main() is also updated
-def verify(host :str, port :int = 443, cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp') -> tuple[bool,list[Validator]]:
+def verify(host :str, port :int = 443, cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', use_sqlite :bool = True) -> tuple[bool,list[Validator]]:
     if not isinstance(port, int):
         raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
     if validators.domain(host) is not True:
@@ -31,7 +31,7 @@ def verify(host :str, port :int = 443, cafiles :list = None, use_sni :bool = Tru
     if not isinstance(tmp_path_prefix, str):
         raise TypeError(f"provided an invalid type {type(tmp_path_prefix)} for tmp_path_prefix, expected str")
 
-    validator = LeafCertValidator(use_sqlite=False)
+    validator = LeafCertValidator(use_sqlite=use_sqlite)
     transport = Transport(host, port)
     if client_pem is not None:
         transport.pre_client_authentication_check(client_pem_path=client_pem)

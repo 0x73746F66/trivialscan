@@ -10,16 +10,17 @@ from OpenSSL.crypto import X509
 from tlstrust import TrustStore
 from tlstrust.context import SOURCES, PLATFORMS, BROWSERS, LANGUAGES
 from tlstrust.stores import VERSIONS
-from rich import inspect
+from rich import inspect, print
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.progress import Progress
 from rich.table import Table
 from rich.style import Style
+from rich.padding  import Padding
 from rich import box
-from . import __version__, exceptions, verify, util, validator, pci, nist, fips
+from . import __version__, constants, exceptions, verify, util, validator, pci, nist, fips
 from .transport import Transport
-
+from .scores import Score
 
 __module__ = 'trivialscan.cli'
 
@@ -172,6 +173,51 @@ STYLES = {
     'trust_ccadb': {'text': 'Common CA Database (CCADB)', 'represent_as': (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'trust_ccadb_status': {'text': ''},
 }
+RATING_ASCII = {
+    'A+': """
+ █████╗    ██╗
+██╔══██╗   ██║
+███████║████████╗
+██╔══██║╚══██╔══╝
+██║  ██║   ██║
+╚═╝  ╚═╝   ╚═╝""",
+    'A': """ █████╗
+██╔══██╗
+███████║
+██╔══██║
+██║  ██║
+╚═╝  ╚═╝""",
+    'B': """██████╗
+██╔══██╗
+██████╔╝
+██╔══██╗
+██████╔╝
+╚═════╝""",
+    'C': """ ██████╗
+██╔════╝
+██║
+██║
+╚██████╗
+ ╚═════╝""",
+    'D': """██████╗
+██╔══██╗
+██║  ██║
+██║  ██║
+██████╔╝
+╚═════╝""",
+    'E': """███████╗
+██╔════╝
+█████╗
+██╔══╝
+███████╗
+╚══════╝""",
+    'F': """███████╗
+██╔════╝
+█████╗
+██╔══╝
+██║
+╚═╝""",
+}
 NEVER_SHOW = [
     'host',
     'port',
@@ -184,6 +230,7 @@ NEVER_SHOW = [
     "subjectKeyIdentifier",
     "authorityKeyIdentifier",
     "certificate_expired",
+    "certificate_validation_oid",
 ]
 JSON_ONLY = [
     "certificate_expired",
@@ -195,6 +242,7 @@ SERVER_JSON_ONLY = JSON_ONLY + [
     'port',
     "peer_address",
     "offered_ciphers",
+    "certificate_validation_oid",
 ]
 SERVER_KEYS = [
     'certificate_validation_type',
@@ -357,18 +405,17 @@ FINGERPRINTS = [
     'certificate_subject_key_identifier',
     'certificate_authority_key_identifier'
 ]
-JSON_FILE = None
 
-def _make_table(validator :validator.Validator, title :str, caption :str) -> Table:
-    title_style = Style(bold=True, color=CLI_COLOR_OK if validator.certificate_valid else CLI_COLOR_NOK)
+def _make_table(result :validator.Validator, title :str, caption :str) -> Table:
+    title_style = Style(bold=True, color=CLI_COLOR_OK if result.certificate_valid else CLI_COLOR_NOK)
     table = Table(title=title, caption=caption, title_style=title_style, box=box.SIMPLE)
     table.add_column("", justify="right", style="dark_turquoise", no_wrap=True)
     table.add_column("Result", justify="left", no_wrap=False)
     return table
 
-def _table_data(validator :validator.Validator, table :Table, skip :list[str]) -> Table:
+def _table_data(result :validator.Validator, table :Table, skip :list[str]) -> Table:
     if 'verification_details' not in skip:
-        for i, err in enumerate(validator.certificate_verify_messages):
+        for i, err in enumerate(result.certificate_verify_messages):
             if any(key.startswith('pci_') for key in skip) and err.startswith('PCI'):
                 continue
             if any(key.startswith('fips_') for key in skip) and err.startswith('FIPS'):
@@ -376,18 +423,18 @@ def _table_data(validator :validator.Validator, table :Table, skip :list[str]) -
             if any(key.startswith('nist_') for key in skip) and err.startswith('NIST'):
                 continue
             table.add_row(f'Note {i+1}', err)
-    for key in validator.validation_checks.keys():
+    for key in result.validation_checks.keys():
         if key in skip:
             continue
-        table.add_row(STYLES.get(key,{}).get('text', key), util.styled_boolean(validator.validation_checks[key], STYLES[key]['represent_as'], STYLES[key]['colors']))
-    for key in validator.compliance_checks.keys():
+        table.add_row(STYLES.get(key,{}).get('text', key), util.styled_boolean(result.validation_checks[key], STYLES[key]['represent_as'], STYLES[key]['colors']))
+    for key in result.compliance_checks.keys():
         if key in skip:
             continue
-        table.add_row(STYLES.get(key,{}).get('text', key), util.styled_boolean(validator.compliance_checks[key], STYLES[key]['represent_as'], STYLES[key]['colors']))
-    for key in list(vars(validator.metadata).keys()):
+        table.add_row(STYLES.get(key,{}).get('text', key), util.styled_boolean(result.compliance_checks[key], STYLES[key]['represent_as'], STYLES[key]['colors']))
+    for key in list(vars(result.metadata).keys()):
         if key in skip:
             continue
-        val = getattr(validator.metadata, key)
+        val = getattr(result.metadata, key)
         if key in FINGERPRINTS and isinstance(val, str):
             table.add_row(STYLES.get(key,{}).get('text', key), util.str_n_split(val).upper())
             continue
@@ -403,10 +450,10 @@ def _table_data(validator :validator.Validator, table :Table, skip :list[str]) -
         table.add_row(STYLES.get(key,{}).get('text', key), util.styled_any(val))
     return table
 
-def _table_ext(validator :validator.Validator, table :Table, skip :list[str]) -> Table:
+def _table_ext(result :validator.Validator, table :Table, skip :list[str]) -> Table:
     if 'extensions' in skip:
         return table
-    for v in validator.metadata.certificate_extensions:
+    for v in result.metadata.certificate_extensions:
         ext_data = v.copy()
         ext = ext_data['name']
         del ext_data['name']
@@ -435,42 +482,59 @@ def _table_ext(validator :validator.Validator, table :Table, skip :list[str]) ->
         table.add_row(f'Extention {ext}', util.styled_any(ext_data))
     return table
 
-def peer_outputs(validator :validator.PeerCertValidator) -> Table:
+def _table_score(score_card :Score, rating_color :str) -> Table:
+    table = Table(box=box.SIMPLE_HEAD)
+    table.add_column("Security Score Card", justify="right", style="dark_turquoise", no_wrap=True)
+    table.add_column("", justify="left", no_wrap=False)
+    table.add_row('Rating', util.styled_any(RATING_ASCII[score_card.rating]), style=rating_color)
+    table.add_row('Rating cap', util.styled_value(score_card.rating_cap))
+    table.add_row('Security score', util.styled_value(f'{score_card.result}/{score_card.security_score_best}'))
+    for label, values in score_card.scoring_results.items():
+        if values:
+            table.add_row(label, util.styled_list(values))
+    if score_card.rating_cap_reason:
+        table.add_row('Rating cap reason', util.styled_list(score_card.rating_cap_reason))
+    table.add_row('Trust summary', util.styled_value(score_card.trust_summary))
+    if score_card.risk_summary:
+        table.add_row('Risk summary', util.styled_list(score_card.risk_summary))
+    return table
+
+def peer_outputs(result :validator.PeerCertValidator) -> Table:
     peer_type = 'Intermediate Certificate'
-    if validator.metadata.certificate_intermediate_ca:
+    if result.metadata.certificate_intermediate_ca:
         peer_type = 'Intermediate CA'
-    title = f'{peer_type}: {validator.metadata.certificate_subject}'
+    title = f'{peer_type}: {result.metadata.certificate_subject}'
     caption = '\n'.join([
-        f'Issuer: {validator.metadata.certificate_issuer}',
-        util.date_diff(validator.certificate.not_valid_after),
+        f'Issuer: {result.metadata.certificate_issuer}',
+        util.date_diff(result.certificate.not_valid_after),
     ])
-    table = _make_table(validator, title, caption)
-    table.add_row(STYLES['certificate_valid']['text'], util.styled_boolean(validator.certificate_valid, STYLES['certificate_valid']['represent_as'], STYLES['certificate_valid']['colors']))
-    _table_data(validator, table, PEER_SKIP)
-    _table_ext(validator, table, PEER_SKIP)
+    table = _make_table(result, title, caption)
+    table.add_row(STYLES['certificate_valid']['text'], util.styled_boolean(result.certificate_valid, STYLES['certificate_valid']['represent_as'], STYLES['certificate_valid']['colors']))
+    _table_data(result, table, PEER_SKIP)
+    _table_ext(result, table, PEER_SKIP)
     return table
 
-def root_outputs(validator :validator.RootCertValidator) -> Table:
-    title = f'Root CA: {validator.metadata.certificate_subject}'
-    caption = util.date_diff(validator.certificate.not_valid_after)
-    table = _make_table(validator, title, caption)
-    table.add_row(STYLES['certificate_valid']['text'], util.styled_boolean(validator.certificate_valid, ('Trusted', 'Not Trusted'), STYLES['certificate_valid']['colors']))
-    _table_data(validator, table, ROOT_SKIP)
-    _table_ext(validator, table, ROOT_SKIP)
+def root_outputs(result :validator.RootCertValidator) -> Table:
+    title = f'Root CA: {result.metadata.certificate_subject}'
+    caption = util.date_diff(result.certificate.not_valid_after)
+    table = _make_table(result, title, caption)
+    table.add_row(STYLES['certificate_valid']['text'], util.styled_boolean(result.certificate_valid, ('Trusted', 'Not Trusted'), STYLES['certificate_valid']['colors']))
+    _table_data(result, table, ROOT_SKIP)
+    _table_ext(result, table, ROOT_SKIP)
     return table
 
-def server_outputs(validator :validator.LeafCertValidator) -> Table:
-    title = f'Leaf Certificate {validator.metadata.host}:{validator.metadata.port} ({validator.metadata.peer_address})'
+def server_outputs(result :validator.LeafCertValidator) -> Table:
+    title = f'Leaf Certificate {result.metadata.host}:{result.metadata.port} ({result.metadata.peer_address})'
     caption = '\n'.join([
-        f'Issuer: {validator.metadata.certificate_issuer}',
-        util.date_diff(validator.certificate.not_valid_after),
+        f'Issuer: {result.metadata.certificate_issuer}',
+        util.date_diff(result.certificate.not_valid_after),
     ])
-    table = _make_table(validator, title, caption)
-    table.add_row(STYLES['certificate_valid']['text'], util.styled_boolean(validator.certificate_valid, STYLES['certificate_valid']['represent_as'], STYLES['certificate_valid']['colors']))
-    table.add_row(STYLES['certificate_chain_valid']['text'], util.styled_boolean(validator.certificate_chain_valid, STYLES['certificate_chain_valid']['represent_as'], STYLES['certificate_chain_valid']['colors']))
-    table.add_row(STYLES['certificate_chain_validation_result']['text'], util.styled_any(validator.certificate_chain_validation_result))
-    _table_data(validator, table, SERVER_SKIP)
-    _table_ext(validator, table, SERVER_SKIP)
+    table = _make_table(result, title, caption)
+    table.add_row(STYLES['certificate_valid']['text'], util.styled_boolean(result.certificate_valid, STYLES['certificate_valid']['represent_as'], STYLES['certificate_valid']['colors']))
+    table.add_row(STYLES['certificate_chain_valid']['text'], util.styled_boolean(result.certificate_chain_valid, STYLES['certificate_chain_valid']['represent_as'], STYLES['certificate_chain_valid']['colors']))
+    table.add_row(STYLES['certificate_chain_validation_result']['text'], util.styled_any(result.certificate_chain_validation_result))
+    _table_data(result, table, SERVER_SKIP)
+    _table_ext(result, table, SERVER_SKIP)
     return table
 
 def update_bar(progress, task):
@@ -505,6 +569,7 @@ def validator_data(result :validator.Validator, certificate_type :str, skip_keys
     data['expiry_status'] = util.date_diff(result.certificate.not_valid_after)
     data['verification_results'] = {}
     data['compliance_results'] = {}
+    data['verification_details'] = data.get('verification_details', {})
     for key, value in result.validation_checks.items():
         if key in skip_keys:
             continue
@@ -533,10 +598,22 @@ def validator_data(result :validator.Validator, certificate_type :str, skip_keys
     return data
 
 def make_json(results :list[validator.Validator], evaluation_duration_seconds :int) -> str:
+    score_card = Score(results)
     data = {
         'generator': __version__,
         'date': datetime.utcnow().replace(microsecond=0).isoformat(),
         'evaluation_duration_seconds': evaluation_duration_seconds,
+        'security_score': score_card.result,
+        'security_score_best': score_card.security_score_best,
+        'security_score_worst': score_card.security_score_worst,
+        'security_scoring_results': score_card.scoring_results,
+        'security_scoring_groups': score_card.scores,
+        'security_rating': score_card.rating,
+        'security_rating_cap': score_card.rating_cap,
+        'security_rating_cap_reason': score_card.rating_cap_reason,
+        'security_rating_groups': score_card.rating_groups,
+        'trust_summary': score_card.trust_summary,
+        'risk_summary': score_card.risk_summary,
         'certificate_trust': [],
         'validations': []
     }
@@ -544,7 +621,7 @@ def make_json(results :list[validator.Validator], evaluation_duration_seconds :i
         if isinstance(result, validator.RootCertValidator):
             data['validations'].append(validator_data(result, 'Root CA', [x for x in ROOT_SKIP if x not in JSON_ONLY]))
             contexts = {**SOURCES, **PLATFORMS, **BROWSERS, **LANGUAGES}
-            trust_store = TrustStore(result.metadata.certificate_authority_key_identifier)
+            trust_store = TrustStore(result.metadata.certificate_subject_key_identifier if not result.metadata.certificate_authority_key_identifier else result.metadata.certificate_authority_key_identifier)
             for name, is_trusted in trust_store.all_results.items():
                 data['certificate_trust'].append({'trust_store': name, 'is_trusted': is_trusted, 'version': VERSIONS[contexts[name]]})
         if isinstance(result, validator.PeerCertValidator):
@@ -556,7 +633,7 @@ def make_json(results :list[validator.Validator], evaluation_duration_seconds :i
             data['validations'].append(validator_data(result, 'Leaf Certificate', [x for x in SERVER_SKIP if x not in SERVER_JSON_ONLY]))
     return json.dumps(data, sort_keys=True, default=str)
 
-def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', debug :bool = False) -> list[validator.Validator]:
+def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', debug :bool = False, use_sqlite :bool = False) -> list[validator.Validator]:
     if not isinstance(client_pem, str) and client_pem is not None:
         raise TypeError(f"provided an invalid type {type(client_pem)} for client_pem, expected list")
     if not isinstance(cafiles, list) and cafiles is not None:
@@ -566,7 +643,6 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
     if not isinstance(tmp_path_prefix, str):
         raise TypeError(f"provided an invalid type {type(tmp_path_prefix)} for tmp_path_prefix, expected str")
 
-    evaluation_start = datetime.utcnow()
     results = []
     with Progress() as progress:
         prog_client_auth = progress.add_task("[cyan]Client Authentication...", total=5*len(domains))
@@ -578,7 +654,7 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
                     raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
                 if validators.domain(host) is not True:
                     raise ValueError(f"provided an invalid domain {host}")
-                result = validator.LeafCertValidator()
+                result = validator.LeafCertValidator(use_sqlite=use_sqlite)
                 transport = Transport(host, port)
                 if client_pem is None:
                     progress.update(prog_client_auth, visible=False)
@@ -607,13 +683,8 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
             progress.update(prog_tls, completed=14*len(domains))
             progress.update(prog_cert_val, completed=7*len(domains))
 
-    console = Console()
-    valid = all(v.certificate_valid for v in results)
     for result in results:
         output(result, debug=debug)
-    result_style = Style(color='dark_sea_green2' if valid else 'light_coral')
-    console.print('Valid ✓✓✓' if valid else '\nNot Valid. There where validation errors', style=result_style)
-    console.print(f'Evaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n\n')
     return results
 
 def cli():
@@ -633,6 +704,7 @@ def cli():
     parser.add_argument('--hide-validation-details', help='Do not include detailed validation messages in output', dest='hide_validation_details', action="store_true")
     parser.add_argument('-O', '--json-file', help='Store to file as JSON', dest='json_file', default=None)
     parser.add_argument('--hide-progress-bars', help='Hide task progress bars', dest='hide_progress_bars', action="store_true")
+    parser.add_argument('--use-sqlite-crlite', help='Use sqlite for caching mozilla crlite database', dest='use_sqlite', action="store_true")
     parser.add_argument('-v', '--errors-only', help='set logging level to ERROR (default CRITICAL)', dest='log_level_error', action="store_true")
     parser.add_argument('-vv', '--warning', help='set logging level to WARNING (default CRITICAL)', dest='log_level_warning', action="store_true")
     parser.add_argument('-vvv', '--info', help='set logging level to INFO (default CRITICAL)', dest='log_level_info', action="store_true")
@@ -750,14 +822,12 @@ def cli():
                     use_sni=not args.disable_sni,
                     client_pem=args.client_pem,
                     tmp_path_prefix=args.tmp_path_prefix,
+                    use_sqlite=args.use_sqlite,
                 )
                 all_results += results
-            valid = all([v.certificate_valid for v in all_results])
             for result in all_results:
                 output(result, debug=debug)
-            result_style = Style(color=CLI_COLOR_OK if valid else CLI_COLOR_NOK)
-            console.print('Valid ✓✓✓' if valid else '\nNot Valid. There where validation errors', style=result_style)
-            console.print(f'Evaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n\n')
+
         else:
             all_results = with_progress_bars( # clones trivialscan.verify and only adds progress bars
                 domains=domains,
@@ -765,8 +835,21 @@ def cli():
                 use_sni=not args.disable_sni,
                 client_pem=args.client_pem,
                 tmp_path_prefix=args.tmp_path_prefix,
-                debug=debug
+                debug=debug,
+                use_sqlite=args.use_sqlite,
             )
+        score_card = Score(all_results)
+        if score_card.rating == 'F':
+            rating_color = CLI_COLOR_NOK
+        elif score_card.rating.startswith('A'):
+            rating_color = CLI_COLOR_OK
+        else:
+            rating_color = CLI_COLOR_ALERT
+        if args.summary_only:
+            console.print(RATING_ASCII[score_card.rating], style=rating_color)
+        else:
+            console.print(_table_score(score_card, rating_color))
+            console.print(f'\nEvaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n')
     except exceptions.ValidationError as ex:
         console.print(str(ex))
         return

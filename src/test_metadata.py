@@ -1,4 +1,5 @@
 from datetime import datetime
+from trivialscan import constants
 from trivialscan.metadata import Metadata
 from trivialscan.transport import Transport
 from trivialscan.validator import LeafCertValidator
@@ -38,7 +39,7 @@ class TestMetadata:
         assert isinstance(self._verify.metadata.certificate_extensions, list)
         assert isinstance(self._verify.metadata.certificate_is_self_signed, bool)
         assert isinstance(self._verify.metadata.negotiated_cipher, str)
-        assert self._verify.metadata.negotiated_protocol in ['TLSv1 (0x301)', 'TLSv1.1 (0x302)', 'TLSv1.2 (0x303)']
+        assert self._verify.metadata.negotiated_protocol in [constants.TLS1_0_LABEL, constants.TLS1_1_LABEL, constants.TLS1_2_LABEL]
         assert isinstance(self._verify.metadata.sni_support, bool)
         assert isinstance(self._verify.metadata.revocation_ocsp_stapling, bool)
         assert isinstance(self._verify.metadata.revocation_ocsp_must_staple, bool)
