@@ -301,7 +301,8 @@ class Score:
     def validity_period(metadata: Metadata) -> int:
         not_after = datetime.fromisoformat(metadata.certificate_not_after)
         not_before = datetime.fromisoformat(metadata.certificate_not_before)
-        if metadata.certificate_expired or not_after > datetime.utcnow():
+        now = datetime.utcnow()
+        if not_after < now or not_before > now:
             return ISSUE_MOD
         difference = not_after - not_before
         if difference.days + difference.seconds / 86400.0 <= 365.2425:
