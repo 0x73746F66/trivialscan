@@ -16,7 +16,9 @@ install: build ## Install the package
 check: ## check build
 	python3 setup.py check
 
-test: ## run unit tests with coverage
+test: install test-only ## run unit tests with coverage
+
+test-only: ## run unit tests with coverage
 	coverage run -m pytest --nf
 	coverage report -m
 
@@ -24,7 +26,7 @@ build: check ## build wheel file
 	rm -f dist/*
 	python3 -m build -nx
 
-publish: install ## upload to pypi.org
+publish: ## upload to pypi.org
 	git tag -f $(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')
 	git push -u origin --tags
 	python3 -m twine upload dist/*
