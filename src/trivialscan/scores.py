@@ -127,8 +127,15 @@ class Score:
             'server_configuration': min(
                 Score.server_configuration(v.metadata) for v in self._validators
             ),
-            'validity_period': min(
-                Score.validity_period(v.metadata) for v in self._validators
+            'leaf_validity_period': min(
+                Score.leaf_validity_period(v.metadata)
+                for v in self._validators
+                if isinstance(v, LeafCertValidator)
+            ),
+            'chain_expiry': min(
+                Score.chain_expiry(v.metadata)
+                for v in self._validators
+                if not isinstance(v, LeafCertValidator)
             ),
         }
         self.security_score_best = BASE_SCORE + (MAJOR_MOD * len(self.scores.keys()))
@@ -298,7 +305,7 @@ class Score:
         return MAJOR_MOD if metadata.certification_authority_authorization else WEAKNESS_MOD
 
     @staticmethod
-    def validity_period(metadata: Metadata) -> int:
+    def leaf_validity_period(metadata: Metadata) -> int:
         not_after = datetime.fromisoformat(metadata.certificate_not_after)
         not_before = datetime.fromisoformat(metadata.certificate_not_before)
         now = datetime.utcnow()
@@ -311,6 +318,14 @@ class Score:
             return MINOR_MOD
         return WEAKNESS_MOD
 
+    @staticmethod
+    def chain_expiry(metadata: Metadata) -> int:
+        not_after = datetime.fromisoformat(metadata.certificate_not_after)
+        not_before = datetime.fromisoformat(metadata.certificate_not_before)
+        now = datetime.utcnow()
+        if not_after < now or not_before > now:
+            return ISSUE_MOD
+        return 0
 
     @staticmethod
     def risk(metadata: Metadata) -> int:
