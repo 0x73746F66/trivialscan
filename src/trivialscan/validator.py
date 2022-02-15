@@ -222,7 +222,7 @@ class Validator:
     def nist_compliant(self) -> bool:
         logger.debug('NIST compliance validations')
         self.compliance_checks[nist.VALIDATION_WEAK_KEY] = self.metadata.certificate_public_key_size >= nist.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
-        if self.compliance_checks[nist.VALIDATION_WEAK_KEY] is False:
+        if not self.compliance_checks[nist.VALIDATION_WEAK_KEY]:
             if self.metadata.certificate_public_key_type == 'RSA':
                 self.certificate_verify_messages.append(nist.NIST_NON_COMPLIANCE_WEAK_KEY_RSA)
             if self.metadata.certificate_public_key_type == 'DSA':
@@ -237,24 +237,23 @@ class Validator:
         not_after = datetime.fromisoformat(self.metadata.certificate_not_after)
         not_before = datetime.fromisoformat(self.metadata.certificate_not_before)
         self.validation_checks[VALIDATION_NOT_EXPIRED] = not_after > datetime.utcnow()
-        if self.validation_checks[VALIDATION_NOT_EXPIRED] is False:
+        if not self.validation_checks[VALIDATION_NOT_EXPIRED]:
             self.certificate_verify_messages.append(util.date_diff(not_after))
         self.validation_checks[VALIDATION_ISSUED_PAST_TENSE] = not_before < datetime.utcnow()
-        if self.validation_checks[VALIDATION_ISSUED_PAST_TENSE] is False:
+        if not self.validation_checks[VALIDATION_ISSUED_PAST_TENSE]:
             self.certificate_verify_messages.append(f'Will only be valid for use in {(datetime.utcnow() - self.metadata.certificate_not_before).days} days')
         self.validation_checks[VALIDATION_SUBJECT_CN_DEFINED] = self.metadata.certificate_common_name is not None
         self.validation_checks[VALIDATION_WEAK_SIG_ALGO] = self.metadata.certificate_signature_algorithm not in constants.KNOWN_WEAK_SIGNATURE_ALGORITHMS.keys()
-        if self.validation_checks[VALIDATION_WEAK_SIG_ALGO] is False:
+        if not self.validation_checks[VALIDATION_WEAK_SIG_ALGO]:
             self.certificate_verify_messages.append(constants.KNOWN_WEAK_SIGNATURE_ALGORITHMS[self.metadata.certificate_signature_algorithm])
         self.validation_checks[VALIDATION_WEAK_KEYS] = self.metadata.certificate_public_key_type not in constants.KNOWN_WEAK_KEYS.keys() or self.metadata.certificate_public_key_size > constants.WEAK_KEY_SIZE[self.metadata.certificate_public_key_type]
-        if self.validation_checks[VALIDATION_WEAK_KEYS] is False:
+        if not self.validation_checks[VALIDATION_WEAK_KEYS]:
             self.certificate_verify_messages.append(constants.KNOWN_WEAK_KEYS[self.metadata.certificate_public_key_type])
         self.possible_phish_or_malicious()
         self.known_compromise()
         self.pwnedkeys()
         self.metadata.revocation_crlite = util.crlite_revoked(db_path=path.join(self.tmp_path_prefix, ".crlite_db"), pem=self._pem, use_sqlite=self.use_sqlite)
-        if self.metadata.revocation_crlite:
-            self.validation_checks[VALIDATION_REVOCATION] = False
+        self.validation_checks[VALIDATION_REVOCATION] = not self.metadata.revocation_crlite
 
     def possible_phish_or_malicious(self) -> bool:
         logger.debug('Impersonation, C2, other detections')

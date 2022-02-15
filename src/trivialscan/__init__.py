@@ -10,7 +10,7 @@ from .transport import Transport
 from .validator import Validator, LeafCertValidator, RootCertValidator, PeerCertValidator
 
 
-__version__ = 'trivialscan==2.0.3'
+__version__ = 'trivialscan==2.0.4'
 __module__ = 'trivialscan'
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"

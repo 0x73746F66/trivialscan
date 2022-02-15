@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="trivialscan",
-    version="2.0.3",
+    version="2.0.4",
     author='Christopher Langton',
     author_email='chris@trivialsec.com',
     description="Validate the security of your TLS connections so that they deserve your trust.",

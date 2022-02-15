@@ -96,16 +96,40 @@ class Score:
         self._validators = validators
         self.rating_cap, self.rating_cap_reason = self._get_max_rating()
         self.scores = {
-            'key_size': min([Score.key_size(v.metadata) for v in self._validators]),
-            'certificate_validation': min([Score.certificate_validation(v.metadata) for v in self._validators if isinstance(v, LeafCertValidator)]),
-            'caa': min([Score.caa(v.metadata) for v in self._validators if isinstance(v, LeafCertValidator)]),
-            'dnssec': min([Score.dnssec(v.metadata) for v in self._validators if isinstance(v, LeafCertValidator)]),
-            'cipher': min([Score.cipher(v.metadata) for v in self._validators if isinstance(v, LeafCertValidator)]),
-            'transport': min([Score.transport(v.metadata) for v in self._validators if isinstance(v, LeafCertValidator)]),
-            'risk': min([Score.risk(v.metadata) for v in self._validators]),
-            'trust': min([Score.trust(v.metadata) for v in self._validators]),
-            'server_configuration': min([Score.server_configuration(v.metadata) for v in self._validators]),
-            'validity_period': min([Score.validity_period(v.metadata) for v in self._validators]),
+            'key_size': min(Score.key_size(v.metadata) for v in self._validators),
+            'certificate_validation': min(
+                Score.certificate_validation(v.metadata)
+                for v in self._validators
+                if isinstance(v, LeafCertValidator)
+            ),
+            'caa': min(
+                Score.caa(v.metadata)
+                for v in self._validators
+                if isinstance(v, LeafCertValidator)
+            ),
+            'dnssec': min(
+                Score.dnssec(v.metadata)
+                for v in self._validators
+                if isinstance(v, LeafCertValidator)
+            ),
+            'cipher': min(
+                Score.cipher(v.metadata)
+                for v in self._validators
+                if isinstance(v, LeafCertValidator)
+            ),
+            'transport': min(
+                Score.transport(v.metadata)
+                for v in self._validators
+                if isinstance(v, LeafCertValidator)
+            ),
+            'risk': min(Score.risk(v.metadata) for v in self._validators),
+            'trust': min(Score.trust(v.metadata) for v in self._validators),
+            'server_configuration': min(
+                Score.server_configuration(v.metadata) for v in self._validators
+            ),
+            'validity_period': min(
+                Score.validity_period(v.metadata) for v in self._validators
+            ),
         }
         self.security_score_best = BASE_SCORE + (MAJOR_MOD * len(self.scores.keys()))
         self.security_score_worst = BASE_SCORE + (ISSUE_MOD * len(self.scores.keys()))
@@ -227,7 +251,11 @@ class Score:
             trust_store = TrustStore(v.metadata.certificate_subject_key_identifier if not v.metadata.certificate_authority_key_identifier else v.metadata.certificate_authority_key_identifier)
             if all([trust_store.check_trust(context) for context in BROWSERS.values()]) and not all([trust_store.check_trust(context) for context in PLATFORMS.values()]):
                 return constants.BROWSER_TRUSTED
-            if not all([trust_store.check_trust(context) for context in BROWSERS.values()]) and all([trust_store.check_trust(context) for context in PLATFORMS.values()]):
+            if not all(
+                trust_store.check_trust(context) for context in BROWSERS.values()
+            ) and all(
+                trust_store.check_trust(context) for context in PLATFORMS.values()
+            ):
                 return constants.SERVER_TRUSTED
 
         return constants.LIMITED_TRUST
@@ -248,7 +276,10 @@ class Score:
             return ISSUE_MOD
         if metadata.tls_long_handshake_intolerance or not metadata.scsv:
             return WEAKNESS_MOD
-        if constants.TLS1_3_LABEL in metadata.offered_tls_versions and metadata.scsv and not metadata.tls_version_interference:
+        if (
+            constants.TLS1_3_LABEL in metadata.offered_tls_versions
+            and not metadata.tls_version_interference
+        ):
             return MAJOR_MOD
         if any([constants.TLS1_2_LABEL in metadata.offered_tls_versions, constants.TLS1_3_LABEL in metadata.offered_tls_versions]):
             return MINOR_MOD
@@ -268,9 +299,17 @@ class Score:
 
     @staticmethod
     def validity_period(metadata: Metadata) -> int:
-        if metadata.certificate_expired:
+        not_after = datetime.fromisoformat(metadata.certificate_not_after)
+        not_before = datetime.fromisoformat(metadata.certificate_not_before)
+        if metadata.certificate_expired or not_after > datetime.utcnow():
             return ISSUE_MOD
-        return WEAKNESS_MOD if datetime.utcnow() > datetime.fromisoformat(metadata.certificate_not_before) else MINOR_MOD
+        difference = not_after - not_before
+        if difference.days + difference.seconds / 86400.0 <= 365.2425:
+            return MAJOR_MOD
+        if 2 <= (difference.days + difference.seconds/86400.0)/365.2425 <= 5:
+            return MINOR_MOD
+        return WEAKNESS_MOD
+
 
     @staticmethod
     def risk(metadata: Metadata) -> int:
@@ -282,20 +321,21 @@ class Score:
 
     @staticmethod
     def transport(metadata: Metadata) -> int:
-        major = []
-        weak = []
-        major.append(metadata.http_xss_protection)
-        major.append(metadata.http_csp)
-        major.append(metadata.http_hsts)
-        major.append(metadata.negotiated_protocol not in constants.WEAK_PROTOCOL.keys())
-        major.append(not metadata.http2_cleartext_support)
-        major.append(constants.TLS1_3_LABEL == metadata.preferred_protocol)
-        weak.append(not metadata.sni_support)
-        weak.append(metadata.compression_support)
-        weak.append(metadata.client_renegotiation)
-        weak.append(metadata.session_resumption_caching)
-        weak.append(metadata.session_resumption_tickets)
-        weak.append(metadata.session_resumption_ticket_hint)
+        major = [                metadata.http_xss_protection,
+            metadata.http_csp,
+            metadata.http_hsts,
+            metadata.negotiated_protocol not in constants.WEAK_PROTOCOL.keys(),
+            not metadata.http2_cleartext_support,
+            constants.TLS1_3_LABEL == metadata.preferred_protocol,
+        ]
+        weak = [
+            not metadata.sni_support,
+            metadata.compression_support,
+            metadata.client_renegotiation,
+            metadata.session_resumption_caching,
+            metadata.session_resumption_tickets,
+            metadata.session_resumption_ticket_hint,
+        ]
         if all(major) and not any(weak):
             return MAJOR_MOD
         if any(major) and not all(weak):
