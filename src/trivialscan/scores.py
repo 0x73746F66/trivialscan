@@ -314,7 +314,7 @@ class Score:
         difference = not_after - not_before
         if difference.days <= 365:
             return MAJOR_MOD
-        if 366 <= difference.year <= 1825:
+        if 366 <= difference.days <= 1825:
             return MINOR_MOD
         return WEAKNESS_MOD
 
