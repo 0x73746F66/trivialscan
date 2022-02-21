@@ -6,6 +6,7 @@ from pathlib import Path
 from datetime import datetime
 from dataclasses import asdict
 import validators
+import progressbar
 from OpenSSL.crypto import X509
 from tlstrust import TrustStore
 from tlstrust.context import SOURCES, PLATFORMS, BROWSERS, LANGUAGES
@@ -482,9 +483,10 @@ def _table_ext(result :validator.Validator, table :Table, skip :list[str]) -> Ta
         table.add_row(f'Extention {ext}', util.styled_any(ext_data))
     return table
 
-def _table_score(score_card :Score, rating_color :str) -> Table:
+def _table_score(score_card :Score, rating_color :str, host :str) -> Table:
     table = Table(box=box.SIMPLE_HEAD)
-    table.add_column("Security Score Card", justify="right", style="dark_turquoise", no_wrap=True)
+    table.add_column(
+        f"Security Score Card {host}", justify="right", style="dark_turquoise", no_wrap=True)
     table.add_column("", justify="left", no_wrap=False)
     table.add_row('Rating', util.styled_any(RATING_ASCII[score_card.rating]), style=rating_color)
     table.add_row('Rating cap', util.styled_value(score_card.rating_cap))
@@ -545,19 +547,34 @@ def update_bar(progress, task):
             progress.update(task, advance=1)
     return progress_bar
 
-def output(result, debug :bool = False):
+
+def output(evaluations: list[tuple[str, list[validator.Validator]]], debug: bool = False, summary_only: bool = False):
     console = Console()
-    if debug and hasattr(result, 'transport'):
-        inspect(result.transport, title=result.transport.negotiated_protocol)
-    if debug and hasattr(result, 'metadata'):
-        inspect(result.metadata, title=result.metadata.certificate_subject)
-    if isinstance(result, validator.RootCertValidator):
-        console.print(root_outputs(result))
-    if isinstance(result, validator.PeerCertValidator):
-        console.print(peer_outputs(result))
-    if isinstance(result, validator.LeafCertValidator):
-        console.print(server_outputs(result))
-    console.print('\n\n')
+    for evaluation in evaluations:
+        host, results = evaluation
+        for result in results:
+            if debug and hasattr(result, 'transport'):
+                inspect(result.transport, title=result.transport.negotiated_protocol)
+            if debug and hasattr(result, 'metadata'):
+                inspect(result.metadata, title=result.metadata.certificate_subject)
+            if isinstance(result, validator.RootCertValidator):
+                console.print(root_outputs(result))
+            if isinstance(result, validator.PeerCertValidator):
+                console.print(peer_outputs(result))
+            if isinstance(result, validator.LeafCertValidator):
+                console.print(server_outputs(result))
+
+        score_card = Score(results)
+        if score_card.rating == 'F':
+            rating_color = CLI_COLOR_NOK
+        elif score_card.rating.startswith('A'):
+            rating_color = CLI_COLOR_OK
+        else:
+            rating_color = CLI_COLOR_ALERT
+        if summary_only:
+            console.print(RATING_ASCII[score_card.rating], style=rating_color)
+        else:
+            console.print(_table_score(score_card, rating_color, host))
 
 def validator_data(result :validator.Validator, certificate_type :str, skip_keys :list) -> dict:
     data = asdict(result.metadata)
@@ -597,11 +614,9 @@ def validator_data(result :validator.Validator, certificate_type :str, skip_keys
 
     return data
 
-def make_json(results :list[validator.Validator], evaluation_duration_seconds :int) -> str:
+def prepare_json(results :list[validator.Validator], target, evaluation_duration_seconds :int) -> dict:
     score_card = Score(results)
     data = {
-        'generator': __version__,
-        'date': datetime.utcnow().replace(microsecond=0).isoformat(),
         'evaluation_duration_seconds': evaluation_duration_seconds,
         'security_score': score_card.result,
         'security_score_best': score_card.security_score_best,
@@ -631,9 +646,10 @@ def make_json(results :list[validator.Validator], evaluation_duration_seconds :i
             data['validations'].append(validator_data(result, cert_type, [x for x in PEER_SKIP if x not in JSON_ONLY]))
         if isinstance(result, validator.LeafCertValidator):
             data['validations'].append(validator_data(result, 'Leaf Certificate', [x for x in SERVER_SKIP if x not in SERVER_JSON_ONLY]))
-    return json.dumps(data, sort_keys=True, default=str)
+    return data
 
-def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp', debug :bool = False, use_sqlite :bool = False) -> list[validator.Validator]:
+
+def with_progress_bars(domains: list[tuple[str, int]], cafiles: list = None, use_sni: bool = True, client_pem: str = None, tmp_path_prefix: str = '/tmp') -> tuple[list[dict], list[validator.Validator]]:
     if not isinstance(client_pem, str) and client_pem is not None:
         raise TypeError(f"provided an invalid type {type(client_pem)} for client_pem, expected list")
     if not isinstance(cafiles, list) and cafiles is not None:
@@ -643,19 +659,22 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
     if not isinstance(tmp_path_prefix, str):
         raise TypeError(f"provided an invalid type {type(tmp_path_prefix)} for tmp_path_prefix, expected str")
 
-    results = []
+    outputs = []
+    json_results = []
     with Progress() as progress:
         prog_client_auth = progress.add_task("[cyan]Client Authentication...", total=5*len(domains))
         prog_tls = progress.add_task("[cyan]Evaluating TLS...", total=14*len(domains))
         prog_cert_val = progress.add_task("[cyan]Certificate Chain Validation...", total=7*len(domains))
         while not progress.finished:
-            for host, port in domains:
+            for domain, port in domains:
+                results = []
+                evaluation_start = datetime.utcnow()
                 if not isinstance(port, int):
                     raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
-                if validators.domain(host) is not True:
-                    raise ValueError(f"provided an invalid domain {host}")
-                result = validator.LeafCertValidator(use_sqlite=use_sqlite)
-                transport = Transport(host, port)
+                if validators.domain(domain) is not True:
+                    raise ValueError(f"provided an invalid domain {domain}")
+                result = validator.LeafCertValidator()
+                transport = Transport(domain, port)
                 if client_pem is None:
                     progress.update(prog_client_auth, visible=False)
                 else:
@@ -666,7 +685,7 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
                     progress.update(prog_client_auth, visible=False)
                     progress.update(prog_tls, visible=False)
                     progress.update(prog_cert_val, visible=False)
-                    raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=host, port=port))
+                    raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=domain, port=port))
                 progress.update(prog_tls, advance=1)
                 result.tmp_path_prefix = tmp_path_prefix
                 result.mount(transport)
@@ -679,19 +698,23 @@ def with_progress_bars(domains :list[tuple[str, int]], cafiles :list = None, use
                 result.nist_compliant()
                 results += result.peer_validations
                 results.append(result)
+                outputs.append((f'{domain}:{port}', results))
+                json_results.append(
+                    prepare_json(results, f'{domain}:{port}', (datetime.utcnow() - evaluation_start).total_seconds())
+                )
             progress.update(prog_client_auth, completed=5*len(domains))
             progress.update(prog_tls, completed=14*len(domains))
             progress.update(prog_cert_val, completed=7*len(domains))
 
-    for result in results:
-        output(result, debug=debug)
-    return results
+    return json_results, outputs
+
+def no_progressbar(data :list):
+    for item in data:
+        yield item
 
 def cli():
     parser = argparse.ArgumentParser()
     parser.add_argument("targets", nargs="*", help='All unnamed arguments are hosts (and ports) targets to test. ~$ trivialscan google.com:443 github.io owasp.org:80')
-    parser.add_argument('-H', '--host', help='single host to check', dest='host', default=None)
-    parser.add_argument('-p', '--port', help='TLS port of host', dest='port', default=443)
     parser.add_argument('-c', '--cafiles', help='path to PEM encoded CA bundle file, url or file path accepted', dest='cafiles', default=None)
     parser.add_argument('-C', '--client-pem', help='path to PEM encoded client certificate, url or file path accepted', dest='client_pem', default=None)
     parser.add_argument('-t', '--tmp-path-prefix', help='local file path to use as a prefix when saving temporary files such as those being fetched for client authorization', dest='tmp_path_prefix', default='/tmp')
@@ -703,13 +726,13 @@ def cli():
     parser.add_argument('-s', '--summary-only', help='Do not include informational details, show only validation outcomes', dest='summary_only', action="store_true")
     parser.add_argument('--hide-validation-details', help='Do not include detailed validation messages in output', dest='hide_validation_details', action="store_true")
     parser.add_argument('-O', '--json-file', help='Store to file as JSON', dest='json_file', default=None)
-    parser.add_argument('--hide-progress-bars', help='Hide task progress bars', dest='hide_progress_bars', action="store_true")
-    parser.add_argument('--use-sqlite-crlite', help='Use sqlite for caching mozilla crlite database', dest='use_sqlite', action="store_true")
-    parser.add_argument('-v', '--errors-only', help='set logging level to ERROR (default CRITICAL)', dest='log_level_error', action="store_true")
-    parser.add_argument('-vv', '--warning', help='set logging level to WARNING (default CRITICAL)', dest='log_level_warning', action="store_true")
-    parser.add_argument('-vvv', '--info', help='set logging level to INFO (default CRITICAL)', dest='log_level_info', action="store_true")
-    parser.add_argument('-vvvv', '--debug', help='set logging level to DEBUG (default CRITICAL)', dest='log_level_debug', action="store_true")
+    parser.add_argument('-q', '--hide-progress-bars', help='Hide task progress bars', dest='hide_progress_bars', action="store_true")
     parser.add_argument('--version', dest='show_version', action="store_true")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-v', '--errors-only', help='set logging level to ERROR (default CRITICAL)', dest='log_level_error', action="store_true")
+    group.add_argument('-vv', '--warning', help='set logging level to WARNING (default CRITICAL)', dest='log_level_warning', action="store_true")
+    group.add_argument('-vvv', '--info', help='set logging level to INFO (default CRITICAL)', dest='log_level_info', action="store_true")
+    group.add_argument('-vvvv', '--debug', help='set logging level to DEBUG (default CRITICAL)', dest='log_level_debug', action="store_true")
     args = parser.parse_args()
     JSON_FILE = args.json_file
     log_level = logging.CRITICAL
@@ -736,12 +759,6 @@ def cli():
     if args.show_version:
         version()
         sys.exit(0)
-    if args.host is None and len(args.targets) == 0:
-        version()
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-    if args.host is not None:
-        args.targets.append(f'{args.host}:{args.port}')
 
     domains = []
     for target in args.targets:
@@ -751,7 +768,7 @@ def cli():
             host, port = pieces
         if len(pieces) == 1:
             host = pieces[0]
-            port = args.port
+            port = 443
         if validators.domain(host) is not True:
             raise AttributeError(f'host {host} is invalid')
         domains.append((host, int(port)))
@@ -809,12 +826,15 @@ def cli():
         PEER_SKIP.extend(SUMMARY_SKIP)
         ROOT_SKIP.extend(SUMMARY_SKIP)
 
+    json_results = []
     all_results = []
-    evaluation_start = datetime.utcnow()
+    run_start = datetime.utcnow()
     console = Console()
     try:
         if args.hide_progress_bars:
+            progressbar.progressbar = no_progressbar
             for domain, port in domains:
+                evaluation_start = datetime.utcnow()
                 _, results = verify(
                     domain,
                     int(port),
@@ -822,40 +842,33 @@ def cli():
                     use_sni=not args.disable_sni,
                     client_pem=args.client_pem,
                     tmp_path_prefix=args.tmp_path_prefix,
-                    use_sqlite=args.use_sqlite,
                 )
-                all_results += results
-            for result in all_results:
-                output(result, debug=debug)
+                json_results.append(
+                    prepare_json(results, f'{domain}:{port}', (datetime.utcnow() - evaluation_start).total_seconds())
+                )
+                all_results.append((f'{domain}:{port}', results))
 
         else:
-            all_results = with_progress_bars( # clones trivialscan.verify and only adds progress bars
+            json_results, all_results = with_progress_bars(  # clones trivialscan.verify and only adds progress bars
                 domains=domains,
                 cafiles=args.cafiles,
                 use_sni=not args.disable_sni,
                 client_pem=args.client_pem,
                 tmp_path_prefix=args.tmp_path_prefix,
-                debug=debug,
-                use_sqlite=args.use_sqlite,
             )
-        score_card = Score(all_results)
-        if score_card.rating == 'F':
-            rating_color = CLI_COLOR_NOK
-        elif score_card.rating.startswith('A'):
-            rating_color = CLI_COLOR_OK
-        else:
-            rating_color = CLI_COLOR_ALERT
-        if args.summary_only:
-            console.print(RATING_ASCII[score_card.rating], style=rating_color)
-        else:
-            console.print(_table_score(score_card, rating_color))
-            console.print(f'\nEvaluation duration seconds {(datetime.utcnow() - evaluation_start).total_seconds()}\n')
-    except exceptions.ValidationError as ex:
-        console.print(str(ex))
-        return
 
-    if JSON_FILE:
+        output(all_results, debug=debug, summary_only=args.summary_only)
+        execution_duration_seconds = (datetime.utcnow() - run_start).total_seconds()
         json_path = Path(JSON_FILE)
         if json_path.is_file():
             json_path.unlink()
-        json_path.write_text(make_json(all_results, (datetime.utcnow() - evaluation_start).total_seconds()))
+            json_path.write_text(json.dumps({
+                'generator': __version__,
+                'execution_duration_seconds': execution_duration_seconds,
+                'date': datetime.utcnow().replace(microsecond=0).isoformat(),
+                'evaluations': json_results
+            }, sort_keys=True, default=str), encoding='utf8')
+
+    except exceptions.ValidationError as ex:
+        console.print(str(ex))
+        return

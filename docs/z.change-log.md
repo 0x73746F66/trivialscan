@@ -1,5 +1,14 @@
 # Change Log
 
+## 2.1.0 Feb 21st 2022
+
+- cli will correctly output each target seperately, and score hosts individually rather than a signle score accross all hosts
+- cli json output now structured to provide individual evaluations per host
+- removed ineffective validator property `use_sqlite` as otehr parts of crlite_query would use sqlite regardless
+- removed redundant `--host` and `--port` cli arguments
+- added `-q` alias for cli argument `--hide-progress-bars`
+- ensured `--hide-progress-bars` will also not allow the crlite_query progress bars to show
+
 ## 2.0.4 Feb 17th 2022
 
 - fixed and extended `validity_period` score

@@ -102,6 +102,11 @@ See [Documentation](./docs/0.index.md) section of this repository
   - ✓ Deprecated protocol
   - ✓ Common Name exists, and uses valid syntax
   - ✓ Root Certificate is a CA and in a trust store
+    - ✓ Distinct Root Trust Store specific evaluations of trust
+    - ✓ Platform specific evaluations of trust
+    - ✓ Evaluations of trust for Web Browsers
+    - ✓ Programming Language specific Trust (Microservice architecture and APIs)
+    - ✓ Python libraries Trust
   - ✓ Validate clientAuth expected subjects sent by server
   - ✓ Intermediate key usages are verified
   - ✓ Valid SAN

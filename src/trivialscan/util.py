@@ -1,6 +1,7 @@
 import logging
 import string
 import random
+import sqlite3
 from io import BytesIO
 from datetime import datetime, timedelta
 from urllib.request import urlretrieve
@@ -740,25 +741,9 @@ def caa_valid(domain_name :str, cert :X509, certificate_chain :list[X509]) -> bo
 
     return False
 
-def crlite_revoked(db_path :str, pem :bytes, use_sqlite :bool = True):
-    if use_sqlite:
-        from crlite_query import IntermediatesDB
-    else:
-        import sqlite3
-        sqlite3.sqlite_version_info = (3, 37, 2)
-        class IntermediatesDB(object):
-            def __init__(self, *, db_path, download_pems=False):
-                pass
-            def __len__(self):
-                return 0
-            def __str__(self):
-                return f"{len(self)} Intermediates"
-            def update(self, *, collection_url, attachments_base_url):
-                pass
-            def issuer_by_DN(self, distinguishedName):
-                return None
-    from crlite_query import CRLiteDB, CRLiteQuery
-
+def crlite_revoked(db_path :str, pem :bytes):
+    sqlite3.sqlite_version_info = (3, 24)
+    from crlite_query import CRLiteDB, CRLiteQuery, IntermediatesDB
     def find_attachments_base_url():
         url = urlparse(constants.CRLITE_URL)
         base_rsp = requests.get(f"{url.scheme}://{url.netloc}/v1/")
@@ -787,9 +772,9 @@ def crlite_revoked(db_path :str, pem :bytes, use_sqlite :bool = True):
         last_updated_file.touch()
         logger.info(f"Status: {crlite_db}")
 
-    query = CRLiteQuery(crlite_db=crlite_db, intermediates_db=IntermediatesDB(db_path=db_path, download_pems=False))
+    crlite_query = CRLiteQuery(crlite_db=crlite_db, intermediates_db=IntermediatesDB(db_path=db_path, download_pems=True))
     results = []
-    for result in query.query(name='peer', generator=query.gen_from_pem(BytesIO(pem))):
+    for result in crlite_query.query(name='peer', generator=crlite_query.gen_from_pem(BytesIO(pem))):
         logger.info(result.print_query_result(verbose=1))
         logger.debug(result.print_query_result(verbose=3))
         results.append(result.is_revoked())

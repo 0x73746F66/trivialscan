@@ -7,14 +7,16 @@ help: ## This help.
 .DEFAULT_GOAL := help
 
 setup: ## setup for development of this project
-	pip install --progress-bar off -U pip
-	pip install --progress-bar off -U -r dev-requirements.txt
+	python -m pip install --progress-bar off -U pip
+	python -m pip install --progress-bar off -U -r dev-requirements.txt
+	python -m pip install --progress-bar off -e .
 
 install: build ## Install the package
-	pip install -U --progress-bar off --no-cache-dir --force-reinstall dist/trivialscan-$(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')-py2.py3-none-any.whl
+	python -m pip install -U --progress-bar off --no-cache-dir --force-reinstall dist/trivialscan-$(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')-py2.py3-none-any.whl
 
 check: ## check build
-	python3 setup.py check
+	python setup.py egg_info
+	python setup.py check
 
 test: install test-only ## run unit tests with coverage
 
@@ -24,12 +26,12 @@ test-only: ## run unit tests with coverage
 
 build: check ## build wheel file
 	rm -f dist/*
-	python3 -m build -nx
+	python -m build -nx
 
 publish: ## upload to pypi.org
 	git tag -f $(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')
 	git push -u origin --tags
-	python3 -m twine upload dist/*
+	python -m twine upload dist/*
 
 test-local: ## Prettier test outputs
 	pylint --exit-zero -f colorized --persistent=y -r y --jobs=0 src/**/*.py

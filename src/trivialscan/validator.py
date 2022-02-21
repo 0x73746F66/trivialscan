@@ -90,16 +90,14 @@ class Validator:
     compliance_checks :dict
     validation_checks :dict
     certificate_verify_messages :list
-    use_sqlite :bool
 
-    def __init__(self, tmp_path_prefix :str = '/tmp', use_sqlite :bool = True) -> None:
+    def __init__(self, tmp_path_prefix :str = '/tmp') -> None:
         if not isinstance(tmp_path_prefix, str):
             raise TypeError(f'tmp_path_prefix of type {type(tmp_path_prefix)} not supported, str expected')
         tmp_path = Path(tmp_path_prefix)
         if not tmp_path.is_dir():
             raise AttributeError(f'tmp_path_prefix {tmp_path_prefix} is not a directory')
         self.tmp_path_prefix = tmp_path_prefix
-        self.use_sqlite = use_sqlite
         self.compliance_checks = {}
         self.certificate_verify_messages = []
         self._pem = None
@@ -252,7 +250,7 @@ class Validator:
         self.possible_phish_or_malicious()
         self.known_compromise()
         self.pwnedkeys()
-        self.metadata.revocation_crlite = util.crlite_revoked(db_path=path.join(self.tmp_path_prefix, ".crlite_db"), pem=self._pem, use_sqlite=self.use_sqlite)
+        self.metadata.revocation_crlite = util.crlite_revoked(db_path=path.join(self.tmp_path_prefix, ".crlite_db"), pem=self._pem)
         self.validation_checks[VALIDATION_REVOCATION] = not self.metadata.revocation_crlite
 
     def possible_phish_or_malicious(self) -> bool:
@@ -790,7 +788,7 @@ class LeafCertValidator(Validator):
         for cert in self._get_root_certs(trust_store):
             if cert.get_serial_number() in self._root_certs:
                 continue
-            root_validator = RootCertValidator(use_sqlite=self.use_sqlite)
+            root_validator = RootCertValidator()
             root_validator.init_x509(cert)
             root_validator.metadata.certificate_root_ca = True
             root_validator.verify()
@@ -850,7 +848,7 @@ class LeafCertValidator(Validator):
             if cert.get_serial_number() == self.x509.get_serial_number():
                 continue
             ca, _ = util.get_basic_constraints(cert.to_cryptography())
-            peer_validator = PeerCertValidator(use_sqlite=self.use_sqlite)
+            peer_validator = PeerCertValidator()
             peer_validator.init_x509(cert)
             peer_validator.metadata.certificate_intermediate_ca = ca is True
             trust_store = None

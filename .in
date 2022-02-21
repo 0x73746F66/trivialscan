@@ -6,19 +6,6 @@ echo -e "\033[1;36m
 | |_| |  | |\\ V /| | (_| | \\__ \\ (_| (_| | | | |
  \\__|_|  |_| \\_/ |_|\\__,_|_|___/\\___\\__,_|_| |_|\033[0m"
 
-if [ "$(which deactivate)" != "deactivate not found" ]; then
-  deactivate
-fi
-which python3 >/dev/null 2>&1
-[ $? -eq 1 ] && (echo -e "\033[1;31mPlease install python version 3.9 \033[0m"; exit 1)
-python3 -m venv >/dev/null 2>&1
-[ $? -eq 1 ] && (echo -e "\033[1;31mPlease install python PEP 405 venv module \033[0m"; exit 1)
-if [[ -f .venv/bin/activate ]]; then
-  source .venv/bin/activate
-else
-  python3 -m venv .venv
-  source .venv/bin/activate
-fi
 
 git fetch
 git status
