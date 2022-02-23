@@ -1,6 +1,9 @@
 # Trivial Scanner
 
-[pypi.org/project/trivialscan](https://pypi.org/project/trivialscan)
+[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://pypi.python.org/pypi/trivialscan/)
+[![PyPI download month](https://img.shields.io/pypi/dm/trivialscan.svg)](https://pypi.python.org/pypi/trivialscan/)
+[![PyPi version](https://badgen.net/pypi/v/trivialscan/)](https://pypi.com/project/trivialscan)
+[![PyPI license](https://img.shields.io/pypi/l/trivialscan.svg)](https://pypi.python.org/pypi/trivialscan/)
 
 Validate the security of your TLS connections so that they deserve your trust.
 
