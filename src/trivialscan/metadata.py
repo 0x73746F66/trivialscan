@@ -98,3 +98,5 @@ class Metadata:
     trust_linux_status :str = field(default_factory=str)
     trust_certifi :bool = field(default_factory=bool)
     trust_certifi_status :str = field(default_factory=str)
+    trust_russia :bool = field(default_factory=bool)
+    trust_russia_status: str = field(default_factory=str)

@@ -1,5 +1,13 @@
 # Change Log
 
+## 2.1.1 Mar 14th 2022
+
+- bump version of `tlstrust==2.2.1`
+- expose the MinTsifry Rossii (Russian) trust information on cli
+- changed the progress bars to use a simplier single bar
+- performance refactor for the CLI to use multiprocessing and operate in a thread per target
+- included examples in repo
+
 ## 2.1.0 Feb 21st 2022
 
 - cli will correctly output each target seperately, and score hosts individually rather than a signle score accross all hosts

@@ -2,31 +2,30 @@ import json
 import sys
 import logging
 import argparse
+import threading
+from multiprocessing import Pool, cpu_count
 from pathlib import Path
 from datetime import datetime
 from dataclasses import asdict
 import validators
 import progressbar
-from OpenSSL.crypto import X509
 from tlstrust import TrustStore
 from tlstrust.context import SOURCES, PLATFORMS, BROWSERS, LANGUAGES
 from tlstrust.stores import VERSIONS
 from rich import inspect, print
 from rich.console import Console
 from rich.logging import RichHandler
-from rich.progress import Progress
 from rich.table import Table
 from rich.style import Style
-from rich.padding  import Padding
 from rich import box
-from . import __version__, constants, exceptions, verify, util, validator, pci, nist, fips
-from .transport import Transport
+from rich.progress import Progress
+from . import __version__, verify, util, validator, pci, nist, fips
 from .scores import Score
 
 __module__ = 'trivialscan.cli'
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
-
+DEBUG = False
 CLI_COLOR_OK = 'dark_sea_green2'
 CLI_COLOR_NOK = 'light_coral'
 CLI_COLOR_ALERT = 'yellow3'
@@ -173,6 +172,8 @@ STYLES = {
     'trust_certifi_status': {'text': ''},
     'trust_ccadb': {'text': 'Common CA Database (CCADB)', 'represent_as': (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
     'trust_ccadb_status': {'text': ''},
+    'trust_russia': {'text': 'MinTsifry Rossii Database (Russia)', 'represent_as': (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED), 'colors': (CLI_COLOR_OK, CLI_COLOR_NOK)},
+    'trust_russia_status': {'text': ''},
 }
 RATING_ASCII = {
     'A+': """
@@ -548,33 +549,15 @@ def update_bar(progress, task):
     return progress_bar
 
 
-def output(evaluations: list[tuple[str, list[validator.Validator]]], debug: bool = False, summary_only: bool = False):
+def output(results: dict, summary_only: bool = False):
     console = Console()
-    for evaluation in evaluations:
-        host, results = evaluation
-        for result in results:
-            if debug and hasattr(result, 'transport'):
-                inspect(result.transport, title=result.transport.negotiated_protocol)
-            if debug and hasattr(result, 'metadata'):
-                inspect(result.metadata, title=result.metadata.certificate_subject)
-            if isinstance(result, validator.RootCertValidator):
-                console.print(root_outputs(result))
-            if isinstance(result, validator.PeerCertValidator):
-                console.print(peer_outputs(result))
-            if isinstance(result, validator.LeafCertValidator):
-                console.print(server_outputs(result))
+    for result in results['evaluations']:
+        console.print(result.get('output'))
 
-        score_card = Score(results)
-        if score_card.rating == 'F':
-            rating_color = CLI_COLOR_NOK
-        elif score_card.rating.startswith('A'):
-            rating_color = CLI_COLOR_OK
-        else:
-            rating_color = CLI_COLOR_ALERT
-        if summary_only:
-            console.print(RATING_ASCII[score_card.rating], style=rating_color)
-        else:
-            console.print(_table_score(score_card, rating_color, host))
+    if summary_only:
+        console.print(RATING_ASCII[results['rating']], style=results['color'])
+    else:
+        console.print(results['score'])
 
 def validator_data(result :validator.Validator, certificate_type :str, skip_keys :list) -> dict:
     data = asdict(result.metadata)
@@ -614,10 +597,10 @@ def validator_data(result :validator.Validator, certificate_type :str, skip_keys
 
     return data
 
-def prepare_json(results :list[validator.Validator], target, evaluation_duration_seconds :int) -> dict:
+def prepare_json(results :list[validator.Validator], target) -> dict:
     score_card = Score(results)
     data = {
-        'evaluation_duration_seconds': evaluation_duration_seconds,
+        'target': target,
         'security_score': score_card.result,
         'security_score_best': score_card.security_score_best,
         'security_score_worst': score_card.security_score_worst,
@@ -648,69 +631,52 @@ def prepare_json(results :list[validator.Validator], target, evaluation_duration
             data['validations'].append(validator_data(result, 'Leaf Certificate', [x for x in SERVER_SKIP if x not in SERVER_JSON_ONLY]))
     return data
 
-
-def with_progress_bars(domains: list[tuple[str, int]], cafiles: list = None, use_sni: bool = True, client_pem: str = None, tmp_path_prefix: str = '/tmp') -> tuple[list[dict], list[validator.Validator]]:
-    if not isinstance(client_pem, str) and client_pem is not None:
-        raise TypeError(f"provided an invalid type {type(client_pem)} for client_pem, expected list")
-    if not isinstance(cafiles, list) and cafiles is not None:
-        raise TypeError(f"provided an invalid type {type(cafiles)} for cafiles, expected list")
-    if not isinstance(use_sni, bool):
-        raise TypeError(f"provided an invalid type {type(use_sni)} for tlsext, expected list")
-    if not isinstance(tmp_path_prefix, str):
-        raise TypeError(f"provided an invalid type {type(tmp_path_prefix)} for tmp_path_prefix, expected str")
-
-    outputs = []
-    json_results = []
-    with Progress() as progress:
-        prog_client_auth = progress.add_task("[cyan]Client Authentication...", total=5*len(domains))
-        prog_tls = progress.add_task("[cyan]Evaluating TLS...", total=14*len(domains))
-        prog_cert_val = progress.add_task("[cyan]Certificate Chain Validation...", total=7*len(domains))
-        while not progress.finished:
-            for domain, port in domains:
-                results = []
-                evaluation_start = datetime.utcnow()
-                if not isinstance(port, int):
-                    raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
-                if validators.domain(domain) is not True:
-                    raise ValueError(f"provided an invalid domain {domain}")
-                result = validator.LeafCertValidator()
-                transport = Transport(domain, port)
-                if client_pem is None:
-                    progress.update(prog_client_auth, visible=False)
-                else:
-                    progress.update(prog_client_auth, advance=1)
-                    transport.pre_client_authentication_check(client_pem_path=client_pem, progress_bar=update_bar(progress, prog_client_auth))
-                    progress.update(prog_client_auth, advance=1)
-                if not transport.connect_least_secure(cafiles=cafiles, use_sni=use_sni, progress_bar=update_bar(progress, prog_tls)) or not isinstance(transport.server_certificate, X509):
-                    progress.update(prog_client_auth, visible=False)
-                    progress.update(prog_tls, visible=False)
-                    progress.update(prog_cert_val, visible=False)
-                    raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=domain, port=port))
-                progress.update(prog_tls, advance=1)
-                result.tmp_path_prefix = tmp_path_prefix
-                result.mount(transport)
-                progress.update(prog_cert_val, advance=1)
-                result.verify()
-                progress.update(prog_cert_val, advance=1)
-                result.verify_chain(progress_bar=update_bar(progress, prog_cert_val))
-                result.pcidss_compliant()
-                result.fips_compliant()
-                result.nist_compliant()
-                results += result.peer_validations
-                results.append(result)
-                outputs.append((f'{domain}:{port}', results))
-                json_results.append(
-                    prepare_json(results, f'{domain}:{port}', (datetime.utcnow() - evaluation_start).total_seconds())
-                )
-            progress.update(prog_client_auth, completed=5*len(domains))
-            progress.update(prog_tls, completed=14*len(domains))
-            progress.update(prog_cert_val, completed=7*len(domains))
-
-    return json_results, outputs
-
 def no_progressbar(data :list):
     for item in data:
         yield item
+
+def wrap_verify(params: tuple[str, int]) -> dict:
+    _, evaluations = verify(**params)
+    param_domain = None
+    param_port = None
+    for validator_cls in evaluations:
+        if isinstance(validator_cls, validator.LeafCertValidator):
+            param_domain = validator_cls.metadata.host
+            param_port = validator_cls.metadata.port
+            break
+    target = f'{param_domain}:{param_port}'
+    results = {
+        'json': prepare_json(evaluations, target),
+        'evaluations': []
+    }
+    for result in evaluations:
+        data = {
+            'target': target
+        }
+        if DEBUG and hasattr(result, 'transport'):
+            inspect(result.transport)
+        if DEBUG and hasattr(result, 'metadata'):
+            inspect(result.metadata)
+        if isinstance(result, validator.RootCertValidator):
+            data['output'] = root_outputs(result)
+        if isinstance(result, validator.PeerCertValidator):
+            data['output'] = peer_outputs(result)
+        if isinstance(result, validator.LeafCertValidator):
+            data['output'] = server_outputs(result)
+        results['evaluations'].append(data)
+
+    score_card = Score(evaluations)
+    if score_card.rating == 'F':
+        rating_color = CLI_COLOR_NOK
+    elif score_card.rating.startswith('A'):
+        rating_color = CLI_COLOR_OK
+    else:
+        rating_color = CLI_COLOR_ALERT
+    results['color'] = rating_color
+    results['rating'] = score_card.rating
+    results['score'] = _table_score(score_card, rating_color, target)
+
+    return results
 
 def cli():
     parser = argparse.ArgumentParser()
@@ -734,7 +700,6 @@ def cli():
     group.add_argument('-vvv', '--info', help='set logging level to INFO (default CRITICAL)', dest='log_level_info', action="store_true")
     group.add_argument('-vvvv', '--debug', help='set logging level to DEBUG (default CRITICAL)', dest='log_level_debug', action="store_true")
     args = parser.parse_args()
-    JSON_FILE = args.json_file
     log_level = logging.CRITICAL
     if args.log_level_error:
         log_level = logging.ERROR
@@ -754,7 +719,7 @@ def cli():
         level=log_level,
         handlers=handlers
     )
-    debug = log_level==logging.DEBUG
+    DEBUG = log_level==logging.DEBUG
     def version(): import platform; print(f"{__version__} Python {sys.version} {platform.platform()} {platform.uname().node} {platform.uname().release} {platform.version()}")
     if args.show_version:
         version()
@@ -771,7 +736,14 @@ def cli():
             port = 443
         if validators.domain(host) is not True:
             raise AttributeError(f'host {host} is invalid')
-        domains.append((host, int(port)))
+        domains.append({
+            'host': host,
+            'port': int(port),
+            'cafiles': args.cafiles,
+            'use_sni': not args.disable_sni,
+            'client_pem': args.client_pem,
+            'tmp_path_prefix': args.tmp_path_prefix,
+        })
 
     if args.hide_validation_details:
         SERVER_SKIP.append('verification_details')
@@ -826,49 +798,35 @@ def cli():
         PEER_SKIP.extend(SUMMARY_SKIP)
         ROOT_SKIP.extend(SUMMARY_SKIP)
 
-    json_results = []
-    all_results = []
     run_start = datetime.utcnow()
-    console = Console()
-    try:
+    with Progress() as progress:
         if args.hide_progress_bars:
             progressbar.progressbar = no_progressbar
-            for domain, port in domains:
-                evaluation_start = datetime.utcnow()
-                _, results = verify(
-                    domain,
-                    int(port),
-                    cafiles=args.cafiles,
-                    use_sni=not args.disable_sni,
-                    client_pem=args.client_pem,
-                    tmp_path_prefix=args.tmp_path_prefix,
-                )
-                json_results.append(
-                    prepare_json(results, f'{domain}:{port}', (datetime.utcnow() - evaluation_start).total_seconds())
-                )
-                all_results.append((f'{domain}:{port}', results))
-
         else:
-            json_results, all_results = with_progress_bars(  # clones trivialscan.verify and only adds progress bars
-                domains=domains,
-                cafiles=args.cafiles,
-                use_sni=not args.disable_sni,
-                client_pem=args.client_pem,
-                tmp_path_prefix=args.tmp_path_prefix,
-            )
+            task = progress.add_task("Scanning hosts", total=len(domains))
 
-        output(all_results, debug=debug, summary_only=args.summary_only)
+        results = []
+        thread = threading.Thread(target=lambda: None)
+        thread.start()
+        with Pool(processes=min(cpu_count(), len(domains))) as pool:
+            for result in pool.imap_unordered(wrap_verify, domains):
+                results.append(result)
+                if not args.hide_progress_bars:
+                    progress.advance(task)
+
+        if not args.hide_progress_bars:
+            progress.update(task, completed=len(domains))
+
         execution_duration_seconds = (datetime.utcnow() - run_start).total_seconds()
-        json_path = Path(JSON_FILE)
-        if json_path.is_file():
-            json_path.unlink()
+        for result in results:
+            output(result, summary_only=args.summary_only)
+        if args.json_file:
+            json_path = Path(args.json_file)
+            if json_path.is_file():
+                json_path.unlink()
             json_path.write_text(json.dumps({
                 'generator': __version__,
                 'execution_duration_seconds': execution_duration_seconds,
                 'date': datetime.utcnow().replace(microsecond=0).isoformat(),
-                'evaluations': json_results
+                'evaluations': [l for l in [v['json'] for v in results]]
             }, sort_keys=True, default=str), encoding='utf8')
-
-    except exceptions.ValidationError as ex:
-        console.print(str(ex))
-        return

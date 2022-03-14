@@ -18,6 +18,7 @@ from tlstrust.stores.ccadb import __version__ as ccadb_version
 from tlstrust.stores.java import __version__ as java_version
 from tlstrust.stores.certifi import __version__ as certifi_version
 from tlstrust.stores.linux import __version__ as linux_version
+from tlstrust.stores.mintsifry_rossii import __version__ as russia_version
 from tlstrust.stores.android_2_2 import __description__ as android2_2_version
 from tlstrust.stores.android_2_3 import __description__ as android2_3_version
 from tlstrust.stores.android_3 import __description__ as android3_version
@@ -344,6 +345,7 @@ class RootCertValidator(Validator):
         self.metadata.trust_java_status = DEFAULT_STATUS.format(platform='Java')
         self.metadata.trust_linux_status = DEFAULT_STATUS.format(platform='Linux')
         self.metadata.trust_certifi_status = DEFAULT_STATUS.format(platform='Python')
+        self.metadata.trust_russia_status = DEFAULT_STATUS.format(platform='MinTsifry Rossii')
         expired_text = ' EXPIRED'
         if trust_store.exists(context.SOURCE_CCADB):
             self.metadata.trust_ccadb_status = f'In Common CA Database {ccadb_version} (Mozilla, Microsoft, and Apple)'
@@ -361,6 +363,10 @@ class RootCertValidator(Validator):
             self.metadata.trust_certifi_status = f'In Python {certifi_version} Root CA Trust Store (Django, requests, urllib, and anything based from these)'
             if trust_store.expired_in_store(context.SOURCE_CERTIFI):
                 self.metadata.trust_certifi_status += expired_text
+        if trust_store.exists(context.SOURCE_RUSSIA):
+            self.metadata.trust_russia_status = f'In Russian MinTsifry Rossii Database {russia_version} (Yandex)'
+            if trust_store.expired_in_store(context.SOURCE_RUSSIA):
+                self.metadata.trust_russia_status += expired_text
 
         android_stores = []
         if trust_store.exists(context.PLATFORM_ANDROID2_2):
@@ -384,6 +390,13 @@ class RootCertValidator(Validator):
             android_stores.append(android_status)
         else:
             android_stores.append(f'{android3_version} Not Present')
+        if trust_store.exists(context.PLATFORM_ANDROID4_4):
+            android_status = f'{android4_version} {"Trusted" if trust_store.android4 else "Not Trusted"}'
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID4):
+                android_status += expired_text
+            android_stores.append(android_status)
+        else:
+            android_stores.append(f'{android4_version} Not Present')
         if trust_store.exists(context.PLATFORM_ANDROID4_4):
             android_status = f'{android4_4_version} {"Trusted" if trust_store.android4_4 else "Not Trusted"}'
             if trust_store.expired_in_store(context.PLATFORM_ANDROID4_4):

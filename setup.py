@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="trivialscan",
-    version="2.1.0",
+    version="2.1.1",
     author='Christopher Langton',
     author_email='chris@trivialsec.com',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -13,7 +13,15 @@ Validate the security of your TLS connections so that they deserve your trust.
 
 ## [Documentation](https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/0.index.md)
 
-![Leaf cba.com.au](https://gitlab.com/trivialsec/trivialscan/-/raw/main/docs/images/leaf-cba.com.au.png)
+Summary CLI output
+
+![trivialscan summary](https://gitlab.com/trivialsec/trivialscan/-/raw/main/docs/images/trivialscan-summary.jpg)
+
+Security Score Card
+
+![trivialscan summary](https://gitlab.com/trivialsec/trivialscan/-/raw/main/docs/images/trivialscan-score-card.jpg)
+
+For full CLI output and JSON format please look in `examples/` of the Gitlab repository
 
 ## Basic Usage
 
@@ -242,7 +250,7 @@ optional arguments:
         'rich==11.0.0',
         'six==1.16.0',
         'tldextract==3.2.0',
-        'tlstrust==2.1.3',
+        'tlstrust==2.2.1',
         'urllib3==1.26.8',
         'validators==0.18.2',
     ],

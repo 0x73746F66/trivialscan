@@ -1,0 +1,835 @@
+{
+    "date": "2022-03-14T23:22:52",
+    "evaluations": [
+        {
+            "certificate_trust": [
+                {
+                    "is_trusted": true,
+                    "trust_store": "Common Certificate Authority Database (CCADB)",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Java(TM) SE Runtime Environment",
+                    "version": "java 17.0.2 2022-01-18 LTS"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Google Trust Services",
+                    "version": "android_latest"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Linux (Arch)",
+                    "version": "5.16.10-arch1-1"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Certifi (Python module for Certificate Authority Certificates)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "MinTsifry Rossii",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Python 3.10",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Microsoft Windows",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Apple Devices",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android",
+                    "version": "android_latest"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "latest Android build",
+                    "version": "android_latest"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 2.2 (Froyo) 2010",
+                    "version": "android_2_2"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 2.3 (Gingerbread) 2010",
+                    "version": "android_2_3"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 3 (Honeycomb) 2011",
+                    "version": "android_3"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 4 (Ice Cream Sandwich) 2011",
+                    "version": "android_4"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 4.4 (KitKat) 2013",
+                    "version": "android_4_4"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 7 (Nougat) 2016",
+                    "version": "android_7"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 8 (Oreo) 2017",
+                    "version": "android_8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 9 (Pie) 2018",
+                    "version": "android_9"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 10 (Q) 2019",
+                    "version": "android_10"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 11 2020",
+                    "version": "android_11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 12 2021",
+                    "version": "android_12"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Mozilla Firefox",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Tor Web Browser",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Chromium Browser",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Google Chrome",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Microsoft Edge",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Brave Browser",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Opera Browser",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Vivaldi Browser",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Amazon Silk",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Samsung Internet",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Yandex",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Apple Safari",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Python built-in https module on Windows",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Python built-in https module on Linux",
+                    "version": "5.16.10-arch1-1"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Python built-in https module on Apple",
+                    "version": "2022.03.14"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "certifi (Python module)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "urllib (Python module)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "requests (Python module)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Django (Python module)",
+                    "version": "certifi==2021.10.8"
+                }
+            ],
+            "risk_summary": [
+                "No critical risks observed",
+                "Certificate uses the OCSP stapling which provides limited revocation controls"
+            ],
+            "security_rating": "F",
+            "security_rating_cap": "F",
+            "security_rating_cap_reason": [
+                "Deprecated protocols CN=aws.amazon.com (78647abcb1445770a0583a5d4fe2c4f71f83d522)"
+            ],
+            "security_rating_groups": {
+                "A": [
+                    3240,
+                    3420
+                ],
+                "A+": [
+                    3420,
+                    3600
+                ],
+                "B": [
+                    3060,
+                    3240
+                ],
+                "C": [
+                    2880,
+                    3060
+                ],
+                "D": [
+                    2520,
+                    2880
+                ],
+                "E": [
+                    1800,
+                    2520
+                ],
+                "F": [
+                    0,
+                    1800
+                ]
+            },
+            "security_score": 1975,
+            "security_score_best": 3600,
+            "security_score_worst": 1125,
+            "security_scoring_groups": {
+                "caa": -75,
+                "certificate_validation": -75,
+                "chain_expiry": 0,
+                "cipher": -125,
+                "dnssec": -125,
+                "key_size": -125,
+                "leaf_validity_period": 100,
+                "risk": 50,
+                "server_configuration": -75,
+                "transport": 50,
+                "trust": -125
+            },
+            "security_scoring_results": {
+                "Best configuration": [
+                    "leaf_validity_period(100)"
+                ],
+                "Configuration issues": [
+                    "key_size(-125)",
+                    "dnssec(-125)",
+                    "cipher(-125)",
+                    "trust(-125)"
+                ],
+                "Good configuration": [
+                    "transport(50)",
+                    "risk(50)"
+                ],
+                "Unscored configuration": [
+                    "chain_expiry"
+                ],
+                "Weak configuration": [
+                    "certificate_validation(-75)",
+                    "caa(-75)",
+                    "server_configuration(-75)"
+                ]
+            },
+            "target": "aws.amazon.com:443",
+            "trust_summary": "No CA Authorization detected, is a trusted Root CA",
+            "validations": [
+                {
+                    "certificate_expired": false,
+                    "certificate_extensions": [
+                        {
+                            "ca": true,
+                            "critical": true,
+                            "name": "basicConstraints",
+                            "path_length": 0
+                        },
+                        {
+                            "content_commitment": false,
+                            "critical": true,
+                            "crl_sign": true,
+                            "data_encipherment": false,
+                            "digital_signature": true,
+                            "keyUsage": [
+                                "digital_signature",
+                                "key_cert_sign",
+                                "crl_sign"
+                            ],
+                            "key_agreement": false,
+                            "key_cert_sign": true,
+                            "key_encipherment": false,
+                            "name": "keyUsage"
+                        },
+                        {
+                            "critical": false,
+                            "name": "subjectKeyIdentifier",
+                            "subjectKeyIdentifier": "59a4660652a07b95923ca394072796745bf93dd0"
+                        },
+                        {
+                            "authorityKeyIdentifier": "8418cc8534ecbc0c94942e08599cc7b2104e0a08",
+                            "authority_cert_issuer": "",
+                            "authority_cert_serial_number": null,
+                            "critical": false,
+                            "name": "authorityKeyIdentifier"
+                        },
+                        {
+                            "authorityInfoAccess": [
+                                {
+                                    "access_location": "http://ocsp.rootca1.amazontrust.com",
+                                    "access_method": "OCSP"
+                                },
+                                {
+                                    "access_location": "http://crt.rootca1.amazontrust.com/rootca1.cer",
+                                    "access_method": "caIssuers"
+                                }
+                            ],
+                            "critical": false,
+                            "name": "authorityInfoAccess"
+                        },
+                        {
+                            "cRLDistributionPoints": [
+                                {
+                                    "crl_issuer": "",
+                                    "full_name": "http://crl.rootca1.amazontrust.com/rootca1.crl",
+                                    "reasons": null,
+                                    "relative_name": null
+                                }
+                            ],
+                            "critical": false,
+                            "name": "cRLDistributionPoints"
+                        },
+                        {
+                            "critical": false,
+                            "name": "certificatePolicies"
+                        }
+                    ],
+                    "certificate_is_self_signed": false,
+                    "certificate_key_compromised": false,
+                    "certificate_known_compromised": false,
+                    "certificate_type": "Intermediate CA",
+                    "certificate_valid": true,
+                    "compliance_results": {},
+                    "expiry_status": "Expires in 1314 days (4 years)",
+                    "possible_phish_or_malicious": false,
+                    "revocation_crlite": false,
+                    "trust_russia": false,
+                    "trust_russia_status": "",
+                    "verification_details": [],
+                    "verification_results": {
+                        "avoid_known_weak_keys": true,
+                        "avoid_known_weak_signature_algorithm": true,
+                        "common_name_defined": true,
+                        "issued_past_tense": true,
+                        "not_expired": true,
+                        "not_revoked": true,
+                        "not_self_signed": true
+                    }
+                },
+                {
+                    "certificate_expired": false,
+                    "certificate_extensions": [
+                        {
+                            "ca": true,
+                            "critical": true,
+                            "name": "basicConstraints",
+                            "path_length": null
+                        },
+                        {
+                            "content_commitment": false,
+                            "critical": true,
+                            "crl_sign": true,
+                            "data_encipherment": false,
+                            "digital_signature": true,
+                            "keyUsage": [
+                                "digital_signature",
+                                "key_cert_sign",
+                                "crl_sign"
+                            ],
+                            "key_agreement": false,
+                            "key_cert_sign": true,
+                            "key_encipherment": false,
+                            "name": "keyUsage"
+                        },
+                        {
+                            "critical": false,
+                            "name": "subjectKeyIdentifier",
+                            "subjectKeyIdentifier": "8418cc8534ecbc0c94942e08599cc7b2104e0a08"
+                        },
+                        {
+                            "authorityKeyIdentifier": "9c5f00dfaa01d7302b3888a2b86d4a9cf2119183",
+                            "authority_cert_issuer": "",
+                            "authority_cert_serial_number": null,
+                            "critical": false,
+                            "name": "authorityKeyIdentifier"
+                        },
+                        {
+                            "authorityInfoAccess": [
+                                {
+                                    "access_location": "http://ocsp.rootg2.amazontrust.com",
+                                    "access_method": "OCSP"
+                                },
+                                {
+                                    "access_location": "http://crt.rootg2.amazontrust.com/rootg2.cer",
+                                    "access_method": "caIssuers"
+                                }
+                            ],
+                            "critical": false,
+                            "name": "authorityInfoAccess"
+                        },
+                        {
+                            "cRLDistributionPoints": [
+                                {
+                                    "crl_issuer": "",
+                                    "full_name": "http://crl.rootg2.amazontrust.com/rootg2.crl",
+                                    "reasons": null,
+                                    "relative_name": null
+                                }
+                            ],
+                            "critical": false,
+                            "name": "cRLDistributionPoints"
+                        },
+                        {
+                            "critical": false,
+                            "name": "certificatePolicies"
+                        }
+                    ],
+                    "certificate_is_self_signed": false,
+                    "certificate_key_compromised": false,
+                    "certificate_known_compromised": false,
+                    "certificate_type": "Intermediate CA",
+                    "certificate_valid": true,
+                    "compliance_results": {},
+                    "expiry_status": "Expires in 5770 days (16 years)",
+                    "possible_phish_or_malicious": false,
+                    "revocation_crlite": false,
+                    "trust_russia": false,
+                    "trust_russia_status": "",
+                    "verification_details": [],
+                    "verification_results": {
+                        "avoid_known_weak_keys": true,
+                        "avoid_known_weak_signature_algorithm": true,
+                        "common_name_defined": true,
+                        "issued_past_tense": true,
+                        "not_expired": true,
+                        "not_revoked": true,
+                        "not_self_signed": true
+                    }
+                },
+                {
+                    "certificate_expired": false,
+                    "certificate_extensions": [
+                        {
+                            "critical": false,
+                            "name": "subjectKeyIdentifier",
+                            "subjectKeyIdentifier": "bf5fb7d1cedd1f86f45b55acdcd710c20ea988e7"
+                        },
+                        {
+                            "authorityKeyIdentifier": "bf5fb7d1cedd1f86f45b55acdcd710c20ea988e7",
+                            "authority_cert_issuer": "<Name(C=US,O=Starfield Technologies\\, Inc.,OU=Starfield Class 2 Certification Authority)>",
+                            "authority_cert_serial_number": 0,
+                            "critical": false,
+                            "name": "authorityKeyIdentifier"
+                        },
+                        {
+                            "ca": true,
+                            "critical": false,
+                            "name": "basicConstraints",
+                            "path_length": null
+                        }
+                    ],
+                    "certificate_is_self_signed": false,
+                    "certificate_key_compromised": false,
+                    "certificate_known_compromised": false,
+                    "certificate_type": "Root CA",
+                    "certificate_valid": false,
+                    "compliance_results": {},
+                    "expiry_status": "Expires in 4489 days (12 years)",
+                    "trust_android": true,
+                    "trust_ccadb": true,
+                    "trust_certifi": true,
+                    "trust_java": true,
+                    "trust_linux": true,
+                    "trust_russia": false,
+                    "trust_russia_status": "No Root CA Certificate in the MinTsifry Rossii Trust Store",
+                    "verification_details": [],
+                    "verification_results": {
+                        "avoid_known_weak_keys": true,
+                        "avoid_known_weak_signature_algorithm": false,
+                        "issued_past_tense": true,
+                        "not_expired": true,
+                        "not_revoked": true
+                    }
+                },
+                {
+                    "certificate_expired": false,
+                    "certificate_extensions": [
+                        {
+                            "ca": true,
+                            "critical": true,
+                            "name": "basicConstraints",
+                            "path_length": null
+                        },
+                        {
+                            "content_commitment": false,
+                            "critical": true,
+                            "crl_sign": true,
+                            "data_encipherment": false,
+                            "digital_signature": true,
+                            "keyUsage": [
+                                "digital_signature",
+                                "key_cert_sign",
+                                "crl_sign"
+                            ],
+                            "key_agreement": false,
+                            "key_cert_sign": true,
+                            "key_encipherment": false,
+                            "name": "keyUsage"
+                        },
+                        {
+                            "critical": false,
+                            "name": "subjectKeyIdentifier",
+                            "subjectKeyIdentifier": "9c5f00dfaa01d7302b3888a2b86d4a9cf2119183"
+                        },
+                        {
+                            "authorityKeyIdentifier": "bf5fb7d1cedd1f86f45b55acdcd710c20ea988e7",
+                            "authority_cert_issuer": "",
+                            "authority_cert_serial_number": null,
+                            "critical": false,
+                            "name": "authorityKeyIdentifier"
+                        },
+                        {
+                            "authorityInfoAccess": [
+                                {
+                                    "access_location": "http://o.ss2.us/",
+                                    "access_method": "OCSP"
+                                },
+                                {
+                                    "access_location": "http://x.ss2.us/x.cer",
+                                    "access_method": "caIssuers"
+                                }
+                            ],
+                            "critical": false,
+                            "name": "authorityInfoAccess"
+                        },
+                        {
+                            "cRLDistributionPoints": [
+                                {
+                                    "crl_issuer": "",
+                                    "full_name": "http://s.ss2.us/r.crl",
+                                    "reasons": null,
+                                    "relative_name": null
+                                }
+                            ],
+                            "critical": false,
+                            "name": "cRLDistributionPoints"
+                        },
+                        {
+                            "critical": false,
+                            "name": "certificatePolicies"
+                        }
+                    ],
+                    "certificate_is_self_signed": false,
+                    "certificate_key_compromised": false,
+                    "certificate_known_compromised": false,
+                    "certificate_type": "Intermediate CA",
+                    "certificate_valid": true,
+                    "compliance_results": {},
+                    "expiry_status": "Expires in 4488 days (12 years)",
+                    "possible_phish_or_malicious": false,
+                    "revocation_crlite": false,
+                    "trust_russia": false,
+                    "trust_russia_status": "",
+                    "verification_details": [],
+                    "verification_results": {
+                        "avoid_known_weak_keys": true,
+                        "avoid_known_weak_signature_algorithm": true,
+                        "common_name_defined": true,
+                        "issued_past_tense": true,
+                        "not_expired": true,
+                        "not_revoked": true,
+                        "not_self_signed": true
+                    }
+                },
+                {
+                    "certificate_chain_valid": true,
+                    "certificate_chain_validation_result": "Validated: digital_signature,key_encipherment,server_auth",
+                    "certificate_expired": false,
+                    "certificate_extensions": [
+                        {
+                            "authorityKeyIdentifier": "59a4660652a07b95923ca394072796745bf93dd0",
+                            "authority_cert_issuer": "",
+                            "authority_cert_serial_number": null,
+                            "critical": false,
+                            "name": "authorityKeyIdentifier"
+                        },
+                        {
+                            "critical": false,
+                            "name": "subjectKeyIdentifier",
+                            "subjectKeyIdentifier": "59cea41078e063cd592509b3e96c3cf1b64490b2"
+                        },
+                        {
+                            "critical": false,
+                            "name": "subjectAltName",
+                            "subjectAltName": [
+                                "aws.amazon.com",
+                                "www.aws.amazon.com",
+                                "aws-us-east-1.amazon.com",
+                                "aws-us-west-2.amazon.com",
+                                "amazonaws-china.com",
+                                "www.amazonaws-china.com",
+                                "1.aws-lbr.amazonaws.com"
+                            ]
+                        },
+                        {
+                            "content_commitment": false,
+                            "critical": true,
+                            "crl_sign": false,
+                            "data_encipherment": false,
+                            "digital_signature": true,
+                            "keyUsage": [
+                                "digital_signature",
+                                "key_encipherment"
+                            ],
+                            "key_agreement": false,
+                            "key_cert_sign": false,
+                            "key_encipherment": true,
+                            "name": "keyUsage"
+                        },
+                        {
+                            "critical": false,
+                            "extendedKeyUsage": [
+                                "serverAuth",
+                                "clientAuth"
+                            ],
+                            "name": "extendedKeyUsage"
+                        },
+                        {
+                            "cRLDistributionPoints": [
+                                {
+                                    "crl_issuer": "",
+                                    "full_name": "http://crl.sca1b.amazontrust.com/sca1b.crl",
+                                    "reasons": null,
+                                    "relative_name": null
+                                }
+                            ],
+                            "critical": false,
+                            "name": "cRLDistributionPoints"
+                        },
+                        {
+                            "critical": false,
+                            "name": "certificatePolicies"
+                        },
+                        {
+                            "authorityInfoAccess": [
+                                {
+                                    "access_location": "http://ocsp.sca1b.amazontrust.com",
+                                    "access_method": "OCSP"
+                                },
+                                {
+                                    "access_location": "http://crt.sca1b.amazontrust.com/sca1b.crt",
+                                    "access_method": "caIssuers"
+                                }
+                            ],
+                            "critical": false,
+                            "name": "authorityInfoAccess"
+                        },
+                        {
+                            "ca": false,
+                            "critical": true,
+                            "name": "basicConstraints",
+                            "path_length": null
+                        },
+                        {
+                            "critical": false,
+                            "name": "signedCertificateTimestampList",
+                            "signedCertificateTimestampList": [
+                                {
+                                    "log_id": "2979bef09e393921f056739f63a577e5be577d9c600af8f94d5d265c255dc784",
+                                    "pre_certificate": true,
+                                    "timestamp": "2021-08-05 00:25:24.149000",
+                                    "version": "v1"
+                                },
+                                {
+                                    "log_id": "51a3b0f5fd01799c566db837788f0ca47acc1b27cbf79e88429a0dfed48b05e5",
+                                    "pre_certificate": true,
+                                    "timestamp": "2021-08-05 00:25:24.148000",
+                                    "version": "v1"
+                                },
+                                {
+                                    "log_id": "41c8cab1df22464a10c6a13a0942875e4e318b1b03ebeb4bc768f090629606f6",
+                                    "pre_certificate": true,
+                                    "timestamp": "2021-08-05 00:25:24.070000",
+                                    "version": "v1"
+                                }
+                            ]
+                        }
+                    ],
+                    "certificate_is_self_signed": false,
+                    "certificate_key_compromised": false,
+                    "certificate_known_compromised": false,
+                    "certificate_type": "Leaf Certificate",
+                    "certificate_valid": false,
+                    "certificate_validation_oid": "2.23.140.1.2.1",
+                    "certificate_validation_type": "Domain Validation (DV)",
+                    "certification_authority_authorization": false,
+                    "compliance_results": {},
+                    "dnssec": false,
+                    "dnssec_algorithm": "",
+                    "expiry_status": "Expires in 140 days",
+                    "host": "aws.amazon.com",
+                    "http_status_code": 200,
+                    "negotiated_cipher": "ECDHE-RSA-AES128-SHA",
+                    "negotiated_cipher_bits": 128,
+                    "negotiated_protocol": "TLSv1 (0x301)",
+                    "offered_ciphers": [
+                        "TLS_AES_256_GCM_SHA384",
+                        "TLS_CHACHA20_POLY1305_SHA256",
+                        "TLS_AES_128_GCM_SHA256",
+                        "ECDHE-ECDSA-AES256-GCM-SHA384",
+                        "ECDHE-RSA-AES256-GCM-SHA384",
+                        "DHE-RSA-AES256-GCM-SHA384",
+                        "ECDHE-ECDSA-CHACHA20-POLY1305",
+                        "ECDHE-RSA-CHACHA20-POLY1305",
+                        "DHE-RSA-CHACHA20-POLY1305",
+                        "ECDHE-ECDSA-AES128-GCM-SHA256",
+                        "ECDHE-RSA-AES128-GCM-SHA256",
+                        "DHE-RSA-AES128-GCM-SHA256",
+                        "ECDHE-ECDSA-AES256-SHA384",
+                        "ECDHE-RSA-AES256-SHA384",
+                        "DHE-RSA-AES256-SHA256",
+                        "ECDHE-ECDSA-AES128-SHA256",
+                        "ECDHE-RSA-AES128-SHA256",
+                        "DHE-RSA-AES128-SHA256",
+                        "ECDHE-ECDSA-AES256-SHA",
+                        "ECDHE-RSA-AES256-SHA",
+                        "DHE-RSA-AES256-SHA",
+                        "ECDHE-ECDSA-AES128-SHA",
+                        "ECDHE-RSA-AES128-SHA",
+                        "DHE-RSA-AES128-SHA",
+                        "RSA-PSK-AES256-GCM-SHA384",
+                        "DHE-PSK-AES256-GCM-SHA384",
+                        "RSA-PSK-CHACHA20-POLY1305",
+                        "DHE-PSK-CHACHA20-POLY1305",
+                        "ECDHE-PSK-CHACHA20-POLY1305",
+                        "AES256-GCM-SHA384",
+                        "PSK-AES256-GCM-SHA384",
+                        "PSK-CHACHA20-POLY1305",
+                        "RSA-PSK-AES128-GCM-SHA256",
+                        "DHE-PSK-AES128-GCM-SHA256",
+                        "AES128-GCM-SHA256",
+                        "PSK-AES128-GCM-SHA256",
+                        "AES256-SHA256",
+                        "AES128-SHA256",
+                        "ECDHE-PSK-AES256-CBC-SHA384",
+                        "ECDHE-PSK-AES256-CBC-SHA",
+                        "SRP-RSA-AES-256-CBC-SHA",
+                        "SRP-AES-256-CBC-SHA",
+                        "RSA-PSK-AES256-CBC-SHA384",
+                        "DHE-PSK-AES256-CBC-SHA384",
+                        "RSA-PSK-AES256-CBC-SHA",
+                        "DHE-PSK-AES256-CBC-SHA",
+                        "AES256-SHA",
+                        "PSK-AES256-CBC-SHA384",
+                        "PSK-AES256-CBC-SHA",
+                        "ECDHE-PSK-AES128-CBC-SHA256",
+                        "ECDHE-PSK-AES128-CBC-SHA",
+                        "SRP-RSA-AES-128-CBC-SHA",
+                        "SRP-AES-128-CBC-SHA",
+                        "RSA-PSK-AES128-CBC-SHA256",
+                        "DHE-PSK-AES128-CBC-SHA256",
+                        "RSA-PSK-AES128-CBC-SHA",
+                        "DHE-PSK-AES128-CBC-SHA",
+                        "AES128-SHA",
+                        "PSK-AES128-CBC-SHA256",
+                        "PSK-AES128-CBC-SHA"
+                    ],
+                    "peer_address": "99.86.140.74",
+                    "port": 443,
+                    "possible_phish_or_malicious": false,
+                    "preferred_protocol": "TLSv1.3 (0x304)",
+                    "revocation_crlite": false,
+                    "revocation_ocsp_status": "Good",
+                    "tlsa": false,
+                    "trust_russia": false,
+                    "trust_russia_status": "",
+                    "verification_details": [],
+                    "verification_results": {
+                        "avoid_deprecated_dnssec_algorithms": true,
+                        "avoid_deprecated_protocols": false,
+                        "avoid_known_weak_keys": true,
+                        "avoid_known_weak_signature_algorithm": true,
+                        "basic_constraints_ca": true,
+                        "certificate_valid_tls_usage": true,
+                        "common_name_defined": true,
+                        "common_name_valid": true,
+                        "issued_past_tense": true,
+                        "match_hostname": true,
+                        "not_expired": true,
+                        "not_revoked": true,
+                        "not_self_signed": true,
+                        "ocsp_staple_satisfied": true,
+                        "trusted_ca": true
+                    },
+                    "weak_cipher": true
+                }
+            ]
+        }
+    ],
+    "execution_duration_seconds": 16.555717,
+    "generator": "trivialscan==2.1.1"
+}
