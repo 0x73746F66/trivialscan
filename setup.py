@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="trivialscan",
-    version="2.1.1",
+    version="2.2.0",
     author='Christopher Langton',
     author_email='chris@trivialsec.com',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -19,7 +19,7 @@ Summary CLI output
 
 Security Score Card
 
-![trivialscan summary](https://gitlab.com/trivialsec/trivialscan/-/raw/main/docs/images/trivialscan-score-card.jpg)
+![trivialscan score-card](https://gitlab.com/trivialsec/trivialscan/-/raw/main/docs/images/trivialscan-score-card.jpg)
 
 For full CLI output and JSON format please look in `examples/` of the Gitlab repository
 

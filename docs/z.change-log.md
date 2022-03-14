@@ -1,6 +1,6 @@
 # Change Log
 
-## 2.1.1 Mar 14th 2022
+## 2.2.0 Mar 14th 2022
 
 - bump version of `tlstrust==2.2.1`
 - expose the MinTsifry Rossii (Russian) trust information on cli
