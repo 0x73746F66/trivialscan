@@ -1,5 +1,10 @@
 # Change Log
 
+## 2.3.0 Mar 14th 2022
+
+- refactored cli to eliminate an exception and show clean output
+- when specifying JSON out put the console output is not shown
+
 ## 2.2.0 Mar 14th 2022
 
 - bump version of `tlstrust==2.2.1`

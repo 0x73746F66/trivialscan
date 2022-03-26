@@ -1,27 +1,28 @@
 
 import sys
 import logging
-import validators
 from datetime import datetime
 from dataclasses import asdict
+from urllib.parse import urlparse
+import validators
 from OpenSSL.crypto import X509
 from . import exceptions, util
 from .transport import Transport
 from .validator import Validator, LeafCertValidator, RootCertValidator, PeerCertValidator
 
 
-__version__ = 'trivialscan==2.2.0'
+__version__ = 'trivialscan==2.3.0'
 __module__ = 'trivialscan'
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 logger = logging.getLogger(__name__)
 
 # When chaning this ensure cli.main() is also updated
-def verify(host :str, port :int = 443, cafiles :list = None, use_sni :bool = True, client_pem :str = None, tmp_path_prefix :str = '/tmp') -> tuple[bool,list[Validator]]:
-    if not isinstance(port, int):
-        raise TypeError(f"provided an invalid type {type(port)} for port, expected int")
-    if validators.domain(host) is not True:
-        raise ValueError(f"provided an invalid domain {host}")
+def analyse(host: str, port: int = 443, cafiles: list = None, use_sni: bool = True, client_pem: str = None, tmp_path_prefix: str = '/tmp') -> tuple[bool, list[Validator]]:
+    url = f'https://{host}:{port}'
+    parsed = urlparse(url)
+    if validators.domain(parsed.hostname) is not True:
+        raise AttributeError(f'URL {url} hostname {parsed.hostname} is invalid')
     if not isinstance(client_pem, str) and client_pem is not None:
         raise TypeError(f"provided an invalid type {type(client_pem)} for client_pem, expected list")
     if not isinstance(cafiles, list) and cafiles is not None:
@@ -32,12 +33,11 @@ def verify(host :str, port :int = 443, cafiles :list = None, use_sni :bool = Tru
         raise TypeError(f"provided an invalid type {type(tmp_path_prefix)} for tmp_path_prefix, expected str")
 
     validator = LeafCertValidator()
-    transport = Transport(host, port)
+    transport = Transport(parsed.hostname, parsed.port)
     if client_pem is not None:
         transport.pre_client_authentication_check(client_pem_path=client_pem)
-
     if not transport.connect_least_secure(cafiles=cafiles, use_sni=use_sni) or not isinstance(transport.server_certificate, X509):
-        raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=host, port=port))
+        raise exceptions.ValidationError(exceptions.VALIDATION_ERROR_TLS_FAILED.format(host=parsed.hostname, port=parsed.port))
     validator.tmp_path_prefix = tmp_path_prefix
     validator.mount(transport)
     validator.verify()

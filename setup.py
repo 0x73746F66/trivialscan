@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="trivialscan",
-    version="2.2.0",
+    version="2.3.0",
     author='Christopher Langton',
     author_email='chris@trivialsec.com',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -31,7 +31,7 @@ For full CLI output and JSON format please look in `examples/` of the Gitlab rep
 import trivialscan
 
 host = 'google.com'
-is_valid, results = trivialscan.verify(host)
+is_valid, results = trivialscan.analyse(host)
 print('\nValid ✓✓✓' if is_valid else '\nNot Valid. There where validation errors')
 ```
 
