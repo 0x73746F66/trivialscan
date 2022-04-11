@@ -13,12 +13,7 @@ from cryptography.x509 import Certificate, extensions, PolicyInformation
 from certvalidator.errors import PathValidationError, RevokedError, InvalidCertificateError, PathBuildingError
 from dns.rrset import RRset
 from tldextract import TLDExtract
-from tlstrust import TrustStore, context
-from tlstrust.stores.ccadb import __version__ as ccadb_version
-from tlstrust.stores.java import __version__ as java_version
-from tlstrust.stores.certifi import __version__ as certifi_version
-from tlstrust.stores.linux import __version__ as linux_version
-from tlstrust.stores.mintsifry_rossii import __version__ as russia_version
+from tlstrust import TrustStore, context, trust_stores_from_chain
 from tlstrust.stores.android_2_2 import __description__ as android2_2_version
 from tlstrust.stores.android_2_3 import __description__ as android2_3_version
 from tlstrust.stores.android_3 import __description__ as android3_version
@@ -81,18 +76,19 @@ VALIDATION_MESSAGES = {
     VALIDATION_OCSP_MUST_STAPLE_SATISFIED: 'OCSP must staple flag set and not satisfied',
 }
 
-class Validator:
-    _pem :bytes
-    _der :bytes
-    x509 :X509
-    certificate :Certificate
-    tmp_path_prefix :str
-    metadata :Metadata
-    compliance_checks :dict
-    validation_checks :dict
-    certificate_verify_messages :list
 
-    def __init__(self, tmp_path_prefix :str = '/tmp') -> None:
+class Validator:
+    _pem: bytes
+    _der: bytes
+    x509: X509
+    certificate: Certificate
+    tmp_path_prefix: str
+    metadata: Metadata
+    compliance_checks: dict
+    validation_checks: dict
+    certificate_verify_messages: list
+
+    def __init__(self, tmp_path_prefix: str = '/tmp') -> None:
         if not isinstance(tmp_path_prefix, str):
             raise TypeError(f'tmp_path_prefix of type {type(tmp_path_prefix)} not supported, str expected')
         tmp_path = Path(tmp_path_prefix)
@@ -114,21 +110,21 @@ class Validator:
             return False
         return all(validations)
 
-    def init_der(self, der :bytes):
+    def init_der(self, der: bytes):
         self._der = der
         self.x509 = load_certificate(FILETYPE_ASN1, der)
         self._pem = dump_certificate(FILETYPE_PEM, self.x509)
         self.certificate = self.x509.to_cryptography()
         self.extract_x509_metadata(self.x509)
 
-    def init_pem(self, pem :bytes):
+    def init_pem(self, pem: bytes):
         self._pem = pem
         self.x509 = load_certificate(FILETYPE_PEM, pem)
         self._der = PEM_cert_to_DER_cert(self._pem.decode())
         self.certificate = self.x509.to_cryptography()
         self.extract_x509_metadata(self.x509)
 
-    def init_x509(self, x509 :X509):
+    def init_x509(self, x509: X509):
         self.x509 = x509
         self._pem = dump_certificate(FILETYPE_PEM, x509)
         self._der = PEM_cert_to_DER_cert(self._pem.decode())
@@ -138,7 +134,7 @@ class Validator:
     def cert_to_text(self) -> str:
         return dump_certificate(FILETYPE_TEXT, self.x509).decode()
 
-    def extract_x509_metadata(self, x509 :X509):
+    def extract_x509_metadata(self, x509: X509):
         if not hasattr(self, 'metadata') or not isinstance(self.metadata, Metadata):
             self.metadata = Metadata()
         self.metadata.certificate_version = x509.get_version()
@@ -177,7 +173,8 @@ class Validator:
         except extensions.ExtensionNotFound:
             pass
         for policy in policies:
-            if not isinstance(policy, PolicyInformation): continue
+            if not isinstance(policy, PolicyInformation):
+                continue
             if policy.policy_identifier._dotted_string in constants.VALIDATION_OID.keys():
                 self.metadata.certificate_validation_oid = policy.policy_identifier._dotted_string
                 self.metadata.certificate_validation_type = constants.VALIDATION_TYPES[constants.VALIDATION_OID[self.metadata.certificate_validation_oid]]
@@ -264,7 +261,8 @@ class Validator:
                 continue
             if cn in check.lower():
                 self.metadata.possible_phish_or_malicious = True
-        subject_ou = util.extract_from_subject(self.certificate, 'organizationalUnitName')
+        subject_ou = util.extract_from_subject(
+            self.certificate, 'organizationalUnitName')
         if subject_ou:
             bad_ou = ['charlesproxy', 'portswigger']
             for ou in bad_ou:
@@ -296,6 +294,7 @@ class Validator:
             self.metadata.certificate_key_compromised = True
         return self.metadata.certificate_key_compromised
 
+
 class RootCertValidator(Validator):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -309,11 +308,12 @@ class RootCertValidator(Validator):
         }
 
     def __repr__(self) -> str:
-        certificate_verify_messages = '", "'.join(self.certificate_verify_messages)
+        certificate_verify_messages = '", "'.join(
+            self.certificate_verify_messages)
         validation_checks = json.dumps(self.validation_checks)
         return f'<Validator(certificate_valid={self.certificate_valid}, ' +\
-              f'certificate_verify_messages=["{certificate_verify_messages}"]", ' +\
-              f'validation_checks={validation_checks}, ' +\
+            f'certificate_verify_messages=["{certificate_verify_messages}"]", ' +\
+            f'validation_checks={validation_checks}, ' +\
                'metadata=<trivialscan.metadata.Metadata>, ' +\
                'x509=<OpenSSL.crypto.X509>, ' +\
                '_pem=<bytes>, ' +\
@@ -338,36 +338,8 @@ class RootCertValidator(Validator):
         if self.compliance_checks[nist.VALIDATION_CA_TRUST] is False:
             self.certificate_verify_messages.append(nist.NIST_NON_COMPLIANCE_CA_TRUST)
 
-    def verify_trust(self, trust_store :TrustStore):
-        DEFAULT_STATUS = 'No Root CA Certificate in the {platform} Trust Store'
-        self.metadata.trust_ccadb_status = DEFAULT_STATUS.format(platform='CCADB')
-        self.metadata.trust_android_status = DEFAULT_STATUS.format(platform='Android')
-        self.metadata.trust_java_status = DEFAULT_STATUS.format(platform='Java')
-        self.metadata.trust_linux_status = DEFAULT_STATUS.format(platform='Linux')
-        self.metadata.trust_certifi_status = DEFAULT_STATUS.format(platform='Python')
-        self.metadata.trust_russia_status = DEFAULT_STATUS.format(platform='MinTsifry Rossii')
+    def verify_trust(self, trust_store: TrustStore):
         expired_text = ' EXPIRED'
-        if trust_store.exists(context.SOURCE_CCADB):
-            self.metadata.trust_ccadb_status = f'In Common CA Database {ccadb_version} (Mozilla, Microsoft, and Apple)'
-            if trust_store.expired_in_store(context.SOURCE_CCADB):
-                self.metadata.trust_ccadb_status += expired_text
-        if trust_store.exists(context.SOURCE_JAVA):
-            self.metadata.trust_java_status = f'In Java Root CA Trust Store {java_version}'
-            if trust_store.expired_in_store(context.SOURCE_JAVA):
-                self.metadata.trust_java_status += expired_text
-        if trust_store.exists(context.SOURCE_LINUX):
-            self.metadata.trust_linux_status = f'In Linux {linux_version} Root CA Trust Store'
-            if trust_store.expired_in_store(context.SOURCE_LINUX):
-                self.metadata.trust_linux_status += expired_text
-        if trust_store.exists(context.SOURCE_CERTIFI):
-            self.metadata.trust_certifi_status = f'In Python {certifi_version} Root CA Trust Store (Django, requests, urllib, and anything based from these)'
-            if trust_store.expired_in_store(context.SOURCE_CERTIFI):
-                self.metadata.trust_certifi_status += expired_text
-        if trust_store.exists(context.SOURCE_RUSSIA):
-            self.metadata.trust_russia_status = f'In Russian MinTsifry Rossii Database {russia_version} (Yandex)'
-            if trust_store.expired_in_store(context.SOURCE_RUSSIA):
-                self.metadata.trust_russia_status += expired_text
-
         android_stores = []
         if trust_store.exists(context.PLATFORM_ANDROID2_2):
             android_status = f'{android2_2_version} {"Trusted" if trust_store.android2_2 else "Not Trusted"}'
@@ -446,13 +418,20 @@ class RootCertValidator(Validator):
             android_stores.append(android_status)
         else:
             android_stores.append(f'{android12_version} Not Present')
-
-        self.metadata.trust_android_status = "\n".join(android_stores)
+        data = trust_store.to_dict()
         self.metadata.trust_ccadb = trust_store.ccadb
+        self.metadata.trust_ccadb_status = ''.join([d['description'] for d in data['trust_stores'] if d['name'] == context.CCADB])
         self.metadata.trust_java = trust_store.java
-        self.metadata.trust_android = all([trust_store.android7, trust_store.android8, trust_store.android9, trust_store.android10, trust_store.android11, trust_store.android12])
+        self.metadata.trust_java_status = ''.join([d['description'] for d in data['trust_stores'] if d['name'] == context.JAVA_SRE])
+        self.metadata.trust_android = all([trust_store.android7, trust_store.android8, trust_store.android9,
+                                          trust_store.android10, trust_store.android11, trust_store.android12])
+        self.metadata.trust_android_status = "\n".join(android_stores)
         self.metadata.trust_linux = trust_store.linux
+        self.metadata.trust_linux_status = ''.join([d['description'] for d in data['trust_stores'] if d['name'] == context.LINUX_ARCH])
         self.metadata.trust_certifi = trust_store.certifi
+        self.metadata.trust_certifi_status = ''.join([d['description'] for d in data['trust_stores'] if d['name'] == context.PYTHON_CERTIFI])
+        self.metadata.trust_russia = trust_store.russia
+        self.metadata.trust_russia_status = ''.join([d['description'] for d in data['trust_stores'] if d['name'] == context.MINTSIFRY_ROSSII])
 
 class PeerCertValidator(Validator):
     def __init__(self, **kwargs) -> None:
@@ -468,11 +447,12 @@ class PeerCertValidator(Validator):
         }
 
     def __repr__(self) -> str:
-        certificate_verify_messages = '", "'.join(self.certificate_verify_messages)
+        certificate_verify_messages = '", "'.join(
+            self.certificate_verify_messages)
         validation_checks = json.dumps(self.validation_checks)
         return f'<Validator(certificate_valid={self.certificate_valid}, ' +\
-              f'certificate_verify_messages=["{certificate_verify_messages}"]", ' +\
-              f'validation_checks={validation_checks}, ' +\
+            f'certificate_verify_messages=["{certificate_verify_messages}"]", ' +\
+            f'validation_checks={validation_checks}, ' +\
                'metadata=<trivialscan.metadata.Metadata>, ' +\
                'x509=<OpenSSL.crypto.X509>, ' +\
                '_pem=<bytes>, ' +\
@@ -483,12 +463,13 @@ class PeerCertValidator(Validator):
         super().verify()
         self.validation_checks[VALIDATION_NOT_SELF_SIGNED] = self.metadata.certificate_is_self_signed is False
 
+
 class LeafCertValidator(Validator):
-    _pem_certificate_chain :list
-    peer_validations :list[PeerCertValidator]
-    certificate_chain :list[X509]
-    transport :Transport
-    _root_certs :list
+    _pem_certificate_chain: list
+    peer_validations: list[PeerCertValidator]
+    certificate_chain: list[X509]
+    transport: Transport
+    _root_certs: list
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -532,16 +513,17 @@ class LeafCertValidator(Validator):
             + 'certificate=<cryptography.x509.Certificate>)>'
         )
 
-    def mount(self, transport :Transport):
+    def mount(self, transport: Transport):
         if not isinstance(transport, Transport):
-            raise TypeError(f"provided an invalid type {type(transport)} for transport, expected an instance of <trivialscan.transport.Transport>")
+            raise TypeError(
+                f"provided an invalid type {type(transport)} for transport, expected an instance of <trivialscan.transport.Transport>")
         self.transport = transport
         self.extract_transport_metadata(transport)
         if isinstance(transport.server_certificate, X509):
             self.init_x509(transport.server_certificate)
         self.parse_openssl_errors(transport.verifier_errors)
 
-    def extract_transport_metadata(self, transport :Transport):
+    def extract_transport_metadata(self, transport: Transport):
         if not hasattr(self, 'metadata') or not isinstance(self.metadata, Metadata):
             self.metadata = Metadata(
                 host=transport.host,
@@ -579,7 +561,8 @@ class LeafCertValidator(Validator):
         self.metadata.session_resumption_ticket_hint = transport.session_ticket_hints
         self.metadata.compression_support = self.header_exists(name='content-encoding', includes_value='gzip')
         self.metadata.client_renegotiation = transport.client_renegotiation
-        self.metadata.scsv = transport.tls_downgrade is False # modern network tools such as F5 try to hide cause and blend in making scsv undetectable directly but a downgrade can still be observed
+        # modern network tools such as F5 try to hide cause and blend in making scsv undetectable directly but a downgrade can still be observed
+        self.metadata.scsv = transport.tls_downgrade is False
         self.metadata.preferred_protocol = transport.preferred_protocol
         self.metadata.http_hsts = self.header_exists(name='strict-transport-security', includes_value='max-age')
         self.metadata.http_expect_ct_report_uri = self.header_exists(name='expect-ct', includes_value='report-uri')
@@ -604,13 +587,15 @@ class LeafCertValidator(Validator):
         self.metadata.http2_support = transport.http2_support
         self.http2_cleartext_support = transport.http2_cleartext_support
 
-    def header_exists(self, name :str, includes_value :str = None) -> bool:
+    def header_exists(self, name: str, includes_value: str = None) -> bool:
         if not isinstance(name, str):
-            raise AttributeError(f'Invalid value for name, got {type(name)} expected str')
+            raise AttributeError(
+                f'Invalid value for name, got {type(name)} expected str')
         checks = []
         if includes_value is not None:
             if not isinstance(includes_value, str):
-                raise AttributeError(f'Invalid value for includes_value, got {type(includes_value)} expected str')
+                raise AttributeError(
+                    f'Invalid value for includes_value, got {type(includes_value)} expected str')
             checks.append(self.transport.http1_support and name in self.transport.http1_headers and includes_value in self.transport.http1_headers[name])
             checks.append(self.transport.http1_1_support and name in self.transport.http1_1_headers and includes_value in self.transport.http1_1_headers[name])
         else:
@@ -618,7 +603,7 @@ class LeafCertValidator(Validator):
             checks.append(self.transport.http1_1_support and name in self.transport.http1_1_headers)
         return any(checks)
 
-    def parse_openssl_errors(self, errors :list[tuple[X509, int]]):
+    def parse_openssl_errors(self, errors: list[tuple[X509, int]]):
         if not isinstance(errors, list):
             return
         for cert, errno in errors:
@@ -640,16 +625,18 @@ class LeafCertValidator(Validator):
         if self.compliance_checks[pci.VALIDATION_DEPRECATED_ALGO] is False:
             self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_WEAK_ALGORITHMS)
         self.compliance_checks[pci.VALIDATION_KNOWN_VULN_SESSION_RESUMPTION] = all([
-            not self.metadata.session_resumption_tickets or constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] == SSL.TLS1_3_VERSION,
-            not self.metadata.session_resumption_caching or constants.PROTOCOL_TEXT_MAP[self.metadata.negotiated_protocol] == SSL.TLS1_3_VERSION,
+            not self.metadata.session_resumption_tickets or constants.PROTOCOL_TEXT_MAP[
+                self.metadata.negotiated_protocol] == SSL.TLS1_3_VERSION,
+            not self.metadata.session_resumption_caching or constants.PROTOCOL_TEXT_MAP[
+                self.metadata.negotiated_protocol] == SSL.TLS1_3_VERSION,
         ])
         self.compliance_checks[pci.VALIDATION_KNOWN_VULN_RENEGOTIATION] = not self.metadata.client_renegotiation
         self.compliance_checks[pci.VALIDATION_KNOWN_VULN_COMPRESSION] = not self.metadata.compression_support
         if any([
-                self.compliance_checks[pci.VALIDATION_KNOWN_VULN_RENEGOTIATION],
-                self.compliance_checks[pci.VALIDATION_KNOWN_VULN_COMPRESSION],
-                self.compliance_checks[pci.VALIDATION_KNOWN_VULN_SESSION_RESUMPTION],
-            ]):
+            self.compliance_checks[pci.VALIDATION_KNOWN_VULN_RENEGOTIATION],
+            self.compliance_checks[pci.VALIDATION_KNOWN_VULN_COMPRESSION],
+            self.compliance_checks[pci.VALIDATION_KNOWN_VULN_SESSION_RESUMPTION],
+        ]):
             self.certificate_verify_messages.append(pci.PCIDSS_NON_COMPLIANCE_KNOWN_VULNERABILITIES)
 
     def fips_compliant(self):
@@ -778,41 +765,7 @@ class LeafCertValidator(Validator):
         elif any([constants.TLS1_0_LABEL in self.metadata.tls_version_interference_versions, constants.SSL3_LABEL in self.metadata.tls_version_interference_versions, constants.SSL2_LABEL in self.metadata.tls_version_interference_versions]):
             self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_VERSION_INTERFERENCE_OBSOLETE)
 
-    def _get_root_certs(self, trust_store :TrustStore):
-        contexts = [
-            context.PLATFORM_ANDROID7,
-            context.PLATFORM_ANDROID8,
-            context.PLATFORM_ANDROID9,
-            context.PLATFORM_ANDROID10,
-            context.PLATFORM_ANDROID11,
-            context.PLATFORM_ANDROID12,
-            context.SOURCE_CCADB,
-            context.SOURCE_JAVA,
-            context.SOURCE_LINUX,
-            context.SOURCE_CERTIFI
-        ]
-        for context_type in contexts:
-            try:
-                yield trust_store.get_certificate_from_store(context_type=context_type)
-            except FileExistsError:
-                pass
-
-    def _validate_roots(self, trust_store :TrustStore):
-        for cert in self._get_root_certs(trust_store):
-            if cert.get_serial_number() in self._root_certs:
-                continue
-            root_validator = RootCertValidator()
-            root_validator.init_x509(cert)
-            root_validator.metadata.certificate_root_ca = True
-            root_validator.verify()
-            root_validator.verify_trust(trust_store)
-            root_validator.pcidss_compliant()
-            root_validator.fips_compliant()
-            root_validator.nist_compliant()
-            self.peer_validations.append(root_validator)
-            self._root_certs.append(cert.get_serial_number())
-
-    def verify_chain(self, progress_bar :callable = lambda *args: None) -> bool:
+    def verify_chain(self) -> bool:
         if not self._pem_certificate_chain:
             return False
 
@@ -845,71 +798,45 @@ class LeafCertValidator(Validator):
         self.certificate_chain_validation_result = validation_result
         self.certificate_chain_valid = self.certificate_chain_valid is not False
 
-        progress_bar()
-        def map_peers(peers :list[X509]):
-            peers_map = {}
-            for cert in peers:
-                ski, aki = util.get_ski_aki(cert.to_cryptography())
-                if ski is None or aki is None:
-                    logger.warning(f'Certificate {cert.get_subject()} has no SKI or AKI')
-                peers_map[ski] = [cert, aki]
-            return peers_map
-
-        peer_lookup = map_peers(self.certificate_chain)
         for cert in self.certificate_chain:
-            progress_bar()
             if cert.get_serial_number() == self.x509.get_serial_number():
                 continue
             ca, _ = util.get_basic_constraints(cert.to_cryptography())
             peer_validator = PeerCertValidator()
             peer_validator.init_x509(cert)
             peer_validator.metadata.certificate_intermediate_ca = ca is True
-            trust_store = None
-            checked_peer_as_root = False
-            if peer_validator.metadata.certificate_authority_key_identifier is None:
-                trust_store = TrustStore(peer_validator.metadata.certificate_subject_key_identifier)
-                checked_peer_as_root = True
-            elif peer_validator.metadata.certificate_authority_key_identifier not in peer_lookup.keys():
-                trust_store = TrustStore(peer_validator.metadata.certificate_authority_key_identifier)
-            if isinstance(trust_store, TrustStore):
-                logger.info(f'Checking for Root CA issuer {cert.get_issuer()} with SKI {peer_validator.metadata.certificate_authority_key_identifier}')
-                self._root_certs = []
-                self.validation_checks[VALIDATION_ROOT_CA_TRUST] = trust_store.is_trusted
-                if any([
-                        trust_store.exists(context.SOURCE_CCADB),
-                        trust_store.exists(context.SOURCE_JAVA),
-                        trust_store.exists(context.SOURCE_LINUX),
-                        trust_store.exists(context.SOURCE_CERTIFI),
-                        trust_store.exists(context.PLATFORM_ANDROID7),
-                        trust_store.exists(context.PLATFORM_ANDROID8),
-                        trust_store.exists(context.PLATFORM_ANDROID9),
-                        trust_store.exists(context.PLATFORM_ANDROID10),
-                        trust_store.exists(context.PLATFORM_ANDROID11),
-                        trust_store.exists(context.PLATFORM_ANDROID12),
-                    ]):
-                    self._validate_roots(trust_store)
-                if not self.validation_checks[VALIDATION_ROOT_CA_TRUST]:
-                    self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_MISSING_ROOT_CA_AKI.format(serial_number=peer_validator.metadata.certificate_serial_number_hex))
-                else:
-                    checked_peer_as_root = checked_peer_as_root is True
+            peer_validator.verify()
+            self.validation_checks[VALIDATION_REVOCATION] = self.validation_checks.get(VALIDATION_REVOCATION) is not False
+            peer_validator.pcidss_compliant()
+            peer_validator.fips_compliant()
+            peer_validator.nist_compliant()
+            self.peer_validations.append(peer_validator)
 
-            if not checked_peer_as_root:
-                peer_validator.verify()
-                self.validation_checks[VALIDATION_REVOCATION] = self.validation_checks.get(VALIDATION_REVOCATION) is not False
-                peer_validator.pcidss_compliant()
-                peer_validator.fips_compliant()
-                peer_validator.nist_compliant()
-                self.peer_validations.append(peer_validator)
+        logger.info('Checking for Root CA')
+        for trust_store in trust_stores_from_chain(self.certificate_chain):
+            self.validation_checks[VALIDATION_ROOT_CA_TRUST] = trust_store.is_trusted
+            root_validator = RootCertValidator()
+            root_validator.init_x509(trust_store.certificate)
+            root_validator.metadata.certificate_root_ca = True
+            root_validator.verify()
+            root_validator.verify_trust(trust_store)
+            root_validator.pcidss_compliant()
+            root_validator.fips_compliant()
+            root_validator.nist_compliant()
+            self.peer_validations.append(root_validator)
+
+            if not self.validation_checks[VALIDATION_ROOT_CA_TRUST]:
+                self.certificate_verify_messages.append(exceptions.VALIDATION_ERROR_MISSING_ROOT_CA_AKI.format(serial_number=peer_validator.metadata.certificate_serial_number_hex))
 
         return all([self.certificate_valid, self.certificate_chain_valid])
 
-    def extract_x509_metadata(self, x509 :X509):
+    def extract_x509_metadata(self, x509: X509):
         super().extract_x509_metadata(x509)
         tlsa_ext = util.get_extensions_by_oid(self.x509.to_cryptography(), constants.TLSA_EXTENSION_OID)
         tlsa_dns = util.get_tlsa_answer(self.metadata.host)
         self.metadata.tlsa = isinstance(tlsa_ext, extensions.Extension) or tlsa_dns is not None
         self.metadata.certification_authority_authorization = util.caa_exist(self.metadata.host)
-        answer :list[RRset] = util.get_dnssec_answer(self.metadata.host)
+        answer: list[RRset] = util.get_dnssec_answer(self.metadata.host)
         if answer:
             self.metadata.dnssec = True
             algorithm = int(answer[0].to_text().split()[6])

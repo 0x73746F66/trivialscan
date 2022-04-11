@@ -9,29 +9,28 @@ from datetime import datetime
 from urllib.parse import urlparse
 import validators
 import progressbar
-from tlstrust.context import SOURCES, PLATFORMS, BROWSERS, LANGUAGES
-from tlstrust.stores import VERSIONS
 from rich import inspect, print
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.progress import Progress
 from trivialscan import __version__, analyse, validator, pci, nist, fips
 from trivialscan.scores import Score
-from . import config
-from . import outputs
+from trivialscan.cli import config, outputs
 
 __module__ = 'trivialscan.cli'
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 DEBUG = False
 
+
 def update_bar(progress, task):
-    def progress_bar(completed :int = None):
+    def progress_bar(completed: int = None):
         if isinstance(completed, int):
             progress.update(task, completed=completed)
         else:
             progress.update(task, advance=1)
     return progress_bar
+
 
 def wrap_console(results: dict, summary_only: bool = False):
     console = Console()
@@ -39,13 +38,16 @@ def wrap_console(results: dict, summary_only: bool = False):
         console.print(result.get('output'))
 
     if summary_only:
-        console.print(config.RATING_ASCII[results['rating']], style=results['color'])
+        console.print(
+            config.RATING_ASCII[results['rating']], style=results['color'])
     else:
         console.print(results['score'])
 
-def no_progressbar(data :list):
+
+def no_progressbar(data: list):
     for item in data:
         yield item
+
 
 def wrap_analyse(params: dict) -> dict:
     err = None
@@ -92,6 +94,7 @@ def wrap_analyse(params: dict) -> dict:
 
     return results
 
+
 def cli():
     parser = argparse.ArgumentParser()
     parser.add_argument("targets", nargs="*", help='All unnamed arguments are hosts (and ports) targets to test. ~$ trivialscan google.com:443 github.io owasp.org:80')
@@ -133,8 +136,10 @@ def cli():
         level=log_level,
         handlers=handlers
     )
-    DEBUG = log_level==logging.DEBUG
-    def version(): import platform; print(f"{__version__} Python {sys.version} {platform.platform()} {platform.uname().node} {platform.uname().release} {platform.version()}")
+    DEBUG = log_level == logging.DEBUG
+
+    def version(): import platform; print(
+        f"{__version__} Python {sys.version} {platform.platform()} {platform.uname().node} {platform.uname().release} {platform.version()}")
     if args.show_version:
         version()
         sys.exit(0)
@@ -145,7 +150,8 @@ def cli():
             target = f'https://{target}'
         parsed = urlparse(target)
         if validators.domain(parsed.hostname) is not True:
-            raise AttributeError(f'URL {target} hostname {parsed.hostname} is invalid')
+            raise AttributeError(
+                f'URL {target} hostname {parsed.hostname} is invalid')
         port = 443 if not parsed.port else parsed.port
         domains.append({
             'host': parsed.hostname,
@@ -228,7 +234,8 @@ def cli():
         if not args.hide_progress_bars:
             progress.remove_task(task)
 
-        execution_duration_seconds = (datetime.utcnow() - run_start).total_seconds()
+        execution_duration_seconds = (
+            datetime.utcnow() - run_start).total_seconds()
         if args.json_file:
             json_path = Path(args.json_file)
             if json_path.is_file():
@@ -246,3 +253,7 @@ def cli():
                     print(result['json'][0]['error'])
                     continue
                 wrap_console(result, summary_only=args.summary_only)
+
+
+if __name__ == "__main__":
+    cli()

@@ -1,17 +1,17 @@
 {
-    "date": "2022-03-14T23:22:52",
+    "date": "2022-04-11T15:33:05",
     "evaluations": [
         {
             "certificate_trust": [
                 {
                     "is_trusted": true,
                     "trust_store": "Common Certificate Authority Database (CCADB)",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Java(TM) SE Runtime Environment",
-                    "version": "java 17.0.2 2022-01-18 LTS"
+                    "version": "java 18 2022-03-22"
                 },
                 {
                     "is_trusted": true,
@@ -21,7 +21,7 @@
                 {
                     "is_trusted": true,
                     "trust_store": "Linux (Arch)",
-                    "version": "5.16.10-arch1-1"
+                    "version": "5.17.1-arch1-1"
                 },
                 {
                     "is_trusted": true,
@@ -29,9 +29,9 @@
                     "version": "certifi==2021.10.8"
                 },
                 {
-                    "is_trusted": true,
+                    "is_trusted": false,
                     "trust_store": "MinTsifry Rossii",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
@@ -41,21 +41,431 @@
                 {
                     "is_trusted": true,
                     "trust_store": "Microsoft Windows",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
-                    "trust_store": "Apple Devices",
-                    "version": "2022.03.14"
+                    "trust_store": "Apple devices",
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
-                    "trust_store": "Android",
+                    "trust_store": "Android (open source)",
                     "version": "android_latest"
                 },
                 {
                     "is_trusted": true,
-                    "trust_store": "latest Android build",
+                    "trust_store": "Android (latest Google build)",
+                    "version": "android_latest"
+                },
+                {
+                    "is_trusted": false,
+                    "trust_store": "Android 2.2 (Froyo) 2010",
+                    "version": "android_2_2"
+                },
+                {
+                    "is_trusted": false,
+                    "trust_store": "Android 2.3 (Gingerbread) 2010",
+                    "version": "android_2_3"
+                },
+                {
+                    "is_trusted": false,
+                    "trust_store": "Android 3 (Honeycomb) 2011",
+                    "version": "android_3"
+                },
+                {
+                    "is_trusted": false,
+                    "trust_store": "Android 4 (Ice Cream Sandwich) 2011",
+                    "version": "android_4"
+                },
+                {
+                    "is_trusted": false,
+                    "trust_store": "Android 4.4 (KitKat) 2013",
+                    "version": "android_4_4"
+                },
+                {
+                    "is_trusted": false,
+                    "trust_store": "Android 7 (Nougat) 2016",
+                    "version": "android_7"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 8 (Oreo) 2017",
+                    "version": "android_8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 9 (Pie) 2018",
+                    "version": "android_9"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 10 (Q) 2019",
+                    "version": "android_10"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 11 2020",
+                    "version": "android_11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 12 2021",
+                    "version": "android_12"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Mozilla Firefox",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Tor Web Browser",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Chromium Browser",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Google Chrome",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Microsoft Edge",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Brave Browser",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Opera Browser",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Vivaldi Browser",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Amazon Silk",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Samsung Internet",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": false,
+                    "trust_store": "Yandex",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Apple Safari",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Python built-in https module on Windows",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Python built-in https module on Linux",
+                    "version": "5.17.1-arch1-1"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Python built-in https module on Apple",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "certifi (Python module)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "urllib (Python module)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "requests (Python module)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Django (Python module)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Common Certificate Authority Database (CCADB)",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Java(TM) SE Runtime Environment",
+                    "version": "java 18 2022-03-22"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Google Trust Services",
+                    "version": "android_latest"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Linux (Arch)",
+                    "version": "5.17.1-arch1-1"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Certifi (Python module for Certificate Authority Certificates)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": false,
+                    "trust_store": "MinTsifry Rossii",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Python 3.10",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Microsoft Windows",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Apple devices",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android (open source)",
+                    "version": "android_latest"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android (latest Google build)",
+                    "version": "android_latest"
+                },
+                {
+                    "is_trusted": false,
+                    "trust_store": "Android 2.2 (Froyo) 2010",
+                    "version": "android_2_2"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 2.3 (Gingerbread) 2010",
+                    "version": "android_2_3"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 3 (Honeycomb) 2011",
+                    "version": "android_3"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 4 (Ice Cream Sandwich) 2011",
+                    "version": "android_4"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 4.4 (KitKat) 2013",
+                    "version": "android_4_4"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 7 (Nougat) 2016",
+                    "version": "android_7"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 8 (Oreo) 2017",
+                    "version": "android_8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 9 (Pie) 2018",
+                    "version": "android_9"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 10 (Q) 2019",
+                    "version": "android_10"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 11 2020",
+                    "version": "android_11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android 12 2021",
+                    "version": "android_12"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Mozilla Firefox",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Tor Web Browser",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Chromium Browser",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Google Chrome",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Microsoft Edge",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Brave Browser",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Opera Browser",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Vivaldi Browser",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Amazon Silk",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Samsung Internet",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": false,
+                    "trust_store": "Yandex",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Apple Safari",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Python built-in https module on Windows",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Python built-in https module on Linux",
+                    "version": "5.17.1-arch1-1"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Python built-in https module on Apple",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "certifi (Python module)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "urllib (Python module)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "requests (Python module)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Django (Python module)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Common Certificate Authority Database (CCADB)",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Java(TM) SE Runtime Environment",
+                    "version": "java 18 2022-03-22"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Google Trust Services",
+                    "version": "android_latest"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Linux (Arch)",
+                    "version": "5.17.1-arch1-1"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Certifi (Python module for Certificate Authority Certificates)",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": false,
+                    "trust_store": "MinTsifry Rossii",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Python 3.10",
+                    "version": "certifi==2021.10.8"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Microsoft Windows",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Apple devices",
+                    "version": "2022.04.11"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android (open source)",
+                    "version": "android_latest"
+                },
+                {
+                    "is_trusted": true,
+                    "trust_store": "Android (latest Google build)",
                     "version": "android_latest"
                 },
                 {
@@ -116,77 +526,77 @@
                 {
                     "is_trusted": true,
                     "trust_store": "Mozilla Firefox",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Tor Web Browser",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Chromium Browser",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Google Chrome",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Microsoft Edge",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Brave Browser",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Opera Browser",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Vivaldi Browser",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Amazon Silk",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Samsung Internet",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
-                    "is_trusted": true,
+                    "is_trusted": false,
                     "trust_store": "Yandex",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Apple Safari",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Python built-in https module on Windows",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Python built-in https module on Linux",
-                    "version": "5.16.10-arch1-1"
+                    "version": "5.17.1-arch1-1"
                 },
                 {
                     "is_trusted": true,
                     "trust_store": "Python built-in https module on Apple",
-                    "version": "2022.03.14"
+                    "version": "2022.04.11"
                 },
                 {
                     "is_trusted": true,
@@ -291,6 +701,7 @@
             "trust_summary": "No CA Authorization detected, is a trusted Root CA",
             "validations": [
                 {
+                    "certificate_authority_key_identifier": "8418cc8534ecbc0c94942e08599cc7b2104e0a08",
                     "certificate_expired": false,
                     "certificate_extensions": [
                         {
@@ -314,18 +725,6 @@
                             "key_cert_sign": true,
                             "key_encipherment": false,
                             "name": "keyUsage"
-                        },
-                        {
-                            "critical": false,
-                            "name": "subjectKeyIdentifier",
-                            "subjectKeyIdentifier": "59a4660652a07b95923ca394072796745bf93dd0"
-                        },
-                        {
-                            "authorityKeyIdentifier": "8418cc8534ecbc0c94942e08599cc7b2104e0a08",
-                            "authority_cert_issuer": "",
-                            "authority_cert_serial_number": null,
-                            "critical": false,
-                            "name": "authorityKeyIdentifier"
                         },
                         {
                             "authorityInfoAccess": [
@@ -359,17 +758,34 @@
                         }
                     ],
                     "certificate_is_self_signed": false,
+                    "certificate_issuer_country": "US",
                     "certificate_key_compromised": false,
                     "certificate_known_compromised": false,
+                    "certificate_md5_fingerprint": "eb268e55d434febda36a979a44654b6d",
+                    "certificate_not_after": "2025-10-19T00:00:00",
+                    "certificate_not_before": "2015-10-22T00:00:00",
+                    "certificate_public_key_curve": "",
+                    "certificate_public_key_exponent": 65537,
+                    "certificate_public_key_size": 2048,
+                    "certificate_public_key_type": "RSA",
+                    "certificate_serial_number": "30:36:37:66:39:34:35:37:38:35:38:37:65:38:61:63:37:37:64:65:62:32:35:33:33:32:35:62:62:63:39:39:38:62:35:36:30:64",
+                    "certificate_serial_number_decimal": 144918209630989264145272943054026349679957517,
+                    "certificate_serial_number_hex": "0x67f94578587e8ac77deb253325bbc998b560d",
+                    "certificate_sha1_fingerprint": "917e732d330f9a12404f73d8bea36948b929dffc",
+                    "certificate_sha256_fingerprint": "f55f9ffcb83c73453261601c7e044db15a0f034b93c05830f28635ef889cf670",
+                    "certificate_signature_algorithm": "sha256WithRSAEncryption",
+                    "certificate_spki_fingerprint": "252333a8e3abb72393d6499abbacca8604faefa84681ccc3e5531d44cc896450",
+                    "certificate_subject_key_identifier": "59a4660652a07b95923ca394072796745bf93dd0",
                     "certificate_type": "Intermediate CA",
                     "certificate_valid": true,
+                    "certificate_version": 2,
                     "compliance_results": {},
-                    "expiry_status": "Expires in 1314 days (4 years)",
+                    "expiry_status": "Expires in 1286 days (4 years)",
                     "possible_phish_or_malicious": false,
                     "revocation_crlite": false,
-                    "trust_russia": false,
-                    "trust_russia_status": "",
-                    "verification_details": [],
+                    "verification_details": [
+                        "Your private key is exposed; Attackers in possession of the private key can impersonate the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware on your behalf and distribute to target systems as you identified as the attacker"
+                    ],
                     "verification_results": {
                         "avoid_known_weak_keys": true,
                         "avoid_known_weak_signature_algorithm": true,
@@ -381,6 +797,7 @@
                     }
                 },
                 {
+                    "certificate_authority_key_identifier": "9c5f00dfaa01d7302b3888a2b86d4a9cf2119183",
                     "certificate_expired": false,
                     "certificate_extensions": [
                         {
@@ -404,18 +821,6 @@
                             "key_cert_sign": true,
                             "key_encipherment": false,
                             "name": "keyUsage"
-                        },
-                        {
-                            "critical": false,
-                            "name": "subjectKeyIdentifier",
-                            "subjectKeyIdentifier": "8418cc8534ecbc0c94942e08599cc7b2104e0a08"
-                        },
-                        {
-                            "authorityKeyIdentifier": "9c5f00dfaa01d7302b3888a2b86d4a9cf2119183",
-                            "authority_cert_issuer": "",
-                            "authority_cert_serial_number": null,
-                            "critical": false,
-                            "name": "authorityKeyIdentifier"
                         },
                         {
                             "authorityInfoAccess": [
@@ -449,17 +854,34 @@
                         }
                     ],
                     "certificate_is_self_signed": false,
+                    "certificate_issuer_country": "US",
                     "certificate_key_compromised": false,
                     "certificate_known_compromised": false,
+                    "certificate_md5_fingerprint": "e865a22aae524d26869af0448d6fd896",
+                    "certificate_not_after": "2037-12-31T01:00:00",
+                    "certificate_not_before": "2015-05-25T12:00:00",
+                    "certificate_public_key_curve": "",
+                    "certificate_public_key_exponent": 65537,
+                    "certificate_public_key_size": 2048,
+                    "certificate_public_key_type": "RSA",
+                    "certificate_serial_number": "30:36:37:66:39:34:34:61:32:61:32:37:63:64:66:33:66:61:63:32:61:65:32:62:30:31:66:39:30:38:65:65:62:39:63:34:63:36",
+                    "certificate_serial_number_decimal": 144918191876577076464031512351042010504348870,
+                    "certificate_serial_number_hex": "0x67f944a2a27cdf3fac2ae2b01f908eeb9c4c6",
+                    "certificate_sha1_fingerprint": "06b25927c42a721631c1efd9431e648fa62e1e39",
+                    "certificate_sha256_fingerprint": "87dcd4dc74640a322cd205552506d1be64f12596258096544986b4850bc72706",
+                    "certificate_signature_algorithm": "sha256WithRSAEncryption",
+                    "certificate_spki_fingerprint": "fbe3018031f9586bcbf41727e417b7d1c45c2f47f93be372a17b96b50757d5a2",
+                    "certificate_subject_key_identifier": "8418cc8534ecbc0c94942e08599cc7b2104e0a08",
                     "certificate_type": "Intermediate CA",
                     "certificate_valid": true,
+                    "certificate_version": 2,
                     "compliance_results": {},
-                    "expiry_status": "Expires in 5770 days (16 years)",
+                    "expiry_status": "Expires in 5742 days (16 years)",
                     "possible_phish_or_malicious": false,
                     "revocation_crlite": false,
-                    "trust_russia": false,
-                    "trust_russia_status": "",
-                    "verification_details": [],
+                    "verification_details": [
+                        "Your private key is exposed; Attackers in possession of the private key can impersonate the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware on your behalf and distribute to target systems as you identified as the attacker"
+                    ],
                     "verification_results": {
                         "avoid_known_weak_keys": true,
                         "avoid_known_weak_signature_algorithm": true,
@@ -471,51 +893,7 @@
                     }
                 },
                 {
-                    "certificate_expired": false,
-                    "certificate_extensions": [
-                        {
-                            "critical": false,
-                            "name": "subjectKeyIdentifier",
-                            "subjectKeyIdentifier": "bf5fb7d1cedd1f86f45b55acdcd710c20ea988e7"
-                        },
-                        {
-                            "authorityKeyIdentifier": "bf5fb7d1cedd1f86f45b55acdcd710c20ea988e7",
-                            "authority_cert_issuer": "<Name(C=US,O=Starfield Technologies\\, Inc.,OU=Starfield Class 2 Certification Authority)>",
-                            "authority_cert_serial_number": 0,
-                            "critical": false,
-                            "name": "authorityKeyIdentifier"
-                        },
-                        {
-                            "ca": true,
-                            "critical": false,
-                            "name": "basicConstraints",
-                            "path_length": null
-                        }
-                    ],
-                    "certificate_is_self_signed": false,
-                    "certificate_key_compromised": false,
-                    "certificate_known_compromised": false,
-                    "certificate_type": "Root CA",
-                    "certificate_valid": false,
-                    "compliance_results": {},
-                    "expiry_status": "Expires in 4489 days (12 years)",
-                    "trust_android": true,
-                    "trust_ccadb": true,
-                    "trust_certifi": true,
-                    "trust_java": true,
-                    "trust_linux": true,
-                    "trust_russia": false,
-                    "trust_russia_status": "No Root CA Certificate in the MinTsifry Rossii Trust Store",
-                    "verification_details": [],
-                    "verification_results": {
-                        "avoid_known_weak_keys": true,
-                        "avoid_known_weak_signature_algorithm": false,
-                        "issued_past_tense": true,
-                        "not_expired": true,
-                        "not_revoked": true
-                    }
-                },
-                {
+                    "certificate_authority_key_identifier": "bf5fb7d1cedd1f86f45b55acdcd710c20ea988e7",
                     "certificate_expired": false,
                     "certificate_extensions": [
                         {
@@ -539,18 +917,6 @@
                             "key_cert_sign": true,
                             "key_encipherment": false,
                             "name": "keyUsage"
-                        },
-                        {
-                            "critical": false,
-                            "name": "subjectKeyIdentifier",
-                            "subjectKeyIdentifier": "9c5f00dfaa01d7302b3888a2b86d4a9cf2119183"
-                        },
-                        {
-                            "authorityKeyIdentifier": "bf5fb7d1cedd1f86f45b55acdcd710c20ea988e7",
-                            "authority_cert_issuer": "",
-                            "authority_cert_serial_number": null,
-                            "critical": false,
-                            "name": "authorityKeyIdentifier"
                         },
                         {
                             "authorityInfoAccess": [
@@ -584,17 +950,34 @@
                         }
                     ],
                     "certificate_is_self_signed": false,
+                    "certificate_issuer_country": "US",
                     "certificate_key_compromised": false,
                     "certificate_known_compromised": false,
+                    "certificate_md5_fingerprint": "c6150925cfea5941ddc7ff2a0a506692",
+                    "certificate_not_after": "2034-06-28T17:39:16",
+                    "certificate_not_before": "2009-09-02T00:00:00",
+                    "certificate_public_key_curve": "",
+                    "certificate_public_key_exponent": 65537,
+                    "certificate_public_key_size": 2048,
+                    "certificate_public_key_type": "RSA",
+                    "certificate_serial_number": "61:37:30:65:34:61:34:63:33:34:38:32:62:37:37:66",
+                    "certificate_serial_number_decimal": 12037640545166866303,
+                    "certificate_serial_number_hex": "0xa70e4a4c3482b77f",
+                    "certificate_sha1_fingerprint": "9e99a48a9960b14926bb7f3b02e22da2b0ab7280",
+                    "certificate_sha256_fingerprint": "28689b30e4c306aab53b027b29e36ad6dd1dcf4b953994482ca84bdc1ecac996",
+                    "certificate_signature_algorithm": "sha256WithRSAEncryption",
+                    "certificate_spki_fingerprint": "2b071c59a0a0ae76b0eadb2bad23bad4580b69c3601b630c2eaf0613afa83f92",
+                    "certificate_subject_key_identifier": "9c5f00dfaa01d7302b3888a2b86d4a9cf2119183",
                     "certificate_type": "Intermediate CA",
                     "certificate_valid": true,
+                    "certificate_version": 2,
                     "compliance_results": {},
-                    "expiry_status": "Expires in 4488 days (12 years)",
+                    "expiry_status": "Expires in 4461 days (12 years)",
                     "possible_phish_or_malicious": false,
                     "revocation_crlite": false,
-                    "trust_russia": false,
-                    "trust_russia_status": "",
-                    "verification_details": [],
+                    "verification_details": [
+                        "Your private key is exposed; Attackers in possession of the private key can impersonate the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware on your behalf and distribute to target systems as you identified as the attacker"
+                    ],
                     "verification_results": {
                         "avoid_known_weak_keys": true,
                         "avoid_known_weak_signature_algorithm": true,
@@ -606,22 +989,215 @@
                     }
                 },
                 {
-                    "certificate_chain_valid": true,
-                    "certificate_chain_validation_result": "Validated: digital_signature,key_encipherment,server_auth",
                     "certificate_expired": false,
                     "certificate_extensions": [
                         {
-                            "authorityKeyIdentifier": "59a4660652a07b95923ca394072796745bf93dd0",
-                            "authority_cert_issuer": "",
-                            "authority_cert_serial_number": null,
-                            "critical": false,
-                            "name": "authorityKeyIdentifier"
+                            "ca": true,
+                            "critical": true,
+                            "name": "basicConstraints",
+                            "path_length": null
                         },
                         {
-                            "critical": false,
-                            "name": "subjectKeyIdentifier",
-                            "subjectKeyIdentifier": "59cea41078e063cd592509b3e96c3cf1b64490b2"
+                            "content_commitment": false,
+                            "critical": true,
+                            "crl_sign": true,
+                            "data_encipherment": false,
+                            "digital_signature": true,
+                            "keyUsage": [
+                                "digital_signature",
+                                "key_cert_sign",
+                                "crl_sign"
+                            ],
+                            "key_agreement": false,
+                            "key_cert_sign": true,
+                            "key_encipherment": false,
+                            "name": "keyUsage"
+                        }
+                    ],
+                    "certificate_is_self_signed": false,
+                    "certificate_issuer_country": "US",
+                    "certificate_key_compromised": false,
+                    "certificate_known_compromised": false,
+                    "certificate_md5_fingerprint": "43c6bfaeecfead2f18c6886830fcc8e6",
+                    "certificate_not_after": "2038-01-17T00:00:00",
+                    "certificate_not_before": "2015-05-26T00:00:00",
+                    "certificate_public_key_curve": "",
+                    "certificate_public_key_exponent": 65537,
+                    "certificate_public_key_size": 2048,
+                    "certificate_public_key_type": "RSA",
+                    "certificate_serial_number": "30:36:36:63:39:66:63:66:39:39:62:66:38:63:30:61:33:39:65:32:66:30:37:38:38:61:34:33:65:36:39:36:33:36:35:62:63:61",
+                    "certificate_serial_number_decimal": 143266978916655856878034712317230054538369994,
+                    "certificate_serial_number_hex": "0x66c9fcf99bf8c0a39e2f0788a43e696365bca",
+                    "certificate_sha1_fingerprint": "8da7f965ec5efc37910f1c6e59fdc1cc6a6ede16",
+                    "certificate_sha256_fingerprint": "8ecde6884f3d87b1125ba31ac3fcb13d7016de7f57cc904fe1cb97c6ae98196e",
+                    "certificate_signature_algorithm": "sha256WithRSAEncryption",
+                    "certificate_spki_fingerprint": "fbe3018031f9586bcbf41727e417b7d1c45c2f47f93be372a17b96b50757d5a2",
+                    "certificate_subject_key_identifier": "8418cc8534ecbc0c94942e08599cc7b2104e0a08",
+                    "certificate_type": "Root CA",
+                    "certificate_valid": true,
+                    "certificate_version": 2,
+                    "compliance_results": {},
+                    "expiry_status": "Expires in 5759 days (16 years)",
+                    "trust_android": false,
+                    "trust_android_status": "Android 2.2 (Froyo) 2010 Not Present\nAndroid 2.3 (Gingerbread) 2010 Not Present\nAndroid 3 (Honeycomb) 2011 Not Present\nAndroid 4 (Ice Cream Sandwich) 2011 Not Present\nAndroid 4.4 (KitKat) 2013 Not Present\nAndroid 7 (Nougat) 2016 Not Present\nAndroid 8 (Oreo) 2017 Trusted\nAndroid 9 (Pie) 2018 Trusted\nAndroid 10 (Q) 2019 Trusted\nAndroid 11 2020 Trusted\nAndroid 12 2021 Trusted",
+                    "trust_ccadb": true,
+                    "trust_ccadb_status": "Root CA Certificate present in CCADB 2022.04.11 Trust Store (Mozilla, Microsoft, and Apple)",
+                    "trust_certifi": true,
+                    "trust_certifi_status": "Root CA Certificate present in Certifi certifi==2021.10.8 Trust Store (Django, requests, urllib, and anything based from these)",
+                    "trust_java": true,
+                    "trust_java_status": "Root CA Certificate present in Java SE java 18 2022-03-22 Trust Store",
+                    "trust_linux": true,
+                    "trust_linux_status": "Root CA Certificate present in Linux 5.17.1-arch1-1 Trust Store",
+                    "trust_russia": false,
+                    "trust_russia_status": "No Root CA Certificate in the Russian Trust Store",
+                    "verification_details": [
+                        "Your private key is exposed; Attackers in possession of the private key can impersonate the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware on your behalf and distribute to target systems as you identified as the attacker"
+                    ],
+                    "verification_results": {
+                        "avoid_known_weak_keys": true,
+                        "avoid_known_weak_signature_algorithm": true,
+                        "issued_past_tense": true,
+                        "not_expired": true,
+                        "not_revoked": true
+                    }
+                },
+                {
+                    "certificate_expired": false,
+                    "certificate_extensions": [
+                        {
+                            "ca": true,
+                            "critical": true,
+                            "name": "basicConstraints",
+                            "path_length": null
                         },
+                        {
+                            "content_commitment": false,
+                            "critical": true,
+                            "crl_sign": true,
+                            "data_encipherment": false,
+                            "digital_signature": false,
+                            "keyUsage": [
+                                "key_cert_sign",
+                                "crl_sign"
+                            ],
+                            "key_agreement": false,
+                            "key_cert_sign": true,
+                            "key_encipherment": false,
+                            "name": "keyUsage"
+                        }
+                    ],
+                    "certificate_is_self_signed": false,
+                    "certificate_issuer_country": "US",
+                    "certificate_key_compromised": false,
+                    "certificate_known_compromised": false,
+                    "certificate_md5_fingerprint": "173574af7b611cebf4f93ce2ee40f9a2",
+                    "certificate_not_after": "2037-12-31T23:59:59",
+                    "certificate_not_before": "2009-09-01T00:00:00",
+                    "certificate_public_key_curve": "",
+                    "certificate_public_key_exponent": 65537,
+                    "certificate_public_key_size": 2048,
+                    "certificate_public_key_type": "RSA",
+                    "certificate_serial_number": "30:30",
+                    "certificate_serial_number_decimal": 0,
+                    "certificate_serial_number_hex": "0x00",
+                    "certificate_sha1_fingerprint": "925a8f8d2c6d04e0665f596aff22d863e8256f3f",
+                    "certificate_sha256_fingerprint": "568d6905a2c88708a4b3025190edcfedb1974a606a13c6e5290fcb2ae63edab5",
+                    "certificate_signature_algorithm": "sha256WithRSAEncryption",
+                    "certificate_spki_fingerprint": "2b071c59a0a0ae76b0eadb2bad23bad4580b69c3601b630c2eaf0613afa83f92",
+                    "certificate_subject_key_identifier": "9c5f00dfaa01d7302b3888a2b86d4a9cf2119183",
+                    "certificate_type": "Root CA",
+                    "certificate_valid": true,
+                    "certificate_version": 2,
+                    "compliance_results": {},
+                    "expiry_status": "Expires in 5743 days (16 years)",
+                    "trust_android": true,
+                    "trust_android_status": "Android 2.2 (Froyo) 2010 Not Present\nAndroid 2.3 (Gingerbread) 2010 Trusted\nAndroid 3 (Honeycomb) 2011 Trusted\nAndroid 4 (Ice Cream Sandwich) 2011 Trusted\nAndroid 4.4 (KitKat) 2013 Trusted\nAndroid 7 (Nougat) 2016 Trusted\nAndroid 8 (Oreo) 2017 Trusted\nAndroid 9 (Pie) 2018 Trusted\nAndroid 10 (Q) 2019 Trusted\nAndroid 11 2020 Trusted\nAndroid 12 2021 Trusted",
+                    "trust_ccadb": true,
+                    "trust_ccadb_status": "Root CA Certificate present in CCADB 2022.04.11 Trust Store (Mozilla, Microsoft, and Apple)",
+                    "trust_certifi": true,
+                    "trust_certifi_status": "Root CA Certificate present in Certifi certifi==2021.10.8 Trust Store (Django, requests, urllib, and anything based from these)",
+                    "trust_java": true,
+                    "trust_java_status": "Root CA Certificate present in Java SE java 18 2022-03-22 Trust Store",
+                    "trust_linux": true,
+                    "trust_linux_status": "Root CA Certificate present in Linux 5.17.1-arch1-1 Trust Store",
+                    "trust_russia": false,
+                    "trust_russia_status": "No Root CA Certificate in the Russian Trust Store",
+                    "verification_details": [
+                        "Your private key is exposed; Attackers in possession of the private key can impersonate the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware on your behalf and distribute to target systems as you identified as the attacker"
+                    ],
+                    "verification_results": {
+                        "avoid_known_weak_keys": true,
+                        "avoid_known_weak_signature_algorithm": true,
+                        "issued_past_tense": true,
+                        "not_expired": true,
+                        "not_revoked": true
+                    }
+                },
+                {
+                    "certificate_expired": false,
+                    "certificate_extensions": [
+                        {
+                            "ca": true,
+                            "critical": false,
+                            "name": "basicConstraints",
+                            "path_length": null
+                        }
+                    ],
+                    "certificate_is_self_signed": false,
+                    "certificate_issuer_country": "US",
+                    "certificate_key_compromised": false,
+                    "certificate_known_compromised": false,
+                    "certificate_md5_fingerprint": "324a4bbbc863699bbe749ac6dd1d4624",
+                    "certificate_not_after": "2034-06-29T17:39:16",
+                    "certificate_not_before": "2004-06-29T17:39:16",
+                    "certificate_public_key_curve": "",
+                    "certificate_public_key_exponent": 3,
+                    "certificate_public_key_size": 2048,
+                    "certificate_public_key_type": "RSA",
+                    "certificate_serial_number": "30:30",
+                    "certificate_serial_number_decimal": 0,
+                    "certificate_serial_number_hex": "0x00",
+                    "certificate_sha1_fingerprint": "ad7e1c28b064ef8f6003402014c3d0e3370eb58a",
+                    "certificate_sha256_fingerprint": "1465fa205397b876faa6f0a9958e5590e40fcc7faa4fb7c2c8677521fb5fb658",
+                    "certificate_signature_algorithm": "sha1WithRSAEncryption",
+                    "certificate_spki_fingerprint": "15f14ac45c9c7da233d3479164e8137fe35ee0f38ae858183f08410ea82ac4b4",
+                    "certificate_subject_key_identifier": "bf5fb7d1cedd1f86f45b55acdcd710c20ea988e7",
+                    "certificate_type": "Root CA",
+                    "certificate_valid": false,
+                    "certificate_version": 2,
+                    "compliance_results": {},
+                    "expiry_status": "Expires in 4462 days (12 years)",
+                    "trust_android": true,
+                    "trust_android_status": "Android 2.2 (Froyo) 2010 Trusted\nAndroid 2.3 (Gingerbread) 2010 Trusted\nAndroid 3 (Honeycomb) 2011 Trusted\nAndroid 4 (Ice Cream Sandwich) 2011 Trusted\nAndroid 4.4 (KitKat) 2013 Trusted\nAndroid 7 (Nougat) 2016 Trusted\nAndroid 8 (Oreo) 2017 Trusted\nAndroid 9 (Pie) 2018 Trusted\nAndroid 10 (Q) 2019 Trusted\nAndroid 11 2020 Trusted\nAndroid 12 2021 Trusted",
+                    "trust_ccadb": true,
+                    "trust_ccadb_status": "Root CA Certificate present in CCADB 2022.04.11 Trust Store (Mozilla, Microsoft, and Apple)",
+                    "trust_certifi": true,
+                    "trust_certifi_status": "Root CA Certificate present in Certifi certifi==2021.10.8 Trust Store (Django, requests, urllib, and anything based from these)",
+                    "trust_java": true,
+                    "trust_java_status": "Root CA Certificate present in Java SE java 18 2022-03-22 Trust Store",
+                    "trust_linux": true,
+                    "trust_linux_status": "Root CA Certificate present in Linux 5.17.1-arch1-1 Trust Store",
+                    "trust_russia": false,
+                    "trust_russia_status": "No Root CA Certificate in the Russian Trust Store",
+                    "verification_details": [
+                        "The use of SHA1 with RSA Encryption is considered vulnerable. Macquarie University Australia 2009: identified vulnerabilities to collision attacks, later in 2017 Marc Stevens demonstrated collision proofs",
+                        "Your private key is exposed; Attackers in possession of the private key can impersonate the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware on your behalf and distribute to target systems as you identified as the attacker"
+                    ],
+                    "verification_results": {
+                        "avoid_known_weak_keys": true,
+                        "avoid_known_weak_signature_algorithm": false,
+                        "issued_past_tense": true,
+                        "not_expired": true,
+                        "not_revoked": true
+                    }
+                },
+                {
+                    "certificate_authority_key_identifier": "59a4660652a07b95923ca394072796745bf93dd0",
+                    "certificate_chain_valid": true,
+                    "certificate_chain_validation_result": "Validated: digital_signature,key_encipherment,server_auth",
+                    "certificate_common_name": "aws.amazon.com",
+                    "certificate_expired": false,
+                    "certificate_extensions": [
                         {
                             "critical": false,
                             "name": "subjectAltName",
@@ -720,19 +1296,56 @@
                         }
                     ],
                     "certificate_is_self_signed": false,
+                    "certificate_issuer": "Amazon",
+                    "certificate_issuer_country": "US",
                     "certificate_key_compromised": false,
                     "certificate_known_compromised": false,
+                    "certificate_md5_fingerprint": "8dde8ee83ca56938fbd511ce314ff0ee",
+                    "certificate_not_after": "2022-08-01T23:59:59",
+                    "certificate_not_before": "2021-08-05T00:00:00",
+                    "certificate_public_key_curve": "",
+                    "certificate_public_key_exponent": 65537,
+                    "certificate_public_key_size": 2048,
+                    "certificate_public_key_type": "RSA",
+                    "certificate_serial_number": "30:34:38:32:31:38:35:35:35:33:37:33:33:37:65:39:66:37:38:63:39:65:36:34:34:34:33:37:62:66:31:61",
+                    "certificate_serial_number_decimal": 5992404112800038766396119390833065754,
+                    "certificate_serial_number_hex": "0x4821855537337e9f78c9e644437bf1a",
+                    "certificate_sha1_fingerprint": "78647abcb1445770a0583a5d4fe2c4f71f83d522",
+                    "certificate_sha256_fingerprint": "e605733b316763755fd01f299520555d56a4d9d1e44c02a06a0102d335c826a9",
+                    "certificate_signature_algorithm": "sha256WithRSAEncryption",
+                    "certificate_spki_fingerprint": "6c58830c12a1a660e8825d035c7f2d991eb64bd1888ad2cdad20972d43c7cdfa",
+                    "certificate_subject": "/CN=aws.amazon.com",
+                    "certificate_subject_key_identifier": "59cea41078e063cd592509b3e96c3cf1b64490b2",
                     "certificate_type": "Leaf Certificate",
                     "certificate_valid": false,
                     "certificate_validation_oid": "2.23.140.1.2.1",
                     "certificate_validation_type": "Domain Validation (DV)",
+                    "certificate_version": 2,
                     "certification_authority_authorization": false,
+                    "client_certificate_expected": false,
+                    "client_renegotiation": false,
                     "compliance_results": {},
+                    "compression_support": true,
                     "dnssec": false,
                     "dnssec_algorithm": "",
-                    "expiry_status": "Expires in 140 days",
+                    "expiry_status": "Expires in 112 days",
+                    "forward_anonymity": true,
                     "host": "aws.amazon.com",
+                    "http1_1_support": true,
+                    "http1_support": false,
+                    "http2_cleartext_support": false,
+                    "http2_support": true,
+                    "http_coep": false,
+                    "http_coop": false,
+                    "http_corp": false,
+                    "http_csp": false,
+                    "http_expect_ct_report_uri": false,
+                    "http_hsts": true,
+                    "http_nosniff": true,
                     "http_status_code": 200,
+                    "http_unsafe_referrer": false,
+                    "http_xfo": true,
+                    "http_xss_protection": true,
                     "negotiated_cipher": "ECDHE-RSA-AES128-SHA",
                     "negotiated_cipher_bits": 128,
                     "negotiated_protocol": "TLSv1 (0x301)",
@@ -798,16 +1411,56 @@
                         "PSK-AES128-CBC-SHA256",
                         "PSK-AES128-CBC-SHA"
                     ],
-                    "peer_address": "99.86.140.74",
+                    "offered_tls_versions": [
+                        "TLSv1.1 (0x302)",
+                        "TLSv1.3 (0x304)",
+                        "TLSv1 (0x301)",
+                        "TLSv1.2 (0x303)"
+                    ],
+                    "peer_address": "65.8.131.71",
                     "port": 443,
                     "possible_phish_or_malicious": false,
                     "preferred_protocol": "TLSv1.3 (0x304)",
                     "revocation_crlite": false,
+                    "revocation_ocsp_must_staple": false,
+                    "revocation_ocsp_reason": null,
+                    "revocation_ocsp_response": "Successful",
+                    "revocation_ocsp_stapling": true,
                     "revocation_ocsp_status": "Good",
+                    "revocation_ocsp_time": null,
+                    "scsv": false,
+                    "session_resumption_caching": true,
+                    "session_resumption_ticket_hint": true,
+                    "session_resumption_tickets": true,
+                    "sni_support": true,
+                    "strong_cipher": false,
+                    "tls_long_handshake_intolerance": false,
+                    "tls_version_interference": true,
+                    "tls_version_interference_versions": [
+                        "SSLv3 (0x300)",
+                        "SSLv2 (0x2ff)"
+                    ],
+                    "tls_version_intolerance": true,
+                    "tls_version_intolerance_versions": [
+                        "TLSv1.4 (0x305)",
+                        "TLSv1.8 (0x309)",
+                        "TLSv2 (0x400)",
+                        "TLSv2.1 (0x401)",
+                        "TLSv2.3 (0x404)"
+                    ],
                     "tlsa": false,
-                    "trust_russia": false,
-                    "trust_russia_status": "",
-                    "verification_details": [],
+                    "verification_details": [
+                        "Your private key is exposed; Attackers in possession of the private key can impersonate the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware on your behalf and distribute to target systems as you identified as the attacker",
+                        "This domain is not enabled for DNSSEC (rfc6840), DS and DNSKEY records were not provided",
+                        "DV Certificates are favored by attackers and seeing one used raises skepticism. DV Certificates are issued for ease-of-use and not for security purposes, and there are known trivial DNS take-over attacks enabled by DV Certificates. An OV or EV Certificate is the distinct opposite of a DV Certificate, attackers avoid using them, they are issued for security purposes specifically as an effective mitigation to the known DNS take-over attacks.",
+                        "This domain is not enabled for CAA verification (rfc8659), CAA DNS records were not provided",
+                        "Server preferred protocol TLSv1.3 (0x304) was avoided and TLSv1 (0x301) was negotiated instead, consider Signaling Cipher Suite Value (SCSV) for Preventing Protocol Downgrade Attacks (rfc7507)",
+                        "TLSv1 (0x301) 2018 deprecated by PCI Council. Also in 2018, Apple, Google, Microsoft, and Mozilla jointly announced deprecation. Officially deprecated in 2020 (rfc8996)",
+                        "Session Resumption (caching) This server has confidentiality vulnerability and a tracking issue affecting privacy; rfc5246 recommends a lifetime of session IDs of less than 24 hours where afterwards the client attempts a resumption and only then the server falls back to a full handshake. The server can link both PSKs to the same user, session resumption caching allows a user identity to be shared with third-party trackers observing traffic on this server. Prior to TLS 1.3 this was a 0-RTT resumption which allows malicious actors to read all of the past communications using the same PSK. The flaw was detailed by rfc5077 in 2008 and web server default configurations have not widely adopted the changes.",
+                        "Session Resumption (tickets) A single key is used for the sessions of multiple users and is intended to mitigate privacy concerns of individual tracking, though a ticket identifier can be reused by a malicious actor for multiple or subsequent connections and decrypt all messages as resumed connections don't perform any Diffie-Hellman exchange, so they don't offer Forward Secrecy against the compromise of the STEK. This vulnerability was first identified by Adam Langley in 2013 which was built on works by M. Perry. in 2012",
+                        "This webserver offers TLS compression so that when a client also supports compression several known exploits exist that allow an attacker to perform session hijacking on an authenticated session. BEAST (2012), CRIME (2012), and BREACH (2013) are the well known attacks however various lesser known attacks exist such as \"ssl, gone in 30 seconds\" (2013) and other related Information Leakage Vulnerabilities",
+                        "Your server is not configured to accept clients that only support obsolete TLS versions, these clients will be shown a error \"ERR_SSL_VERSION_INTERFERENCE\" and not negotiate a secure connection to your server."
+                    ],
                     "verification_results": {
                         "avoid_deprecated_dnssec_algorithms": true,
                         "avoid_deprecated_protocols": false,
@@ -830,6 +1483,9 @@
             ]
         }
     ],
-    "execution_duration_seconds": 16.555717,
-    "generator": "trivialscan==2.1.1"
+    "execution_duration_seconds": 20.427151,
+    "generator": "trivialscan==2.4.0",
+    "targets": [
+        "aws.amazon.com:443"
+    ]
 }

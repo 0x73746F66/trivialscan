@@ -288,7 +288,9 @@ TRUST_KEYS = [
     'trust_linux',
     'trust_linux_status',
     'trust_certifi',
-    'trust_certifi_status'
+    'trust_certifi_status',
+    'trust_russia',
+    'trust_russia_status',
 ]
 ROOT_SKIP = NEVER_SHOW + SERVER_KEYS + [
     'certificate_authority_key_identifier',
