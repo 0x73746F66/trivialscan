@@ -1,139 +1,138 @@
-      Intermediate CA: /C=US/O=Amazon/OU=Server CA      
-                      1B/CN=Amazon                      
-                                                        
-                                           Result       
- ────────────────────────────────────────────────────── 
-                       Certificate Valid   Valid        
-              Certificate is not expired   Pass         
-          Certificate issued in the past   Pass         
-                  Subject CN was defined   Pass         
-           Not a self-signed Certificate   Pass         
-   Avoid known weak signature algorithms   Pass         
-  Avoid known weak public key algorithms   Pass         
-           Certificate chain not revoked   Pass         
-                 Compromised Certificate   OK           
-                 Compromised Private Key   OK           
-              Revocation: Mozilla CRLite   Not Revoked  
-       Indicators of Phishing or Malware   OK           
-      MinTsifry Rossii Database (Russia)   Not Trusted  
-                                           Unknown      
-                                                        
-                Issuer: Amazon Root CA 1                
-             Expires in 1314 days (4 years)             
-  Intermediate CA: /C=US/O=Amazon/CN=Amazon Root CA 1   
-                                                        
-                                           Result       
- ────────────────────────────────────────────────────── 
-                       Certificate Valid   Valid        
-              Certificate is not expired   Pass         
-          Certificate issued in the past   Pass         
-                  Subject CN was defined   Pass         
-           Not a self-signed Certificate   Pass         
-   Avoid known weak signature algorithms   Pass         
-  Avoid known weak public key algorithms   Pass         
-           Certificate chain not revoked   Pass         
-                 Compromised Certificate   OK           
-                 Compromised Private Key   OK           
-              Revocation: Mozilla CRLite   Not Revoked  
-       Indicators of Phishing or Malware   OK           
-      MinTsifry Rossii Database (Russia)   Not Trusted  
-                                           Unknown      
-                                                        
-Issuer: Starfield Services Root Certificate Authority - 
-                           G2                           
-            Expires in 5770 days (16 years)             
-      Root CA: /C=US/O=Starfield Technologies, Inc./OU=Starfield Class 2 Certification Authority       
-                                                                                                       
-                                           Result                                                      
- ───────────────────────────────────────────────────────────────────────────────────────────────────── 
-                       Certificate Valid   Not Trusted                                                 
-              Certificate is not expired   Pass                                                        
-          Certificate issued in the past   Pass                                                        
-   Avoid known weak signature algorithms   Fail                                                        
-  Avoid known weak public key algorithms   Pass                                                        
-           Certificate chain not revoked   Pass                                                        
-                 Compromised Certificate   OK                                                          
-                 Compromised Private Key   OK                                                          
-              Common CA Database (CCADB)   Trusted                                                     
-                                    Java   Trusted                                                     
-                                 Android   Trusted                                                     
-                                   Linux   Trusted                                                     
-                                  Python   Trusted                                                     
-      MinTsifry Rossii Database (Russia)   Not Trusted                                                 
-                                           No Root CA Certificate in the MinTsifry Rossii Trust Store  
-                                                                                                       
-                                    Expires in 4489 days (12 years)                                    
-                    Intermediate CA:                    
-/C=US/ST=Arizona/L=Scottsdale/O=Starfield Technologies, 
-Inc./CN=Starfield Services Root Certificate Authority - 
-                           G2                           
-                                                        
-                                           Result       
- ────────────────────────────────────────────────────── 
-                       Certificate Valid   Valid        
-              Certificate is not expired   Pass         
-          Certificate issued in the past   Pass         
-                  Subject CN was defined   Pass         
-           Not a self-signed Certificate   Pass         
-   Avoid known weak signature algorithms   Pass         
-  Avoid known weak public key algorithms   Pass         
-           Certificate chain not revoked   Pass         
-                 Compromised Certificate   OK           
-                 Compromised Private Key   OK           
-              Revocation: Mozilla CRLite   Not Revoked  
-       Indicators of Phishing or Malware   OK           
-      MinTsifry Rossii Database (Russia)   Not Trusted  
-                                           Unknown      
-                                                        
-                      Issuer: None                      
-            Expires in 4488 days (12 years)             
-                          Leaf Certificate aws.amazon.com:443 (99.86.140.74)                           
-                                                                                                       
-                                            Result                                                     
- ───────────────────────────────────────────────────────────────────────────────────────────────────── 
-                        Certificate Valid   Validation Errors                                          
-                  Certificate Chain Valid   Valid                                                      
-      Certificate Chain Validation Result   Validated: digital_signature,key_encipherment,server_auth  
-               Certificate is not expired   Pass                                                       
-           Certificate issued in the past   Pass                                                       
-                   Subject CN was defined   Pass                                                       
-              Subject CN has valid syntax   Pass                                                       
-  Subject CN matches the server host name   Pass                                                       
-            Not a self-signed Certificate   Pass                                                       
-    Avoid known weak signature algorithms   Pass                                                       
-   Avoid known weak public key algorithms   Pass                                                       
-           Avoid deprecated TLS protocols   Fail                                                       
-       Avoid deprecated DNSSEC algorithms   Pass                                                       
-                         Leaf is not a CA   Pass                                                       
-            Key usage appropriate for TLS   Pass                                                       
-            Certificate chain not revoked   Pass                                                       
-           Root CA Certificate is trusted   Pass                                                       
-                    OCSP Staple satisfied   Pass                                                       
-      Certificate Owner Validation Method   Domain Validation (DV)                                     
-                                      CAA   Absent                                                     
-                  Compromised Certificate   OK                                                         
-                  Compromised Private Key   OK                                                         
-                         Revocation: OCSP   Good                                                       
-               Revocation: Mozilla CRLite   Not Revoked                                                
-                      Negotiated Protocol   TLSv1 (0x301)                                              
-                        Negotiated Cipher   ECDHE-RSA-AES128-SHA                                       
-                   Negotiated Cipher bits   128                                                        
-                   Weak negotiated cipher   Present                                                    
-                                TLSA/DANE   Absent                                                     
-                                   DNSSEC   Absent                                                     
-                         DNSSEC Algorithm   N/A                                                        
-                Server Preferred Protocol   TLSv1.3 (0x304)                                            
-                HTTP response status code   200                                                        
-        Indicators of Phishing or Malware   OK                                                         
-       MinTsifry Rossii Database (Russia)   Not Trusted                                                
-                                            Unknown                                                    
-                                                                                                       
-                                            Issuer: Amazon                                             
-                                          Expires in 140 days                                          
+      Intermediate CA: /C=US/O=Amazon/OU=Server CA
+                      1B/CN=Amazon
+
+                                           Result
+ ──────────────────────────────────────────────────────
+                       Certificate Valid   Valid
+              Certificate is not expired   Pass
+          Certificate issued in the past   Pass
+                  Subject CN was defined   Pass
+           Not a self-signed Certificate   Pass
+   Avoid known weak signature algorithms   Pass
+  Avoid known weak public key algorithms   Pass
+           Certificate chain not revoked   Pass
+                 Compromised Certificate   OK
+                 Compromised Private Key   OK
+              Revocation: Mozilla CRLite   Not Revoked
+       Indicators of Phishing or Malware   OK
+      MinTsifry Rossii Database (Russia)   Not Trusted
+                                           Unknown
+
+                Issuer: Amazon Root CA 1
+             Expires in 1314 days (4 years)
+  Intermediate CA: /C=US/O=Amazon/CN=Amazon Root CA 1
+
+                                           Result
+ ──────────────────────────────────────────────────────
+                       Certificate Valid   Valid
+              Certificate is not expired   Pass
+          Certificate issued in the past   Pass
+                  Subject CN was defined   Pass
+           Not a self-signed Certificate   Pass
+   Avoid known weak signature algorithms   Pass
+  Avoid known weak public key algorithms   Pass
+           Certificate chain not revoked   Pass
+                 Compromised Certificate   OK
+                 Compromised Private Key   OK
+              Revocation: Mozilla CRLite   Not Revoked
+       Indicators of Phishing or Malware   OK
+      MinTsifry Rossii Database (Russia)   Not Trusted
+                                           Unknown
+
+Issuer: Starfield Services Root Certificate Authority -
+                           G2
+            Expires in 5770 days (16 years)
+      Root CA: /C=US/O=Starfield Technologies, Inc./OU=Starfield Class 2 Certification Authority
+
+                                           Result
+ ─────────────────────────────────────────────────────────────────────────────────────────────────────
+                       Certificate Valid   Not Trusted
+              Certificate is not expired   Pass
+          Certificate issued in the past   Pass
+   Avoid known weak signature algorithms   Fail
+  Avoid known weak public key algorithms   Pass
+           Certificate chain not revoked   Pass
+                 Compromised Certificate   OK
+                 Compromised Private Key   OK
+              Common CA Database (CCADB)   Trusted
+                                    Java   Trusted
+                                 Android   Trusted
+                                   Linux   Trusted
+                                  Python   Trusted
+      MinTsifry Rossii Database (Russia)   Not Trusted
+                                           No Root CA Certificate in the MinTsifry Rossii Trust Store
+
+                                    Expires in 4489 days (12 years)
+                    Intermediate CA:
+/C=US/ST=Arizona/L=Scottsdale/O=Starfield Technologies,
+Inc./CN=Starfield Services Root Certificate Authority -
+                           G2
+
+                                           Result
+ ──────────────────────────────────────────────────────
+                       Certificate Valid   Valid
+              Certificate is not expired   Pass
+          Certificate issued in the past   Pass
+                  Subject CN was defined   Pass
+           Not a self-signed Certificate   Pass
+   Avoid known weak signature algorithms   Pass
+  Avoid known weak public key algorithms   Pass
+           Certificate chain not revoked   Pass
+                 Compromised Certificate   OK
+                 Compromised Private Key   OK
+              Revocation: Mozilla CRLite   Not Revoked
+       Indicators of Phishing or Malware   OK
+      MinTsifry Rossii Database (Russia)   Not Trusted
+                                           Unknown
+
+                      Issuer: None
+            Expires in 4488 days (12 years)
+                          Leaf Certificate aws.amazon.com:443 (99.86.140.74)
+
+                                            Result
+ ─────────────────────────────────────────────────────────────────────────────────────────────────────
+                        Certificate Valid   Validation Errors
+                  Certificate Chain Valid   Valid
+      Certificate Chain Validation Result   Validated: digital_signature,key_encipherment,server_auth
+               Certificate is not expired   Pass
+           Certificate issued in the past   Pass
+                   Subject CN was defined   Pass
+              Subject CN has valid syntax   Pass
+  Subject CN matches the server host name   Pass
+            Not a self-signed Certificate   Pass
+    Avoid known weak signature algorithms   Pass
+   Avoid known weak public key algorithms   Pass
+           Avoid deprecated TLS protocols   Fail
+       Avoid deprecated DNSSEC algorithms   Pass
+                         Leaf is not a CA   Pass
+            Key usage appropriate for TLS   Pass
+            Certificate chain not revoked   Pass
+           Root CA Certificate is trusted   Pass
+                    OCSP Staple satisfied   Pass
+      Certificate Owner Validation Method   Domain Validation (DV)
+                                      CAA   Absent
+                  Compromised Certificate   OK
+                  Compromised Private Key   OK
+                         Revocation: OCSP   Good
+               Revocation: Mozilla CRLite   Not Revoked
+                      Negotiated Protocol   TLSv1 (0x301)
+                        Negotiated Cipher   ECDHE-RSA-AES128-SHA
+                   Negotiated Cipher bits   128
+                   Weak negotiated cipher   Present
+                                TLSA/DANE   Absent
+                                   DNSSEC   Absent
+                         DNSSEC Algorithm   N/A
+                Server Preferred Protocol   TLSv1.3 (0x304)
+                HTTP response status code   200
+        Indicators of Phishing or Malware   OK
+       MinTsifry Rossii Database (Russia)   Not Trusted
+                                            Unknown
+
+                                            Issuer: Amazon
+                                          Expires in 140 days
 ███████╗
 ██╔════╝
 █████╗
 ██╔══╝
 ██║
 ╚═╝
-

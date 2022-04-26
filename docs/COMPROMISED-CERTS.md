@@ -11,6 +11,7 @@ Various compromises investigated and the result
 Lesser known issue in 2018 resulted in removal of the Root CA issuer entirely
 
 Results:
+
 - our use of `tlstrust` will uncover these via CCADB
 
 ### GoDaddy 2014-2018
@@ -22,6 +23,7 @@ Captured [in bugzilla](https://wiki.mozilla.org/CA/Responding_To_An_Incident#Inc
 The [Symantec](https://groups.google.com/a/chromium.org/g/blink-dev/c/eUAKwjihhBs/m/El1mH8S6AwAJ) trust issue included 2k certificates that were not associated with registered domains, therefore many were not considered a risk to the browsers! Even though each of them are capable of being used maliciously, they simply can't be a server 'leaf' Certificate, so for the purposes of `trivialscan` we will need to distrust any that appear in a certificate chain.
 
 Results:
+
 - Appear as a Root CA; Root stores have all revoked the Symantec so our use of `tlstrust` will uncover these
 - Appear as a peer/intermediate; CRLite will report these as revoked, which leveraged OneCRL for intermediate certificates
 - Appear as a 'leaf' DigiCert's acquisition of Symantec required these to be revoked, so CRLite will report these via the CRL/OCSP

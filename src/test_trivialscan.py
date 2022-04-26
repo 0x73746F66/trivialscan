@@ -5,17 +5,19 @@ from trivialscan.validator import LeafCertValidator, PeerCertValidator
 from trivialscan.transport import Transport
 from trivialscan import analyse, exceptions
 
+
 class TestValidator:
-    _verify :LeafCertValidator
-    host = 'commbank.com.au'
+    _verify: LeafCertValidator
+    host = "commbank.com.au"
+
     def _setup(self):
-        if not hasattr(self, '_transport'):
+        if not hasattr(self, "_transport"):
             self._transport = Transport(self.host)
             self._transport.connect_least_secure()
             self._verify = LeafCertValidator()
             self._verify.mount(self._transport)
 
-    def test_tranport_mount(self):
+    def test_transport_mount(self):
         self._setup()
         assert isinstance(self._verify.transport, Transport)
 
@@ -53,18 +55,18 @@ class TestValidator:
 
     def test_no_port(self):
         with pytest.raises(exceptions.ValidationError):
-            analyse(self.host, port='80')
+            analyse(self.host, port="80")
 
     def test_bad_cafiles(self):
         with pytest.raises(TypeError):
-            analyse(self.host, cafiles='/bad.pem')
+            analyse(self.host, cafiles="/bad.pem")
 
     def test_no_sni(self):
         with pytest.raises(TypeError):
             analyse(self.host, use_sni=None)
 
     def test_client_pem(self):
-        pem = '/tmp/client.pem'
+        pem = "/tmp/client.pem"
         p = Path(pem)
         p.touch()
         with pytest.raises(SSL.Error):
@@ -80,7 +82,7 @@ class TestValidator:
 
     def test_no_connection(self):
         with pytest.raises(exceptions.ValidationError):
-            analyse(host='not-a-real.site')
+            analyse(host="not-a-real.site")
 
     def test_verify_helper(self):
         is_valid, results = analyse(self.host)
@@ -88,6 +90,6 @@ class TestValidator:
         assert len(results) > 1
 
     def test_with_tmp_path_prefix(self):
-        is_valid, results = analyse(self.host, tmp_path_prefix='/tmp')
+        is_valid, results = analyse(self.host, tmp_path_prefix="/tmp")
         assert isinstance(is_valid, bool)
         assert len(results) > 1

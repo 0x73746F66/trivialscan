@@ -1,4 +1,13 @@
+from pathlib import Path
 from setuptools import setup, find_packages
+
+requirements = Path('requirements.txt')
+install_requires = []
+for line in requirements.read_text(encoding='utf8').splitlines():
+    req = line.strip()
+    if req.startswith('#'):
+        continue
+    install_requires.append(req)
 
 setup(
     name="trivialscan",
@@ -209,7 +218,7 @@ optional arguments:
 ## [Change Log](https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/z.change-log.md)
     """,
     long_description_content_type="text/markdown",
-    url="https://gitlab.com/trivialsec/py-tls-veryify",
+    url="https://gitlab.com/trivialsec/trivialscan",
     project_urls={
         "Source": "https://gitlab.com/trivialsec/trivialscan",
         "Documentation": "https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/0.index.md",
@@ -222,39 +231,8 @@ optional arguments:
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     ],
     include_package_data=True,
-    install_requires=[
-        'asn1crypto==1.4.0',
-        'certifi==2021.5.30',
-        'certvalidator==0.11.1',
-        'cffi==1.15.0',
-        'charset-normalizer==2.0.12',
-        'colorama==0.4.4',
-        'commonmark==0.9.1',
-        'cryptography==35.0.0',
-        'decorator==5.1.1',
-        'dnspython==2.2.0',
-        'filelock==3.6.0',
-        'hyperframe==6.0.1',
-        'idna==3.3',
-        'moz-crlite-query==0.5.0',
-        'oscrypto==1.2.1',
-        'progressbar2==4.0.0',
-        'py==1.11.0',
-        'pyOpenSSL==21.0.0',
-        'pycparser==2.21',
-        'pygments==2.11.2',
-        'python-utils==3.1.0',
-        'requests==2.27.1',
-        'requests-file==1.5.1',
-        'retry==0.9.2',
-        'rich==11.0.0',
-        'six==1.16.0',
-        'tldextract==3.2.0',
-        'tlstrust==2.4.1',
-        'urllib3==1.26.8',
-        'validators==0.18.2',
-    ],
-    entry_points = {
+    install_requires=install_requires,
+    entry_points={
         'console_scripts': ['trivialscan=trivialscan.cli:cli'],
     },
     packages=find_packages(where="src"),

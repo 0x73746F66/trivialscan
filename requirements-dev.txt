@@ -8,3 +8,8 @@ pytest
 build
 twine
 coverage
+typed-ast
+black
+pre-commit
+detect-secrets
+pip-audit

@@ -15,7 +15,8 @@ if __name__ == "__main__":
         if not chk_path.is_file():
             print(f'not a file {cert_file}')
         file_type = FILETYPE_ASN1
-        if cert_file.endswith('.crt') or cert_file.endswith('.pem'): file_type = FILETYPE_PEM
+        if cert_file.endswith('.crt') or cert_file.endswith('.pem'):
+            file_type = FILETYPE_PEM
         cert = load_certificate(file_type, chk_path.read_bytes())
         print(
             dump_certificate(FILETYPE_TEXT, cert).decode()

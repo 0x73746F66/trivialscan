@@ -4,11 +4,13 @@ from trivialscan.metadata import Metadata
 from trivialscan.transport import Transport
 from trivialscan.validator import LeafCertValidator
 
+
 class TestMetadata:
-    _verify :LeafCertValidator
-    host = 'http2.github.io'
+    _verify: LeafCertValidator
+    host = "http2.github.io"
+
     def setup(self):
-        if not hasattr(self, '_transport'):
+        if not hasattr(self, "_transport"):
             self._transport = Transport(self.host)
             self._transport.connect_least_secure()
             self._verify = LeafCertValidator()
@@ -19,9 +21,16 @@ class TestMetadata:
         assert isinstance(self._verify.metadata, Metadata)
         assert self._verify.metadata.host == self.host
         assert 443 == self._verify.metadata.port
-        assert self._verify.metadata.certificate_public_key_type in ['RSA', 'DSA', 'EC', 'DH']
+        assert self._verify.metadata.certificate_public_key_type in [
+            "RSA",
+            "DSA",
+            "EC",
+            "DH",
+        ]
         assert isinstance(self._verify.metadata.certificate_public_key_size, int)
-        assert len(self._verify.metadata.certificate_serial_number.replace(':', '')) == 64
+        assert (
+            len(self._verify.metadata.certificate_serial_number.replace(":", "")) == 64
+        )
         assert isinstance(self._verify.metadata.certificate_serial_number_decimal, int)
         assert isinstance(self._verify.metadata.certificate_serial_number_hex, str)
         assert isinstance(self._verify.metadata.certificate_issuer, str)
@@ -35,11 +44,17 @@ class TestMetadata:
         assert datetime.fromisoformat(self._verify.metadata.certificate_not_after)
         assert isinstance(self._verify.metadata.certificate_san, list)
         assert isinstance(self._verify.metadata.certificate_subject_key_identifier, str)
-        assert isinstance(self._verify.metadata.certificate_authority_key_identifier, str)
+        assert isinstance(
+            self._verify.metadata.certificate_authority_key_identifier, str
+        )
         assert isinstance(self._verify.metadata.certificate_extensions, list)
         assert isinstance(self._verify.metadata.certificate_is_self_signed, bool)
         assert isinstance(self._verify.metadata.negotiated_cipher, str)
-        assert self._verify.metadata.negotiated_protocol in [constants.TLS1_0_LABEL, constants.TLS1_1_LABEL, constants.TLS1_2_LABEL]
+        assert self._verify.metadata.negotiated_protocol in [
+            constants.TLS1_0_LABEL,
+            constants.TLS1_1_LABEL,
+            constants.TLS1_2_LABEL,
+        ]
         assert isinstance(self._verify.metadata.sni_support, bool)
         assert isinstance(self._verify.metadata.revocation_ocsp_stapling, bool)
         assert isinstance(self._verify.metadata.revocation_ocsp_must_staple, bool)

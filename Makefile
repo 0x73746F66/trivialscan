@@ -1,4 +1,6 @@
 SHELL := /bin/bash
+-include .env
+export $(shell sed 's/=.*//' .env)
 .PHONY: help
 
 help: ## This help.
@@ -6,13 +8,18 @@ help: ## This help.
 
 .DEFAULT_GOAL := help
 
-setup: ## setup for development of this project
-	python -m pip install --progress-bar off -U pip
-	python -m pip install --progress-bar off -U -r dev-requirements.txt
-	python -m pip install --progress-bar off -e .
+deps: ## install dependancies for development of this project
+	pip install -U pip
+	pip install -U -r requirements-dev.txt
+	pip install -e .
+
+setup: deps ## setup for development of this project
+	pre-commit install --hook-type pre-push --hook-type pre-commit
+	@ [ -f .secrets.baseline ] || ( detect-secrets scan > .secrets.baseline )
+	detect-secrets audit .secrets.baseline
 
 install: build ## Install the package
-	python -m pip install -U --progress-bar off --no-cache-dir --force-reinstall dist/trivialscan-$(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')-py2.py3-none-any.whl
+	pip install -U dist/trivialscan-$(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')-py2.py3-none-any.whl
 
 check: ## check build
 	python setup.py egg_info
@@ -34,16 +41,11 @@ publish: ## upload to pypi.org
 	python -m twine upload dist/*
 
 test-local: ## Prettier test outputs
-	pylint --exit-zero -f colorized --persistent=y -r y --jobs=0 src/**/*.py
+	pre-commit run --all-files
 	semgrep -q --strict --timeout=0 --config=p/r2c-ci --lang=py src/**/*.py
-
-pylint-ci: ## run pylint for CI
-	pylint --exit-zero --persistent=n -f json -r n --jobs=0 --errors-only src/**/*.py > pylint.json
 
 semgrep-sast-ci: ## run core semgrep rules for CI
 	semgrep --disable-version-check -q --strict --error -o semgrep-ci.json --json --timeout=0 --config=p/r2c-ci --lang=py src/**/*.py
-
-test-all: semgrep-sast-ci pylint-ci ## Run all CI tests
 
 run-json: ## www.trivialsec.com
 	@python src/main.py www.trivialsec.com -O trivialscan_www.trivialsec.com.json

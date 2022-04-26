@@ -1,7 +1,6 @@
 # Contributing
 
-Releases
------------
+## Releases
 
 Follow SemVer:
 
@@ -9,8 +8,7 @@ Follow SemVer:
 - minor releases should be backwards compatible so any deprecations must be indicated to end-users, and this may require a wrapper function for the deprecated function using the old name that holds the deprecation warning OR supporting both deprecated and new functionality using a flag for the new and default to the old
 - patch releases must be completely backwards compatible, so only add functionality, do not delete anything. if a change is made consider minor release instead. Of course a patch may be used to restore broken functionality so ensure the broken version is yanked once patched
 
-Merge Checklist
------------
+## Merge Checklist
 
 - Version bump in `setup.py` and `cli.py`
 - Coverage `make test` remains same or better, never reduce coverage percentage
@@ -21,12 +19,12 @@ Merge Checklist
 - Update the docs
 - Complete a change log entry
 
-Project non-goals
------------
+## Project non-goals
 
 One main rule here, no rewriting logic that is provided via existing packages in the ecosystem where possible, it is not hard to literally search the code Github and if it is compatible with the license, or better it is on PyPi, integrate it directly or fork it.
 
 Currently we utilise:
+
 - `pyOpenSSL` Python bindings for OpenSSL
 - `certifi` is self-explanatory
 - `cryptography` is a powerful tool that can be used for this purpose
@@ -34,8 +32,7 @@ Currently we utilise:
 
 Less of a rule, just good advice. If the functionality you want to add is significantly large, complex, or niche - consider making it a separate library and then integrate it here. [tlstrust](https://pypi.org/project/tlstrust/) is an example where it was both large and complex enough to be best suited in it's own package but still fully integrated into this tool.
 
-What to contribute?
------------
+## What to contribute?
 
 Anything you want, or one of these:
 

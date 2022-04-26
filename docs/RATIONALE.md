@@ -19,6 +19,7 @@ Firstly, `pyOpenSSL` is stable and the only other alternative I know of is `nass
 ## Why another python library for Certificate verification?
 
 We have several existing options in Python;
+
 - `pyOpenSSL` Python bindings for OpenSSL
 - `certifi` is self-explanatory
 - `cryptography` is a powerful tool that can be used for this purpose
@@ -72,6 +73,7 @@ Maybe vulnerabilities in SPDY or NPN will be disclosed via UVI (Cloud Security A
 ## Planning HPKP support
 
 Because browsers no longer validated HPKP, It is common knowledge that attackers were able to abuse the browser security model.
+
 > This only effected websites that did not have any use for HPKP
 
 When an attacker gained access to your server by any means, they can (once you were already compromised) then modify the webserver HTTP response headers by including a HPKP policy when it was not expected. This made client browsers block the compromised website, resulting in legitimate visitors not being able to load your website at all.

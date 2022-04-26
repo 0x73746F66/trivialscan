@@ -1,589 +1,587 @@
-                                     Intermediate CA: /C=US/O=Amazon/OU=Server CA 1B/CN=Amazon                                      
-                                                                                                                                    
-                                           Result                                                                                   
- ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-                       Certificate Valid   Valid                                                                                    
-                                  Note 1   Your private key is exposed; Attackers in possession of the private key can impersonate  
-                                           the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware  
-                                           on your behalf and distribute to target systems as you identified as the attacker        
-              Certificate is not expired   Pass                                                                                     
-          Certificate issued in the past   Pass                                                                                     
-                  Subject CN was defined   Pass                                                                                     
-           Not a self-signed Certificate   Pass                                                                                     
-   Avoid known weak signature algorithms   Pass                                                                                     
-  Avoid known weak public key algorithms   Pass                                                                                     
-           Certificate chain not revoked   Pass                                                                                     
-                          [PCI] Key Size   Pass                                                                                     
-                         [FIPS] Key Size   Pass                                                                                     
-                         [NIST] Key Size   Pass                                                                                     
-        Derived private key (PEM format)   -----BEGIN PRIVATE KEY-----                                                              
-                                           MIIBJwIBADANBgkqhkiG9w0BAQEFAASCAREwggENAgEAAoIBAQDCThZn3c68asg3                         
-                                           Wuw6MLAd5tES6BIoSMzoKcG5blPVo+sDORrMd4f2AbnZcMzPa43j4wNxhplty6aU                         
-                                           Kk4T1qe9BOwKFjwK6zmxxLVYo7bHViXsPlJ6qOMpFge5blDP+18x+B26A0piiQOu                         
-                                           PkfyDyeR4xQghfj66Yo19V+emU3nazfvpFA+ROz6WoVmB5x+F2pV8xeKNR7u6azD                         
-                                           dU5YVX1TawprmxRC1+WsAYmz6qP+z8ArDITC2FMVy2fw0IjKOtEXc/VfmtTFch5+                         
-                                           AfGYMGMqqvJ6LcXiAhqG5TI+Dr0RtM88k+8XUBCeQ8IGKuANaL7TiItKZYxK1MMu                         
-                                           TJtV9IblAgMBAAE=                                                                         
-                                           -----END PRIVATE KEY-----                                                                
-                                                                                                                                    
-                         Public Key Type   RSA                                                                                      
-                        Public Key Curve   N/A                                                                                      
-                     Public Key Exponent   65537                                                                                    
-                         Public Key Size   2048                                                                                     
-                                  Serial   30:36:37:66:39:34:35:37:38:35:38:37:65:38:61:63:37:37:64:65:62:32:35:33:33:32:35:62:62…  
-                        Serial (decimal)   144918209630989264145272943054026349679957517                                            
-                            Serial (hex)   0x67f94578587e8ac77deb253325bbc998b560d                                                  
-                     Certificate Version   2                                                                                        
-                     Issuer Country Code   US                                                                                       
-                     Signature Algorithm   sha256WithRSAEncryption                                                                  
-                    Fingerprint (sha256)   F5 5F 9F FC B8 3C 73 45 32 61 60 1C 7E 04 4D B1 5A 0F 03 4B 93 C0 58 30 F2 86 35 EF 88   
-                                           9C F6 70                                                                                 
-                      Fingerprint (sha1)   91 7E 73 2D 33 0F 9A 12 40 4F 73 D8 BE A3 69 48 B9 29 DF FC                              
-                       Fingerprint (md5)   EB 26 8E 55 D4 34 FE BD A3 6A 97 9A 44 65 4B 6D                                          
-                      Fingerprint (SPKI)   25 23 33 A8 E3 AB B7 23 93 D6 49 9A BB AC CA 86 04 FA EF A8 46 81 CC C3 E5 53 1D 44 CC   
-                                           89 64 50                                                                                 
-                              Not Before   2015-10-22T00:00:00                                                                      
-                               Not After   2025-10-19T00:00:00                                                                      
-            Subject Key Identifier (SKI)   59 A4 66 06 52 A0 7B 95 92 3C A3 94 07 27 96 74 5B F9 3D D0                              
-          Authority Key Identifier (AKI)   84 18 CC 85 34 EC BC 0C 94 94 2E 08 59 9C C7 B2 10 4E 0A 08                              
-                 Compromised Certificate   OK                                                                                       
-                 Compromised Private Key   OK                                                                                       
-              Revocation: Mozilla CRLite   Not Revoked                                                                              
-       Indicators of Phishing or Malware   OK                                                                                       
-      MinTsifry Rossii Database (Russia)   Not Trusted                                                                              
-                                           Unknown                                                                                  
-              Extention basicConstraints   critical=True                                                                            
-                                           ca=True                                                                                  
-                                           path_length=0                                                                            
-                      Extension keyUsage   critical=True                                                                            
-                                           digital_signature=True                                                                   
-                                           content_commitment=False                                                                 
-                                           key_encipherment=False                                                                   
-                                           data_encipherment=False                                                                  
-                                           key_agreement=False                                                                      
-                                           key_cert_sign=True                                                                       
-                                           crl_sign=True                                                                            
-                                           digital_signature                                                                        
-                                           key_cert_sign                                                                            
-                                           crl_sign                                                                                 
-           Extension authorityInfoAccess   critical=False                                                                           
-                                           access_location=http://ocsp.rootca1.amazontrust.com                                      
-                                           access_method=OCSP                                                                       
-                                           access_location=http://crt.rootca1.amazontrust.com/rootca1.cer                           
-                                           access_method=caIssuers                                                                  
-         Extension cRLDistributionPoints   critical=False                                                                           
-                                           full_name=http://crl.rootca1.amazontrust.com/rootca1.crl                                 
-                                           relative_name                                                                            
-                                           reasons                                                                                  
-                                           crl_issuer=                                                                              
-           Extention certificatePolicies   critical=False                                                                           
-                                                                                                                                    
-                                                      Issuer: Amazon Root CA 1                                                      
-                                                   Expires in 1314 days (4 years)                                                   
-                                        Intermediate CA: /C=US/O=Amazon/CN=Amazon Root CA 1                                         
-                                                                                                                                    
-                                           Result                                                                                   
- ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-                       Certificate Valid   Valid                                                                                    
-                                  Note 1   Your private key is exposed; Attackers in possession of the private key can impersonate  
-                                           the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware  
-                                           on your behalf and distribute to target systems as you identified as the attacker        
-              Certificate is not expired   Pass                                                                                     
-          Certificate issued in the past   Pass                                                                                     
-                  Subject CN was defined   Pass                                                                                     
-           Not a self-signed Certificate   Pass                                                                                     
-   Avoid known weak signature algorithms   Pass                                                                                     
-  Avoid known weak public key algorithms   Pass                                                                                     
-           Certificate chain not revoked   Pass                                                                                     
-                          [PCI] Key Size   Pass                                                                                     
-                         [FIPS] Key Size   Pass                                                                                     
-                         [NIST] Key Size   Pass                                                                                     
-        Derived private key (PEM format)   -----BEGIN PRIVATE KEY-----                                                              
-                                           MIIBJwIBADANBgkqhkiG9w0BAQEFAASCAREwggENAgEAAoIBAQCyeIBxynjV43Gv                         
-                                           R4BQdH1u2NeIdvSZaPdYIWD5dIQBL6wCLYbToEN6TrKk0Da6Ab6N20jIBxc2TPTu                         
-                                           iCPHPus39bUZ+ElosN7XuXY4HWGepP6CNqXlSlbkReH5/bQW+nTanJs1OS/6sCBQ                         
-                                           Bmx60ICypvmv7EcZj1A4B9yihzlY+LrVqflIZzCW7pR4Xm+Jo1HAMIZmoUVmulTr                         
-                                           o8OR+Ujc/9HoMC19LXRwNdeIJPeexFluu3OHF/IyRii4Q/q3HarKtPKfJA4tS/dx                         
-                                           XF5p/+qVAss4iq5QOG/b+y1iG8XHHlThd+BnyA+chyPWP0AgfyCAxIBMPjskJo4E                         
-                                           rmyayKoNAgMBAAE=                                                                         
-                                           -----END PRIVATE KEY-----                                                                
-                                                                                                                                    
-                         Public Key Type   RSA                                                                                      
-                        Public Key Curve   N/A                                                                                      
-                     Public Key Exponent   65537                                                                                    
-                         Public Key Size   2048                                                                                     
-                                  Serial   30:36:37:66:39:34:34:61:32:61:32:37:63:64:66:33:66:61:63:32:61:65:32:62:30:31:66:39:30…  
-                        Serial (decimal)   144918191876577076464031512351042010504348870                                            
-                            Serial (hex)   0x67f944a2a27cdf3fac2ae2b01f908eeb9c4c6                                                  
-                     Certificate Version   2                                                                                        
-                     Issuer Country Code   US                                                                                       
-                     Signature Algorithm   sha256WithRSAEncryption                                                                  
-                    Fingerprint (sha256)   87 DC D4 DC 74 64 0A 32 2C D2 05 55 25 06 D1 BE 64 F1 25 96 25 80 96 54 49 86 B4 85 0B   
-                                           C7 27 06                                                                                 
-                      Fingerprint (sha1)   06 B2 59 27 C4 2A 72 16 31 C1 EF D9 43 1E 64 8F A6 2E 1E 39                              
-                       Fingerprint (md5)   E8 65 A2 2A AE 52 4D 26 86 9A F0 44 8D 6F D8 96                                          
-                      Fingerprint (SPKI)   FB E3 01 80 31 F9 58 6B CB F4 17 27 E4 17 B7 D1 C4 5C 2F 47 F9 3B E3 72 A1 7B 96 B5 07   
-                                           57 D5 A2                                                                                 
-                              Not Before   2015-05-25T12:00:00                                                                      
-                               Not After   2037-12-31T01:00:00                                                                      
-            Subject Key Identifier (SKI)   84 18 CC 85 34 EC BC 0C 94 94 2E 08 59 9C C7 B2 10 4E 0A 08                              
-          Authority Key Identifier (AKI)   9C 5F 00 DF AA 01 D7 30 2B 38 88 A2 B8 6D 4A 9C F2 11 91 83                              
-                 Compromised Certificate   OK                                                                                       
-                 Compromised Private Key   OK                                                                                       
-              Revocation: Mozilla CRLite   Not Revoked                                                                              
-       Indicators of Phishing or Malware   OK                                                                                       
-      MinTsifry Rossii Database (Russia)   Not Trusted                                                                              
-                                           Unknown                                                                                  
-              Extention basicConstraints   critical=True                                                                            
-                                           ca=True                                                                                  
-                                           path_length=null                                                                         
-                      Extension keyUsage   critical=True                                                                            
-                                           digital_signature=True                                                                   
-                                           content_commitment=False                                                                 
-                                           key_encipherment=False                                                                   
-                                           data_encipherment=False                                                                  
-                                           key_agreement=False                                                                      
-                                           key_cert_sign=True                                                                       
-                                           crl_sign=True                                                                            
-                                           digital_signature                                                                        
-                                           key_cert_sign                                                                            
-                                           crl_sign                                                                                 
-           Extension authorityInfoAccess   critical=False                                                                           
-                                           access_location=http://ocsp.rootg2.amazontrust.com                                       
-                                           access_method=OCSP                                                                       
-                                           access_location=http://crt.rootg2.amazontrust.com/rootg2.cer                             
-                                           access_method=caIssuers                                                                  
-         Extension cRLDistributionPoints   critical=False                                                                           
-                                           full_name=http://crl.rootg2.amazontrust.com/rootg2.crl                                   
-                                           relative_name                                                                            
-                                           reasons                                                                                  
-                                           crl_issuer=                                                                              
-           Extention certificatePolicies   critical=False                                                                           
-                                                                                                                                    
-                                     Issuer: Starfield Services Root Certificate Authority - G2                                     
-                                                  Expires in 5770 days (16 years)                                                   
-                     Root CA: /C=US/O=Starfield Technologies, Inc./OU=Starfield Class 2 Certification Authority                     
-                                                                                                                                    
-                                           Result                                                                                   
- ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-                       Certificate Valid   Not Trusted                                                                              
-                                  Note 1   The use of SHA1 with RSA Encryption is considered vulnerable. Macquarie University       
-                                           Australia 2009: identified vulnerabilities to collision attacks, later in 2017 Marc      
-                                           Stevens demonstrated collision proofs                                                    
-                                  Note 2   Your private key is exposed; Attackers in possession of the private key can impersonate  
-                                           the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware  
-                                           on your behalf and distribute to target systems as you identified as the attacker        
-              Certificate is not expired   Pass                                                                                     
-          Certificate issued in the past   Pass                                                                                     
-   Avoid known weak signature algorithms   Fail                                                                                     
-  Avoid known weak public key algorithms   Pass                                                                                     
-           Certificate chain not revoked   Pass                                                                                     
-                          [PCI] Key Size   Pass                                                                                     
-                          [PCI] CA Trust   Pass                                                                                     
-                         [FIPS] Key Size   Pass                                                                                     
-                         [FIPS] CA Trust   Pass                                                                                     
-                         [NIST] Key Size   Pass                                                                                     
-                         [NIST] CA Trust   Pass                                                                                     
-        Derived private key (PEM format)   -----BEGIN PRIVATE KEY-----                                                              
-                                           MIIBJQIBADANBgkqhkiG9w0BAQEFAASCAQ8wggELAgEAAoIBAQC3Msj+6XGmBIWt                         
-                                           DBFk385N78gDGIc/oav7PKaf8MOh2tTYbitTkPskpD6E8J7oX+zlJ0T1KKY/e97g                         
-                                           KvDIr1MvnsoFAZMej2YcOadN+lq2cwQlZut3f+dZxkqZJRRU6ybH838Z1TBwj6+w                         
-                                           Rir/resp7defqgSHo9T5iaU0X9tDkYI22WY8sbi5gv2cOj4QyDvvBmVmepsZGD3/                         
-                                           cVE8MC5fvj13c7JdBmzDI1aaK4UmkhynArPkPw2vCHmCuDY96pzTNbO8acr1zJ3o                         
-                                           /WSNF4Azbl5KXZnJHoe0nRrA1W4TNSNe35tfPe/W93bC6j67eA0cQmdrBNj41tpv                         
-                                           i/JEoAGrAgED                                                                             
-                                           -----END PRIVATE KEY-----                                                                
-                                                                                                                                    
-                         Public Key Type   RSA                                                                                      
-                        Public Key Curve   N/A                                                                                      
-                     Public Key Exponent   3                                                                                        
-                         Public Key Size   2048                                                                                     
-                                  Serial   30:30                                                                                    
-                        Serial (decimal)   0                                                                                        
-                            Serial (hex)   0x00                                                                                     
-                     Certificate Version   2                                                                                        
-                     Issuer Country Code   US                                                                                       
-                     Signature Algorithm   sha1WithRSAEncryption                                                                    
-                    Fingerprint (sha256)   14 65 FA 20 53 97 B8 76 FA A6 F0 A9 95 8E 55 90 E4 0F CC 7F AA 4F B7 C2 C8 67 75 21 FB   
-                                           5F B6 58                                                                                 
-                      Fingerprint (sha1)   AD 7E 1C 28 B0 64 EF 8F 60 03 40 20 14 C3 D0 E3 37 0E B5 8A                              
-                       Fingerprint (md5)   32 4A 4B BB C8 63 69 9B BE 74 9A C6 DD 1D 46 24                                          
-                      Fingerprint (SPKI)   15 F1 4A C4 5C 9C 7D A2 33 D3 47 91 64 E8 13 7F E3 5E E0 F3 8A E8 58 18 3F 08 41 0E A8   
-                                           2A C4 B4                                                                                 
-                              Not Before   2004-06-29T17:39:16                                                                      
-                               Not After   2034-06-29T17:39:16                                                                      
-            Subject Key Identifier (SKI)   BF 5F B7 D1 CE DD 1F 86 F4 5B 55 AC DC D7 10 C2 0E A9 88 E7                              
-                 Compromised Certificate   OK                                                                                       
-                 Compromised Private Key   OK                                                                                       
-              Common CA Database (CCADB)   Trusted                                                                                  
-                                           In Common CA Database 2022.03.14 (Mozilla, Microsoft, and Apple)                         
-                                    Java   Trusted                                                                                  
-                                           In Java Root CA Trust Store java 17.0.2 2022-01-18 LTS                                   
-                                 Android   Trusted                                                                                  
-                                           Android 2.2 (Froyo) 2010 Trusted                                                         
-                                           Android 2.3 (Gingerbread) 2010 Trusted                                                   
-                                           Android 3 (Honeycomb) 2011 Trusted                                                       
-                                           Android 4 (Ice Cream Sandwich) 2011 Trusted                                              
-                                           Android 4.4 (KitKat) 2013 Trusted                                                        
-                                           Android 7 (Nougat) 2016 Trusted                                                          
-                                           Android 8 (Oreo) 2017 Trusted                                                            
-                                           Android 9 (Pie) 2018 Trusted                                                             
-                                           Android 10 (Q) 2019 Trusted                                                              
-                                           Android 11 2020 Trusted                                                                  
-                                           Android 12 2021 Trusted                                                                  
-                                   Linux   Trusted                                                                                  
-                                           In Linux 5.16.10-arch1-1 Root CA Trust Store                                             
-                                  Python   Trusted                                                                                  
-                                           In Python certifi==2021.10.8 Root CA Trust Store (Django, requests, urllib, and          
-                                           anything based from these)                                                               
-      MinTsifry Rossii Database (Russia)   Not Trusted                                                                              
-                                           No Root CA Certificate in the MinTsifry Rossii Trust Store                               
-              Extention basicConstraints   critical=False                                                                           
-                                           ca=True                                                                                  
-                                           path_length=null                                                                         
-                                                                                                                                    
-                                                  Expires in 4489 days (12 years)                                                   
-Intermediate CA: /C=US/ST=Arizona/L=Scottsdale/O=Starfield Technologies, Inc./CN=Starfield Services Root Certificate Authority - G2 
-                                                                                                                                    
-                                           Result                                                                                   
- ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-                       Certificate Valid   Valid                                                                                    
-                                  Note 1   Your private key is exposed; Attackers in possession of the private key can impersonate  
-                                           the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware  
-                                           on your behalf and distribute to target systems as you identified as the attacker        
-              Certificate is not expired   Pass                                                                                     
-          Certificate issued in the past   Pass                                                                                     
-                  Subject CN was defined   Pass                                                                                     
-           Not a self-signed Certificate   Pass                                                                                     
-   Avoid known weak signature algorithms   Pass                                                                                     
-  Avoid known weak public key algorithms   Pass                                                                                     
-           Certificate chain not revoked   Pass                                                                                     
-                          [PCI] Key Size   Pass                                                                                     
-                         [FIPS] Key Size   Pass                                                                                     
-                         [NIST] Key Size   Pass                                                                                     
-        Derived private key (PEM format)   -----BEGIN PRIVATE KEY-----                                                              
-                                           MIIBJwIBADANBgkqhkiG9w0BAQEFAASCAREwggENAgEAAoIBAQDVDDrEKvlO4vW+                         
-                                           GZdfjohTsR8/y8+fIBNtKTrID30892t2OGPZNmCom15cAICyL1l/9of5JUOG52kb                         
-                                           UpqQ4XHj2C0NTm/2yEnZtvMaVq4rtnQU68/7JuMauh2WLmo7WJSJR1b/JaCTcFOD                         
-                                           2oR0FMNnngRoOt+OQFodSk7PQ5E751bWAHDLUu57fa4657wx+UX2wmDPE1kCK4DM                         
-                                           NEffud6QZW0CzyyRpqbn3oUYSXxmTqM6bam17jQuug0DuDPfR+uxa40l2ZvOgdFF                         
-                                           RjKWcIfeAg5JQ4W2bHO7ZOphQazJ1FTfhy/HIrImzJ9ZVGif/L4qL8RVHHVAYBeF                         
-                                           AlU5i38FAgMBAAE=                                                                         
-                                           -----END PRIVATE KEY-----                                                                
-                                                                                                                                    
-                         Public Key Type   RSA                                                                                      
-                        Public Key Curve   N/A                                                                                      
-                     Public Key Exponent   65537                                                                                    
-                         Public Key Size   2048                                                                                     
-                                  Serial   61:37:30:65:34:61:34:63:33:34:38:32:62:37:37:66                                          
-                        Serial (decimal)   12037640545166866303                                                                     
-                            Serial (hex)   0xa70e4a4c3482b77f                                                                       
-                     Certificate Version   2                                                                                        
-                     Issuer Country Code   US                                                                                       
-                     Signature Algorithm   sha256WithRSAEncryption                                                                  
-                    Fingerprint (sha256)   28 68 9B 30 E4 C3 06 AA B5 3B 02 7B 29 E3 6A D6 DD 1D CF 4B 95 39 94 48 2C A8 4B DC 1E   
-                                           CA C9 96                                                                                 
-                      Fingerprint (sha1)   9E 99 A4 8A 99 60 B1 49 26 BB 7F 3B 02 E2 2D A2 B0 AB 72 80                              
-                       Fingerprint (md5)   C6 15 09 25 CF EA 59 41 DD C7 FF 2A 0A 50 66 92                                          
-                      Fingerprint (SPKI)   2B 07 1C 59 A0 A0 AE 76 B0 EA DB 2B AD 23 BA D4 58 0B 69 C3 60 1B 63 0C 2E AF 06 13 AF   
-                                           A8 3F 92                                                                                 
-                              Not Before   2009-09-02T00:00:00                                                                      
-                               Not After   2034-06-28T17:39:16                                                                      
-            Subject Key Identifier (SKI)   9C 5F 00 DF AA 01 D7 30 2B 38 88 A2 B8 6D 4A 9C F2 11 91 83                              
-          Authority Key Identifier (AKI)   BF 5F B7 D1 CE DD 1F 86 F4 5B 55 AC DC D7 10 C2 0E A9 88 E7                              
-                 Compromised Certificate   OK                                                                                       
-                 Compromised Private Key   OK                                                                                       
-              Revocation: Mozilla CRLite   Not Revoked                                                                              
-       Indicators of Phishing or Malware   OK                                                                                       
-      MinTsifry Rossii Database (Russia)   Not Trusted                                                                              
-                                           Unknown                                                                                  
-              Extention basicConstraints   critical=True                                                                            
-                                           ca=True                                                                                  
-                                           path_length=null                                                                         
-                      Extension keyUsage   critical=True                                                                            
-                                           digital_signature=True                                                                   
-                                           content_commitment=False                                                                 
-                                           key_encipherment=False                                                                   
-                                           data_encipherment=False                                                                  
-                                           key_agreement=False                                                                      
-                                           key_cert_sign=True                                                                       
-                                           crl_sign=True                                                                            
-                                           digital_signature                                                                        
-                                           key_cert_sign                                                                            
-                                           crl_sign                                                                                 
-           Extension authorityInfoAccess   critical=False                                                                           
-                                           access_location=http://o.ss2.us/                                                         
-                                           access_method=OCSP                                                                       
-                                           access_location=http://x.ss2.us/x.cer                                                    
-                                           access_method=caIssuers                                                                  
-         Extension cRLDistributionPoints   critical=False                                                                           
-                                           full_name=http://s.ss2.us/r.crl                                                          
-                                           relative_name                                                                            
-                                           reasons                                                                                  
-                                           crl_issuer=                                                                              
-           Extention certificatePolicies   critical=False                                                                           
-                                                                                                                                    
-                                                            Issuer: None                                                            
-                                                  Expires in 4488 days (12 years)                                                   
-                                         Leaf Certificate aws.amazon.com:443 (13.35.139.73)                                         
-                                                                                                                                    
-                                             Result                                                                                 
- ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-                         Certificate Valid   Validation Errors                                                                      
-                   Certificate Chain Valid   Valid                                                                                  
-       Certificate Chain Validation Result   Validated: digital_signature,key_encipherment,server_auth                              
-                                    Note 1   Your private key is exposed; Attackers in possession of the private key can            
-                                             impersonate the website, eavesdrop on encrypted traffic they have copied, or           
-                                             digitally sign malware on your behalf and distribute to target systems as you          
-                                             identified as the attacker                                                             
-                                    Note 2   This domain is not enabled for DNSSEC (rfc6840), DS and DNSKEY records were not        
-                                             provided                                                                               
-                                    Note 3   DV Certificates are favored by attackers and seeing one used raises skepticism. DV     
-                                             Certificates are issued for ease-of-use and not for security purposes, and there are   
-                                             known trivial DNS take-over attacks enabled by DV Certificates. An OV or EV            
-                                             Certificate is the distinct opposite of a DV Certificate, attackers avoid using them,  
-                                             they are issued for security purposes specifically as an effective mitigation to the   
-                                             known DNS take-over attacks.                                                           
-                                    Note 4   This domain is not enabled for CAA verification (rfc8659), CAA DNS records were not    
-                                             provided                                                                               
-                                    Note 5   Server preferred protocol TLSv1.3 (0x304) was avoided and TLSv1 (0x301) was            
-                                             negotiated instead, consider Signaling Cipher Suite Value (SCSV) for Preventing        
-                                             Protocol Downgrade Attacks (rfc7507)                                                   
-                                    Note 6   TLSv1 (0x301) 2018 deprecated by PCI Council. Also in 2018, Apple, Google, Microsoft,  
-                                             and Mozilla jointly announced deprecation. Officially deprecated in 2020 (rfc8996)     
-                                    Note 7   Session Resumption (caching) This server has confidentiality vulnerability and a       
-                                             tracking issue affecting privacy; rfc5246 recommends a lifetime of session IDs of      
-                                             less than 24 hours where afterwards the client attempts a resumption and only then     
-                                             the server falls back to a full handshake. The server can link both PSKs to the same   
-                                             user, session resumption caching allows a user identity to be shared with third-party  
-                                             trackers observing traffic on this server. Prior to TLS 1.3 this was a 0-RTT           
-                                             resumption which allows malicious actors to read all of the past communications using  
-                                             the same PSK. The flaw was detailed by rfc5077 in 2008 and web server default          
-                                             configurations have not widely adopted the changes.                                    
-                                    Note 8   Session Resumption (tickets) A single key is used for the sessions of multiple users   
-                                             and is intended to mitigate privacy concerns of individual tracking, though a ticket   
-                                             identifier can be reused by a malicious actor for multiple or subsequent connections   
-                                             and decrypt all messages as resumed connections don't perform any Diffie-Hellman       
-                                             exchange, so they don't offer Forward Secrecy against the compromise of the STEK.      
-                                             This vulnerability was first identified by Adam Langley in 2013 which was built on     
-                                             works by M. Perry. in 2012                                                             
-                                    Note 9   This webserver offers TLS compression so that when a client also supports compression  
-                                             several known exploits exist that allow an attacker to perform session hijacking on    
-                                             an authenticated session. BEAST (2012), CRIME (2012), and BREACH (2013) are the well   
-                                             known attacks however various lesser known attacks exist such as "ssl, gone in 30      
-                                             seconds" (2013) and other related Information Leakage Vulnerabilities                  
-                                   Note 10   Your server is not configured to accept clients that only support obsolete TLS         
-                                             versions, these clients will be shown a error "ERR_SSL_VERSION_INTERFERENCE" and not   
-                                             negotiate a secure connection to your server.                                          
-                                   Note 11   PCI DSS version 3.2.1 compliance requires deprecated and known weak TLS protocols are  
-                                             not supported                                                                          
-                                   Note 12   PCI DSS version 3.2.1 compliance requires that no known vulnerabilities are present    
-                                   Note 13   FIPS 140-2 (NIST SP800-131A transition mode) compliance requires cipher bits to        
-                                             greater than 160, not be of Anonymous key exchange suites, Exchange ciphers, or many   
-                                             block ciphers                                                                          
-                                   Note 14   NIST SP800-131A (strict mode) compliance requires deprecated and known weak TLS        
-                                             protocols are not supported                                                            
-                                   Note 15   NIST SP800-131A (strict mode) compliance requires cipher bits to greater than 160,     
-                                             not be of Anonymous key exchange suites, Exchange ciphers, or many block ciphers       
-                Certificate is not expired   Pass                                                                                   
-            Certificate issued in the past   Pass                                                                                   
-                    Subject CN was defined   Pass                                                                                   
-               Subject CN has valid syntax   Pass                                                                                   
-   Subject CN matches the server host name   Pass                                                                                   
-             Not a self-signed Certificate   Pass                                                                                   
-     Avoid known weak signature algorithms   Pass                                                                                   
-    Avoid known weak public key algorithms   Pass                                                                                   
-            Avoid deprecated TLS protocols   Fail                                                                                   
-        Avoid deprecated DNSSEC algorithms   Pass                                                                                   
-                          Leaf is not a CA   Pass                                                                                   
-             Key usage appropriate for TLS   Pass                                                                                   
-             Certificate chain not revoked   Pass                                                                                   
-            Root CA Certificate is trusted   Pass                                                                                   
-                     OCSP Staple satisfied   Pass                                                                                   
-                            [PCI] Key Size   Pass                                                                                   
-                         [PCI] Cipher bits   Pass                                                                                   
-                [PCI] Deprecated protocols   Fail                                                                                   
-                     [PCI] Weak algorithms   Pass                                                                                   
-       [PCI] Vulnerable session resumption   Fail                                                                                   
-            [PCI] Vulnerable renegotiation   Pass                                                                                   
-              [PCI] Vulnerable compression   Fail                                                                                   
-                           [FIPS] Key Size   Pass                                                                                   
-       [FIPS] No ClientAuth for TLS1.0/1.1   Pass                                                                                   
-               [FIPS] Deprecated protocols   Pass                                                                                   
-                        [FIPS] Cipher bits   Fail                                                                                   
-                           [NIST] Key Size   Pass                                                                                   
-               [NIST] Deprecated protocols   Fail                                                                                   
-                        [NIST] Cipher bits   Fail                                                                                   
-          Derived private key (PEM format)   -----BEGIN PRIVATE KEY-----                                                            
-                                             MIIBJwIBADANBgkqhkiG9w0BAQEFAASCAREwggENAgEAAoIBAQDQP1Qyrg2TlzdF                       
-                                             TMYHk+Elxva1SQgB1SOBMsZ7YVtlzmaTeVOkFIZCnDIUUljN9DMFHIt06xBSF2rP                       
-                                             ys7WEH4y4sL1Bd0dcERmwL16hVD0QZfm54tRVgdgWKmIY1D2f7xnhEK1NZHMT5x5                       
-                                             4yDprMpbNqK7agBHDEqgq0EN+wOySumHTLoz3bbnSZrlTCkp1Cv08Ca7fsEX7n3c                       
-                                             CBOJFty/OMNWidhcPzGF6lFlovMlTZ9zehlGuyNhZt7q0d2xasw8wjkchO/LaqMH                       
-                                             xdbBuub7ixNsM8fPBRsD30PfVzfiqqU68qD/15ZErlwGneGCwNewFhLrFmUNsLyO                       
-                                             qHENnjFDAgMBAAE=                                                                       
-                                             -----END PRIVATE KEY-----                                                              
-                                                                                                                                    
-                           Public Key Type   RSA                                                                                    
-                          Public Key Curve   N/A                                                                                    
-                       Public Key Exponent   65537                                                                                  
-                           Public Key Size   2048                                                                                   
-                                    Serial   30:34:38:32:31:38:35:35:35:33:37:33:33:37:65:39:66:37:38:63:39:65:36:34:34:34:33:37:…  
-                          Serial (decimal)   5992404112800038766396119390833065754                                                  
-                              Serial (hex)   0x4821855537337e9f78c9e644437bf1a                                                      
-                       Certificate Version   2                                                                                      
-                       Certificate Subject   /CN=aws.amazon.com                                                                     
-                         Issuer Subject CN   Amazon                                                                                 
-                       Issuer Country Code   US                                                                                     
-                       Signature Algorithm   sha256WithRSAEncryption                                                                
-                      Fingerprint (sha256)   E6 05 73 3B 31 67 63 75 5F D0 1F 29 95 20 55 5D 56 A4 D9 D1 E4 4C 02 A0 6A 01 02 D3    
-                                             35 C8 26 A9                                                                            
-                        Fingerprint (sha1)   78 64 7A BC B1 44 57 70 A0 58 3A 5D 4F E2 C4 F7 1F 83 D5 22                            
-                         Fingerprint (md5)   8D DE 8E E8 3C A5 69 38 FB D5 11 CE 31 4F F0 EE                                        
-                        Fingerprint (SPKI)   6C 58 83 0C 12 A1 A6 60 E8 82 5D 03 5C 7F 2D 99 1E B6 4B D1 88 8A D2 CD AD 20 97 2D    
-                                             43 C7 CD FA                                                                            
-                                Not Before   2021-08-05T00:00:00                                                                    
-                                 Not After   2022-08-01T23:59:59                                                                    
-                    Certificate Subject CN   aws.amazon.com                                                                         
-              Subject Key Identifier (SKI)   59 CE A4 10 78 E0 63 CD 59 25 09 B3 E9 6C 3C F1 B6 44 90 B2                            
-            Authority Key Identifier (AKI)   59 A4 66 06 52 A0 7B 95 92 3C A3 94 07 27 96 74 5B F9 3D D0                            
-               Client Certificate Expected   No                                                                                     
-       Certificate Owner Validation Method   Domain Validation (DV)                                                                 
-                                       CAA   Absent                                                                                 
-                   Compromised Certificate   OK                                                                                     
-                   Compromised Private Key   OK                                                                                     
-                 Revocation: OCSP Stapling   Present                                                                                
-         Revocation: OCSP Must Staple flag   Absent                                                                                 
-                          Revocation: OCSP   Good                                                                                   
-                 Revocation: OCSP Response   Successful                                                                             
-                  Revocation: OCSP Revoked   Not Revoked                                                                            
-             Revocation: OCSP Revoked time   Not Revoked                                                                            
-                Revocation: Mozilla CRLite   Not Revoked                                                                            
-               Server Name Indicator (SNI)   Present                                                                                
-                       Negotiated Protocol   TLSv1 (0x301)                                                                          
-                      Offered TLS versions   TLSv1.3 (0x304)                                                                        
-                                             TLSv1.2 (0x303)                                                                        
-                                             TLSv1 (0x301)                                                                          
-                                             TLSv1.1 (0x302)                                                                        
-                         Negotiated Cipher   ECDHE-RSA-AES128-SHA                                                                   
-                    Negotiated Cipher bits   128                                                                                    
-                    Weak negotiated cipher   Present                                                                                
-                  Strong negotiated cipher   NOT OK                                                                                 
-                   Forward Anonymity (FPS)   Present                                                                                
-              Session Resumption (caching)   Detected                                                                               
-              Session Resumption (tickets)   Detected                                                                               
-          Session Resumption (ticket hint)   Detected                                                                               
-             Insecure Client Renegotiation   OK                                                                                     
-                                 TLSA/DANE   Absent                                                                                 
-                                    DNSSEC   Absent                                                                                 
-                          DNSSEC Algorithm   N/A                                                                                    
-           TLS downgrade prevention (SCSV)   Ineffective                                                                            
-                 Server Preferred Protocol   TLSv1.3 (0x304)                                                                        
-                           TLS Compression   Present                                                                                
-                   TLS version intolerance   Detected                                                                               
-          TLS version intolerance versions   TLSv1.4 (0x305)                                                                        
-                                             TLSv1.8 (0x309)                                                                        
-                                             TLSv2 (0x400)                                                                          
-                                             TLSv2.1 (0x401)                                                                        
-                                             TLSv2.3 (0x404)                                                                        
-                  TLS version interference   Detected                                                                               
-         TLS version interference versions   SSLv3 (0x300)                                                                          
-                                             SSLv2 (0x2ff)                                                                          
-            TLS long handshake intolerance   OK                                                                                     
-                      Expect-CT report-uri   Absent                                                                                 
-                                      HSTS   Present                                                                                
-                     X-Frame-Options (XFO)   Present                                                                                
-             Content Security Policy (CSP)   Absent                                                                                 
-       Cross-Origin-Embedder-Policy (COEP)   Absent                                                                                 
-         Cross-Origin-Opener-Policy (COOP)   Absent                                                                                 
-       Cross-Origin-Resource-Policy (CORP)   Absent                                                                                 
-            X-Content-Type-Options nosniff   Present                                                                                
-                Referrer-Policy unsafe-url   OK                                                                                     
-                          X-XSS-Protection   Present                                                                                
-                 HTTP response status code   200                                                                                    
-                                    HTTP/1   No                                                                                     
-                                  HTTP/1.1   Yes                                                                                    
-                                    HTTP/2   Yes                                                                                    
-                          HTTP/2 Cleartext   No                                                                                     
-         Indicators of Phishing or Malware   OK                                                                                     
-        MinTsifry Rossii Database (Russia)   Not Trusted                                                                            
-                                             Unknown                                                                                
-                  Extension subjectAltName   critical=False                                                                         
-                                             aws.amazon.com                                                                         
-                                             www.aws.amazon.com                                                                     
-                                             aws-us-east-1.amazon.com                                                               
-                                             aws-us-west-2.amazon.com                                                               
-                                             amazonaws-china.com                                                                    
-                                             www.amazonaws-china.com                                                                
-                                             1.aws-lbr.amazonaws.com                                                                
-                        Extension keyUsage   critical=True                                                                          
-                                             digital_signature=True                                                                 
-                                             content_commitment=False                                                               
-                                             key_encipherment=True                                                                  
-                                             data_encipherment=False                                                                
-                                             key_agreement=False                                                                    
-                                             key_cert_sign=False                                                                    
-                                             crl_sign=False                                                                         
-                                             digital_signature                                                                      
-                                             key_encipherment                                                                       
-                Extension extendedKeyUsage   critical=False                                                                         
-                                             serverAuth                                                                             
-                                             clientAuth                                                                             
-           Extension cRLDistributionPoints   critical=False                                                                         
-                                             full_name=http://crl.sca1b.amazontrust.com/sca1b.crl                                   
-                                             relative_name                                                                          
-                                             reasons                                                                                
-                                             crl_issuer=                                                                            
-             Extention certificatePolicies   critical=False                                                                         
-             Extension authorityInfoAccess   critical=False                                                                         
-                                             access_location=http://ocsp.sca1b.amazontrust.com                                      
-                                             access_method=OCSP                                                                     
-                                             access_location=http://crt.sca1b.amazontrust.com/sca1b.crt                             
-                                             access_method=caIssuers                                                                
-                Extention basicConstraints   critical=True                                                                          
-                                             ca=False                                                                               
-                                             path_length=null                                                                       
-  Extension signedCertificateTimestampList   critical=False                                                                         
-                                             version=v1                                                                             
-                                             log_id=2979bef09e393921f056739f63a577e5be577d9c600af8f94d5d265c255dc784                
-                                             timestamp=2021-08-05T00:25:24.149000                                                   
-                                             pre_certificate=True                                                                   
-                                             version=v1                                                                             
-                                             log_id=51a3b0f5fd01799c566db837788f0ca47acc1b27cbf79e88429a0dfed48b05e5                
-                                             timestamp=2021-08-05T00:25:24.148000                                                   
-                                             pre_certificate=True                                                                   
-                                             version=v1                                                                             
-                                             log_id=41c8cab1df22464a10c6a13a0942875e4e318b1b03ebeb4bc768f090629606f6                
-                                             timestamp=2021-08-05T00:25:24.070000                                                   
-                                             pre_certificate=True                                                                   
-                                                                                                                                    
-                                                           Issuer: Amazon                                                           
-                                                        Expires in 140 days                                                         
-                                                                                                                              
-  Security Score Card aws.amazon.com:443                                                                                      
- ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 
-                                  Rating   ███████╗                                                                           
-                                           ██╔════╝                                                                           
-                                           █████╗                                                                             
-                                           ██╔══╝                                                                             
-                                           ██║                                                                                
-                                           ╚═╝                                                                                
-                              Rating cap   F                                                                                  
-                          Security score   1975/3600                                                                          
-                  Unscored configuration   chain_expiry                                                                       
-                      Best configuration   leaf_validity_period(100)                                                          
-                      Good configuration   transport(50)                                                                      
-                                           risk(50)                                                                           
-                      Weak configuration   certificate_validation(-75)                                                        
-                                           caa(-75)                                                                           
-                                           server_configuration(-75)                                                          
-                    Configuration issues   key_size(-125)                                                                     
-                                           dnssec(-125)                                                                       
-                                           cipher(-125)                                                                       
-                                           trust(-125)                                                                        
-                       Rating cap reason   Deprecated protocols CN=aws.amazon.com (78647abcb1445770a0583a5d4fe2c4f71f83d522)  
-                           Trust summary   No CA Authorization detected, is a trusted Root CA                                 
-                            Risk summary   No critical risks observed                                                         
-                                           Certificate uses the OCSP stapling which provides limited revocation controls      
-                                                                                                                              
+                                     Intermediate CA: /C=US/O=Amazon/OU=Server CA 1B/CN=Amazon
 
+                                           Result
+ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                       Certificate Valid   Valid
+                                  Note 1   Your private key is exposed; Attackers in possession of the private key can impersonate
+                                           the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware
+                                           on your behalf and distribute to target systems as you identified as the attacker
+              Certificate is not expired   Pass
+          Certificate issued in the past   Pass
+                  Subject CN was defined   Pass
+           Not a self-signed Certificate   Pass
+   Avoid known weak signature algorithms   Pass
+  Avoid known weak public key algorithms   Pass
+           Certificate chain not revoked   Pass
+                          [PCI] Key Size   Pass
+                         [FIPS] Key Size   Pass
+                         [NIST] Key Size   Pass
+        Derived private key (PEM format)   -----BEGIN PRIVATE KEY-----
+                                           MIIBJwIBADANBgkqhkiG9w0BAQEFAASCAREwggENAgEAAoIBAQDCThZn3c68asg3
+                                           Wuw6MLAd5tES6BIoSMzoKcG5blPVo+sDORrMd4f2AbnZcMzPa43j4wNxhplty6aU
+                                           Kk4T1qe9BOwKFjwK6zmxxLVYo7bHViXsPlJ6qOMpFge5blDP+18x+B26A0piiQOu
+                                           PkfyDyeR4xQghfj66Yo19V+emU3nazfvpFA+ROz6WoVmB5x+F2pV8xeKNR7u6azD
+                                           dU5YVX1TawprmxRC1+WsAYmz6qP+z8ArDITC2FMVy2fw0IjKOtEXc/VfmtTFch5+
+                                           AfGYMGMqqvJ6LcXiAhqG5TI+Dr0RtM88k+8XUBCeQ8IGKuANaL7TiItKZYxK1MMu
+                                           TJtV9IblAgMBAAE=
+                                           -----END PRIVATE KEY-----
+
+                         Public Key Type   RSA
+                        Public Key Curve   N/A
+                     Public Key Exponent   65537
+                         Public Key Size   2048
+                                  Serial   30:36:37:66:39:34:35:37:38:35:38:37:65:38:61:63:37:37:64:65:62:32:35:33:33:32:35:62:62…
+                        Serial (decimal)   144918209630989264145272943054026349679957517
+                            Serial (hex)   0x67f94578587e8ac77deb253325bbc998b560d
+                     Certificate Version   2
+                     Issuer Country Code   US
+                     Signature Algorithm   sha256WithRSAEncryption
+                    Fingerprint (sha256)   F5 5F 9F FC B8 3C 73 45 32 61 60 1C 7E 04 4D B1 5A 0F 03 4B 93 C0 58 30 F2 86 35 EF 88
+                                           9C F6 70
+                      Fingerprint (sha1)   91 7E 73 2D 33 0F 9A 12 40 4F 73 D8 BE A3 69 48 B9 29 DF FC
+                       Fingerprint (md5)   EB 26 8E 55 D4 34 FE BD A3 6A 97 9A 44 65 4B 6D
+                      Fingerprint (SPKI)   25 23 33 A8 E3 AB B7 23 93 D6 49 9A BB AC CA 86 04 FA EF A8 46 81 CC C3 E5 53 1D 44 CC
+                                           89 64 50
+                              Not Before   2015-10-22T00:00:00
+                               Not After   2025-10-19T00:00:00
+            Subject Key Identifier (SKI)   59 A4 66 06 52 A0 7B 95 92 3C A3 94 07 27 96 74 5B F9 3D D0
+          Authority Key Identifier (AKI)   84 18 CC 85 34 EC BC 0C 94 94 2E 08 59 9C C7 B2 10 4E 0A 08
+                 Compromised Certificate   OK
+                 Compromised Private Key   OK
+              Revocation: Mozilla CRLite   Not Revoked
+       Indicators of Phishing or Malware   OK
+      MinTsifry Rossii Database (Russia)   Not Trusted
+                                           Unknown
+              Extention basicConstraints   critical=True
+                                           ca=True
+                                           path_length=0
+                      Extension keyUsage   critical=True
+                                           digital_signature=True
+                                           content_commitment=False
+                                           key_encipherment=False
+                                           data_encipherment=False
+                                           key_agreement=False
+                                           key_cert_sign=True
+                                           crl_sign=True
+                                           digital_signature
+                                           key_cert_sign
+                                           crl_sign
+           Extension authorityInfoAccess   critical=False
+                                           access_location=http://ocsp.rootca1.amazontrust.com
+                                           access_method=OCSP
+                                           access_location=http://crt.rootca1.amazontrust.com/rootca1.cer
+                                           access_method=caIssuers
+         Extension cRLDistributionPoints   critical=False
+                                           full_name=http://crl.rootca1.amazontrust.com/rootca1.crl
+                                           relative_name
+                                           reasons
+                                           crl_issuer=
+           Extention certificatePolicies   critical=False
+
+                                                      Issuer: Amazon Root CA 1
+                                                   Expires in 1314 days (4 years)
+                                        Intermediate CA: /C=US/O=Amazon/CN=Amazon Root CA 1
+
+                                           Result
+ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                       Certificate Valid   Valid
+                                  Note 1   Your private key is exposed; Attackers in possession of the private key can impersonate
+                                           the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware
+                                           on your behalf and distribute to target systems as you identified as the attacker
+              Certificate is not expired   Pass
+          Certificate issued in the past   Pass
+                  Subject CN was defined   Pass
+           Not a self-signed Certificate   Pass
+   Avoid known weak signature algorithms   Pass
+  Avoid known weak public key algorithms   Pass
+           Certificate chain not revoked   Pass
+                          [PCI] Key Size   Pass
+                         [FIPS] Key Size   Pass
+                         [NIST] Key Size   Pass
+        Derived private key (PEM format)   -----BEGIN PRIVATE KEY-----
+                                           MIIBJwIBADANBgkqhkiG9w0BAQEFAASCAREwggENAgEAAoIBAQCyeIBxynjV43Gv
+                                           R4BQdH1u2NeIdvSZaPdYIWD5dIQBL6wCLYbToEN6TrKk0Da6Ab6N20jIBxc2TPTu
+                                           iCPHPus39bUZ+ElosN7XuXY4HWGepP6CNqXlSlbkReH5/bQW+nTanJs1OS/6sCBQ
+                                           Bmx60ICypvmv7EcZj1A4B9yihzlY+LrVqflIZzCW7pR4Xm+Jo1HAMIZmoUVmulTr
+                                           o8OR+Ujc/9HoMC19LXRwNdeIJPeexFluu3OHF/IyRii4Q/q3HarKtPKfJA4tS/dx
+                                           XF5p/+qVAss4iq5QOG/b+y1iG8XHHlThd+BnyA+chyPWP0AgfyCAxIBMPjskJo4E
+                                           rmyayKoNAgMBAAE=
+                                           -----END PRIVATE KEY-----
+
+                         Public Key Type   RSA
+                        Public Key Curve   N/A
+                     Public Key Exponent   65537
+                         Public Key Size   2048
+                                  Serial   30:36:37:66:39:34:34:61:32:61:32:37:63:64:66:33:66:61:63:32:61:65:32:62:30:31:66:39:30…
+                        Serial (decimal)   144918191876577076464031512351042010504348870
+                            Serial (hex)   0x67f944a2a27cdf3fac2ae2b01f908eeb9c4c6
+                     Certificate Version   2
+                     Issuer Country Code   US
+                     Signature Algorithm   sha256WithRSAEncryption
+                    Fingerprint (sha256)   87 DC D4 DC 74 64 0A 32 2C D2 05 55 25 06 D1 BE 64 F1 25 96 25 80 96 54 49 86 B4 85 0B
+                                           C7 27 06
+                      Fingerprint (sha1)   06 B2 59 27 C4 2A 72 16 31 C1 EF D9 43 1E 64 8F A6 2E 1E 39
+                       Fingerprint (md5)   E8 65 A2 2A AE 52 4D 26 86 9A F0 44 8D 6F D8 96
+                      Fingerprint (SPKI)   FB E3 01 80 31 F9 58 6B CB F4 17 27 E4 17 B7 D1 C4 5C 2F 47 F9 3B E3 72 A1 7B 96 B5 07
+                                           57 D5 A2
+                              Not Before   2015-05-25T12:00:00
+                               Not After   2037-12-31T01:00:00
+            Subject Key Identifier (SKI)   84 18 CC 85 34 EC BC 0C 94 94 2E 08 59 9C C7 B2 10 4E 0A 08
+          Authority Key Identifier (AKI)   9C 5F 00 DF AA 01 D7 30 2B 38 88 A2 B8 6D 4A 9C F2 11 91 83
+                 Compromised Certificate   OK
+                 Compromised Private Key   OK
+              Revocation: Mozilla CRLite   Not Revoked
+       Indicators of Phishing or Malware   OK
+      MinTsifry Rossii Database (Russia)   Not Trusted
+                                           Unknown
+              Extention basicConstraints   critical=True
+                                           ca=True
+                                           path_length=null
+                      Extension keyUsage   critical=True
+                                           digital_signature=True
+                                           content_commitment=False
+                                           key_encipherment=False
+                                           data_encipherment=False
+                                           key_agreement=False
+                                           key_cert_sign=True
+                                           crl_sign=True
+                                           digital_signature
+                                           key_cert_sign
+                                           crl_sign
+           Extension authorityInfoAccess   critical=False
+                                           access_location=http://ocsp.rootg2.amazontrust.com
+                                           access_method=OCSP
+                                           access_location=http://crt.rootg2.amazontrust.com/rootg2.cer
+                                           access_method=caIssuers
+         Extension cRLDistributionPoints   critical=False
+                                           full_name=http://crl.rootg2.amazontrust.com/rootg2.crl
+                                           relative_name
+                                           reasons
+                                           crl_issuer=
+           Extention certificatePolicies   critical=False
+
+                                     Issuer: Starfield Services Root Certificate Authority - G2
+                                                  Expires in 5770 days (16 years)
+                     Root CA: /C=US/O=Starfield Technologies, Inc./OU=Starfield Class 2 Certification Authority
+
+                                           Result
+ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                       Certificate Valid   Not Trusted
+                                  Note 1   The use of SHA1 with RSA Encryption is considered vulnerable. Macquarie University
+                                           Australia 2009: identified vulnerabilities to collision attacks, later in 2017 Marc
+                                           Stevens demonstrated collision proofs
+                                  Note 2   Your private key is exposed; Attackers in possession of the private key can impersonate
+                                           the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware
+                                           on your behalf and distribute to target systems as you identified as the attacker
+              Certificate is not expired   Pass
+          Certificate issued in the past   Pass
+   Avoid known weak signature algorithms   Fail
+  Avoid known weak public key algorithms   Pass
+           Certificate chain not revoked   Pass
+                          [PCI] Key Size   Pass
+                          [PCI] CA Trust   Pass
+                         [FIPS] Key Size   Pass
+                         [FIPS] CA Trust   Pass
+                         [NIST] Key Size   Pass
+                         [NIST] CA Trust   Pass
+        Derived private key (PEM format)   -----BEGIN PRIVATE KEY-----
+                                           MIIBJQIBADANBgkqhkiG9w0BAQEFAASCAQ8wggELAgEAAoIBAQC3Msj+6XGmBIWt
+                                           DBFk385N78gDGIc/oav7PKaf8MOh2tTYbitTkPskpD6E8J7oX+zlJ0T1KKY/e97g
+                                           KvDIr1MvnsoFAZMej2YcOadN+lq2cwQlZut3f+dZxkqZJRRU6ybH838Z1TBwj6+w
+                                           Rir/resp7defqgSHo9T5iaU0X9tDkYI22WY8sbi5gv2cOj4QyDvvBmVmepsZGD3/
+                                           cVE8MC5fvj13c7JdBmzDI1aaK4UmkhynArPkPw2vCHmCuDY96pzTNbO8acr1zJ3o
+                                           /WSNF4Azbl5KXZnJHoe0nRrA1W4TNSNe35tfPe/W93bC6j67eA0cQmdrBNj41tpv
+                                           i/JEoAGrAgED
+                                           -----END PRIVATE KEY-----
+
+                         Public Key Type   RSA
+                        Public Key Curve   N/A
+                     Public Key Exponent   3
+                         Public Key Size   2048
+                                  Serial   30:30
+                        Serial (decimal)   0
+                            Serial (hex)   0x00
+                     Certificate Version   2
+                     Issuer Country Code   US
+                     Signature Algorithm   sha1WithRSAEncryption
+                    Fingerprint (sha256)   14 65 FA 20 53 97 B8 76 FA A6 F0 A9 95 8E 55 90 E4 0F CC 7F AA 4F B7 C2 C8 67 75 21 FB
+                                           5F B6 58
+                      Fingerprint (sha1)   AD 7E 1C 28 B0 64 EF 8F 60 03 40 20 14 C3 D0 E3 37 0E B5 8A
+                       Fingerprint (md5)   32 4A 4B BB C8 63 69 9B BE 74 9A C6 DD 1D 46 24
+                      Fingerprint (SPKI)   15 F1 4A C4 5C 9C 7D A2 33 D3 47 91 64 E8 13 7F E3 5E E0 F3 8A E8 58 18 3F 08 41 0E A8
+                                           2A C4 B4
+                              Not Before   2004-06-29T17:39:16
+                               Not After   2034-06-29T17:39:16
+            Subject Key Identifier (SKI)   BF 5F B7 D1 CE DD 1F 86 F4 5B 55 AC DC D7 10 C2 0E A9 88 E7
+                 Compromised Certificate   OK
+                 Compromised Private Key   OK
+              Common CA Database (CCADB)   Trusted
+                                           In Common CA Database 2022.03.14 (Mozilla, Microsoft, and Apple)
+                                    Java   Trusted
+                                           In Java Root CA Trust Store java 17.0.2 2022-01-18 LTS
+                                 Android   Trusted
+                                           Android 2.2 (Froyo) 2010 Trusted
+                                           Android 2.3 (Gingerbread) 2010 Trusted
+                                           Android 3 (Honeycomb) 2011 Trusted
+                                           Android 4 (Ice Cream Sandwich) 2011 Trusted
+                                           Android 4.4 (KitKat) 2013 Trusted
+                                           Android 7 (Nougat) 2016 Trusted
+                                           Android 8 (Oreo) 2017 Trusted
+                                           Android 9 (Pie) 2018 Trusted
+                                           Android 10 (Q) 2019 Trusted
+                                           Android 11 2020 Trusted
+                                           Android 12 2021 Trusted
+                                   Linux   Trusted
+                                           In Linux 5.16.10-arch1-1 Root CA Trust Store
+                                  Python   Trusted
+                                           In Python certifi==2021.10.8 Root CA Trust Store (Django, requests, urllib, and
+                                           anything based from these)
+      MinTsifry Rossii Database (Russia)   Not Trusted
+                                           No Root CA Certificate in the MinTsifry Rossii Trust Store
+              Extention basicConstraints   critical=False
+                                           ca=True
+                                           path_length=null
+
+                                                  Expires in 4489 days (12 years)
+Intermediate CA: /C=US/ST=Arizona/L=Scottsdale/O=Starfield Technologies, Inc./CN=Starfield Services Root Certificate Authority - G2
+
+                                           Result
+ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                       Certificate Valid   Valid
+                                  Note 1   Your private key is exposed; Attackers in possession of the private key can impersonate
+                                           the website, eavesdrop on encrypted traffic they have copied, or digitally sign malware
+                                           on your behalf and distribute to target systems as you identified as the attacker
+              Certificate is not expired   Pass
+          Certificate issued in the past   Pass
+                  Subject CN was defined   Pass
+           Not a self-signed Certificate   Pass
+   Avoid known weak signature algorithms   Pass
+  Avoid known weak public key algorithms   Pass
+           Certificate chain not revoked   Pass
+                          [PCI] Key Size   Pass
+                         [FIPS] Key Size   Pass
+                         [NIST] Key Size   Pass
+        Derived private key (PEM format)   -----BEGIN PRIVATE KEY-----
+                                           MIIBJwIBADANBgkqhkiG9w0BAQEFAASCAREwggENAgEAAoIBAQDVDDrEKvlO4vW+
+                                           GZdfjohTsR8/y8+fIBNtKTrID30892t2OGPZNmCom15cAICyL1l/9of5JUOG52kb
+                                           UpqQ4XHj2C0NTm/2yEnZtvMaVq4rtnQU68/7JuMauh2WLmo7WJSJR1b/JaCTcFOD
+                                           2oR0FMNnngRoOt+OQFodSk7PQ5E751bWAHDLUu57fa4657wx+UX2wmDPE1kCK4DM
+                                           NEffud6QZW0CzyyRpqbn3oUYSXxmTqM6bam17jQuug0DuDPfR+uxa40l2ZvOgdFF
+                                           RjKWcIfeAg5JQ4W2bHO7ZOphQazJ1FTfhy/HIrImzJ9ZVGif/L4qL8RVHHVAYBeF
+                                           AlU5i38FAgMBAAE=
+                                           -----END PRIVATE KEY-----
+
+                         Public Key Type   RSA
+                        Public Key Curve   N/A
+                     Public Key Exponent   65537
+                         Public Key Size   2048
+                                  Serial   61:37:30:65:34:61:34:63:33:34:38:32:62:37:37:66
+                        Serial (decimal)   12037640545166866303
+                            Serial (hex)   0xa70e4a4c3482b77f
+                     Certificate Version   2
+                     Issuer Country Code   US
+                     Signature Algorithm   sha256WithRSAEncryption
+                    Fingerprint (sha256)   28 68 9B 30 E4 C3 06 AA B5 3B 02 7B 29 E3 6A D6 DD 1D CF 4B 95 39 94 48 2C A8 4B DC 1E
+                                           CA C9 96
+                      Fingerprint (sha1)   9E 99 A4 8A 99 60 B1 49 26 BB 7F 3B 02 E2 2D A2 B0 AB 72 80
+                       Fingerprint (md5)   C6 15 09 25 CF EA 59 41 DD C7 FF 2A 0A 50 66 92
+                      Fingerprint (SPKI)   2B 07 1C 59 A0 A0 AE 76 B0 EA DB 2B AD 23 BA D4 58 0B 69 C3 60 1B 63 0C 2E AF 06 13 AF
+                                           A8 3F 92
+                              Not Before   2009-09-02T00:00:00
+                               Not After   2034-06-28T17:39:16
+            Subject Key Identifier (SKI)   9C 5F 00 DF AA 01 D7 30 2B 38 88 A2 B8 6D 4A 9C F2 11 91 83
+          Authority Key Identifier (AKI)   BF 5F B7 D1 CE DD 1F 86 F4 5B 55 AC DC D7 10 C2 0E A9 88 E7
+                 Compromised Certificate   OK
+                 Compromised Private Key   OK
+              Revocation: Mozilla CRLite   Not Revoked
+       Indicators of Phishing or Malware   OK
+      MinTsifry Rossii Database (Russia)   Not Trusted
+                                           Unknown
+              Extention basicConstraints   critical=True
+                                           ca=True
+                                           path_length=null
+                      Extension keyUsage   critical=True
+                                           digital_signature=True
+                                           content_commitment=False
+                                           key_encipherment=False
+                                           data_encipherment=False
+                                           key_agreement=False
+                                           key_cert_sign=True
+                                           crl_sign=True
+                                           digital_signature
+                                           key_cert_sign
+                                           crl_sign
+           Extension authorityInfoAccess   critical=False
+                                           access_location=http://o.ss2.us/
+                                           access_method=OCSP
+                                           access_location=http://x.ss2.us/x.cer
+                                           access_method=caIssuers
+         Extension cRLDistributionPoints   critical=False
+                                           full_name=http://s.ss2.us/r.crl
+                                           relative_name
+                                           reasons
+                                           crl_issuer=
+           Extention certificatePolicies   critical=False
+
+                                                            Issuer: None
+                                                  Expires in 4488 days (12 years)
+                                         Leaf Certificate aws.amazon.com:443 (13.35.139.73)
+
+                                             Result
+ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                         Certificate Valid   Validation Errors
+                   Certificate Chain Valid   Valid
+       Certificate Chain Validation Result   Validated: digital_signature,key_encipherment,server_auth
+                                    Note 1   Your private key is exposed; Attackers in possession of the private key can
+                                             impersonate the website, eavesdrop on encrypted traffic they have copied, or
+                                             digitally sign malware on your behalf and distribute to target systems as you
+                                             identified as the attacker
+                                    Note 2   This domain is not enabled for DNSSEC (rfc6840), DS and DNSKEY records were not
+                                             provided
+                                    Note 3   DV Certificates are favored by attackers and seeing one used raises skepticism. DV
+                                             Certificates are issued for ease-of-use and not for security purposes, and there are
+                                             known trivial DNS take-over attacks enabled by DV Certificates. An OV or EV
+                                             Certificate is the distinct opposite of a DV Certificate, attackers avoid using them,
+                                             they are issued for security purposes specifically as an effective mitigation to the
+                                             known DNS take-over attacks.
+                                    Note 4   This domain is not enabled for CAA verification (rfc8659), CAA DNS records were not
+                                             provided
+                                    Note 5   Server preferred protocol TLSv1.3 (0x304) was avoided and TLSv1 (0x301) was
+                                             negotiated instead, consider Signaling Cipher Suite Value (SCSV) for Preventing
+                                             Protocol Downgrade Attacks (rfc7507)
+                                    Note 6   TLSv1 (0x301) 2018 deprecated by PCI Council. Also in 2018, Apple, Google, Microsoft,
+                                             and Mozilla jointly announced deprecation. Officially deprecated in 2020 (rfc8996)
+                                    Note 7   Session Resumption (caching) This server has confidentiality vulnerability and a
+                                             tracking issue affecting privacy; rfc5246 recommends a lifetime of session IDs of
+                                             less than 24 hours where afterwards the client attempts a resumption and only then
+                                             the server falls back to a full handshake. The server can link both PSKs to the same
+                                             user, session resumption caching allows a user identity to be shared with third-party
+                                             trackers observing traffic on this server. Prior to TLS 1.3 this was a 0-RTT
+                                             resumption which allows malicious actors to read all of the past communications using
+                                             the same PSK. The flaw was detailed by rfc5077 in 2008 and web server default
+                                             configurations have not widely adopted the changes.
+                                    Note 8   Session Resumption (tickets) A single key is used for the sessions of multiple users
+                                             and is intended to mitigate privacy concerns of individual tracking, though a ticket
+                                             identifier can be reused by a malicious actor for multiple or subsequent connections
+                                             and decrypt all messages as resumed connections don't perform any Diffie-Hellman
+                                             exchange, so they don't offer Forward Secrecy against the compromise of the STEK.
+                                             This vulnerability was first identified by Adam Langley in 2013 which was built on
+                                             works by M. Perry. in 2012
+                                    Note 9   This webserver offers TLS compression so that when a client also supports compression
+                                             several known exploits exist that allow an attacker to perform session hijacking on
+                                             an authenticated session. BEAST (2012), CRIME (2012), and BREACH (2013) are the well
+                                             known attacks however various lesser known attacks exist such as "ssl, gone in 30
+                                             seconds" (2013) and other related Information Leakage Vulnerabilities
+                                   Note 10   Your server is not configured to accept clients that only support obsolete TLS
+                                             versions, these clients will be shown a error "ERR_SSL_VERSION_INTERFERENCE" and not
+                                             negotiate a secure connection to your server.
+                                   Note 11   PCI DSS version 3.2.1 compliance requires deprecated and known weak TLS protocols are
+                                             not supported
+                                   Note 12   PCI DSS version 3.2.1 compliance requires that no known vulnerabilities are present
+                                   Note 13   FIPS 140-2 (NIST SP800-131A transition mode) compliance requires cipher bits to
+                                             greater than 160, not be of Anonymous key exchange suites, Exchange ciphers, or many
+                                             block ciphers
+                                   Note 14   NIST SP800-131A (strict mode) compliance requires deprecated and known weak TLS
+                                             protocols are not supported
+                                   Note 15   NIST SP800-131A (strict mode) compliance requires cipher bits to greater than 160,
+                                             not be of Anonymous key exchange suites, Exchange ciphers, or many block ciphers
+                Certificate is not expired   Pass
+            Certificate issued in the past   Pass
+                    Subject CN was defined   Pass
+               Subject CN has valid syntax   Pass
+   Subject CN matches the server host name   Pass
+             Not a self-signed Certificate   Pass
+     Avoid known weak signature algorithms   Pass
+    Avoid known weak public key algorithms   Pass
+            Avoid deprecated TLS protocols   Fail
+        Avoid deprecated DNSSEC algorithms   Pass
+                          Leaf is not a CA   Pass
+             Key usage appropriate for TLS   Pass
+             Certificate chain not revoked   Pass
+            Root CA Certificate is trusted   Pass
+                     OCSP Staple satisfied   Pass
+                            [PCI] Key Size   Pass
+                         [PCI] Cipher bits   Pass
+                [PCI] Deprecated protocols   Fail
+                     [PCI] Weak algorithms   Pass
+       [PCI] Vulnerable session resumption   Fail
+            [PCI] Vulnerable renegotiation   Pass
+              [PCI] Vulnerable compression   Fail
+                           [FIPS] Key Size   Pass
+       [FIPS] No ClientAuth for TLS1.0/1.1   Pass
+               [FIPS] Deprecated protocols   Pass
+                        [FIPS] Cipher bits   Fail
+                           [NIST] Key Size   Pass
+               [NIST] Deprecated protocols   Fail
+                        [NIST] Cipher bits   Fail
+          Derived private key (PEM format)   -----BEGIN PRIVATE KEY-----
+                                             MIIBJwIBADANBgkqhkiG9w0BAQEFAASCAREwggENAgEAAoIBAQDQP1Qyrg2TlzdF
+                                             TMYHk+Elxva1SQgB1SOBMsZ7YVtlzmaTeVOkFIZCnDIUUljN9DMFHIt06xBSF2rP
+                                             ys7WEH4y4sL1Bd0dcERmwL16hVD0QZfm54tRVgdgWKmIY1D2f7xnhEK1NZHMT5x5
+                                             4yDprMpbNqK7agBHDEqgq0EN+wOySumHTLoz3bbnSZrlTCkp1Cv08Ca7fsEX7n3c
+                                             CBOJFty/OMNWidhcPzGF6lFlovMlTZ9zehlGuyNhZt7q0d2xasw8wjkchO/LaqMH
+                                             xdbBuub7ixNsM8fPBRsD30PfVzfiqqU68qD/15ZErlwGneGCwNewFhLrFmUNsLyO
+                                             qHENnjFDAgMBAAE=
+                                             -----END PRIVATE KEY-----
+
+                           Public Key Type   RSA
+                          Public Key Curve   N/A
+                       Public Key Exponent   65537
+                           Public Key Size   2048
+                                    Serial   30:34:38:32:31:38:35:35:35:33:37:33:33:37:65:39:66:37:38:63:39:65:36:34:34:34:33:37:…
+                          Serial (decimal)   5992404112800038766396119390833065754
+                              Serial (hex)   0x4821855537337e9f78c9e644437bf1a
+                       Certificate Version   2
+                       Certificate Subject   /CN=aws.amazon.com
+                         Issuer Subject CN   Amazon
+                       Issuer Country Code   US
+                       Signature Algorithm   sha256WithRSAEncryption
+                      Fingerprint (sha256)   E6 05 73 3B 31 67 63 75 5F D0 1F 29 95 20 55 5D 56 A4 D9 D1 E4 4C 02 A0 6A 01 02 D3
+                                             35 C8 26 A9
+                        Fingerprint (sha1)   78 64 7A BC B1 44 57 70 A0 58 3A 5D 4F E2 C4 F7 1F 83 D5 22
+                         Fingerprint (md5)   8D DE 8E E8 3C A5 69 38 FB D5 11 CE 31 4F F0 EE
+                        Fingerprint (SPKI)   6C 58 83 0C 12 A1 A6 60 E8 82 5D 03 5C 7F 2D 99 1E B6 4B D1 88 8A D2 CD AD 20 97 2D
+                                             43 C7 CD FA
+                                Not Before   2021-08-05T00:00:00
+                                 Not After   2022-08-01T23:59:59
+                    Certificate Subject CN   aws.amazon.com
+              Subject Key Identifier (SKI)   59 CE A4 10 78 E0 63 CD 59 25 09 B3 E9 6C 3C F1 B6 44 90 B2
+            Authority Key Identifier (AKI)   59 A4 66 06 52 A0 7B 95 92 3C A3 94 07 27 96 74 5B F9 3D D0
+               Client Certificate Expected   No
+       Certificate Owner Validation Method   Domain Validation (DV)
+                                       CAA   Absent
+                   Compromised Certificate   OK
+                   Compromised Private Key   OK
+                 Revocation: OCSP Stapling   Present
+         Revocation: OCSP Must Staple flag   Absent
+                          Revocation: OCSP   Good
+                 Revocation: OCSP Response   Successful
+                  Revocation: OCSP Revoked   Not Revoked
+             Revocation: OCSP Revoked time   Not Revoked
+                Revocation: Mozilla CRLite   Not Revoked
+               Server Name Indicator (SNI)   Present
+                       Negotiated Protocol   TLSv1 (0x301)
+                      Offered TLS versions   TLSv1.3 (0x304)
+                                             TLSv1.2 (0x303)
+                                             TLSv1 (0x301)
+                                             TLSv1.1 (0x302)
+                         Negotiated Cipher   ECDHE-RSA-AES128-SHA
+                    Negotiated Cipher bits   128
+                    Weak negotiated cipher   Present
+                  Strong negotiated cipher   NOT OK
+                   Forward Anonymity (FPS)   Present
+              Session Resumption (caching)   Detected
+              Session Resumption (tickets)   Detected
+          Session Resumption (ticket hint)   Detected
+             Insecure Client Renegotiation   OK
+                                 TLSA/DANE   Absent
+                                    DNSSEC   Absent
+                          DNSSEC Algorithm   N/A
+           TLS downgrade prevention (SCSV)   Ineffective
+                 Server Preferred Protocol   TLSv1.3 (0x304)
+                           TLS Compression   Present
+                   TLS version intolerance   Detected
+          TLS version intolerance versions   TLSv1.4 (0x305)
+                                             TLSv1.8 (0x309)
+                                             TLSv2 (0x400)
+                                             TLSv2.1 (0x401)
+                                             TLSv2.3 (0x404)
+                  TLS version interference   Detected
+         TLS version interference versions   SSLv3 (0x300)
+                                             SSLv2 (0x2ff)
+            TLS long handshake intolerance   OK
+                      Expect-CT report-uri   Absent
+                                      HSTS   Present
+                     X-Frame-Options (XFO)   Present
+             Content Security Policy (CSP)   Absent
+       Cross-Origin-Embedder-Policy (COEP)   Absent
+         Cross-Origin-Opener-Policy (COOP)   Absent
+       Cross-Origin-Resource-Policy (CORP)   Absent
+            X-Content-Type-Options nosniff   Present
+                Referrer-Policy unsafe-url   OK
+                          X-XSS-Protection   Present
+                 HTTP response status code   200
+                                    HTTP/1   No
+                                  HTTP/1.1   Yes
+                                    HTTP/2   Yes
+                          HTTP/2 Cleartext   No
+         Indicators of Phishing or Malware   OK
+        MinTsifry Rossii Database (Russia)   Not Trusted
+                                             Unknown
+                  Extension subjectAltName   critical=False
+                                             aws.amazon.com
+                                             www.aws.amazon.com
+                                             aws-us-east-1.amazon.com
+                                             aws-us-west-2.amazon.com
+                                             amazonaws-china.com
+                                             www.amazonaws-china.com
+                                             1.aws-lbr.amazonaws.com
+                        Extension keyUsage   critical=True
+                                             digital_signature=True
+                                             content_commitment=False
+                                             key_encipherment=True
+                                             data_encipherment=False
+                                             key_agreement=False
+                                             key_cert_sign=False
+                                             crl_sign=False
+                                             digital_signature
+                                             key_encipherment
+                Extension extendedKeyUsage   critical=False
+                                             serverAuth
+                                             clientAuth
+           Extension cRLDistributionPoints   critical=False
+                                             full_name=http://crl.sca1b.amazontrust.com/sca1b.crl
+                                             relative_name
+                                             reasons
+                                             crl_issuer=
+             Extention certificatePolicies   critical=False
+             Extension authorityInfoAccess   critical=False
+                                             access_location=http://ocsp.sca1b.amazontrust.com
+                                             access_method=OCSP
+                                             access_location=http://crt.sca1b.amazontrust.com/sca1b.crt
+                                             access_method=caIssuers
+                Extention basicConstraints   critical=True
+                                             ca=False
+                                             path_length=null
+  Extension signedCertificateTimestampList   critical=False
+                                             version=v1
+                                             log_id=2979bef09e393921f056739f63a577e5be577d9c600af8f94d5d265c255dc784
+                                             timestamp=2021-08-05T00:25:24.149000
+                                             pre_certificate=True
+                                             version=v1
+                                             log_id=51a3b0f5fd01799c566db837788f0ca47acc1b27cbf79e88429a0dfed48b05e5
+                                             timestamp=2021-08-05T00:25:24.148000
+                                             pre_certificate=True
+                                             version=v1
+                                             log_id=41c8cab1df22464a10c6a13a0942875e4e318b1b03ebeb4bc768f090629606f6
+                                             timestamp=2021-08-05T00:25:24.070000
+                                             pre_certificate=True
+
+                                                           Issuer: Amazon
+                                                        Expires in 140 days
+
+  Security Score Card aws.amazon.com:443
+ ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                                  Rating   ███████╗
+                                           ██╔════╝
+                                           █████╗
+                                           ██╔══╝
+                                           ██║
+                                           ╚═╝
+                              Rating cap   F
+                          Security score   1975/3600
+                  Unscored configuration   chain_expiry
+                      Best configuration   leaf_validity_period(100)
+                      Good configuration   transport(50)
+                                           risk(50)
+                      Weak configuration   certificate_validation(-75)
+                                           caa(-75)
+                                           server_configuration(-75)
+                    Configuration issues   key_size(-125)
+                                           dnssec(-125)
+                                           cipher(-125)
+                                           trust(-125)
+                       Rating cap reason   Deprecated protocols CN=aws.amazon.com (78647abcb1445770a0583a5d4fe2c4f71f83d522)
+                           Trust summary   No CA Authorization detected, is a trusted Root CA
+                            Risk summary   No critical risks observed
+                                           Certificate uses the OCSP stapling which provides limited revocation controls
