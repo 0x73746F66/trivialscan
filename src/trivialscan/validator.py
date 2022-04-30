@@ -43,6 +43,8 @@ from tlstrust.stores.android_9 import __description__ as android9_version
 from tlstrust.stores.android_10 import __description__ as android10_version
 from tlstrust.stores.android_11 import __description__ as android11_version
 from tlstrust.stores.android_12 import __description__ as android12_version
+from tlstrust.stores.android_13 import __description__ as android13_version
+from tlstrust.stores.android_14 import __description__ as android14_version
 from . import exceptions, util, constants, pci, fips, nist
 from .transport import Transport
 from .metadata import Metadata
@@ -576,6 +578,22 @@ class RootCertValidator(Validator):
             android_stores.append(android_status)
         else:
             android_stores.append(f"{android12_version} Not Present")
+
+        if trust_store.exists(context.PLATFORM_ANDROID13):
+            android_status = f'{android13_version} {"Trusted" if trust_store.android13 else "Not Trusted"}'
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID13):
+                android_status += expired_text
+            android_stores.append(android_status)
+        else:
+            android_stores.append(f"{android13_version} Not Present")
+        if trust_store.exists(context.PLATFORM_ANDROID14):
+            android_status = f'{android14_version} {"Trusted" if trust_store.android14 else "Not Trusted"}'
+            if trust_store.expired_in_store(context.PLATFORM_ANDROID14):
+                android_status += expired_text
+            android_stores.append(android_status)
+        else:
+            android_stores.append(f"{android14_version} Not Present")
+
         data = trust_store.to_dict()
         self.metadata.trust_ccadb = trust_store.ccadb
         self.metadata.trust_ccadb_status = "".join(
@@ -601,6 +619,8 @@ class RootCertValidator(Validator):
                 trust_store.android10,
                 trust_store.android11,
                 trust_store.android12,
+                trust_store.android13,
+                trust_store.android14,
             ]
         )
         self.metadata.trust_android_status = "\n".join(android_stores)
@@ -617,7 +637,7 @@ class RootCertValidator(Validator):
             [
                 d["description"]
                 for d in data["trust_stores"]
-                if d["name"] == context.PYTHON_CERTIFI
+                if d["name"] == context.PY_CERTIFI
             ]
         )
         self.metadata.trust_russia = trust_store.russia
@@ -626,6 +646,52 @@ class RootCertValidator(Validator):
                 d["description"]
                 for d in data["trust_stores"]
                 if d["name"] == context.MINTSIFRY_ROSSII
+            ]
+        )
+        self.metadata.trust_rustls = trust_store.rustls
+        self.metadata.trust_rustls_status = "".join(
+            [
+                d["description"]
+                for d in data["trust_stores"]
+                if d["name"] == context.RUSTLS
+            ]
+        )
+        self.metadata.trust_go = trust_store.check_trust(context.LANGUAGE_GO_CERTIFI)
+        self.metadata.trust_go_status = "".join(
+            [
+                d["description"]
+                for d in data["trust_stores"]
+                if d["name"] == context.GO_CERTIFI
+            ]
+        )
+        self.metadata.trust_ruby = trust_store.check_trust(
+            context.LANGUAGE_RUBY_CERTIFI
+        )
+        self.metadata.trust_ruby_status = "".join(
+            [
+                d["description"]
+                for d in data["trust_stores"]
+                if d["name"] == context.RUBY_CERTIFI
+            ]
+        )
+        self.metadata.trust_node = trust_store.check_trust(
+            context.LANGUAGE_NODE_CERTIFI
+        )
+        self.metadata.trust_node_status = "".join(
+            [
+                d["description"]
+                for d in data["trust_stores"]
+                if d["name"] == context.NODE_CERTIFI
+            ]
+        )
+        self.metadata.trust_erlang = trust_store.check_trust(
+            context.LANGUAGE_ERLANG_CERTIFI
+        )
+        self.metadata.trust_erlang_status = "".join(
+            [
+                d["description"]
+                for d in data["trust_stores"]
+                if d["name"] == context.ERLANG_CERTIFI
             ]
         )
 

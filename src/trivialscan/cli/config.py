@@ -504,6 +504,36 @@ STYLES = {
         "colors": (CLI_COLOR_OK, CLI_COLOR_NOK),
     },
     "trust_russia_status": {"text": ""},
+    "trust_rustls": {
+        "text": "Rust (Rustls crate)",
+        "represent_as": (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED),
+        "colors": (CLI_COLOR_OK, CLI_COLOR_NOK),
+    },
+    "trust_rustls_status": {"text": ""},
+    "trust_go": {
+        "text": "Go (gocertifi module)",
+        "represent_as": (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED),
+        "colors": (CLI_COLOR_OK, CLI_COLOR_NOK),
+    },
+    "trust_go_status": {"text": ""},
+    "trust_node": {
+        "text": "Node.js (certifi library)",
+        "represent_as": (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED),
+        "colors": (CLI_COLOR_OK, CLI_COLOR_NOK),
+    },
+    "trust_node_status": {"text": ""},
+    "trust_erlang": {
+        "text": "Erlang (certifi library)",
+        "represent_as": (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED),
+        "colors": (CLI_COLOR_OK, CLI_COLOR_NOK),
+    },
+    "trust_erlang_status": {"text": ""},
+    "trust_ruby": {
+        "text": "Ruby (certifi gem)",
+        "represent_as": (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED),
+        "colors": (CLI_COLOR_OK, CLI_COLOR_NOK),
+    },
+    "trust_ruby_status": {"text": ""},
 }
 RATING_ASCII = {
     "A+": """
@@ -643,10 +673,20 @@ TRUST_KEYS = [
     "trust_android_status",
     "trust_linux",
     "trust_linux_status",
-    "trust_certifi",
-    "trust_certifi_status",
     "trust_russia",
     "trust_russia_status",
+    "trust_rustls",
+    "trust_rustls_status",
+    "trust_certifi",
+    "trust_certifi_status",
+    "trust_go",
+    "trust_go_status",
+    "trust_ruby",
+    "trust_ruby_status",
+    "trust_node",
+    "trust_node_status",
+    "trust_erlang",
+    "trust_erlang_status",
 ]
 ROOT_SKIP = (
     NEVER_SHOW
@@ -729,7 +769,13 @@ SUMMARY_SKIP = [
     "trust_java_status",
     "trust_android_status",
     "trust_linux_status",
+    "trust_russia_status",
+    "trust_rustls_status",
     "trust_certifi_status",
+    "trust_go_status",
+    "trust_node_status",
+    "trust_ruby_status",
+    "trust_erlang_status",
     "certificate_sha256_fingerprint",
     "certificate_sha1_fingerprint",
     "certificate_md5_fingerprint",

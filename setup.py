@@ -1,17 +1,11 @@
+import distutils.text_file
 from pathlib import Path
 from setuptools import setup, find_packages
 
-requirements = Path('requirements.txt')
-install_requires = []
-for line in requirements.read_text(encoding='utf8').splitlines():
-    req = line.strip()
-    if req.startswith('#'):
-        continue
-    install_requires.append(req)
-
+install_requires = distutils.text_file.TextFile(filename=str(Path(__file__).with_name('requirements.txt'))).readlines()
 setup(
     name="trivialscan",
-    version="2.3.1",
+    version="2.3.2",
     author='Christopher Langton',
     author_email='chris@trivialsec.com',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -179,11 +173,16 @@ optional arguments:
   - ✓ Deprecated protocol
   - ✓ Common Name exists, and uses valid syntax
   - ✓ Root Certificate is a CA and in a trust store
-    - ✓ Distinct Root Trust Store specific evaluations of trust
+    - ✓ Real Root CA Trust Stores; specific evaluations of trust that actually exist today (unlike Qualys and others who use 1990-2000s stores)
     - ✓ Platform specific evaluations of trust
     - ✓ Evaluations of trust for Web Browsers
-    - ✓ Programming Language specific Trust (Microservice architecture and APIs)
+    - ✓ Programming Language specific Trust (for Microservice architecture and APIs)
     - ✓ Python libraries Trust
+    - ✓ Go modules Trust
+    - ✓ Rust crates Trust
+    - ✓ Erlang libraries Trust
+    - ✓ Node.js libraries Trust
+    - ✓ Ruby gem Trust
   - ✓ Validate clientAuth expected subjects sent by server
   - ✓ Intermediate key usages are verified
   - ✓ Valid SAN

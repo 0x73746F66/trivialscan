@@ -1,5 +1,9 @@
 # Change Log
 
+## 2.3.2 Mar 14th 2022
+
+- bump `tlstrust` to support new stores and contexts
+
 ## 2.3.1 Mar 14th 2022
 
 - bump `tlstrust` to better support multiple cert chains and non-standard certs (AWS) which don't use a subject common name

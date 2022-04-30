@@ -1,3 +1,4 @@
+import platform
 import json
 import sys
 import logging
@@ -35,6 +36,7 @@ def update_bar(progress, task):
 
 def wrap_console(results: dict, summary_only: bool = False):
     console = Console()
+    console.print("\n")
     for result in results["validations"]:
         console.print(result.get("output"))
 
@@ -223,8 +225,6 @@ def cli():
     DEBUG = log_level == logging.DEBUG  # noqa: F841
 
     def version():
-        import platform
-
         print(
             f"{__version__} Python {sys.version} {platform.platform()} {platform.uname().node} {platform.uname().release} {platform.version()}"
         )

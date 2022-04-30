@@ -1,16 +1,16 @@
 from datetime import datetime
 from tlstrust.context import BROWSERS, PLATFORMS
 from tlstrust import TrustStore
-from trivialscan.nist import WEAK_CIPHER_BITS
-from trivialscan import constants
-from trivialscan.metadata import Metadata
-from trivialscan import (
+from .nist import WEAK_CIPHER_BITS
+from .metadata import Metadata
+from . import (
+    constants,
     Validator,
     LeafCertValidator,
     RootCertValidator,
     PeerCertValidator,
 )
-from trivialscan.validator import VALIDATION_VALID_CAA, VALIDATION_MESSAGES
+from .validator import VALIDATION_VALID_CAA, VALIDATION_MESSAGES
 
 
 BASE_SCORE = 2500
@@ -256,6 +256,7 @@ class Score:
                     v.metadata.trust_linux,
                     v.metadata.trust_certifi,
                     v.metadata.trust_java,
+                    v.metadata.trust_rustls,
                 ]
             )
             if not any_trust:
@@ -286,6 +287,7 @@ class Score:
                     v.metadata.trust_linux,
                     v.metadata.trust_certifi,
                     v.metadata.trust_java,
+                    v.metadata.trust_rustls,
                 ]
             )
         for v in self._validators:
@@ -380,6 +382,7 @@ class Score:
                 metadata.trust_android,
                 metadata.trust_linux,
                 metadata.trust_certifi,
+                metadata.trust_rustls,
             ]
         ):
             return MAJOR_MOD
@@ -394,6 +397,7 @@ class Score:
                     metadata.trust_android,
                     metadata.trust_linux,
                     metadata.trust_certifi,
+                    metadata.trust_rustls,
                 ]
             )
             else ISSUE_MOD

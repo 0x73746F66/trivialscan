@@ -1,15 +1,16 @@
+import logging
 from dataclasses import asdict
 from tlstrust import TrustStore
-from tlstrust.context import SOURCES, PLATFORMS, BROWSERS, LANGUAGES
-from tlstrust.stores import VERSIONS
 from rich.table import Table
 from rich.style import Style
 from rich import box
 from trivialscan import util, validator
 from trivialscan.scores import Score
-from . import config
+from trivialscan.cli import config
 
 __module__ = "trivialscan.cli.outputs"
+
+logger = logging.getLogger(__name__)
 
 
 def _make_table(result: validator.Validator, title: str, caption: str) -> Table:
@@ -309,32 +310,22 @@ def prepare_json(results: list[validator.Validator], target: str) -> dict:
         "security_rating_groups": score_card.rating_groups,
         "trust_summary": score_card.trust_summary,
         "risk_summary": score_card.risk_summary,
-        "certificate_trust": [],
         "validations": [],
     }
     for result in results:
         if isinstance(result, validator.RootCertValidator):
-            data["validations"].append(
-                validator_data(
-                    result,
-                    "Root CA",
-                    [x for x in config.ROOT_SKIP if x not in config.JSON_ONLY],
-                )
+            validation_data = validator_data(
+                result,
+                "Root CA",
+                [x for x in config.ROOT_SKIP if x not in config.JSON_ONLY],
             )
-            contexts = {**SOURCES, **PLATFORMS, **BROWSERS, **LANGUAGES}
             trust_store = TrustStore(
                 result.metadata.certificate_subject_key_identifier
                 if not result.metadata.certificate_authority_key_identifier
                 else result.metadata.certificate_authority_key_identifier
             )
-            for name, is_trusted in trust_store.all_results.items():
-                data["certificate_trust"].append(
-                    {
-                        "trust_store": name,
-                        "is_trusted": is_trusted,
-                        "version": VERSIONS[contexts[name]],
-                    }
-                )
+            validation_data["certificate_trust"] = trust_store.to_dict()
+            data["validations"].append(validation_data)
         if isinstance(result, validator.PeerCertValidator):
             cert_type = "Intermediate Certificate"
             if result.metadata.certificate_intermediate_ca:
