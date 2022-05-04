@@ -36,7 +36,7 @@ Less of a rule, just good advice. If the functionality you want to add is signif
 
 Anything you want, or one of these:
 
-⌛⌛ 3.0.0 Todo List ⌛⌛
+⌛⌛ 3.0.0 Idea List ⌛⌛
 
 - HSTS Preloading
 - Handshake Simulations
@@ -62,5 +62,3 @@ Anything you want, or one of these:
   - Public Key Modulus
   - deep link https://crt.sh/?sha1=
   - Certificate Transparency
-  - Trust Rating
-  - Risk Score (A+ to F)

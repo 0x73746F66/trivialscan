@@ -349,7 +349,7 @@ def gather_key_usages(cert: Certificate) -> tuple[list, list]:
     return validator_key_usage, validator_extended_key_usage
 
 
-def _extract_key_usage(ext):
+def _extract_key_usage(ext: extensions.Extension):
     validator_key_usage = []
     if ext.digital_signature:
         validator_key_usage.append("digital_signature")

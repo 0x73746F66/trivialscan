@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 install_requires = distutils.text_file.TextFile(filename=str(Path(__file__).with_name('requirements.txt'))).readlines()
 setup(
     name="trivialscan",
-    version="2.3.2",
+    version="3.0.0",
     author='Christopher Langton',
     author_email='chris@trivialsec.com',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -52,8 +52,7 @@ produces:
 usage: trivialscan [-h] [-H HOST] [-p PORT] [-c CAFILES] [-C CLIENT_PEM] [-t TMP_PATH_PREFIX] [--pci-dss] [--nist-strict-mode] [--fips-nist-transition-mode] [--disable-sni]
                [--show-private-key] [-s] [--hide-validation-details] [-O JSON_FILE] [--hide-progress-bars] [-v] [-vv] [-vvv] [-vvvv] [--version]
                [targets ...]
-
-positional arguments:
+ositional arguments:
   targets               All unnamed arguments are hosts (and ports) targets to test. ~$ trivialscan google.com:443 github.io owasp.org:80
 
 optional arguments:
@@ -225,7 +224,6 @@ optional arguments:
     },
     classifiers=[
         "Operating System :: OS Independent",
-        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     ],
@@ -236,6 +234,6 @@ optional arguments:
     },
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    python_requires=">=3.9",
+    python_requires=">=3.10",
     options={"bdist_wheel": {"universal": "1"}},
 )

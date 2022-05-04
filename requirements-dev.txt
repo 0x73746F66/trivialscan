@@ -1,6 +1,5 @@
 setuptools
 wheel
-semgrep
 bandit
 autopep8
 pylint
