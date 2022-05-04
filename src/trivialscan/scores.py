@@ -253,9 +253,10 @@ class Score:
                 [
                     v.metadata.trust_ccadb,
                     v.metadata.trust_android,
-                    v.metadata.trust_linux,
                     v.metadata.trust_certifi,
                     v.metadata.trust_java,
+                    v.metadata.trust_libcurl,
+                    v.metadata.trust_dart,
                     v.metadata.trust_rustls,
                 ]
             )
@@ -284,9 +285,10 @@ class Score:
                 [
                     v.metadata.trust_ccadb,
                     v.metadata.trust_android,
-                    v.metadata.trust_linux,
                     v.metadata.trust_certifi,
                     v.metadata.trust_java,
+                    v.metadata.trust_libcurl,
+                    v.metadata.trust_dart,
                     v.metadata.trust_rustls,
                 ]
             )
@@ -380,8 +382,9 @@ class Score:
                 metadata.trust_ccadb,
                 metadata.trust_java,
                 metadata.trust_android,
-                metadata.trust_linux,
                 metadata.trust_certifi,
+                metadata.trust_libcurl,
+                metadata.trust_dart,
                 metadata.trust_rustls,
             ]
         ):
@@ -395,8 +398,9 @@ class Score:
                     metadata.trust_ccadb,
                     metadata.trust_java,
                     metadata.trust_android,
-                    metadata.trust_linux,
                     metadata.trust_certifi,
+                    metadata.trust_libcurl,
+                    metadata.trust_dart,
                     metadata.trust_rustls,
                 ]
             )

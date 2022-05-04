@@ -464,7 +464,8 @@ class RootCertValidator(Validator):
                 self.metadata.trust_android,
                 self.metadata.trust_certifi,
                 self.metadata.trust_java,
-                self.metadata.trust_linux,
+                self.metadata.trust_libcurl,
+                self.metadata.trust_dart,
             ]
         )
         if self.compliance_checks[pci.VALIDATION_CA_TRUST] is False:
@@ -478,7 +479,8 @@ class RootCertValidator(Validator):
                 self.metadata.trust_android,
                 self.metadata.trust_certifi,
                 self.metadata.trust_java,
-                self.metadata.trust_linux,
+                self.metadata.trust_libcurl,
+                self.metadata.trust_dart,
             ]
         )
         if self.compliance_checks[fips.VALIDATION_CA_TRUST] is False:
@@ -492,7 +494,8 @@ class RootCertValidator(Validator):
                 self.metadata.trust_android,
                 self.metadata.trust_certifi,
                 self.metadata.trust_java,
-                self.metadata.trust_linux,
+                self.metadata.trust_libcurl,
+                self.metadata.trust_dart,
             ]
         )
         if self.compliance_checks[nist.VALIDATION_CA_TRUST] is False:
@@ -624,20 +627,36 @@ class RootCertValidator(Validator):
             ]
         )
         self.metadata.trust_android_status = "\n".join(android_stores)
-        self.metadata.trust_linux = trust_store.linux
-        self.metadata.trust_linux_status = "".join(
+        self.metadata.trust_linux = trust_store.check_trust(context.SOURCE_CCADB)
+        self.metadata.trust_linux_status = "\n".join(
             [
                 d["description"]
                 for d in data["trust_stores"]
-                if d["name"] == context.LINUX_ARCH
+                if d["name"]
+                in [
+                    context.LINUX_ARCH,
+                    context.LINUX_ALPINE,
+                    context.LINUX_CENTOS,
+                    context.LINUX_DEBIAN,
+                    context.LINUX_FEDORA,
+                    context.LINUX_RHEL,
+                    context.LINUX_UBUNTU,
+                ]
             ]
         )
         self.metadata.trust_certifi = trust_store.certifi
-        self.metadata.trust_certifi_status = "".join(
+        self.metadata.trust_certifi_status = "\n".join(
             [
                 d["description"]
                 for d in data["trust_stores"]
-                if d["name"] == context.PY_CERTIFI
+                if d["name"]
+                in [
+                    context.PY_CERTIFI,
+                    context.GO_CERTIFI,
+                    context.RUBY_CERTIFI,
+                    context.NODE_CERTIFI,
+                    context.ERLANG_CERTIFI,
+                ]
             ]
         )
         self.metadata.trust_russia = trust_store.russia
@@ -649,49 +668,135 @@ class RootCertValidator(Validator):
             ]
         )
         self.metadata.trust_rustls = trust_store.rustls
-        self.metadata.trust_rustls_status = "".join(
+        self.metadata.trust_rustls_status = "\n".join(
             [
                 d["description"]
                 for d in data["trust_stores"]
-                if d["name"] == context.RUSTLS
+                if d["name"]
+                in [
+                    context.RUST_WINDOWS,
+                    context.RUST_LINUX,
+                    context.RUST_APPLE,
+                    context.RUST_RUSTLS,
+                    context.RUST_WEBPKI,
+                ]
             ]
         )
         self.metadata.trust_go = trust_store.check_trust(context.LANGUAGE_GO_CERTIFI)
-        self.metadata.trust_go_status = "".join(
+        self.metadata.trust_go_status = "\n".join(
             [
                 d["description"]
                 for d in data["trust_stores"]
-                if d["name"] == context.GO_CERTIFI
+                if d["name"]
+                in [
+                    context.GO_WINDOWS,
+                    context.GO_LINUX,
+                    context.GO_APPLE,
+                ]
             ]
         )
         self.metadata.trust_ruby = trust_store.check_trust(
             context.LANGUAGE_RUBY_CERTIFI
         )
-        self.metadata.trust_ruby_status = "".join(
+        self.metadata.trust_ruby_status = "\n".join(
             [
                 d["description"]
                 for d in data["trust_stores"]
-                if d["name"] == context.RUBY_CERTIFI
+                if d["name"]
+                in [
+                    context.RUBY_WINDOWS,
+                    context.RUBY_LINUX,
+                    context.RUBY_APPLE,
+                ]
             ]
         )
         self.metadata.trust_node = trust_store.check_trust(
             context.LANGUAGE_NODE_CERTIFI
         )
-        self.metadata.trust_node_status = "".join(
+        self.metadata.trust_node_status = "\n".join(
             [
                 d["description"]
                 for d in data["trust_stores"]
-                if d["name"] == context.NODE_CERTIFI
+                if d["name"]
+                in [
+                    context.NODE_WINDOWS,
+                    context.NODE_LINUX,
+                    context.NODE_APPLE,
+                ]
             ]
         )
         self.metadata.trust_erlang = trust_store.check_trust(
             context.LANGUAGE_ERLANG_CERTIFI
         )
-        self.metadata.trust_erlang_status = "".join(
+        self.metadata.trust_erlang_status = "\n".join(
             [
                 d["description"]
                 for d in data["trust_stores"]
-                if d["name"] == context.ERLANG_CERTIFI
+                if d["name"]
+                in [
+                    context.ERLANG_WINDOWS,
+                    context.ERLANG_LINUX,
+                    context.ERLANG_APPLE,
+                ]
+            ]
+        )
+        self.metadata.trust_dart = trust_store.check_trust(context.SOURCE_DART)
+        self.metadata.trust_dart_status = "".join(
+            [
+                d["description"]
+                for d in data["trust_stores"]
+                if d["name"] == context.DART
+            ]
+        )
+        self.metadata.trust_libcurl = trust_store.check_trust(context.SOURCE_CURL)
+        self.metadata.trust_libcurl_status = "\n".join(
+            [
+                d["description"]
+                for d in data["trust_stores"]
+                if d["name"]
+                in [
+                    context.CURL_WINDOWS,
+                    context.CURL_LINUX,
+                    context.CURL_APPLE,
+                ]
+            ]
+        )
+        self.metadata.trust_elixir = any(
+            [
+                trust_store.check_trust(context.LANGUAGE_ELIXIR_MINT),
+                trust_store.check_trust(context.LANGUAGE_ELIXIR_WINDOWS_SERVER),
+                trust_store.check_trust(context.LANGUAGE_ELIXIR_LINUX_SERVER),
+                trust_store.check_trust(context.LANGUAGE_ELIXIR_MACOS_SERVER),
+            ]
+        )
+        self.metadata.trust_elixir_status = "\n".join(
+            [
+                d["description"]
+                for d in data["trust_stores"]
+                if d["name"]
+                in [
+                    context.ELIXIR_MINT,
+                    context.ELIXIR_WINDOWS,
+                    context.ELIXIR_LINUX,
+                    context.ELIXIR_APPLE,
+                ]
+            ]
+        )
+        self.metadata.trust_bsd = any(
+            [
+                trust_store.check_trust(context.PLATFORM_OPENBSD),
+                trust_store.check_trust(context.PLATFORM_FREEBSD),
+            ]
+        )
+        self.metadata.trust_bsd_status = "\n".join(
+            [
+                d["description"]
+                for d in data["trust_stores"]
+                if d["name"]
+                in [
+                    context.FREEBSD,
+                    context.OPENBSD,
+                ]
             ]
         )
 

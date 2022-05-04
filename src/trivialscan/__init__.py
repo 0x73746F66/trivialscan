@@ -15,7 +15,7 @@ from .validator import (
 )
 
 
-__version__ = "trivialscan==2.3.2"
+__version__ = "trivialscan==2.3.3"
 __module__ = "trivialscan"
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"

@@ -480,6 +480,12 @@ STYLES = {
         "colors": (CLI_COLOR_OK, CLI_COLOR_NOK),
     },
     "trust_linux_status": {"text": ""},
+    "trust_bsd": {
+        "text": "BSD",
+        "represent_as": (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED),
+        "colors": (CLI_COLOR_OK, CLI_COLOR_NOK),
+    },
+    "trust_bsd_status": {"text": ""},
     "trust_java": {
         "text": "Java",
         "represent_as": (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED),
@@ -534,6 +540,24 @@ STYLES = {
         "colors": (CLI_COLOR_OK, CLI_COLOR_NOK),
     },
     "trust_ruby_status": {"text": ""},
+    "trust_libcurl": {
+        "text": "libcurl",
+        "represent_as": (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED),
+        "colors": (CLI_COLOR_OK, CLI_COLOR_NOK),
+    },
+    "trust_libcurl_status": {"text": ""},
+    "trust_dart": {
+        "text": "Dart Native",
+        "represent_as": (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED),
+        "colors": (CLI_COLOR_OK, CLI_COLOR_NOK),
+    },
+    "trust_dart_status": {"text": ""},
+    "trust_elixir": {
+        "text": "Elixir",
+        "represent_as": (CLI_VALUE_TRUSTED, CLI_VALUE_NOT_TRUSTED),
+        "colors": (CLI_COLOR_OK, CLI_COLOR_NOK),
+    },
+    "trust_elixir_status": {"text": ""},
 }
 RATING_ASCII = {
     "A+": """
@@ -673,6 +697,8 @@ TRUST_KEYS = [
     "trust_android_status",
     "trust_linux",
     "trust_linux_status",
+    "trust_bsd",
+    "trust_bsd_status",
     "trust_russia",
     "trust_russia_status",
     "trust_rustls",
@@ -687,6 +713,12 @@ TRUST_KEYS = [
     "trust_node_status",
     "trust_erlang",
     "trust_erlang_status",
+    "trust_libcurl",
+    "trust_libcurl_status",
+    "trust_dart",
+    "trust_dart_status",
+    "trust_elixir",
+    "trust_elixir_status",
 ]
 ROOT_SKIP = (
     NEVER_SHOW
@@ -769,6 +801,7 @@ SUMMARY_SKIP = [
     "trust_java_status",
     "trust_android_status",
     "trust_linux_status",
+    "trust_bsd_status",
     "trust_russia_status",
     "trust_rustls_status",
     "trust_certifi_status",
@@ -776,6 +809,9 @@ SUMMARY_SKIP = [
     "trust_node_status",
     "trust_ruby_status",
     "trust_erlang_status",
+    "trust_libcurl_status",
+    "trust_dart_status",
+    "trust_elixir_status",
     "certificate_sha256_fingerprint",
     "certificate_sha1_fingerprint",
     "certificate_md5_fingerprint",

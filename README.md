@@ -13,13 +13,13 @@ Package `trivialscan` provides a command-line tool `trivialscan` which contacts 
 
 You can use `trivialscan` on your internal network or local computer, to test your servers while they are being developed. It is equally capable of reaching any other internet connected server also.
 
-## [Change Log](./docs/z.change-log.md)
+# [Change Log](./docs/z.change-log.md)
 
-## Documentation
+# Documentation
 
 See [Documentation](./docs/0.index.md) section of this repository
 
-## Features
+# Features
 
 - Compliance
   - PCI DSS 3.2.1
@@ -46,6 +46,8 @@ See [Documentation](./docs/0.index.md) section of this repository
   - ✓ Downgrade attack detection and SCSV
   - ✓ TLS version intolerance
   - ✓ TLS version interference
+  - ✓ TLS long handshake intolerance detection
+  - ✓ TLSA/DANE detection
 - DNS Information
   - ✓ Certification Authority Authorization (CAA) present
   - ✓ CAA Valid
@@ -105,11 +107,10 @@ See [Documentation](./docs/0.index.md) section of this repository
   - ✓ Deprecated protocol
   - ✓ Common Name exists, and uses valid syntax
   - ✓ Root Certificate is a CA and in a trust store
-    - ✓ Distinct Root Trust Store specific evaluations of trust
+    - ✓ Real Root CA Trust Stores; specific evaluations of trust that actually exist today (unlike Qualys and others who use 1990-2000s stores)
     - ✓ Platform specific evaluations of trust
     - ✓ Evaluations of trust for Web Browsers
-    - ✓ Programming Language specific Trust (Microservice architecture and APIs)
-    - ✓ Python libraries Trust
+    - ✓ Programming Language specific Trust (for Microservice architecture and APIs)
   - ✓ Validate clientAuth expected subjects sent by server
   - ✓ Intermediate key usages are verified
   - ✓ Valid SAN
@@ -134,12 +135,30 @@ See [Documentation](./docs/0.index.md) section of this repository
   - ✓ Server certificates should not be a CA
   - ✓ When client certificate presented, check cert usage permits clientAuth
   - ✓ Certificate is not self signed
-  - ✓ Known compromised Certificates
+  - ✓ Compromised Certificate
+  - ✓ Compromised Private Key
 - Authentication
   - ✓ clientAuth
 - ✓ CLI output evaluation duration
 - ✓ OpenSSL verify errors are actually evaluated and reported instead of either terminate connection or simply ignored (default approach most use VERIFY_NONE we actually let openssl do verification and keep the connection open anyway)
 
-## I have paid for weak certs, what now?
+# Trust Stores
+
+Only the following are distinct Root CA Certificate bundles, also refered to as Trust Stores:
+
+1. Common Certificate Authority Database (CCADB)
+2. Java(TM) SE Runtime Environment
+3. Google Trust Services
+4. Rustls (curated CCADB)
+5. libcurl (curated CCADB)
+6. Dart Native (curated CCADB)
+7. Certifi (curated CCADB)
+8. MinTsifry Rossii
+
+Others may exist so please inform us of any we don't already track.
+
+There are many contexts that rely on one of the above, including Microsoft, Apple, Linux, and Mozilla that all rely on CCADB directly.
+
+# I have paid for weak certs, what now?
 
 Likely you can get a free Certificate Reissuance: [Debian keep a list](https://wiki.debian.org/SSLkeys#SSL_Certificate_Reissuance) of references that might help, otherwise contact your cert issuer and ask them to correct the problem for free.

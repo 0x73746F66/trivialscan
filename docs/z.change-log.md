@@ -1,14 +1,18 @@
 # Change Log
 
-## 2.3.2 Mar 14th 2022
+## 2.3.3 May 4th 2022
 
 - bump `tlstrust` to support new stores and contexts
 
-## 2.3.1 Mar 14th 2022
+## 2.3.2 May 1st 2022
+
+- bump `tlstrust` to support new stores and contexts
+
+## 2.3.1 Apr 12th 2022
 
 - bump `tlstrust` to better support multiple cert chains and non-standard certs (AWS) which don't use a subject common name
 
-## 2.3.0 Mar 14th 2022
+## 2.3.0 Mar 15th 2022
 
 - refactored cli to eliminate an exception and show clean output
 - when specifying JSON out put the console output is not shown

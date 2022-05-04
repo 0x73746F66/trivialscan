@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 install_requires = distutils.text_file.TextFile(filename=str(Path(__file__).with_name('requirements.txt'))).readlines()
 setup(
     name="trivialscan",
-    version="2.3.2",
+    version="2.3.3",
     author='Christopher Langton',
     author_email='chris@trivialsec.com',
     description="Validate the security of your TLS connections so that they deserve your trust.",
@@ -14,7 +14,7 @@ setup(
 
 Validate the security of your TLS connections so that they deserve your trust.
 
-## [Documentation](https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/0.index.md)
+# [Documentation](https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/0.index.md)
 
 Summary CLI output
 
@@ -26,7 +26,7 @@ Security Score Card
 
 For full CLI output and JSON format please look in `examples/` of the Gitlab repository
 
-## Basic Usage
+# Basic Usage
 
 `python3 -m pip install -U trivialscan`
 
@@ -85,7 +85,7 @@ optional arguments:
   --version
 ```
 
-## Features
+# Features
 
 - Compliance
   - PCI DSS 3.2.1
@@ -177,12 +177,6 @@ optional arguments:
     - ✓ Platform specific evaluations of trust
     - ✓ Evaluations of trust for Web Browsers
     - ✓ Programming Language specific Trust (for Microservice architecture and APIs)
-    - ✓ Python libraries Trust
-    - ✓ Go modules Trust
-    - ✓ Rust crates Trust
-    - ✓ Erlang libraries Trust
-    - ✓ Node.js libraries Trust
-    - ✓ Ruby gem Trust
   - ✓ Validate clientAuth expected subjects sent by server
   - ✓ Intermediate key usages are verified
   - ✓ Valid SAN
@@ -213,6 +207,23 @@ optional arguments:
   - ✓ clientAuth
 - ✓ CLI output evaluation duration
 - ✓ OpenSSL verify errors are actually evaluated and reported instead of either terminate connection or simply ignored (default approach most use VERIFY_NONE we actually let openssl do verification and keep the connection open anyway)
+
+# Trust Stores
+
+Only the following are distinct Root CA Certificate bundles, also refered to as Trust Stores:
+
+1. Common Certificate Authority Database (CCADB)
+2. Java(TM) SE Runtime Environment
+3. Google Trust Services
+4. Rustls (curated CCADB)
+5. libcurl (curated CCADB)
+6. Dart Native (curated CCADB)
+7. Certifi (curated CCADB)
+8. MinTsifry Rossii
+
+Others may exist so please inform us of any we don't already track.
+
+There are many contexts that rely on one of the above, including Microsoft, Apple, Linux, and Mozilla that all rely on CCADB directly.
 
 ## [Change Log](https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/z.change-log.md)
     """,
