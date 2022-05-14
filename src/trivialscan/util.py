@@ -3,11 +3,12 @@ import string
 import random
 import sqlite3
 from io import BytesIO
-from datetime import datetime, timedelta
+from datetime import datetime, date, time, timedelta
 from urllib.request import urlretrieve
 from urllib.parse import urlparse
 from binascii import hexlify
 from pathlib import Path
+from decimal import Decimal
 import requests
 import validators
 from cryptography import x509
@@ -22,11 +23,42 @@ from dns import resolver, dnssec, rdatatype, message, query, name as dns_name
 from dns.exception import DNSException, Timeout as DNSTimeoutError
 from dns.resolver import NoAnswer
 from tldextract import TLDExtract
+from tlstrust import util as tlstrust_util
+from tlstrust.context import STORES
 from . import constants
+from .certificate import (
+    BaseCertificate,
+    RootCertificate,
+    IntermediateCertificate,
+    LeafCertificate,
+)
 
 __module__ = "trivialscan.util"
 
 logger = logging.getLogger(__name__)
+
+
+def force_str(s, encoding="utf-8", strings_only=False, errors="strict"):
+    if issubclass(type(s), str):
+        return s
+    if strings_only and isinstance(
+        s,
+        (
+            type(None),
+            int,
+            float,
+            Decimal,
+            datetime,
+            date,
+            time,
+        ),
+    ):
+        return s
+    if isinstance(s, bytes):
+        s = str(s, encoding, errors)
+    else:
+        s = str(s)
+    return s
 
 
 def filter_valid_files_urls(inputs: list[str], tmp_path_prefix: str = "/tmp"):
@@ -928,7 +960,7 @@ def crlite_revoked(db_path: str, pem: bytes):
     return any(results)
 
 
-@retry(SSL.WantReadError, tries=5, delay=0.5)
+@retry(SSL.WantReadError, tries=3, delay=0.5)
 def do_handshake(conn):
     try:
         conn.do_handshake()
@@ -938,3 +970,71 @@ def do_handshake(conn):
 
 def average(values: list):
     return sum(values) / len(values)
+
+
+def get_certificates(
+    leaf: X509, certificates: list[X509], hostname: str
+) -> list[BaseCertificate]:
+    roots: list[X509] = []
+    ret_certs = []
+    leaf_aki = tlstrust_util.get_key_identifier_hex(
+        leaf.to_cryptography(),
+        extension=extensions.AuthorityKeyIdentifier,
+        key="key_identifier",
+    )
+    leaf_ski = tlstrust_util.get_key_identifier_hex(
+        leaf.to_cryptography(), extension=extensions.SubjectKeyIdentifier, key="digest"
+    )
+    aki_lookup = {leaf_aki: [leaf]}
+    for cert in certificates:
+        aki = tlstrust_util.get_key_identifier_hex(
+            cert.to_cryptography(),
+            extension=extensions.AuthorityKeyIdentifier,
+            key="key_identifier",
+        )
+        aki_lookup.setdefault(aki, [])
+        aki_lookup[aki].append(cert)
+        for _, context_type in STORES.items():
+            try:
+                ret = tlstrust_util.get_certificate_from_store(aki, context_type)
+            except FileExistsError:
+                continue
+            root_ski = tlstrust_util.get_key_identifier_hex(
+                ret.to_cryptography(),
+                extension=extensions.SubjectKeyIdentifier,
+                key="digest",
+            )
+            if root_ski not in [
+                tlstrust_util.get_key_identifier_hex(
+                    c.to_cryptography(),
+                    extension=extensions.SubjectKeyIdentifier,
+                    key="digest",
+                )
+                for c in roots
+            ]:
+                roots.append(ret)
+
+    def next_chain(ski: str, lookup: dict):
+        for next_cert in lookup.get(ski, []):
+            next_ski = tlstrust_util.get_key_identifier_hex(
+                next_cert.to_cryptography(),
+                extension=extensions.SubjectKeyIdentifier,
+                key="digest",
+            )
+            ret_certs.append(
+                LeafCertificate(next_cert, hostname)
+                if next_ski == leaf_ski
+                else IntermediateCertificate(next_cert)
+            )
+            next_chain(next_ski, lookup)
+
+    for cert in roots:
+        ski = tlstrust_util.get_key_identifier_hex(
+            cert.to_cryptography(),
+            extension=extensions.SubjectKeyIdentifier,
+            key="digest",
+        )
+        next_chain(ski, aki_lookup)
+        ret_certs.append(RootCertificate(cert))
+
+    return list({v.sha1_fingerprint: v for v in ret_certs}.values())

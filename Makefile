@@ -16,7 +16,7 @@ deps: ## install dependancies for development of this project
 setup: deps ## setup for development of this project
 	pre-commit install --hook-type pre-push --hook-type pre-commit
 	@ [ -f .secrets.baseline ] || ( detect-secrets scan > .secrets.baseline )
-	detect-secrets audit .secrets.baseline
+	yes | detect-secrets audit .secrets.baseline
 
 install: ## Install the package
 	pip install -U dist/trivialscan-$(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')-py2.py3-none-any.whl

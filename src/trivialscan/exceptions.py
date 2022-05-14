@@ -87,6 +87,10 @@ VALIDATION_ERROR_VERSION_INTERFERENCE_OBSOLETE = 'Your server is not configured 
 VALIDATION_ERROR_MISSING_ROOT_CA_AKI = "The intermediate Certificate with serial number {serial_number} has no Authority Key Identifier (AKI) which indicates either it was intended to be the Root CA and was not in the Trust Store, or it may have been issued invalid without an AKI, or the server provided a malformed Certificate. Without an AKI a valid Certificate chain can not be formed and there is not verifiable trust anchor. The Server Certificate is considered invalid, fake, or malicious."
 
 
+class TransportError(ConnectionError):
+    """Used when Transport class specific issues are encountered that are not validation related"""
+
+
 class ValidationError(ValueError):
     def __init__(self, message: str = None, openssl_errno: int = None):
         if openssl_errno in X509_MESSAGES.keys():
