@@ -188,31 +188,54 @@ def cli():
         True for n in config.get("outputs", []) if n.get("type") == "console"
     )
 
-    with Progress(
-        TextColumn("{task.description}", table_column=Column(ratio=2)),
-        MofNCompleteColumn(table_column=Column(ratio=1)),
-        SpinnerColumn(table_column=Column(ratio=2)),
-        expand=False,
-    ) as progress:
+    if config["defaults"].get("hide_progress_bars"):
         the_pool = Pool(
             cpu_count(),
             wrap_analyse,
-            (queue_in, queue_out, progress.console if use_console else None, config),
+            (queue_in, queue_out, console if use_console else None, config),
         )
-        task_id = progress.add_task("Evaluating domains", total=num_targets)
         for target in targets:
             queue_in.put(target)
         for _ in range(num_targets):
             result = queue_out.get()
             if use_console:
-                progress.console.print(
+                console.print(
                     f'{result["_metadata"]["transport"]["hostname"]}:{result["_metadata"]["transport"]["port"]} [green]DONE![/green]',
                     highlight=False,
                 )
             queries.append(result)
-            progress.advance(task_id)
-        progress.update(task_id, completed=num_targets)
-        progress.stop_task(task_id)
+
+    else:
+        with Progress(
+            TextColumn("{task.description}", table_column=Column(ratio=2)),
+            MofNCompleteColumn(table_column=Column(ratio=1)),
+            SpinnerColumn(table_column=Column(ratio=2)),
+            expand=False,
+        ) as progress:
+            the_pool = Pool(
+                cpu_count(),
+                wrap_analyse,
+                (
+                    queue_in,
+                    queue_out,
+                    progress.console if use_console else None,
+                    config,
+                ),
+            )
+            task_id = progress.add_task("Evaluating domains", total=num_targets)
+            for target in targets:
+                queue_in.put(target)
+            for _ in range(num_targets):
+                result = queue_out.get()
+                if use_console:
+                    progress.console.print(
+                        f'{result["_metadata"]["transport"]["hostname"]}:{result["_metadata"]["transport"]["port"]} [green]DONE![/green]',
+                        highlight=False,
+                    )
+                queries.append(result)
+                progress.advance(task_id)
+            progress.update(task_id, completed=num_targets)
+            progress.stop_task(task_id)
 
     queue_in.close()
     queue_in.join_thread()

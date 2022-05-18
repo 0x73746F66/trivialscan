@@ -199,7 +199,7 @@ def get_certificate_extensions(cert: Certificate) -> list[dict]:
             "name": ext.oid._name,  # pylint: disable=protected-access
         }
         if isinstance(ext.value, extensions.UnrecognizedExtension):
-            continue
+            data = {**data, **vars(ext.value)}
         if isinstance(ext.value, extensions.CRLNumber):
             data[data["name"]] = ext.value.crl_number
         if isinstance(ext.value, extensions.AuthorityKeyIdentifier):
@@ -708,6 +708,7 @@ def get_tlsa_answer(domain_name: str) -> resolver.Answer:
 def get_dnssec_answer(domain_name: str):
     logger.info(f"Trying to resolve DNSSEC for {domain_name}")
     dns_resolver = resolver.Resolver(configure=False)
+    dns_resolver.nameservers = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
     dns_resolver.lifetime = 5
     tldext = TLDExtract(cache_dir="/tmp")(f"http://{domain_name}")
     answers = []
@@ -731,7 +732,6 @@ def get_dnssec_answer(domain_name: str):
     except ConnectionError:
         logger.warning("Name or service not known")
         return None
-    dns_resolver.nameservers = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
     nameservers = []
     for ns in [i.to_text() for i in response.rrset]:
         logger.info(f"Checking A for {ns}")

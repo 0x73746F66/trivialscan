@@ -1,18 +1,14 @@
-from ...constants import NOT_KNOWN_WEAK_CIPHERS
+from ...constants import WEAK_PROTOCOL
 from ...transport import TransportState
 from ...transport import Transport
 from .. import BaseEvaluationTask
 
 
 class EvaluationTask(BaseEvaluationTask):
-    def __init__(  # pylint: disable=useless-super-delegation
+    def __init__(
         self, transport: Transport, state: TransportState, metadata: dict, config: dict
     ) -> None:
         super().__init__(transport, state, metadata, config)
 
     def evaluate(self):
-        results = []
-        for offered_cipher in self._state.offered_ciphers:
-            results.append(offered_cipher not in NOT_KNOWN_WEAK_CIPHERS)
-
-        return any(results)
+        return self._state.negotiated_protocol in WEAK_PROTOCOL.keys()

@@ -110,20 +110,38 @@ evaluations:
         display_as: Good Configuration
         score: 80
 
-  - key: known_weak_cipher_negotiated
+  - key: deprecated_protocol_negotiated
     group: tls_negotiation
-    label_as: Known weak ciphers negotiated
+    label_as: Deprecated TLS protocol negotiated
     issue: TBA
-    metadata:
-      - offered_ciphers
-      - negotiated_cipher
-      - negotiated_cipher_bits
     references:
       - name:
         url:
     anotate_results:
       - value: False
-        evaluation_value: "[dark_sea_dark_sea_green22]PASS![/dark_sea_dark_sea_green22]"
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 120
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: known_weak_cipher_negotiated
+    group: tls_negotiation
+    label_as: Known weak ciphers negotiated
+    issue: TBA
+    metadata:
+      - key: negotiated_cipher
+        format_str: " %s"
+      - key: negotiated_cipher_bits
+        format_str: " (%d bits)"
+    references:
+      - name:
+        url:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 120
       - value: True
@@ -139,11 +157,45 @@ evaluations:
       - name:
         url:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_dark_sea_green22]PASS![/dark_sea_dark_sea_green22]"
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 60
+      - value: True
+        evaluation_value: "[yellow]WARN![/yellow]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: rc4_cipher_offered
+    group: tls_negotiation
+    label_as: Known exploited and deprecated RC4 ciphers offered
+    issue: TBA
+    references:
+      - name:
+        url:
+    anotate_results:
       - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: True
+        evaluation_value: "[yellow]WARN![/yellow]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: cbc_cipher_offered
+    group: tls_negotiation
+    label_as: Known exploited and deprecated CBC ciphers offered
+    issue: TBA
+    references:
+      - name:
+        url:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: True
         evaluation_value: "[yellow]WARN![/yellow]"
         display_as: Misconfigured
         score: -100
@@ -152,8 +204,6 @@ evaluations:
     group: tls_negotiation
     label_as: Strong ciphers negotiated
     issue: TBA
-    metadata:
-      - forward_anonymity
     references:
       - name:
         url:
@@ -162,6 +212,40 @@ evaluations:
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 120
+      - value: False
+        evaluation_value: "[yellow]WARN![/yellow]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: strong_cipher_offered
+    group: tls_negotiation
+    label_as: Strong ciphers offered
+    issue: TBA
+    references:
+      - name:
+        url:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: False
+        evaluation_value: "[yellow]WARN![/yellow]"
+        display_as: Misconfigured
+        score: -500
+
+  - key: only_strong_ciphers_offered
+    group: tls_negotiation
+    label_as: Only strong ciphers offered
+    issue: TBA
+    references:
+      - name:
+        url:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 400
       - value: False
         evaluation_value: "[yellow]WARN![/yellow]"
         display_as: Misconfigured
@@ -307,3 +391,27 @@ evaluations:
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Not Revoked
         score: 50
+
+  - key: secure_renegotiation
+    group: tls_negotiation
+    label_as: Secure Renegotiation
+    issue: Client initiated TLS renegotiation allows attackers to leverage known exploits for lower protocols, prevention is possible when implementing Secure Renegotiation described in RFC-5746 section 3.3 implemented using the renegotiation_info extension or the spurious cipher TLS_EMPTY_RENEGOTIATION_INFO_SCSV
+    cvss2: AV:N/AC:M/Au:N/C:N/I:N/A:C
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H
+    cve:
+      - CVE-2009-3555
+      - CVE-2011-1473
+      - CVE-2011-5094
+      - CVE-2021-3449
+    references:
+      - name: RFC 5746 - Transport Layer Security Renegotiation Indication Extension
+        url: https://datatracker.ietf.org/doc/html/rfc5746
+    anotate_results:
+      - value: False
+        evaluation_value: "[yellow]WARN![/yellow]"
+        display_as: Misconfigured
+        score: -120
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 100

@@ -1,4 +1,3 @@
-from ...constants import NOT_KNOWN_WEAK_CIPHERS
 from ...transport import TransportState
 from ...transport import Transport
 from .. import BaseEvaluationTask
@@ -13,6 +12,6 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self):
         results = []
         for offered_cipher in self._state.offered_ciphers:
-            results.append(offered_cipher not in NOT_KNOWN_WEAK_CIPHERS)
+            results.append("-CBC-" in offered_cipher)
 
         return any(results)

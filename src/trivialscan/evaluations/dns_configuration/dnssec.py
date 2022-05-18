@@ -1,3 +1,4 @@
+from ...certificate import LeafCertificate
 from ...transport import TransportState
 from ...transport import Transport
 from .. import BaseEvaluationTask
@@ -9,5 +10,8 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, state, metadata, config)
 
-    def evaluate(self):
+    def evaluate(self) -> bool | None:
+        for cert in self._state.certificates:
+            if isinstance(cert, LeafCertificate):
+                return cert.dnssec_valid
         return None

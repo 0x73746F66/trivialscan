@@ -14,6 +14,7 @@ from OpenSSL.crypto import (
     TYPE_DH,
     TYPE_EC,
 )
+from dns.resolver import Answer
 from . import util, constants
 
 __module__ = "trivialscan.certificate"
@@ -176,22 +177,22 @@ class BaseCertificate:
         policies = []
         try:
             policies = (
-                self.x509.to_cryptography()
+                self.x509.to_cryptography()  # pylint: disable=protected-access
                 .extensions.get_extension_for_class(extensions.CertificatePolicies)
                 .value._policies
-            )  # pylint: disable=protected-access
+            )
         except extensions.ExtensionNotFound:
             pass
         for policy in policies:
             if not isinstance(policy, PolicyInformation):
                 continue
             if (
-                policy.policy_identifier._dotted_string
-                in constants.VALIDATION_OID.keys()
-            ):  # pylint: disable=protected-access,consider-iterating-dictionary
+                policy.policy_identifier._dotted_string  # pylint: disable=protected-access
+                in constants.VALIDATION_OID.keys()  # pylint: disable=consider-iterating-dictionary
+            ):
                 return (
-                    policy.policy_identifier._dotted_string
-                )  # pylint: disable=protected-access
+                    policy.policy_identifier._dotted_string  # pylint: disable=protected-access
+                )
         return None
 
     @property
@@ -209,16 +210,26 @@ class BaseCertificate:
         )  # pylint: disable=consider-iterating-dictionary
 
     @property
-    def revocation_crl(self) -> str:
-        pass
+    def revocation_crl_urls(self) -> list[str]:
+        urls = set()
+        for ext in self.extensions:
+            if ext.get("cRLDistributionPoints"):
+                for info in ext["cRLDistributionPoints"]:
+                    urls.add(info["full_name"])
+        return list(urls)
 
     @property
     def revocation_ocsp_stapling(self) -> bool:
         pass
 
     @property
-    def revocation_ocsp_url(self) -> str:
-        pass
+    def revocation_ocsp_url(self) -> str | None:
+        for ext in self.extensions:
+            if ext.get("authorityInfoAccess"):
+                for info in ext["authorityInfoAccess"]:
+                    if info["access_method"] == "OCSP":
+                        return info["access_location"]
+        return None
 
     @property
     def revocation_ocsp_must_staple(self) -> bool:
@@ -264,7 +275,7 @@ class BaseCertificate:
 
 
 class RootCertificate(BaseCertificate):
-    def __init__(self, x509: X509) -> None:
+    def __init__(self, x509: X509) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(x509)
 
     @property
@@ -278,7 +289,7 @@ class RootCertificate(BaseCertificate):
 
 
 class IntermediateCertificate(BaseCertificate):
-    def __init__(self, x509: X509) -> None:
+    def __init__(self, x509: X509) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(x509)
 
     def to_dict(self) -> dict:
@@ -289,22 +300,55 @@ class IntermediateCertificate(BaseCertificate):
 
 class LeafCertificate(BaseCertificate):
     _hostname: str
+    _certification_authority_authorization: bool
+    _dnssec: bool
+    _dnssec_answer: Answer
+    _dnssec_valid: bool
+    _dnssec_algorithm: str
 
     def __init__(self, x509: X509, hostname: str) -> None:
         super().__init__(x509)
         self._hostname = hostname
+        self._certification_authority_authorization = None
+        self._dnssec = None
+        self._dnssec_answer = None
+        self._dnssec_valid = None
+        self._dnssec_algorithm = None
 
     @property
     def certification_authority_authorization(self) -> bool:
-        return util.caa_exist(self._hostname)
+        if not isinstance(self._certification_authority_authorization, bool):
+            self._certification_authority_authorization = util.caa_exist(self._hostname)
+        return self._certification_authority_authorization
 
     @property
     def dnssec(self) -> bool:
-        return False
+        if not isinstance(self._dnssec_answer, Answer):
+            self._dnssec_answer = util.get_dnssec_answer(self._hostname)
+        if not isinstance(self._dnssec, bool):
+            self._dnssec = isinstance(self._dnssec_answer, Answer)
+        return self._dnssec
+
+    @property
+    def dnssec_valid(self) -> bool:
+        if not isinstance(self._dnssec_valid, bool):
+            self._dnssec_valid = util.dnssec_valid(self._hostname)
+        return self._dnssec_valid
 
     @property
     def dnssec_algorithm(self) -> str | None:
-        return None
+        if isinstance(self._dnssec_algorithm, str):
+            return self._dnssec_algorithm
+        if not isinstance(self._dnssec_answer, Answer):
+            self._dnssec_answer = util.get_dnssec_answer(self._hostname)
+        if isinstance(self._dnssec_answer, Answer):
+            algorithm = int(self._dnssec_answer[0].to_text().split()[6])
+            self._dnssec_algorithm = (
+                algorithm
+                if algorithm not in constants.DNSSEC_ALGORITHMS
+                else constants.DNSSEC_ALGORITHMS[algorithm]
+            )
+        return self._dnssec_algorithm
 
     @property
     def tlsa(self) -> bool:

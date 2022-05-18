@@ -13,6 +13,6 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self):
         results = []
         for offered_cipher in self._state.offered_ciphers:
-            results.append(offered_cipher not in NOT_KNOWN_WEAK_CIPHERS)
+            results.append(offered_cipher in NOT_KNOWN_WEAK_CIPHERS)
 
-        return any(results)
+        return all(results)

@@ -39,14 +39,19 @@ class TransportState:
     compression_support
     dnssec
     deprecated_dnssec_algorithm
+    deprecated_protocol_negotiated
     known_weak_cipher_negotiated
     known_weak_cipher_offered
+    rc4_cipher_offered
+    cbc_cipher_offered
     strong_cipher_negotiated
+    strong_cipher_offered
     known_weak_signature_algorithm
     fallback_scsv
     tls_robot
     private_key_known_compromised
     revocation_crlite
+    secure_renegotiation
 
     TODO
     tlsa                            https://www.cloudns.net/wiki/article/342/
@@ -63,7 +68,6 @@ class TransportState:
     http_nosniff
     http_unsafe_referrer
     http_xss_protection
-    avoid_deprecated_protocols
     avoid_known_weak_keys
     basic_constraints_ca
     certificate_valid_tls_usage
@@ -80,7 +84,6 @@ class TransportState:
     Uses common DH primes:
     DH public server param (Ys) reuse:
     ECDH public server param reuse:
-    Secure Renegotiation: RFC5746 3.3 the renegotiation_info extension exists, or; use the cipher TLS_EMPTY_RENEGOTIATION_INFO_SCSV
     POODLE; CBC Padding Oracle Vulnerability; SSLv3 or CBC (GOLDENDOODLE, Zombie POODLE, Sleeping POODLE, POODLE BITES, POODLE 2.0, CVE-2015-4458, CVE-2016-2107, and Invalid Mac 0-length record CVE-2019-1559)
     HEARTBLEED: CVE-2014-0160 OpenSSL Vulnerability allowing attackers to access random server memory that could potentially disclose any sensitive data the server is storing
     CCS Injection: CVE-2014-0224 TLS feature providing MitM attackers opertunity to leverage Change-Cipher-Specs allowing the use of attacker preferred ciphers that are available and potentially offer an exploit path
@@ -116,19 +119,42 @@ class TransportState:
                     "port": self.port,
                     "sni_support": self.sni_support,
                     "peer_address": self.peer_address,
+                    "certificate_mtls_expected": self.certificate_mtls_expected,
                 },
                 "certificates": [cert.to_dict() for cert in self.certificates],
                 "tls": {
-                    "offered_ciphers": self.offered_ciphers,
-                    "forward_anonymity": self.forward_anonymity,
-                    "negotiated_cipher": self.negotiated_cipher,
-                    "negotiated_cipher_bits": self.negotiated_cipher_bits,
+                    "cipher": {
+                        "forward_anonymity": self.forward_anonymity,
+                        "offered": list(set(self.offered_ciphers)),
+                        "negotiated": self.negotiated_cipher,
+                        "negotiated_bits": self.negotiated_cipher_bits,
+                    },
+                    "protocol": {
+                        "negotiated": self.negotiated_protocol,
+                        "preferred": self.preferred_protocol,
+                        "offered": list(set(self.offered_tls_versions)),
+                    },
+                    "version_intolerance": {
+                        "result": self.tls_version_intolerance,
+                        "versions": list(set(self.tls_version_intolerance_versions)),
+                    },
+                    "version_interference": {
+                        "result": self.tls_version_interference,
+                        "versions": list(set(self.tls_version_interference_versions)),
+                    },
+                    "session_resumption": {
+                        "caching": self.session_resumption_caching,
+                        "tickets": self.session_resumption_tickets,
+                        "ticket_hint": self.session_resumption_ticket_hint,
+                    },
                 },
                 "http": {
                     "status_code": self.http_status_code,
                     "v1_support": self.http1_support,
                     "v1_1_support": self.http1_1_support,
                     "v2_support": self.http2_support,
+                    "h2c_support": self.http2_cleartext_support,
+                    "headers": self.http_headers,
                 },
             },
         }

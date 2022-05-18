@@ -35,13 +35,23 @@ def query_hostname(
         result = cls.evaluate()
         result_label = "Unknown"
         score = 0
+        metadata = ""
+        if evaluation.get("metadata"):
+            for extra in evaluation.get("metadata"):
+                value = None
+                if hasattr(state, extra.get("key")):
+                    value = getattr(state, extra.get("key"))
+                if hasattr(transport, extra.get("key")):
+                    value = getattr(transport, extra.get("key"))
+                if value:
+                    metadata += extra.get("format_str") % value
         for anotatation in evaluation["anotate_results"]:
             if anotatation["value"] is result:
                 result_label = anotatation["display_as"]
                 score = anotatation["score"]
                 if use_console:
                     console.print(
-                        f'{state.hostname}:{state.port} {anotatation["evaluation_value"]} {evaluation["label_as"]}',
+                        f'{state.hostname}:{state.port} {anotatation["evaluation_value"]} {evaluation["label_as"]}{metadata}',
                         highlight=False,
                     )
                 break
