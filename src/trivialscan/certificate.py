@@ -58,6 +58,13 @@ class BaseCertificate:
         return None
 
     @property
+    def public_key_modulus(self) -> int | None:
+        if self.x509.get_pubkey().type() in [TYPE_RSA, TYPE_DSA]:
+            return self.x509.to_cryptography().public_key().public_numbers().n
+
+        return None
+
+    @property
     def public_key_curve(self) -> str | None:
         if self.x509.get_pubkey().type() in [TYPE_DH, TYPE_EC]:
             return self.x509.to_cryptography().public_key().curve.name
