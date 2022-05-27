@@ -43,43 +43,43 @@ publish: ## upload to pypi.org
 	python -m twine upload dist/*
 
 run-json: ## www.trivialsec.com
-	@python src/dev.py www.trivialsec.com -O trivialscan_www.trivialsec.com.json
+	python -m trivialscan.cli www.trivialsec.com -O trivialscan_www.trivialsec.com.json
 
-run-valid: ## google.com
-	@python src/dev.py ssllabs.com
+run-valid: ## ssllabs.com
+	python -m trivialscan.cli ssllabs.com
 
 run-expired: ## expired.badssl.com
-	@python src/dev.py expired.badssl.com
+	python -m trivialscan.cli expired.badssl.com
 
 run-selfsigned: ## self-signed.badssl.com
-	@python src/dev.py self-signed.badssl.com
+	python -m trivialscan.cli self-signed.badssl.com
 
 run-invalid-hostname: ## wrong.host.badssl.com no-common-name.badssl.com
-	@python src/dev.py wrong.host.badssl.com no-common-name.badssl.com
+	python -m trivialscan.cli wrong.host.badssl.com no-common-name.badssl.com
 
 run-untrusted: ## untrusted.root.badssl.com
-	@python src/dev.py untrusted.root.badssl.com
+	python -m trivialscan.cli untrusted.root.badssl.com
 
 run-revoked: ## no-subject.badssl.com
-	@python src/dev.py no-subject.badssl.com
+	python -m trivialscan.cli no-subject.badssl.com
 
 run-broken: ## revoked.badssl.com
-	@python src/dev.py revoked.badssl.com
+	python -m trivialscan.cli revoked.badssl.com
 
 run-invalid-hpkp: ## pinning-test.badssl.com
-	@python src/dev.py pinning-test.badssl.com
+	python -m trivialscan.cli pinning-test.badssl.com
 
 run-incomplete-chain: ## incomplete-chain.badssl.com sha1-intermediate.badssl.com
-	@python src/dev.py incomplete-chain.badssl.com sha1-intermediate.badssl.com
+	python -m trivialscan.cli incomplete-chain.badssl.com sha1-intermediate.badssl.com
 
 run-missing-ct: ## no-sct.badssl.com invalid-expected-sct.badssl.com
-	@python src/dev.py no-sct.badssl.com invalid-expected-sct.badssl.com
+	python -m trivialscan.cli no-sct.badssl.com invalid-expected-sct.badssl.com
 
 run-weak: ## null.badssl.com cbc.badssl.com rc4-md5.badssl.com rc4.badssl.com 3des.badssl.com static-rsa.badssl.com sha1-2016.badssl.com
-	@python src/dev.py null.badssl.com cbc.badssl.com rc4-md5.badssl.com rc4.badssl.com 3des.badssl.com -H static-rsa.badssl.com -H sha1-2016.badssl.com
+	python -m trivialscan.cli null.badssl.com cbc.badssl.com rc4-md5.badssl.com rc4.badssl.com 3des.badssl.com -H static-rsa.badssl.com -H sha1-2016.badssl.com
 
 run-deprecated-tls: ## tls-v1-0.badssl.com tls-v1-1.badssl.com
-	@python src/dev.py -H tls-v1-0.badssl.com -p 1010 -H tls-v1-1.badssl.com -p 1011
+	python -m trivialscan.cli -H tls-v1-0.badssl.com -p 1010 -H tls-v1-1.badssl.com -p 1011
 
 run-known-pwnd: ## superfish.badssl.com edellroot.badssl.com dsdtestprovider.badssl.com preact-cli.badssl.com webpack-dev-server.badssl.com
-	@python src/dev.py -H superfish.badssl.com -H edellroot.badssl.com -H dsdtestprovider.badssl.com -H preact-cli.badssl.com -H webpack-dev-server.badssl.com
+	python -m trivialscan.cli -H superfish.badssl.com -H edellroot.badssl.com -H dsdtestprovider.badssl.com -H preact-cli.badssl.com -H webpack-dev-server.badssl.com

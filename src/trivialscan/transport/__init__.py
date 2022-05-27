@@ -4,7 +4,7 @@ from datetime import datetime
 from time import sleep
 from socket import socket, AF_INET, SOCK_STREAM, MSG_PEEK
 from pathlib import Path
-from cryptography.x509 import extensions, oid
+from cryptography.x509 import extensions, oid, ExtensionNotFound
 from cryptography.x509.base import Certificate
 from cryptography.x509.ocsp import (
     OCSPResponse,
@@ -105,13 +105,13 @@ class Transport:
         )
         if valid_client_pem is False:
             logger.error(
-                f"[{self._state.hostname}:{self._state.port}] client_pem_path was provided but is not a valid URL or file does not exist"
+                f"{self._state.hostname}:{self._state.port} client_pem_path was provided but is not a valid URL or file does not exist"
             )
             return False
         if isinstance(valid_client_pem, list) and len(valid_client_pem) == 1:
             self._client_pem_path = valid_client_pem[0]
         logger.info(
-            f"[{self._state.hostname}:{self._state.port}] Negotiating with the server to derive expected client certificate subjects"
+            f"{self._state.hostname}:{self._state.port} Negotiating with the server to derive expected client certificate subjects"
         )
         ctx = SSL.Context(method=getattr(SSL, Transport._default_connect_method))
         ctx.load_verify_locations(cafile=where())
@@ -128,17 +128,17 @@ class Transport:
         conn.close()
         if len(self.expected_client_subjects) > 0:
             logger.info(
-                f"[{self._state.hostname}:{self._state.port}] Checking client certificate"
+                f"{self._state.hostname}:{self._state.port} Checking client certificate"
             )
             self.client_certificate = load_certificate(
                 FILETYPE_PEM, Path(self._client_pem_path).read_bytes()
             )
             logger.debug(
-                f"[{self._state.hostname}:{self._state.port}] issuer subject: {self.client_certificate.get_issuer().commonName}"
+                f"{self._state.hostname}:{self._state.port} issuer subject: {self.client_certificate.get_issuer().commonName}"
             )
             for check in self.expected_client_subjects:
                 logger.debug(
-                    f"[{self._state.hostname}:{self._state.port}] expected subject: {check.commonName}"
+                    f"{self._state.hostname}:{self._state.port} expected subject: {check.commonName}"
                 )
                 if self.client_certificate.get_issuer().commonName == check.commonName:
                     self.client_certificate_match = True
@@ -174,7 +174,7 @@ class Transport:
         if request_compression is True:
             request.append("Accept-Encoding: compress, gzip")
         request = "\r\n".join(request) + "\r\n\r\n"
-        logger.info(f"[{self._state.hostname}:{self._state.port}] Request:\n{request}")
+        logger.info(f"{self._state.hostname}:{self._state.port} Request:\n{request}")
         head = b""
         try:
             conn.sendall(request.encode())
@@ -212,10 +212,10 @@ class Transport:
             "HTTP/1.0": "http1_",
             "HTTP/1.1": "http1_1_",
         }
-        logger.debug(f"[{self._state.hostname}:{self._state.port}] protocol {protocol}")
+        logger.debug(f"{self._state.hostname}:{self._state.port} protocol {protocol}")
         head, _ = self.do_request(conn, protocol=protocol)
         logger.info(
-            f"[{self._state.hostname}:{self._state.port}] Response headers:\n{head}"
+            f"{self._state.hostname}:{self._state.port} Response headers:\n{head}"
         )
         header = Transport.parse_header(head)
         prefix = proto_map[protocol]
@@ -264,7 +264,7 @@ class Transport:
             return None
         if response.status_code != 200:
             logger.warning(
-                f"[{self._state.hostname}:{self._state.port}] HTTP request returned {response.status_code}"
+                f"{self._state.hostname}:{self._state.port} HTTP request returned {response.status_code}"
             )
             return None
         response = load_der_ocsp_response(response.content)
@@ -272,7 +272,7 @@ class Transport:
             return None
         if response.serial_number != ocsp_request.serial_number:
             logger.debug(
-                f"[{self._state.hostname}:{self._state.port}] Response serial number does not match request"
+                f"{self._state.hostname}:{self._state.port} Response serial number does not match request"
             )
             return None
         return response
@@ -287,9 +287,10 @@ class Transport:
         )
         if not isinstance(issuer, X509):
             logger.warning(
-                f"[{self._state.hostname}:{self._state.port}] Issuer certificate not found in chain"
+                f"{self._state.hostname}:{self._state.port} Issuer certificate not found in chain"
             )
-            return False
+            self._state.revocation_ocsp_result = False
+            return True
         self._state.revocation_ocsp_stapling = False
         self._state.revocation_ocsp_must_staple = False
         ext = None
@@ -303,49 +304,55 @@ class Transport:
             for feature in ext.value:
                 if feature == extensions.TLSFeatureType.status_request:
                     logger.debug(
-                        f"[{self._state.hostname}:{self._state.port}] Peer presented a must-staple cert"
+                        f"{self._state.hostname}:{self._state.port} Peer presented a must-staple cert"
                     )
                     self._state.revocation_ocsp_must_staple = True
                     break
         response = None
         if assertion == b"":
             if self._state.revocation_ocsp_must_staple is True:
-                return False  # stapled response is expected and required
-            ext = self.server_certificate.to_cryptography().extensions.get_extension_for_class(
-                extensions.AuthorityInformationAccess
-            )
-            if ext is None:
-                return True  # stapled response is expected though not required, not very good but still a valid assertion
-            uris = [
-                desc.access_location.value
-                for desc in ext.value
-                if desc.access_method == oid.AuthorityInformationAccessOID.OCSP
-            ]
-            if not uris:
-                return True  # stapled response is expected though not required, without any responders it is still a valid assertion
-            for uri in uris:
-                logger.debug(
-                    f"[{self._state.hostname}:{self._state.port}] Requesting OCSP from responder {uri}"
+                self._state.revocation_ocsp_result = False
+                return True  # stapled response is expected and required
+            try:
+                ext = self.server_certificate.to_cryptography().extensions.get_extension_for_class(
+                    extensions.AuthorityInformationAccess
                 )
-                response = self._get_ocsp_response(issuer.to_cryptography(), uri)
-                if response is None:
-                    continue
+                if ext is None:
+                    self._state.revocation_ocsp_result = True
+                    return True  # stapled response is expected though not required, not very good but still a valid assertion
+                uris = [
+                    desc.access_location.value
+                    for desc in ext.value
+                    if desc.access_method == oid.AuthorityInformationAccessOID.OCSP
+                ]
+                if not uris:
+                    self._state.revocation_ocsp_result = True
+                    return True  # stapled response is expected though not required, without any responders it is still a valid assertion
+                for uri in uris:
+                    logger.debug(
+                        f"{self._state.hostname}:{self._state.port} Requesting OCSP from responder {uri}"
+                    )
+                    response = self._get_ocsp_response(issuer.to_cryptography(), uri)
+                    if response is None:
+                        continue
+            except ExtensionNotFound:
+                pass  # no responders
         if response is None and assertion != b"":
             self._state.revocation_ocsp_stapling = True
             response = load_der_ocsp_response(assertion)
         if response is None:
             logger.warning(
-                f"[{self._state.hostname}:{self._state.port}] OCSP response is not available"
+                f"{self._state.hostname}:{self._state.port} OCSP response is not available"
             )
-            return False
+            self._state.revocation_ocsp_result = False
+            return True
         if response.this_update > datetime.utcnow():
             logger.error(
-                f"[{self._state.hostname}:{self._state.port}] OCSP thisUpdate is future dated"
+                f"{self._state.hostname}:{self._state.port} OCSP thisUpdate is future dated"
             )
-            return False
-        logger.info(
-            f"[{self._state.hostname}:{self._state.port}] OCSP response received"
-        )
+            self._state.revocation_ocsp_result = False
+            return True
+        logger.info(f"{self._state.hostname}:{self._state.port} OCSP response received")
         if response.revocation_reason:
             self._state.revocation_ocsp_reason = response.revocation_reason.value
         if response.revocation_time:
@@ -358,10 +365,11 @@ class Transport:
             self._state.revocation_ocsp_status = constants.OCSP_CERT_STATUS[
                 response.certificate_status.value
             ]
-        return (
+        self._state.revocation_ocsp_result = (
             response.response_status == OCSPResponseStatus.SUCCESSFUL
             and response.certificate_status == OCSPCertStatus.GOOD
         )
+        return True
 
     def prepare_socket(self, timeout: int = 1):
         sock = socket(AF_INET, SOCK_STREAM)
@@ -450,14 +458,14 @@ class Transport:
         self, tls_version: int, use_sni: bool = False, protocol: str = None
     ) -> None:
         logger.info(
-            f"[{self._state.hostname}:{self._state.port}] Trying {constants.OPENSSL_VERSION_LOOKUP[tls_version]}"
+            f"{self._state.hostname}:{self._state.port} Trying {constants.OPENSSL_VERSION_LOOKUP[tls_version]}"
         )
         ctx = self.prepare_context()
         ctx.set_verify(
             getattr(SSL, Transport._default_connect_verify_mode), self._verifier
         )
         ctx.set_max_proto_version(tls_version)
-        ctx.set_ocsp_client_callback(self._ocsp_handler)
+        # ctx.set_ocsp_client_callback(self._ocsp_handler)
         ctx.set_options(
             _util.lib.SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION
             | _util.lib.SSL_OP_LEGACY_SERVER_CONNECT
@@ -465,7 +473,7 @@ class Transport:
         conn = SSL.Connection(context=ctx, socket=self.prepare_socket())
         conn.request_ocsp()
         if all([use_sni, ssl.HAS_SNI]):
-            logger.info(f"[{self._state.hostname}:{self._state.port}] using SNI")
+            logger.info(f"{self._state.hostname}:{self._state.port} using SNI")
             conn.set_tlsext_host_name(idna.encode(self._state.hostname))
         try:
             conn.connect((self._state.hostname, self._state.port))
@@ -496,14 +504,14 @@ class Transport:
                 for (_, cert) in enumerate(conn.get_peer_cert_chain()):
                     self._certificate_chain.append(cert)
                 logger.debug(
-                    f"[{self._state.hostname}:{self._state.port}] Peer cert chain length: {len(self._certificate_chain)}"
+                    f"{self._state.hostname}:{self._state.port} Peer cert chain length: {len(self._certificate_chain)}"
                 )
             self._state.certificates = util.get_certificates(
                 self.server_certificate, self._certificate_chain, self._state.hostname
             )
             if protocol is not None:
                 logger.info(
-                    f"[{self._state.hostname}:{self._state.port}] Trying protocol {protocol}"
+                    f"{self._state.hostname}:{self._state.port} Trying protocol {protocol}"
                 )
                 self._protocol_handler(conn, protocol)
             conn.shutdown()
@@ -515,6 +523,7 @@ class Transport:
                     "alert protocol",
                     "shutdown while in init",
                     "sslv3 alert handshake failure",
+                    "invalid status response",
                 ]
             ):
                 logger.warning(err, exc_info=True)
@@ -530,7 +539,7 @@ class Transport:
         }
         for protocol, prefix in proto_map.items():
             logger.debug(
-                f"[{self._state.hostname}:{self._state.port}] protocol {protocol}"
+                f"{self._state.hostname}:{self._state.port} protocol {protocol}"
             )
             ctx = self.prepare_context()
             ctx.set_max_proto_version(tls_version)
@@ -548,7 +557,7 @@ class Transport:
                     conn.close()
                     continue
                 logger.info(
-                    f"[{self._state.hostname}:{self._state.port}] Response headers:\n{head}"
+                    f"{self._state.hostname}:{self._state.port} Response headers:\n{head}"
                 )
                 self._state.http_headers = Transport.parse_header(head)
                 http_status_code = int(self._state.http_headers["response_code"])
@@ -625,8 +634,18 @@ class Transport:
             protocol = conn.get_protocol_version_name()
             logger.info(f"Negotiated {protocol}")
             conn.shutdown()
-        except SSL.Error as ex:
-            logger.warning(ex, exc_info=True)
+        except SSL.Error as err:
+            if all(
+                x not in str(err)
+                for x in [
+                    "no protocols available",
+                    "alert protocol",
+                    "shutdown while in init",
+                    "sslv3 alert handshake failure",
+                    "invalid status response",
+                ]
+            ):
+                logger.warning(err, exc_info=True)
         finally:
             conn.close()
         return protocol

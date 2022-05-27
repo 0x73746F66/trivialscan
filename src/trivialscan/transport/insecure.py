@@ -41,7 +41,7 @@ class InsecureTransport(Transport):
             )  # Skip HTTP testing until negotiated
             if not isinstance(self.server_certificate, X509):
                 logger.info(
-                    f"[{self._state.hostname}:{self._state.port}] Failed {constants.OPENSSL_VERSION_LOOKUP[version]} use_sni {use_sni}"
+                    f"{self._state.hostname}:{self._state.port} Failed {constants.OPENSSL_VERSION_LOOKUP[version]} use_sni {use_sni}"
                 )
                 continue
 
@@ -54,11 +54,13 @@ class InsecureTransport(Transport):
                     f"{label} ({hex(constants.PROTOCOL_VERSION[label])})"
                 )
 
-            self.do_http(version)
-            break
+            if self._state.negotiated_protocol:
+                self.do_http(version)
+                break
+
         if not self._state.negotiated_protocol:
             raise TransportError(
-                f"server listening at [{self._state.hostname}:{self._state.port}] did not respond to any known TLS protocols"
+                f"server listening at {self._state.hostname}:{self._state.port} did not respond to any known TLS protocols"
             )
 
         negotiated = self.specify_tls_version(use_sni=use_sni)
