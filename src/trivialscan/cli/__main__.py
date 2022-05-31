@@ -11,13 +11,15 @@ import progressbar
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.table import Column
+from rich.table import Table
 from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColumn
 from trivialscan.transport.state import TransportState
-from .. import query_hostname
+from .. import evaluate
 from ..config import get_config
 
-
 __module__ = "trivialscan.cli"
+__version__ = "3.0.0-devel"
+REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
 
 assert sys.version_info >= (3, 10), "Requires Python 3.10 or newer"
 console = Console()
@@ -113,6 +115,10 @@ def configure() -> dict:
         action="store_true",
     )
     args = parser.parse_args()
+    if args.show_version:
+        print(f"trivialscan=={__version__}\n{REMOTE_URL}")
+        sys.exit(0)
+
     log_level = logging.CRITICAL
     if args.log_level_error:
         log_level = logging.ERROR
@@ -122,6 +128,7 @@ def configure() -> dict:
         log_level = logging.INFO
     if args.log_level_debug:
         log_level = logging.DEBUG
+
     handlers = []
     log_format = "%(asctime)s - %(name)s - [%(levelname)s] %(message)s"
     if sys.stdout.isatty():
@@ -130,31 +137,86 @@ def configure() -> dict:
     logging.basicConfig(format=log_format, level=log_level, handlers=handlers)
     progressbar.progressbar = no_progressbar
 
-    cli_args = {"defaults": vars(args)}
     base_config = get_config(args.config_file)
-    return {**base_config, **cli_args}
+    return _cli_config(vars(args), base_config), args.hide_progress_bars
 
 
-def wrap_analyse(
+def _cli_config(cli_args: dict, config: dict) -> dict:
+    # only overwrite value in config file if OVERRIDE cli args were defined
+    config["defaults"]["cafiles"] = cli_args.get(
+        "cafiles", config["defaults"]["cafiles"]
+    )
+    config["defaults"]["tmp_path_prefix"] = cli_args.get(
+        "tmp_path_prefix", config["defaults"]["tmp_path_prefix"]
+    )
+    if cli_args.get("disable_sni"):
+        config["defaults"]["use_sni"] = False
+
+    config.setdefault("targets", [])
+    targets = []
+    for hostname in cli_args.get("targets", []):
+        if not hostname.startswith("http"):
+            hostname = f"https://{hostname}"
+        parsed = urlparse(hostname)
+        if validators.domain(parsed.hostname) is not True:
+            raise AttributeError(
+                f"URL {hostname} hostname {parsed.hostname} is invalid"
+            )
+        targets.append(
+            {
+                "hostname": parsed.hostname,
+                "port": 443 if not parsed.port else parsed.port,
+                "client_certificate": cli_args.get("client_pem"),
+            }
+        )
+    if targets:
+        config["targets"] = targets
+
+    if cli_args.get("hide_progress_bars"):
+        config["outputs"] = [
+            n for n in config.get("outputs", []) if n.get("type") != "console"
+        ]
+    if cli_args.get("json_file"):
+        if any(n.get("type") == "json" for n in config.get("outputs", [])):
+            config["outputs"] = [
+                n for n in config.get("outputs", []) if n.get("type") != "json"
+            ]
+        config["outputs"].append({"type": "json", "path": cli_args.get("json_file")})
+
+    return config
+
+
+def wrap_evaluate(
     queue_in, queue_out, progress_console: Console = None, config: dict = None
 ) -> None:
     use_console = isinstance(progress_console, Console)
     logger = logging.getLogger(__name__)
-    for hostname, port in iter(queue_in.get, None):
+    for target in iter(queue_in.get, None):
         if use_console:
-            progress_console.print(
-                f"{hostname}:{port} [cyan]START[/cyan]", highlight=False
+            table = Table.grid(expand=True)
+            table.add_column(style="cyan")
+            table.add_column(justify="right")
+            table.add_row(
+                "START", f"{target.get('hostname')}:{target.get('port', 443)}"
             )
+            progress_console.print(table)
         try:
-            state, evaluations = query_hostname(
-                hostname, int(port), progress_console, config
+            state, evaluations = evaluate(
+                console=progress_console,
+                evaluations=config["evaluations"],
+                **target,
+                **config["defaults"],
             )
             if isinstance(state, TransportState):
                 if use_console:
-                    progress_console.print(
-                        f"{state.hostname}:{state.port} [blue]INFO![/blue] negotiated {state.negotiated_protocol}",
-                        highlight=False,
+                    table = Table.grid(expand=True)
+                    table.add_column()
+                    table.add_column(justify="right")
+                    table.add_row(
+                        f"[cyan]DONE![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}",
+                        f"{state.hostname}:{state.port}",
                     )
+                    progress_console.print(table)
                 data = state.to_dict()
                 data["evaluations"] = evaluations
                 queue_out.put(data)
@@ -162,47 +224,48 @@ def wrap_analyse(
             logger.exception(ex)
             queue_out.put(
                 {
-                    "_metadata": {"transport": {"hostname": hostname, "port": port}},
+                    "_metadata": {
+                        "transport": {
+                            "hostname": target.get("hostname"),
+                            "port": target.get("port"),
+                        }
+                    },
                     "error": str(ex),
                 }
             )
 
 
 def cli():
-    config = configure()
-    targets = []
-    for target in config["defaults"].get("targets", []):
-        if not target.startswith("http"):
-            target = f"https://{target}"
-        parsed = urlparse(target)
-        if validators.domain(parsed.hostname) is not True:
-            raise AttributeError(f"URL {target} hostname {parsed.hostname} is invalid")
-        targets.append((parsed.hostname, 443 if not parsed.port else parsed.port))
-
+    config, hide_progress_bars = configure()
+    if not config.get("targets"):
+        print("no targets are defined")
+        sys.exit(1)
     run_start = datetime.utcnow()
     queue_in = Queue()
     queue_out = Queue()
     queries = []
-    num_targets = len(targets)
-    use_console = any(
-        True for n in config.get("outputs", []) if n.get("type") == "console"
-    )
-
-    if config["defaults"].get("hide_progress_bars"):
+    num_targets = len(config.get("targets"))
+    use_console = any(n.get("type") == "console" for n in config.get("outputs", []))
+    if use_console:
+        console.print(
+            f"""[bold][aquamarine3] _        _       _       _
+| |_ _ __(_)_   _(_) __ _| |___  ___ __ _ _ __
+| __| '__| \\ \\ / / |/ _\\` | / __|/ __/ _\\` | '_\\
+| |_| |  | |\\ V /| | (_| | \\__ \\ (_| (_| | | | |
+ \\__|_|  |_| \\_/ |_|\\__,_|_|___/\\___\\__,_|_| |_|[/aquamarine3]
+        [dark_sea_green2]SUCCESS[/dark_sea_green2] [khaki1]ISSUE[/khaki1] [light_coral]VULNERABLE[/light_coral][/bold]
+[cyan]INFO![/cyan] Evaluating {num_targets} domain{'s' if num_targets >1 else ''}"""
+        )
+    if hide_progress_bars:
         the_pool = Pool(
             cpu_count(),
-            wrap_analyse,
+            wrap_evaluate,
             (queue_in, queue_out, console if use_console else None, config),
         )
-        for target in targets:
+        for target in config.get("targets"):
             queue_in.put(target)
         for _ in range(num_targets):
             result = queue_out.get()
-            if use_console:
-                console.print(
-                    f'{result["_metadata"]["transport"]["hostname"]}:{result["_metadata"]["transport"]["port"]} [green]DONE![/green]',
-                    highlight=False,
-                )
             queries.append(result)
 
     else:
@@ -210,11 +273,11 @@ def cli():
             TextColumn("{task.description}", table_column=Column(ratio=2)),
             MofNCompleteColumn(table_column=Column(ratio=1)),
             SpinnerColumn(table_column=Column(ratio=2)),
-            expand=False,
+            transient=True,
         ) as progress:
             the_pool = Pool(
                 cpu_count(),
-                wrap_analyse,
+                wrap_evaluate,
                 (
                     queue_in,
                     queue_out,
@@ -223,19 +286,13 @@ def cli():
                 ),
             )
             task_id = progress.add_task("Evaluating domains", total=num_targets)
-            for target in targets:
+            for target in config.get("targets"):
                 queue_in.put(target)
             for _ in range(num_targets):
                 result = queue_out.get()
-                if use_console:
-                    progress.console.print(
-                        f'{result["_metadata"]["transport"]["hostname"]}:{result["_metadata"]["transport"]["port"]} [green]DONE![/green]',
-                        highlight=False,
-                    )
                 queries.append(result)
                 progress.advance(task_id)
-            progress.update(task_id, completed=num_targets)
-            progress.stop_task(task_id)
+            progress.stop()
 
     queue_in.close()
     queue_in.join_thread()
@@ -252,20 +309,30 @@ def cli():
             json.dumps(
                 {
                     "generator": "trivialscan",
-                    "targets": [f"{hostname}:{port}" for hostname, port in targets],
+                    "targets": [
+                        f"{target.get('hostname')}:{target.get('port')}"
+                        for target in config.get("targets")
+                    ],
                     "execution_duration_seconds": execution_duration_seconds,
                     "date": datetime.utcnow().replace(microsecond=0).isoformat(),
                     "queries": queries,
                 },
                 sort_keys=True,
+                indent=4,
                 default=str,
             ),
             encoding="utf8",
         )
+        if use_console:
+            console.print(f"[cyan]SAVED[/cyan] {json_file}")
     if use_console:
+        console.print(
+            "[cyan]TOTAL[/cyan] Execution duration %.1f seconds"
+            % execution_duration_seconds
+        )
         for result in queries:
             if result.get("error"):
-                console.print(result["error"])
+                console.print(f'[light_coral]ERROR[/light_coral] {result["error"]}')
 
 
 if __name__ == "__main__":

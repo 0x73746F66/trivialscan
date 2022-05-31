@@ -1,6 +1,7 @@
 import logging
 from os.path import expanduser
 from pathlib import Path
+from copy import deepcopy
 import yaml
 
 __module__ = "trivialscan.config"
@@ -8,20 +9,115 @@ __module__ = "trivialscan.config"
 logger = logging.getLogger(__name__)
 
 
-def _merge_evaluations(evaluations: list, default_evaluations: list) -> list:
-    default_evaluations.extend(
+def _deep_merge(*args) -> dict:
+    assert len(args) >= 2, "_deep_merge requires at least two dicts to merge"
+    result = deepcopy(args[0])
+    if not isinstance(result, dict):
+        raise AttributeError(
+            f"_deep_merge only takes dict arguments, got {type(result)} {result}"
+        )
+    for merge_dict in args[1:]:
+        if not isinstance(merge_dict, dict):
+            raise AttributeError(
+                f"_deep_merge only takes dict arguments, got {type(merge_dict)} {merge_dict}"
+            )
+        for key, merge_val in merge_dict.items():
+            result_val = result.get(key)
+            if isinstance(result_val, dict) and isinstance(merge_val, dict):
+                result[key] = _deep_merge(result_val, merge_val)
+            else:
+                result[key] = deepcopy(merge_val)
+    return result
+
+
+def _evaluation_merge(key: str, item1: dict, item2: dict) -> dict:
+    if not isinstance(key, str):
+        raise AttributeError(f"_evaluation_merge key should be str, got {type(key)}")
+    if item1[key] != item2[key]:
+        raise AttributeError(
+            f"_evaluation_merge key should match both items, got {item1[key]} {item2[key]}"
+        )
+    return_dict = deepcopy(item1)
+    if not isinstance(item1, dict) or not isinstance(item2, dict):
+        raise AttributeError(
+            f"_evaluation_merge only takes dict arguments, got {type(item1)} {type(item2)}"
+        )
+    if item2.get("cve"):
+        return_dict["cve"] = list({*item1.get("cve", []), *item2.get("cve", [])})
+    if item2.get("substitutions"):
+        return_dict["substitutions"] = list(
+            {*item1.get("substitutions", []), *item2.get("substitutions", [])}
+        )
+    if item2.get("references"):
+        return_dict["references"] = _merge_2_lists_of_dicts(
+            item1.get("references", []), item2.get("references", []), unique_key="name"
+        )
+    if item2.get("anotate_results"):
+        return_dict["anotate_results"] = _merge_2_lists_of_dicts(
+            item1.get("anotate_results", []),
+            item2.get("anotate_results", []),
+            unique_key="value",
+        )
+    update_props = ["group", "label_as", "issue", "cvss2", "cvss3"]
+    for prop in update_props:
+        if prop in item2:
+            return_dict[prop] = item2[prop]
+    return return_dict
+
+
+def _default_dict_merger(key: str, item1: dict, item2: dict) -> dict:
+    return item1.update(item2)
+
+
+def _merge_lists_by_value(
+    *args, unique_key: str = "key", merge_fn=_default_dict_merger
+) -> list:
+    assert len(args) >= 2, "_merge_lists_by_value requires at least two lists to merge"
+    result = deepcopy(args[0])
+    if not isinstance(result, list):
+        raise AttributeError("_merge_lists_by_value only takes list arguments")
+    step = 1
+    while step < len(args):
+        merge_list = deepcopy(args[step])
+        if not isinstance(merge_list, list):
+            raise AttributeError("_merge_lists_by_value only takes list arguments")
+        if not result:
+            result = merge_list
+            step += 1
+            continue
+        if not merge_list:
+            step += 1
+            continue
+
+        result = _merge_2_lists_of_dicts(
+            result, merge_list, unique_key=unique_key, merge_fn=merge_fn
+        )
+        step += 1
+
+    return list(filter(None, result))
+
+
+def _merge_2_lists_of_dicts(
+    list1: list, list2: list, unique_key: str = "key", merge_fn=_default_dict_merger
+) -> list:
+    if not isinstance(list1, list) or not isinstance(list2, list):
+        raise AttributeError("_merge_2_lists_of_dicts only takes list arguments")
+    result = deepcopy(list1)
+    result.extend(
         list(
             map(
-                lambda x, y: y if x.get("key") != y.get("key") else x.update(y),
-                default_evaluations,
-                evaluations,
+                lambda x, y: y
+                if x.get(unique_key) != y.get(unique_key)
+                else merge_fn(unique_key, x, y),
+                result,
+                list2,
             )
         )
     )
-    return list(filter(None, default_evaluations))
+    return list({v[unique_key]: v for v in list(filter(None, result))}.values())
 
 
-def _combine(default_values: dict, user_conf: dict, custom_conf: dict) -> dict:
+def _combine_configs(default_values: dict, user_conf: dict, custom_conf: dict) -> dict:
     ret_config = {
         "defaults": {
             **default_values.get("defaults", {}),
@@ -40,11 +136,17 @@ def _combine(default_values: dict, user_conf: dict, custom_conf: dict) -> dict:
     if not outputs:
         outputs = default_values["outputs"]
     ret_config["outputs"] = outputs
-    evaluations = _merge_evaluations(
-        user_conf.get("evaluations", []), default_values["evaluations"]
+    ret_config["evaluations"] = _merge_lists_by_value(
+        default_values["evaluations"],
+        user_conf.get("evaluations", []),
+        custom_conf.get("evaluations", []),
+        unique_key="key",
+        merge_fn=_evaluation_merge,
     )
-    ret_config["evaluations"] = _merge_evaluations(
-        custom_conf.get("evaluations", []), evaluations
+    ret_config["targets"] = _merge_lists_by_value(
+        user_conf.get("targets", []),
+        custom_conf.get("targets", []),
+        unique_key="hostname",
     )
     return ret_config
 
@@ -54,13 +156,16 @@ def get_config(filename: str = ".trivialscan-config.yaml") -> dict:
     user_config = {}
     rel_config_path = Path(filename)
     user_config_path = Path(f"{expanduser('~')}/{filename}")
-    default_values = yaml.safe_load(DEFAULT_VALUES)
     if rel_config_path.is_file():
         rel_config = yaml.safe_load(rel_config_path.read_text(encoding="utf8"))
     if user_config_path.is_file():
         user_config = yaml.safe_load(user_config_path.read_text(encoding="utf8"))
 
-    return _combine(default_values, user_config, rel_config)
+    return _combine_configs(default_config(), user_config, rel_config)
+
+
+def default_config() -> dict:
+    return yaml.safe_load(DEFAULT_VALUES)
 
 
 DEFAULT_VALUES = b"""
@@ -68,7 +173,6 @@ DEFAULT_VALUES = b"""
 defaults:
   use_sni: True
   cafiles:
-  client_pem:
   tmp_path_prefix: /tmp
 
 outputs:
@@ -78,7 +182,8 @@ evaluations:
   - key: client_renegotiation
     group: tls_negotiation
     label_as: Client initiated TLS renegotiation
-    issue: Server accepts client-initiated insecure renegotiation, numerous exploits exists and many have been assigned CVE
+    issue: >
+      Server accepts client-initiated insecure renegotiation, numerous exploits exists and many have been assigned CVE
     cvss2: AV:N/AC:M/Au:N/C:N/I:N/A:C
     cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H
     cve:
@@ -95,7 +200,7 @@ evaluations:
         display_as: Not Detected
         score: 60
       - value: True
-        evaluation_value: "[yellow]WARN![/yellow]"
+        evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -60
 
@@ -115,7 +220,7 @@ evaluations:
         url: https://datatracker.ietf.org/doc/html/rfc5746
     anotate_results:
       - value: False
-        evaluation_value: "[yellow]WARN![/yellow]"
+        evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -120
       - value: True
@@ -140,7 +245,7 @@ evaluations:
         display_as: Not Detected
         score: 40
       - value: True
-        evaluation_value: "[yellow]WARN![/yellow]"
+        evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -40
 
@@ -219,10 +324,20 @@ evaluations:
   - key: deprecated_protocol_negotiated
     group: tls_negotiation
     label_as: Deprecated TLS protocol negotiated
-    issue: TBA
+    issue: >
+      When information is sent between the client and the server, it must be encrypted and protected in order to prevent an attacker from being able to read or modify it.
+      This is most commonly done using HTTPS, which uses the Transport Layer Security (TLS) protocol, a replacement for the deprecated Secure Socket Layer (SSL) protocol.
+      By default, most servers still support outdated and known vulnerable protocols, typically for backwards compatibility with equally outdated web browser software.
+      This is known as an insecure default and could lead to trivial attacks against default or misconfigured servers.
+    cvss2: AV:N/AC:H/Au:N/C:C/I:C/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+    cve:
+      - CVE-2014-8730
+      - CVE-2014-0160
+      - CVE-2009-3555
     references:
-      - name:
-        url:
+      - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
+        url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
     anotate_results:
       - value: False
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -235,16 +350,20 @@ evaluations:
 
   - key: known_weak_cipher_negotiated
     group: tls_negotiation
-    label_as: Known weak ciphers negotiated
-    issue: TBA
-    metadata:
-      - key: negotiated_cipher
-        format_str: " %s"
-      - key: negotiated_cipher_bits
-        format_str: " (%d bits)"
+    label_as: Known weak ciphers negotiated {negotiated_cipher} ({negotiated_cipher_bits} bits)
+    issue: >
+      A cipher suite is a combination of authentication, encryption, and message authentication code (MAC) algorithms.
+      They are used during the negotiation of security settings for a TLS/SSL connection as well as for the transfer of data.
+      By default, most servers still support outdated and known vulnerable ciphers.
+      This is known as an insecure default and could lead to trivial attacks against default or misconfigured servers.
+    cvss2: AV:N/AC:H/Au:N/C:C/I:C/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+    cve:
+      - CVE-2014-6321
+      - CVE-2008-0166
     references:
-      - name:
-        url:
+      - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
+        url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
     anotate_results:
       - value: False
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -254,21 +373,33 @@ evaluations:
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
         score: -200
+    substitutions:
+      - negotiated_cipher
+      - negotiated_cipher_bits
 
   - key: known_weak_cipher_offered
     group: tls_negotiation
     label_as: Known weak ciphers offered
-    issue: TBA
+    issue: >
+      A cipher suite is a combination of authentication, encryption, and message authentication code (MAC) algorithms.
+      They are used during the negotiation of security settings for a TLS/SSL connection as well as for the transfer of data.
+      By default, most servers still support outdated and known vulnerable ciphers.
+      This could lead to trivial attacks against default or misconfigured servers.
+    cvss2: AV:N/AC:H/Au:N/C:C/I:C/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+    cve:
+      - CVE-2014-6321
+      - CVE-2008-0166
     references:
-      - name:
-        url:
+      - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
+        url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
     anotate_results:
       - value: False
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 60
       - value: True
-        evaluation_value: "[yellow]WARN![/yellow]"
+        evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -100
 
@@ -285,7 +416,7 @@ evaluations:
         display_as: Good Configuration
         score: 60
       - value: True
-        evaluation_value: "[yellow]WARN![/yellow]"
+        evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -100
 
@@ -302,7 +433,7 @@ evaluations:
         display_as: Good Configuration
         score: 60
       - value: True
-        evaluation_value: "[yellow]WARN![/yellow]"
+        evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -100
 
@@ -319,7 +450,7 @@ evaluations:
         display_as: Good Configuration
         score: 120
       - value: False
-        evaluation_value: "[yellow]WARN![/yellow]"
+        evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -200
 
@@ -336,7 +467,7 @@ evaluations:
         display_as: Good Configuration
         score: 60
       - value: False
-        evaluation_value: "[yellow]WARN![/yellow]"
+        evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -500
 
@@ -353,7 +484,7 @@ evaluations:
         display_as: Good Configuration
         score: 400
       - value: False
-        evaluation_value: "[yellow]WARN![/yellow]"
+        evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -200
 
@@ -377,7 +508,7 @@ evaluations:
         url: https://sha-mbles.github.io/
     anotate_results:
       - value: True
-        evaluation_value: "[yellow]WARN![/yellow]"
+        evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -100
       - value: False
@@ -399,7 +530,7 @@ evaluations:
         url: https://datatracker.ietf.org/doc/html/rfc7507
     anotate_results:
       - value: False
-        evaluation_value: "[yellow]WARN![/yellow]"
+        evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -180
       - value: True
@@ -474,4 +605,3 @@ evaluations:
         display_as: Not Revoked
         score: 50
 """
-config = get_config()

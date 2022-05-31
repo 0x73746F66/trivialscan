@@ -16,7 +16,7 @@ class EvaluationTask(BaseEvaluationTask):
         if isinstance(self._result, bool):
             return self._result
 
-        tmp_path_prefix = self._configuration["defaults"].get("tmp_path_prefix", "/tmp")
+        tmp_path_prefix = self._configuration.get("tmp_path_prefix", "/tmp")
         results: list[bool] = []
         for cert in self._state.certificates:
             results.append(

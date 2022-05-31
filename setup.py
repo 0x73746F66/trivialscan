@@ -2,10 +2,12 @@ import distutils.text_file
 from pathlib import Path
 from setuptools import setup, find_packages
 
+__version__ = "3.0.0"
+
 install_requires = distutils.text_file.TextFile(filename=str(Path(__file__).with_name('requirements.txt'))).readlines()
 setup(
     name="trivialscan",
-    version="3.0.0",
+    version=__version__,
     author='Christopher Langton',
     author_email='chris@trivialsec.com',
     description="Validate the security of your TLS connections so that they deserve your trust.",

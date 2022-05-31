@@ -42,8 +42,8 @@ publish: ## upload to pypi.org
 	git push -u origin --tags
 	python -m twine upload dist/*
 
-run-json: ## www.trivialsec.com
-	python -m trivialscan.cli www.trivialsec.com -O trivialscan_www.trivialsec.com.json
+run-all: ## www.trivialsec.com
+	cat .development/targets.txt | xargs python -m trivialscan.cli
 
 run-valid: ## ssllabs.com
 	python -m trivialscan.cli ssllabs.com

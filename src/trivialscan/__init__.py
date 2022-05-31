@@ -1,7 +1,8 @@
 import sys
 from importlib import import_module
 from rich.console import Console
-from .config import config
+from rich.table import Table
+from .config import default_config
 from .transport.insecure import InsecureTransport
 from .transport.state import TransportState
 from .evaluations import BaseEvaluationTask
@@ -9,21 +10,36 @@ from .evaluations import BaseEvaluationTask
 __module__ = "trivialscan"
 
 assert sys.version_info >= (3, 10), "Requires Python 3.10 or newer"
+config = default_config()
 
 
-def query_hostname(
-    hostname: str, port: int = 443, console: Console = None, customs_config: dict = None
+def evaluate(
+    hostname: str,
+    port: int = 443,
+    evaluations: list = config.get("evaluations"),
+    skip_evaluations: list = [],
+    skip_evaluation_groups: list = [],
+    use_sni: bool = config["defaults"].get("use_sni"),
+    cafiles: str = config["defaults"].get("cafiles"),
+    client_certificate: str = None,
+    console: Console = None,
+    **kwargs,
 ) -> tuple[TransportState, list[dict]]:
     use_console = isinstance(console, Console)
-    conf = customs_config or config
     transport = InsecureTransport(hostname, port)
-    transport.connect_insecure(
-        cafiles=conf["defaults"].get("cafiles"),
-        use_sni=not conf["defaults"].get("disable_sni"),
-    )
+    if isinstance(client_certificate, str):
+        transport.pre_client_authentication_check(client_pem_path=client_certificate)
+    transport.connect_insecure(cafiles=cafiles, use_sni=use_sni)
     state = transport.get_state()
-    evaluations = []
-    for evaluation in conf.get("evaluations"):
+    evaluation_results = []
+    for evaluation in evaluations:
+        if any(
+            [
+                evaluation["group"] in skip_evaluation_groups,
+                evaluation["key"] in skip_evaluations,
+            ]
+        ):
+            continue
         _cls = getattr(
             import_module(
                 f'.evaluations.{evaluation["group"]}.{evaluation["key"]}',
@@ -31,33 +47,42 @@ def query_hostname(
             ),
             "EvaluationTask",
         )
-        cls: BaseEvaluationTask = _cls(transport, state, evaluation, conf)
+        cls: BaseEvaluationTask = _cls(transport, state, evaluation, config["defaults"])
         result = cls.evaluate()
+        label_as = evaluation["label_as"]
+        evaluation_value = "[cyan]SKIP![/cyan]"
         result_label = "Unknown"
         score = 0
-        metadata = ""
-        if evaluation.get("metadata"):
-            for extra in evaluation.get("metadata"):
-                value = None
-                if hasattr(state, extra.get("key")):
-                    value = getattr(state, extra.get("key"))
-                if hasattr(transport, extra.get("key")):
-                    value = getattr(transport, extra.get("key"))
-                if value:
-                    metadata += extra.get("format_str") % value
-        for anotatation in evaluation["anotate_results"]:
+        for anotatation in evaluation.get("anotate_results", []):
             if anotatation["value"] is result:
+                evaluation_value = anotatation["evaluation_value"]
                 result_label = anotatation["display_as"]
                 score = anotatation["score"]
-                if use_console:
-                    console.print(
-                        f'{state.hostname}:{state.port} {anotatation["evaluation_value"]} {evaluation["label_as"]}{metadata}',
-                        highlight=False,
-                    )
                 break
-        evaluations.append(
+
+        substitutions = {}
+        for substitution in evaluation.get("substitutions", []):
+            value = None
+            if hasattr(state, substitution):
+                value = getattr(state, substitution)
+            if hasattr(transport, substitution):
+                value = getattr(transport, substitution)
+            if value:
+                substitutions[substitution] = value
+        if substitutions:
+            label_as = label_as.format(**substitutions)
+            evaluation_value = evaluation_value.format(**substitutions)
+        if use_console:
+            table = Table.grid(expand=True)
+            table.add_column()
+            table.add_column(justify="right")
+            table.add_row(
+                f"{evaluation_value} {label_as}", f"{state.hostname}:{state.port}"
+            )
+            console.print(table)
+        evaluation_results.append(
             {
-                "name": evaluation["label_as"],
+                "name": label_as,
                 "key": evaluation["key"],
                 "group": evaluation["group"],
                 "cve": evaluation.get("cve", []),
@@ -70,10 +95,5 @@ def query_hostname(
                 "description": evaluation["issue"],
             }
         )
-        if result is None and use_console:
-            console.print(
-                f'{state.hostname}:{state.port} [magenta]SKIP![/magenta] {evaluation["label_as"]}',
-                highlight=False,
-            )
 
-    return state, evaluations
+    return state, evaluation_results

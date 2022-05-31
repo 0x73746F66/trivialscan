@@ -49,7 +49,7 @@ class InsecureTransport(Transport):
                 self._state.sni_support = True
 
             if version == SSL.TLS1_3_VERSION:
-                # server can only prefer this too
+                # server can only prefer this too, that's how TLS1.3 was intended
                 self._state.preferred_protocol = (
                     f"{label} ({hex(constants.PROTOCOL_VERSION[label])})"
                 )
