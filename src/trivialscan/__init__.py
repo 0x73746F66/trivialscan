@@ -1,8 +1,10 @@
 import sys
+import json
 from importlib import import_module
+from pathlib import Path
 from rich.console import Console
-from rich.table import Table
 from .config import default_config
+from .cli import log
 from .transport.insecure import InsecureTransport
 from .transport.state import TransportState
 from .evaluations import BaseEvaluationTask
@@ -25,7 +27,6 @@ def evaluate(
     console: Console = None,
     **kwargs,
 ) -> tuple[TransportState, list[dict]]:
-    use_console = isinstance(console, Console)
     transport = InsecureTransport(hostname, port)
     if isinstance(client_certificate, str):
         transport.pre_client_authentication_check(client_pem_path=client_certificate)
@@ -72,14 +73,7 @@ def evaluate(
         if substitutions:
             label_as = label_as.format(**substitutions)
             evaluation_value = evaluation_value.format(**substitutions)
-        if use_console:
-            table = Table.grid(expand=True)
-            table.add_column()
-            table.add_column(justify="right")
-            table.add_row(
-                f"{evaluation_value} {label_as}", f"{state.hostname}:{state.port}"
-            )
-            console.print(table)
+        log(f"{evaluation_value} {label_as}", hostname=state.hostname, port=state.port, con=console)
         evaluation_results.append(
             {
                 "name": label_as,

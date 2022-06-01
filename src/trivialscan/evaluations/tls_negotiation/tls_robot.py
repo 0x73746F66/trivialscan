@@ -26,7 +26,7 @@ EXECUTE_BLINDING = True
 # We only enable TCP fast open if the Linux proc interface exists
 ENABLE_FASTOPEN = os.path.exists("/proc/sys/net/ipv4/tcp_fastopen")
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def powmod(x, y, z):
@@ -45,7 +45,7 @@ class EvaluationTask(BaseEvaluationTask):
         self, transport: Transport, state: TransportState, metadata: dict, config: dict
     ) -> None:
         super().__init__(transport, state, metadata, config)
-        self._leaf = None
+        self._leaf:LeafCertificate = None
         self._cke_version = None
         self._cke_2and_prefix = None
 
@@ -55,10 +55,16 @@ class EvaluationTask(BaseEvaluationTask):
                 self._leaf = cert
                 break
         if self._leaf is None:
+            logger.info('tls_robot: missing Leaf Cedrtificate')
             return None
-
-        e = self._leaf.public_key_exponent
+        if self._leaf.public_key_type not in ['RSA', 'DSA']:
+            logger.info(f'tls_robot: {self._leaf.public_key_type} not subject to TLS ROBOT attacks')
+            return False
+        if self._leaf.public_key_modulus is None:
+            logger.info('tls_robot: No public key modulus available')
+            return None
         N = self._leaf.public_key_modulus
+        e = self._leaf.public_key_exponent
         modulus_bits = int(math.ceil(math.log(N, 2)))
         modulus_bytes = (modulus_bits + 7) // 8
         self._cke_2and_prefix = bytearray.fromhex(
@@ -104,7 +110,7 @@ class EvaluationTask(BaseEvaluationTask):
         oracle_bad4 = self._oracle(pms_bad4, messageflow=False)
 
         if oracle_good == oracle_bad1 == oracle_bad2 == oracle_bad3 == oracle_bad4:
-            log.info(
+            logger.info(
                 f"Identical results ({oracle_good}), retrying with changed messageflow"
             )
             oracle_good = self._oracle(pms_good, messageflow=True)
@@ -113,7 +119,7 @@ class EvaluationTask(BaseEvaluationTask):
             oracle_bad3 = self._oracle(pms_bad3, messageflow=True)
             oracle_bad4 = self._oracle(pms_bad4, messageflow=True)
             if oracle_good == oracle_bad1 == oracle_bad2 == oracle_bad3 == oracle_bad4:
-                log.info(f"Identical results ({oracle_good}), no working oracle found")
+                logger.info(f"Identical results ({oracle_good}), no working oracle found")
                 return False
             else:
                 flow = True
@@ -134,7 +140,7 @@ class EvaluationTask(BaseEvaluationTask):
             or oracle_bad3 != oracle_bad_verify3
             or oracle_bad4 != oracle_bad_verify4
         ):
-            log.warning("Getting inconsistent results, aborting.")
+            logger.warning("Getting inconsistent results, aborting.")
             return None
         # If the response to the invalid PKCS#1 request (oracle_bad1) is equal to both
         # requests starting with 0002, we have a weak oracle. This is because the only
@@ -142,9 +148,9 @@ class EvaluationTask(BaseEvaluationTask):
         # correctly formatted PKCS#1 message with 0x00 on a correct position. This
         # makes our oracle weak
         if oracle_bad1 == oracle_bad2 == oracle_bad3:
-            log.info("The oracle is weak, the attack could take too long")
+            logger.info("The oracle is weak, the attack could take too long")
         else:
-            log.warning("The oracle is strong, real attack is possible")
+            logger.warning("The oracle is strong, real attack is possible")
 
         return True
 
@@ -197,12 +203,12 @@ class EvaluationTask(BaseEvaluationTask):
                 else:
                     return f"Received something other than an alert ({alert[0:10]})"
             except ConnectionResetError as ex:
-                log.exception(ex)
+                logger.exception(ex)
                 return "ConnectionResetError"
             except socket.timeout:
                 return "Timeout waiting for alert"
             finally:
                 s.close()
         except Exception as ex:
-            log.exception(ex)
+            logger.exception(ex)
             return str(ex)

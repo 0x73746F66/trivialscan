@@ -2,6 +2,8 @@ import logging
 from os.path import expanduser
 from pathlib import Path
 from copy import deepcopy
+from urllib.parse import urlparse
+import validators
 import yaml
 
 __module__ = "trivialscan.config"
@@ -117,6 +119,31 @@ def _merge_2_lists_of_dicts(
     return list({v[unique_key]: v for v in list(filter(None, result))}.values())
 
 
+def _validate_config(combined_config: dict) -> dict:
+    if not combined_config.get('targets'):
+        raise RuntimeError('No targets defined')
+    targets = []
+    for target in combined_config.get('targets'):
+        hostname = target.get('hostname')
+        if not hostname or not isinstance(hostname, str):
+            raise AttributeError("Missing hostname")
+        if not hostname.startswith("http"):
+            hostname = f"https://{hostname}"
+        parsed = urlparse(hostname)
+        if validators.domain(parsed.hostname) is not True:
+            raise AttributeError(
+                f"URL {hostname} hostname {parsed.hostname} is invalid"
+            )
+        if isinstance(target.get('port'), str):
+            target['port'] = int(target.get('port'))
+        if target.get('port') is None or target.get('port') == 0:  # falsey type coersion
+            target['port'] = 443
+        targets.append(target)
+    combined_config['targets'] = targets
+    # TODO: more config validations
+    return combined_config
+
+
 def _combine_configs(default_values: dict, user_conf: dict, custom_conf: dict) -> dict:
     ret_config = {
         "defaults": {
@@ -148,7 +175,7 @@ def _combine_configs(default_values: dict, user_conf: dict, custom_conf: dict) -
         custom_conf.get("targets", []),
         unique_key="hostname",
     )
-    return ret_config
+    return _validate_config(ret_config)
 
 
 def get_config(filename: str = ".trivialscan-config.yaml") -> dict:

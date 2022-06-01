@@ -7,6 +7,7 @@ rich
 validators
 idna
 # trivialscan deps
+tlstrust==2.6.3
 certvalidator
 dnspython
 hyperframe
@@ -16,5 +17,5 @@ progressbar2
 requests
 retry
 tldextract
-tlstrust
 urllib3
+pyyaml

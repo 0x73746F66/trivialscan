@@ -7,7 +7,7 @@ __module__ = "trivialscan.transport.state"
 
 class TransportState:
     certificate_mtls_expected: bool = None
-    certificates: list[BaseCertificate]
+    certificates: list[BaseCertificate] = []
     negotiated_protocol: str = None
     preferred_protocol: str = None
     offered_tls_versions: list = []

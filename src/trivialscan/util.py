@@ -36,7 +36,7 @@ from .certificate import (
 __module__ = "trivialscan.util"
 
 logger = logging.getLogger(__name__)
-
+MAX_DEPTH = 8
 
 def force_str(s, encoding="utf-8", strings_only=False, errors="strict"):
     if issubclass(type(s), str):
@@ -547,114 +547,6 @@ def date_diff(comparer: datetime) -> str:
         return f"Expires in {interval.days} days"
 
 
-def styled_boolean(
-    value: bool,
-    represent_as: tuple[str, str] = ("True", "False"),
-    colors: tuple[str, str] = ("dark_sea_green2", "light_coral"),
-) -> str:
-    console = Console()
-    if value is None:
-        value = False
-    if not isinstance(value, bool):
-        raise TypeError(f"{type(value)} provided")
-    val = represent_as[0] if value else represent_as[1]
-    color = colors[0] if value else colors[1]
-    with console.capture() as capture:
-        console.print(val, style=Style(color=color))
-    return capture.get().strip()
-
-
-def styled_value(value: str, color: str = "white") -> str:
-    if value.startswith("http"):
-        return value
-    if len(value) > 70:
-        return value
-    console = Console()
-    with console.capture() as capture:
-        console.print(value, style=Style(color=color), no_wrap=True)
-    return capture.get().strip()
-
-
-def styled_list(
-    values: list, delimiter: str = "\n", color: str = "bright_white"
-) -> str:
-    styled_values = []
-    for value in values:
-        if value is None:
-            styled_values.append(styled_value("Unknown", "cornflower_blue"))
-            continue
-        if isinstance(value, bool):
-            styled_values.append(styled_boolean(value, colors=(color, color)))
-            continue
-        if isinstance(value, list):
-            styled_values.append(styled_list(value, delimiter, color))
-            continue
-        if isinstance(value, dict):
-            styled_values.append(styled_dict(value, delimiter, colors=(color, color)))
-            continue
-        if isinstance(value, bytes):
-            value = value.decode()
-        if isinstance(value, datetime):
-            value = value.isoformat()
-        styled_values.append(styled_value(str(value), color=color))
-
-    return delimiter.join(styled_values)
-
-
-def styled_dict(
-    values: dict,
-    delimiter: str = "=",
-    colors: tuple[str, str] = ("bright_white", "bright_white"),
-) -> str:
-    pairs = []
-    for key, v in values.items():
-        if isinstance(v, bool):
-            pairs.append(f"{key}{delimiter}{styled_boolean(v)}")
-            continue
-        if v is None:
-            pairs.append(f'{key}{delimiter}{styled_value("null", color=colors[1])}')
-            continue
-        if isinstance(v, list):
-            pairs.append(f"{key}{delimiter}{styled_list(v, color=colors[1])}")
-            continue
-        if isinstance(v, dict):
-            pairs.append(
-                f"{key}{delimiter}{styled_dict(v, delimiter=delimiter, colors=colors)}"
-            )
-            continue
-        if isinstance(v, (int, float)):
-            v = str(v)
-        if isinstance(v, bytes):
-            v = v.decode()
-        if isinstance(v, datetime):
-            v = v.isoformat()
-        if isinstance(v, str):
-            pairs.append(f"{key}{delimiter}{styled_value(v, color=colors[1])}")
-    return "\n".join(pairs)
-
-
-def styled_any(
-    value, dict_delimiter="=", list_delimiter="\n", color: str = "bright_white"
-) -> str:
-    if isinstance(value, list) and len(value) == 1:
-        value = value[0]
-    if isinstance(value, (str, int)):
-        return str(value)
-    if value is None:
-        return styled_value("None", color=color)
-    if isinstance(value, bool):
-        return styled_boolean(value)
-    if isinstance(value, dict):
-        return styled_dict(value, delimiter=dict_delimiter)
-    if isinstance(value, list):
-        return styled_list(value, delimiter=list_delimiter, color=color)
-    if isinstance(value, bytes):
-        return styled_value(value.decode(), color=color)
-    if isinstance(value, datetime):
-        return styled_value(value.isoformat(), color=color)
-    return styled_value(value, color=color)
-
-
 def get_txt_answer(domain_name: str) -> resolver.Answer:
     logger.info(f"Trying to resolve TXT for {domain_name}")
     dns_resolver = resolver.Resolver(configure=False)
@@ -1014,19 +906,21 @@ def get_certificates(
             ]:
                 roots.append(ret)
 
-    def next_chain(ski: str, lookup: dict):
-        for next_cert in lookup.get(ski, []):
+    def next_chain(ski: str, lookup: dict, depth:int = 0):
+        for next_cert in lookup[ski]:
             next_ski = tlstrust_util.get_key_identifier_hex(
                 next_cert.to_cryptography(),
                 extension=extensions.SubjectKeyIdentifier,
                 key="digest",
             )
             ret_certs.append(
-                LeafCertificate(next_cert, hostname)
-                if next_ski == leaf_ski
-                else IntermediateCertificate(next_cert)
+                IntermediateCertificate(next_cert)
+                if next_ski != leaf_ski
+                else LeafCertificate(next_cert, hostname)
             )
-            next_chain(next_ski, lookup)
+            if next_ski in lookup and depth < MAX_DEPTH:
+                depth += 1
+                next_chain(next_ski, lookup, depth)
 
     for cert in roots:
         ski = tlstrust_util.get_key_identifier_hex(
@@ -1034,7 +928,8 @@ def get_certificates(
             extension=extensions.SubjectKeyIdentifier,
             key="digest",
         )
-        next_chain(ski, aki_lookup)
         ret_certs.append(RootCertificate(cert))
+        if ski in aki_lookup:
+            next_chain(ski, aki_lookup)
 
     return list({v.sha1_fingerprint: v for v in ret_certs}.values())

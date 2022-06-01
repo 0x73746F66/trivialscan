@@ -11,7 +11,7 @@ help: ## This help.
 deps: ## install dependancies for development of this project
 	python -m pip install -U pip
 	python -m pip install -U -r requirements-dev.txt
-	python -m pip install -e .
+	python -m pip install --force-reinstall --no-cache-dir -e .
 
 setup: deps ## setup for development of this project
 	pre-commit install --hook-type pre-push --hook-type pre-commit

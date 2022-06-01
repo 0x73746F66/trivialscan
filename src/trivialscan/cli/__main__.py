@@ -11,9 +11,9 @@ import progressbar
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.table import Column
-from rich.table import Table
 from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColumn
 from trivialscan.transport.state import TransportState
+from . import log
 from .. import evaluate
 from ..config import get_config
 
@@ -23,7 +23,7 @@ REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
 
 assert sys.version_info >= (3, 10), "Requires Python 3.10 or newer"
 console = Console()
-
+logger = logging.getLogger(__name__)
 
 def no_progressbar(data: list):
     yield from data
@@ -189,17 +189,8 @@ def _cli_config(cli_args: dict, config: dict) -> dict:
 def wrap_evaluate(
     queue_in, queue_out, progress_console: Console = None, config: dict = None
 ) -> None:
-    use_console = isinstance(progress_console, Console)
-    logger = logging.getLogger(__name__)
     for target in iter(queue_in.get, None):
-        if use_console:
-            table = Table.grid(expand=True)
-            table.add_column(style="cyan")
-            table.add_column(justify="right")
-            table.add_row(
-                "START", f"{target.get('hostname')}:{target.get('port', 443)}"
-            )
-            progress_console.print(table)
+        log("[cyan]START[/cyan]", hostname=target.get('hostname'), port=target.get('port', 443), con=progress_console)
         try:
             state, evaluations = evaluate(
                 console=progress_console,
@@ -208,20 +199,12 @@ def wrap_evaluate(
                 **config["defaults"],
             )
             if isinstance(state, TransportState):
-                if use_console:
-                    table = Table.grid(expand=True)
-                    table.add_column()
-                    table.add_column(justify="right")
-                    table.add_row(
-                        f"[cyan]DONE![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}",
-                        f"{state.hostname}:{state.port}",
-                    )
-                    progress_console.print(table)
+                log(f"[cyan]DONE![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}", hostname=state.hostname, port=state.port, con=progress_console)
                 data = state.to_dict()
                 data["evaluations"] = evaluations
                 queue_out.put(data)
         except Exception as ex:  # pylint: disable=broad-except
-            logger.exception(ex)
+            logger.error(ex, exc_info=True)
             queue_out.put(
                 {
                     "_metadata": {
@@ -230,16 +213,13 @@ def wrap_evaluate(
                             "port": target.get("port"),
                         }
                     },
-                    "error": str(ex),
+                    "error": (type(ex).__name__, ex),
                 }
             )
 
 
 def cli():
     config, hide_progress_bars = configure()
-    if not config.get("targets"):
-        print("no targets are defined")
-        sys.exit(1)
     run_start = datetime.utcnow()
     queue_in = Queue()
     queue_out = Queue()
@@ -253,9 +233,9 @@ def cli():
 | __| '__| \\ \\ / / |/ _\\` | / __|/ __/ _\\` | '_\\
 | |_| |  | |\\ V /| | (_| | \\__ \\ (_| (_| | | | |
  \\__|_|  |_| \\_/ |_|\\__,_|_|___/\\___\\__,_|_| |_|[/aquamarine3]
-        [dark_sea_green2]SUCCESS[/dark_sea_green2] [khaki1]ISSUE[/khaki1] [light_coral]VULNERABLE[/light_coral][/bold]
-[cyan]INFO![/cyan] Evaluating {num_targets} domain{'s' if num_targets >1 else ''}"""
+        [dark_sea_green2]SUCCESS[/dark_sea_green2] [khaki1]ISSUE[/khaki1] [light_coral]VULNERABLE[/light_coral][/bold]"""
         )
+    log(f"[cyan]INFO![/cyan] Evaluating {num_targets} domain{'s' if num_targets >1 else ''}", aside="core", con=console if use_console else None)
     if hide_progress_bars:
         the_pool = Pool(
             cpu_count(),
@@ -323,16 +303,13 @@ def cli():
             ),
             encoding="utf8",
         )
-        if use_console:
-            console.print(f"[cyan]SAVED[/cyan] {json_file}")
-    if use_console:
-        console.print(
-            "[cyan]TOTAL[/cyan] Execution duration %.1f seconds"
-            % execution_duration_seconds
-        )
-        for result in queries:
-            if result.get("error"):
-                console.print(f'[light_coral]ERROR[/light_coral] {result["error"]}')
+        log(f"[cyan]SAVED[/cyan] {json_file}", aside='core', con=console if use_console else None)
+
+    log("[cyan]TOTAL[/cyan] Execution duration %.1f seconds" % execution_duration_seconds, aside='core', con=console if use_console else None)
+    for result in queries:
+        if result.get("error"):
+            err, msg = result["error"]
+            log(f'[light_coral]ERROR[/light_coral] {msg}', aside=err, con=console if use_console else None)
 
 
 if __name__ == "__main__":
