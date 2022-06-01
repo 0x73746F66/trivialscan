@@ -9,9 +9,9 @@ help: ## This help.
 .DEFAULT_GOAL := help
 
 deps: ## install dependancies for development of this project
-	pip install -U pip
-	pip install -U -r requirements-dev.txt
-	pip install -e .
+	python -m pip install -U pip
+	python -m pip install -U -r requirements-dev.txt
+	python -m pip install -e .
 
 setup: deps ## setup for development of this project
 	pre-commit install --hook-type pre-push --hook-type pre-commit
@@ -19,7 +19,7 @@ setup: deps ## setup for development of this project
 	yes | detect-secrets audit .secrets.baseline
 
 install: ## Install the package
-	pip install -U dist/trivialscan-$(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')-py2.py3-none-any.whl
+	python -m pip install -U dist/trivialscan-$(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')-py2.py3-none-any.whl
 
 check: ## check build
 	python setup.py egg_info
