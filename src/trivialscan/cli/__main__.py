@@ -25,8 +25,12 @@ assert sys.version_info >= (3, 10), "Requires Python 3.10 or newer"
 console = Console()
 logger = logging.getLogger(__name__)
 
+
 def no_progressbar(data: list):
     yield from data
+
+
+progressbar.progressbar = no_progressbar
 
 
 def configure() -> dict:
@@ -135,8 +139,6 @@ def configure() -> dict:
         log_format = "%(message)s"
         handlers.append(RichHandler(rich_tracebacks=True))
     logging.basicConfig(format=log_format, level=log_level, handlers=handlers)
-    progressbar.progressbar = no_progressbar
-
     base_config = get_config(args.config_file)
     return _cli_config(vars(args), base_config), args.hide_progress_bars
 
@@ -162,16 +164,18 @@ def _cli_config(cli_args: dict, config: dict) -> dict:
             raise AttributeError(
                 f"URL {hostname} hostname {parsed.hostname} is invalid"
             )
-        targets.append(
-            {
-                "hostname": parsed.hostname,
-                "port": 443 if not parsed.port else parsed.port,
-                "client_certificate": cli_args.get("client_pem"),
-            }
-        )
+        target = {
+            "hostname": parsed.hostname,
+            "port": 443 if not parsed.port else parsed.port,
+            "client_certificate": cli_args.get("client_pem"),
+        }
+        for _target in config["targets"]:
+            if parsed.hostname == _target["hostname"]:
+                target = {**_target, **target}
+                break
+        targets.append(target)
     if targets:
         config["targets"] = targets
-
     if cli_args.get("hide_progress_bars"):
         config["outputs"] = [
             n for n in config.get("outputs", []) if n.get("type") != "console"
@@ -190,7 +194,12 @@ def wrap_evaluate(
     queue_in, queue_out, progress_console: Console = None, config: dict = None
 ) -> None:
     for target in iter(queue_in.get, None):
-        log("[cyan]START[/cyan]", hostname=target.get('hostname'), port=target.get('port', 443), con=progress_console)
+        log(
+            "[cyan]START[/cyan]",
+            hostname=target.get("hostname"),
+            port=target.get("port", 443),
+            con=progress_console,
+        )
         try:
             state, evaluations = evaluate(
                 console=progress_console,
@@ -199,7 +208,12 @@ def wrap_evaluate(
                 **config["defaults"],
             )
             if isinstance(state, TransportState):
-                log(f"[cyan]DONE![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}", hostname=state.hostname, port=state.port, con=progress_console)
+                log(
+                    f"[cyan]DONE![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}",
+                    hostname=state.hostname,
+                    port=state.port,
+                    con=progress_console,
+                )
                 data = state.to_dict()
                 data["evaluations"] = evaluations
                 queue_out.put(data)
@@ -228,14 +242,18 @@ def cli():
     use_console = any(n.get("type") == "console" for n in config.get("outputs", []))
     if use_console:
         console.print(
-            f"""[bold][aquamarine3] _        _       _       _
+            """[bold][aquamarine3] _        _       _       _
 | |_ _ __(_)_   _(_) __ _| |___  ___ __ _ _ __
 | __| '__| \\ \\ / / |/ _\\` | / __|/ __/ _\\` | '_\\
 | |_| |  | |\\ V /| | (_| | \\__ \\ (_| (_| | | | |
  \\__|_|  |_| \\_/ |_|\\__,_|_|___/\\___\\__,_|_| |_|[/aquamarine3]
         [dark_sea_green2]SUCCESS[/dark_sea_green2] [khaki1]ISSUE[/khaki1] [light_coral]VULNERABLE[/light_coral][/bold]"""
         )
-    log(f"[cyan]INFO![/cyan] Evaluating {num_targets} domain{'s' if num_targets >1 else ''}", aside="core", con=console if use_console else None)
+    log(
+        f"[cyan]INFO![/cyan] Evaluating {num_targets} domain{'s' if num_targets >1 else ''}",
+        aside="core",
+        con=console if use_console else None,
+    )
     if hide_progress_bars:
         the_pool = Pool(
             cpu_count(),
@@ -303,13 +321,26 @@ def cli():
             ),
             encoding="utf8",
         )
-        log(f"[cyan]SAVED[/cyan] {json_file}", aside='core', con=console if use_console else None)
+        log(
+            f"[cyan]SAVED[/cyan] {json_file}",
+            aside="core",
+            con=console if use_console else None,
+        )
 
-    log("[cyan]TOTAL[/cyan] Execution duration %.1f seconds" % execution_duration_seconds, aside='core', con=console if use_console else None)
+    log(
+        "[cyan]TOTAL[/cyan] Execution duration %.1f seconds"
+        % execution_duration_seconds,
+        aside="core",
+        con=console if use_console else None,
+    )
     for result in queries:
         if result.get("error"):
             err, msg = result["error"]
-            log(f'[light_coral]ERROR[/light_coral] {msg}', aside=err, con=console if use_console else None)
+            log(
+                f"[light_coral]ERROR[/light_coral] {msg}",
+                aside=err,
+                con=console if use_console else None,
+            )
 
 
 if __name__ == "__main__":

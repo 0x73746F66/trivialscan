@@ -1,7 +1,5 @@
 import sys
-import json
 from importlib import import_module
-from pathlib import Path
 from rich.console import Console
 from .config import default_config
 from .cli import log
@@ -34,12 +32,22 @@ def evaluate(
     state = transport.get_state()
     evaluation_results = []
     for evaluation in evaluations:
+        label_as = evaluation["label_as"]
+        evaluation_value = "[cyan]SKIP![/cyan]"
+        result_label = "Unknown"
+        score = 0
         if any(
             [
                 evaluation["group"] in skip_evaluation_groups,
                 evaluation["key"] in skip_evaluations,
             ]
         ):
+            log(
+                f"{evaluation_value} {label_as}",
+                hostname=state.hostname,
+                port=state.port,
+                con=console,
+            )
             continue
         _cls = getattr(
             import_module(
@@ -50,10 +58,6 @@ def evaluate(
         )
         cls: BaseEvaluationTask = _cls(transport, state, evaluation, config["defaults"])
         result = cls.evaluate()
-        label_as = evaluation["label_as"]
-        evaluation_value = "[cyan]SKIP![/cyan]"
-        result_label = "Unknown"
-        score = 0
         for anotatation in evaluation.get("anotate_results", []):
             if anotatation["value"] is result:
                 evaluation_value = anotatation["evaluation_value"]
@@ -73,7 +77,12 @@ def evaluate(
         if substitutions:
             label_as = label_as.format(**substitutions)
             evaluation_value = evaluation_value.format(**substitutions)
-        log(f"{evaluation_value} {label_as}", hostname=state.hostname, port=state.port, con=console)
+        log(
+            f"{evaluation_value} {label_as}",
+            hostname=state.hostname,
+            port=state.port,
+            con=console,
+        )
         evaluation_results.append(
             {
                 "name": label_as,

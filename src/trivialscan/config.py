@@ -120,11 +120,19 @@ def _merge_2_lists_of_dicts(
 
 
 def _validate_config(combined_config: dict) -> dict:
-    if not combined_config.get('targets'):
-        raise RuntimeError('No targets defined')
+    skip_evaluations = combined_config["defaults"].get("skip_evaluations", [])
+    skip_evaluation_groups = combined_config["defaults"].get(
+        "skip_evaluation_groups", []
+    )
+    if skip_evaluations:
+        del combined_config["defaults"]["skip_evaluations"]
+    if skip_evaluation_groups:
+        del combined_config["defaults"]["skip_evaluation_groups"]
+    if not combined_config.get("targets"):
+        raise RuntimeError("No targets defined")
     targets = []
-    for target in combined_config.get('targets'):
-        hostname = target.get('hostname')
+    for target in combined_config.get("targets"):
+        hostname = target.get("hostname")
         if not hostname or not isinstance(hostname, str):
             raise AttributeError("Missing hostname")
         if not hostname.startswith("http"):
@@ -134,12 +142,22 @@ def _validate_config(combined_config: dict) -> dict:
             raise AttributeError(
                 f"URL {hostname} hostname {parsed.hostname} is invalid"
             )
-        if isinstance(target.get('port'), str):
-            target['port'] = int(target.get('port'))
-        if target.get('port') is None or target.get('port') == 0:  # falsey type coersion
-            target['port'] = 443
+        if isinstance(target.get("port"), str):
+            target["port"] = int(target.get("port"))
+        if (
+            target.get("port") is None or target.get("port") == 0
+        ):  # falsey type coercion
+            target["port"] = 443
+        target["skip_evaluations"] = [
+            *skip_evaluations,
+            *target.get("skip_evaluations", []),
+        ]
+        target["skip_evaluation_groups"] = [
+            *skip_evaluation_groups,
+            *target.get("skip_evaluation_groups", []),
+        ]
         targets.append(target)
-    combined_config['targets'] = targets
+    combined_config["targets"] = targets
     # TODO: more config validations
     return combined_config
 

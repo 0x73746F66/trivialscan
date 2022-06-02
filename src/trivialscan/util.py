@@ -17,8 +17,6 @@ from OpenSSL import SSL
 from OpenSSL.crypto import X509, FILETYPE_PEM, dump_certificate
 from retry.api import retry
 from certvalidator import CertificateValidator, ValidationContext
-from rich.style import Style
-from rich.console import Console
 from dns import resolver, dnssec, rdatatype, message, query, name as dns_name
 from dns.exception import DNSException, Timeout as DNSTimeoutError
 from dns.resolver import NoAnswer
@@ -37,6 +35,7 @@ __module__ = "trivialscan.util"
 
 logger = logging.getLogger(__name__)
 MAX_DEPTH = 8
+
 
 def force_str(s, encoding="utf-8", strings_only=False, errors="strict"):
     if issubclass(type(s), str):
@@ -811,7 +810,7 @@ def crlite_revoked(db_path: str, pem: bytes):
     from crlite_query import CRLiteDB, CRLiteQuery, IntermediatesDB
 
     def find_attachments_base_url():
-        url = urlparse(constants.CRLITE_URL)
+        url = urlparse(constants.CRLITE_BASE_URL)
         base_rsp = requests.get(f"{url.scheme}://{url.netloc}/v1/")
         return base_rsp.json()["capabilities"]["attachments"]["base_url"]
 
@@ -829,18 +828,23 @@ def crlite_revoked(db_path: str, pem: bytes):
         logger.info(f"Database was updated at {last_updated}, skipping.")
         update = False
     crlite_db = CRLiteDB(db_path=db_path)
+    intermediates_db = IntermediatesDB(db_path=db_path, download_pems=True)
+
     if update:
-        crlite_db.update(
-            collection_url=constants.CRLITE_URL,
+        intermediates_db.update(
+            collection_url=constants.CRLITE_INTERMEDIATES_URL,
             attachments_base_url=find_attachments_base_url(),
         )
-        crlite_db.cleanup()
+        crlite_db.update(
+            collection_url=constants.CRLITE_REVOCATIONS_URL,
+            attachments_base_url=find_attachments_base_url(),
+        )
         last_updated_file.touch()
         logger.info(f"Status: {crlite_db}")
 
     crlite_query = CRLiteQuery(
         crlite_db=crlite_db,
-        intermediates_db=IntermediatesDB(db_path=db_path, download_pems=True),
+        intermediates_db=intermediates_db,
     )
     results = []
     for result in crlite_query.query(
@@ -906,7 +910,7 @@ def get_certificates(
             ]:
                 roots.append(ret)
 
-    def next_chain(ski: str, lookup: dict, depth:int = 0):
+    def next_chain(ski: str, lookup: dict, depth: int = 0):
         for next_cert in lookup[ski]:
             next_ski = tlstrust_util.get_key_identifier_hex(
                 next_cert.to_cryptography(),

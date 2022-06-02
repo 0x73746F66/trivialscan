@@ -3,6 +3,8 @@ defaults:
   use_sni: True
   cafiles:
   tmp_path_prefix: /tmp
+  skip_evaluations:
+    - revocation_crlite
 
 outputs:
   - type: console
