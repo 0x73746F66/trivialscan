@@ -19,7 +19,7 @@ setup: deps ## setup for development of this project
 	yes | detect-secrets audit .secrets.baseline
 
 install: ## Install the package
-	python -m pip install -U dist/trivialscan-$(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')-py2.py3-none-any.whl
+	python -m pip install -U dist/trivialscan-$(shell cat ./setup.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)-py2.py3-none-any.whl
 
 check: ## check build
 	python setup.py egg_info
@@ -38,7 +38,7 @@ build: check ## build wheel file
 	python -m build -nxsw
 
 publish: ## upload to pypi.org
-	git tag -f $(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')
+	git tag -f $(shell cat ./setup.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)
 	git push -u origin --tags
 	python -m twine upload dist/*
 

@@ -14,6 +14,7 @@ class EvaluationTask(BaseEvaluationTask):
         results: list[bool] = []
         for cert in self._state.certificates:
             results.append(
-                cert.signature_algorithm in KNOWN_WEAK_SIGNATURE_ALGORITHMS.keys()
-            )  # pylint: disable=consider-iterating-dictionary
+                cert.signature_algorithm
+                in KNOWN_WEAK_SIGNATURE_ALGORITHMS.keys()  # pylint: disable=consider-iterating-dictionary
+            )
         return any(results)

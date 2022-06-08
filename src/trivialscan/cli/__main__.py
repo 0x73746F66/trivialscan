@@ -12,14 +12,16 @@ from rich.console import Console
 from rich.logging import RichHandler
 from rich.table import Column
 from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColumn
+from art import text2art
 from trivialscan.transport.state import TransportState
 from . import log
 from .. import evaluate
-from ..config import get_config
+from ..config import load_config, get_config
 
 __module__ = "trivialscan.cli"
 __version__ = "3.0.0-devel"
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
+APP_BANNER = text2art("trivialscan", font="tarty4")
 
 assert sys.version_info >= (3, 10), "Requires Python 3.10 or newer"
 console = Console()
@@ -120,7 +122,9 @@ def configure() -> dict:
     )
     args = parser.parse_args()
     if args.show_version:
-        print(f"trivialscan=={__version__}\n{REMOTE_URL}")
+        console.print(
+            f"[aquamarine3]{APP_BANNER}[/aquamarine3]\ntrivialscan=={__version__}\n{REMOTE_URL}"
+        )
         sys.exit(0)
 
     log_level = logging.CRITICAL
@@ -139,12 +143,21 @@ def configure() -> dict:
         log_format = "%(message)s"
         handlers.append(RichHandler(rich_tracebacks=True))
     logging.basicConfig(format=log_format, level=log_level, handlers=handlers)
-    base_config = get_config(args.config_file)
-    return _cli_config(vars(args), base_config), args.hide_progress_bars
+    config = _cli_config(vars(args), args.config_file)
+    if config["defaults"].get("skip_evaluations"):
+        del config["defaults"]["skip_evaluations"]
+    if config["defaults"].get("skip_evaluation_groups"):
+        del config["defaults"]["skip_evaluation_groups"]
+    return config, args.hide_progress_bars
 
 
-def _cli_config(cli_args: dict, config: dict) -> dict:
+def _cli_config(cli_args: dict, filename: str | None) -> dict:
     # only overwrite value in config file if OVERRIDE cli args were defined
+    if filename:
+        custom = load_config(filename)
+    else:
+        custom = load_config()
+    config = get_config(custom_values=custom)
     config["defaults"]["cafiles"] = cli_args.get(
         "cafiles", config["defaults"]["cafiles"]
     )
@@ -153,7 +166,6 @@ def _cli_config(cli_args: dict, config: dict) -> dict:
     )
     if cli_args.get("disable_sni"):
         config["defaults"]["use_sni"] = False
-
     config.setdefault("targets", [])
     targets = []
     for hostname in cli_args.get("targets", []):
@@ -242,11 +254,7 @@ def cli():
     use_console = any(n.get("type") == "console" for n in config.get("outputs", []))
     if use_console:
         console.print(
-            """[bold][aquamarine3] _        _       _       _
-| |_ _ __(_)_   _(_) __ _| |___  ___ __ _ _ __
-| __| '__| \\ \\ / / |/ _\\` | / __|/ __/ _\\` | '_\\
-| |_| |  | |\\ V /| | (_| | \\__ \\ (_| (_| | | | |
- \\__|_|  |_| \\_/ |_|\\__,_|_|___/\\___\\__,_|_| |_|[/aquamarine3]
+            f"""[bold][aquamarine3]{APP_BANNER}[/aquamarine3]
         [dark_sea_green2]SUCCESS[/dark_sea_green2] [khaki1]ISSUE[/khaki1] [light_coral]VULNERABLE[/light_coral][/bold]"""
         )
     log(

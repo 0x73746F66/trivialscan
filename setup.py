@@ -1,16 +1,66 @@
+from io import StringIO
 import distutils.text_file
 from pathlib import Path
 from setuptools import setup, find_packages
 
 __version__ = "3.0.0"
 
-install_requires = distutils.text_file.TextFile(filename=str(Path(__file__).with_name('requirements.txt'))).readlines()
+try:
+    install_requires = distutils.text_file.TextFile(filename=str(Path(__file__).with_name('requirements.txt'))).readlines()
+except FileNotFoundError:
+    install_requires = distutils.text_file.TextFile(file=StringIO("""
+cryptography
+certifi
+asn1crypto
+pyOpenSSL
+rich
+validators
+idna
+tlstrust==2.6.3
+certvalidator
+dnspython
+hyperframe
+moz-crlite-query
+oscrypto
+progressbar2
+requests==2.27.1
+urllib3==1.26.9
+appdirs==1.4.4
+attrs==21.4.0
+cattrs==1.10.0
+requests-cache==0.9.4
+url-normalize==1.4.3
+retry
+tldextract
+pyyaml
+art""")).readlines()
 setup(
     name="trivialscan",
     version=__version__,
     author='Christopher Langton',
     author_email='chris@trivialsec.com',
     description="Validate the security of your TLS connections so that they deserve your trust.",
+    url="https://gitlab.com/trivialsec/trivialscan",
+    project_urls={
+        "Source": "https://gitlab.com/trivialsec/trivialscan",
+        "Documentation": "https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/0.index.md",
+        "Tracker": "https://gitlab.com/trivialsec/trivialscan/-/issues",
+    },
+    classifiers=[
+        "Operating System :: OS Independent",
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    ],
+    include_package_data=True,
+    install_requires=install_requires,
+    entry_points={
+        'console_scripts': ['trivialscan=trivialscan.cli:cli'],
+    },
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    python_requires=">=3.10",
+    options={"bdist_wheel": {"universal": "1"}},
     long_description="""
 # Trivial Scanner
 
@@ -218,24 +268,4 @@ optional arguments:
 ## [Change Log](https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/z.change-log.md)
     """,
     long_description_content_type="text/markdown",
-    url="https://gitlab.com/trivialsec/trivialscan",
-    project_urls={
-        "Source": "https://gitlab.com/trivialsec/trivialscan",
-        "Documentation": "https://gitlab.com/trivialsec/trivialscan/-/blob/main/docs/0.index.md",
-        "Tracker": "https://gitlab.com/trivialsec/trivialscan/-/issues",
-    },
-    classifiers=[
-        "Operating System :: OS Independent",
-        'Programming Language :: Python :: 3.10',
-        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-    ],
-    include_package_data=True,
-    install_requires=install_requires,
-    entry_points={
-        'console_scripts': ['trivialscan=trivialscan.cli:cli'],
-    },
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
-    python_requires=">=3.10",
-    options={"bdist_wheel": {"universal": "1"}},
 )

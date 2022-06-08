@@ -14,8 +14,14 @@ hyperframe
 moz-crlite-query
 oscrypto
 progressbar2
-requests
+requests==2.27.1
+urllib3==1.26.9
+appdirs==1.4.4
+attrs==21.4.0
+cattrs==1.10.0
+requests-cache==0.9.4
+url-normalize==1.4.3
 retry
 tldextract
-urllib3
 pyyaml
+art

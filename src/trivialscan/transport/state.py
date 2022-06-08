@@ -34,25 +34,6 @@ class TransportState:
     http_headers: dict[str, str] = {}
     evaluations: list = []
     """config exists
-
-    client_renegotiation
-    compression_support
-    dnssec
-    deprecated_dnssec_algorithm
-    deprecated_protocol_negotiated
-    known_weak_cipher_negotiated
-    known_weak_cipher_offered
-    rc4_cipher_offered
-    cbc_cipher_offered
-    strong_cipher_negotiated
-    strong_cipher_offered
-    known_weak_signature_algorithm
-    fallback_scsv
-    tls_robot
-    private_key_known_compromised
-    revocation_crlite
-    secure_renegotiation
-
     TODO
     tlsa                            https://www.cloudns.net/wiki/article/342/
     possible_phish_or_malicious

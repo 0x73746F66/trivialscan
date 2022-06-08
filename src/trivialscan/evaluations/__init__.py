@@ -6,6 +6,7 @@ class BaseEvaluationTask:
     _transport: Transport
     _state: TransportState
     _metadata: dict
+    substitution_metadata: dict
 
     def __init__(
         self,
@@ -18,3 +19,4 @@ class BaseEvaluationTask:
         self._state = state
         self._metadata = metadata
         self._configuration = configuration
+        self.substitution_metadata = {}

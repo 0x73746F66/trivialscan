@@ -1,7 +1,8 @@
 import sys
 from importlib import import_module
+from copy import deepcopy
 from rich.console import Console
-from .config import default_config
+from .config import load_config, get_config
 from .cli import log
 from .transport.insecure import InsecureTransport
 from .transport.state import TransportState
@@ -10,15 +11,15 @@ from .evaluations import BaseEvaluationTask
 __module__ = "trivialscan"
 
 assert sys.version_info >= (3, 10), "Requires Python 3.10 or newer"
-config = default_config()
+config = get_config(custom_values=load_config())
 
 
 def evaluate(
     hostname: str,
     port: int = 443,
     evaluations: list = config.get("evaluations"),
-    skip_evaluations: list = [],
-    skip_evaluation_groups: list = [],
+    skip_evaluations: list = config["defaults"].get("skip_evaluations", []),
+    skip_evaluation_groups: list = config["defaults"].get("skip_evaluation_groups", []),
     use_sni: bool = config["defaults"].get("use_sni"),
     cafiles: str = config["defaults"].get("cafiles"),
     client_certificate: str = None,
@@ -65,7 +66,7 @@ def evaluate(
                 score = anotatation["score"]
                 break
 
-        substitutions = {}
+        substitutions = deepcopy(cls.substitution_metadata)
         for substitution in evaluation.get("substitutions", []):
             value = None
             if hasattr(state, substitution):
@@ -83,6 +84,25 @@ def evaluate(
             port=state.port,
             con=console,
         )
+        compliance = []
+        for ctype, _cval in evaluation.get("compliance", {}).items():
+            for _compliance in _cval:
+                cname = f"{ctype} {_compliance['version']}"
+                if cname not in config:
+                    compliance.append({**{"compliance": ctype}, **_compliance})
+                    continue
+                if ctype == "PCI DSS":
+                    for requirement in _compliance.get("requirements", []) or []:
+                        if str(requirement) in config[cname]:
+                            compliance.append(
+                                {
+                                    "compliance": ctype,
+                                    "version": str(_compliance["version"]),
+                                    "requirement": str(requirement),
+                                    "description": config[cname][str(requirement)],
+                                }
+                            )
+
         evaluation_results.append(
             {
                 "name": label_as,
@@ -96,6 +116,8 @@ def evaluate(
                 "score": score,
                 "references": evaluation.get("references", []),
                 "description": evaluation["issue"],
+                "metadata": substitutions,
+                "compliance": compliance,
             }
         )
 

@@ -11,6 +11,9 @@ outputs:
   - type: json
     path: .development/trivialscan_results.json
 
+"PCI DSS 3.2.1":
+  12.7: To minimise the risk of attack from local sources, run a history scan of candidates before hiring
+
 targets:
   - hostname: expired.badssl.com
     port: 443
@@ -54,6 +57,7 @@ evaluations:
     anotate_results:
       - value: False
         score: 80
+
   - key: secure_renegotiation
     label_as: Client initiated TLS secure renegotiation {preferred_protocol}
     substitutions:

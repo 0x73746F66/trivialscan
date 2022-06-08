@@ -872,7 +872,7 @@ def get_certificates(
     leaf: X509, certificates: list[X509], hostname: str
 ) -> list[BaseCertificate]:
     roots: list[X509] = []
-    ret_certs = []
+    ret_certs = [LeafCertificate(leaf, hostname)]
     leaf_aki = tlstrust_util.get_key_identifier_hex(
         leaf.to_cryptography(),
         extension=extensions.AuthorityKeyIdentifier,
@@ -888,6 +888,9 @@ def get_certificates(
             extension=extensions.AuthorityKeyIdentifier,
             key="key_identifier",
         )
+        if not aki:
+            ret_certs.append(RootCertificate(cert))
+            continue
         aki_lookup.setdefault(aki, [])
         aki_lookup[aki].append(cert)
         for _, context_type in STORES.items():
