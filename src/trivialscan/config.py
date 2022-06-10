@@ -727,7 +727,7 @@ evaluations:
         score: 200
       - value: True
         evaluation_value: "[light_coral]FAIL![/light_coral]"
-        display_as: Vulnerabile
+        display_as: Vulnerable
         score: -500
     substitutions:
       - public_key_type

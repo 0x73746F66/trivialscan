@@ -3,12 +3,6 @@ default_language_version:
   python: python3.10
 
 repos:
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v2.32.0
-    hooks:
-      - id: pyupgrade
-        args: [--py37-plus]
-
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.1.0
     hooks:

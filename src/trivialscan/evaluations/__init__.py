@@ -18,16 +18,13 @@ class BaseEvaluationTask:
         self._configuration = configuration
         self.substitution_metadata = {}
 
-
     @property
     def transport(self) -> Transport:
         return self._transport
 
-
     @property
     def state(self) -> TransportState:
         return self._transport.get_state()
-
 
     @property
     def metadata(self) -> dict:

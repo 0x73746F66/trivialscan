@@ -7,7 +7,6 @@ from pathlib import Path
 from datetime import datetime
 from urllib.parse import urlparse
 import validators
-import progressbar
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.table import Column
@@ -25,13 +24,6 @@ APP_BANNER = text2art("trivialscan", font="tarty4")
 assert sys.version_info >= (3, 10), "Requires Python 3.10 or newer"
 console = Console()
 logger = logging.getLogger(__name__)
-
-
-def no_progressbar(data: list):
-    yield from data
-
-
-progressbar.progressbar = no_progressbar
 
 
 def configure() -> tuple[dict, tuple[bool, bool, bool]]:
