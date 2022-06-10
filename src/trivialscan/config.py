@@ -232,7 +232,7 @@ def load_config(filename: str = DEFAULT_CONFIG) -> dict:
     return {}
 
 
-DEFAULT_VALUES = rb"""
+DEFAULT_VALUES = b"""
 ---
 defaults:
   use_sni: True
@@ -711,6 +711,28 @@ evaluations:
     substitutions:
       - sha1_fingerprint
 
+  - key: known_weak_keys
+    group: certificate
+    label_as: Known Weak key usage {public_key_type}-{public_key_size}
+    issue: >
+      Continued use of weak keys in certificates puts your sensitive data at risk. Exhaustive key searches or brute force attacks against certificates with weak keys are dangerous to network security.
+      As computational power increases, so does the need for stronger keys.
+    references:
+      - name: TLS/SSL certificate weak key vulnerability - DigiCert
+        url: https://docs.digicert.com/certificate-tools/discovery-user-guide/tlsssl-certificate-vulnerabilities/weak-keys/
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 200
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Vulnerabile
+        score: -500
+    substitutions:
+      - public_key_type
+      - public_key_size
+
 "PCI DSS 3.2.1":
   1: Configure and use firewalls to protect cardholder data
   1.1: Create and implement standards for configuration of firewalls and routers
@@ -761,13 +783,30 @@ evaluations:
   6.4.6: After a significant change is complete, all relevant PCI DSS requirements should be applied to all new or modified systems and networks, and documentation updated accordingly
   6.5: Address common coding vulnerabilities in software development processes
   6.5.1: Consider injection flaws, specifically SQL injection, also OS Command Injection, LDAP and XPath injection flaws as well as other injection flaws
-  6.5.2: Buffer overflows
-  6.5.3: Unsecured cryptographic storage
-  6.5.4: Unsecured communications
-  6.5.5: Inappropriate error handling
+  6.5.2: >
+    Buffer overflows; attackers can be used to do all kinds of operations if appropriate border controls are not applied. When this happens, the attacker will have the ability to add malicious code to the end of the buffer and then push the malicious code into executable memory space by overflowing the buffer. The malicious code is then run and usually allows the attacker remote access to the application or the infected system.
+    To avoid buffer overflows, encoding techniques including:
+    - Appropriate boundary controls should be implemented.
+    - Input data must be truncated accordingly.
+  6.5.3: >
+    Insecure cryptographic storage should be handled with the following coding techniques:
+    - Cryptographic flaws must be prevented.
+    - Strong cryptographic algorithms and keys should be used.
+  6.5.4: Unsecured communications need to be handled with coding techniques that properly encrypt all sensitive communications.
+  6.5.5: Improper error handling should be determined in software development policies, and procedures and error messages should be handled with information-proof coding techniques.
   6.5.6: All high risk vulnerabilities identified during the vulnerability identification process must be addressed
   6.5.7: Cross-Site Scripting (XSS)
-  6.5.8: Inappropriate access control
+  6.5.8: >
+    Inappropriate access control
+    A direct object reference occurs when a developer presents a reference to an internal application object, such as a file, directory, database record, or key, as a URL or form parameter. Attackers can change these references to access other unauthorized objects.
+    Access controls must be applied consistently at the application layer and business logic for all URLs. The only way for an application to protect sensitive functionality is to prevent links or URLs from being viewed by unauthorized users.
+    Attackers can perform unauthorized actions by directly accessing these URLs. An attacker can enumerate and navigate the directory structure of a website so that they can gain access to unauthorized information and learn more about the functioning of the site for later exploitation.
+    If user interfaces allow access to unauthorized functions, this access can result in unauthorized persons gaining access to privileged credentials or cardholder data. Only authorized users should be allowed to access direct object references to sensitive resources. Limiting access to data sources will help prevent cardholder data from being made available to unauthorized sources.
+    Unsafe direct object references in software development policies and procedures, inability to restrict URL access or inappropriate access control, such as directory traversal, should be addressed with coding techniques that include:
+    - Users must be properly authenticated.
+    - Entries should be sanitized.
+    - Internal object references should not be disclosed to users.
+    - User interfaces that do not allow access to unauthorized functions should be designed.
   6.5.9: Cross-site request forgery (CSRF)
   6.5.10: Broken authentication and session management
   6.6: Constantly address new threats and vulnerabilities for Internet-facing web applications and ensure that these applications are protected from known attacks
