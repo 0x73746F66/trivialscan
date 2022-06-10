@@ -13,6 +13,6 @@ def log(message:str, con:None|Console = None, **kwargs):
             aside += kwargs.get('hostname')
     table = Table.grid(expand=True)
     table.add_column()
-    table.add_column(justify="right", style="dim")
+    table.add_column(justify="right", style="dim", no_wrap=True, overflow=None)
     table.add_row(message, aside)
     con.print(table)
