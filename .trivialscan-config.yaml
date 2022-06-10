@@ -12,7 +12,7 @@ outputs:
     path: .development/trivialscan_results.json
 
 "PCI DSS 3.2.1":
-  12.7: To minimise the risk of attack from local sources, run a history scan of candidates before hiring
+  "6.5.4": Insecure communications
 
 targets:
   - hostname: expired.badssl.com

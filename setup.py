@@ -16,7 +16,7 @@ pyOpenSSL
 rich
 validators
 idna
-tlstrust==2.6.3
+tlstrust==2.6.4
 certvalidator
 dnspython
 hyperframe
