@@ -465,9 +465,9 @@ VALIDATION_TYPES: dict[str, str] = {
 }
 X509_DATE_FMT = r"%Y%m%d%H%M%SZ"
 WEAK_KEY_SIZE: dict[str, int] = {
-    "RSA": 1024,
-    "DSA": 2048,
-    "EC": 160,
+    "RSA": 2048,
+    "DSA": 4096,
+    "EC": 233,
 }
 KNOWN_WEAK_KEYS: dict[str, str] = {
     "RSA": "The use RSA Encryption is considered vulnerable in certain context. 2000: Factorization of a 512-bit RSA Modulus, essentially derive a private key knowing only the public key. Verified bt EFF in 2001. Later in 2009 factorization of up to 1024-bit keys",
