@@ -1,16 +1,14 @@
 from OpenSSL import SSL
 from ...constants import OPENSSL_VERSION_LOOKUP
-from ...transport import TransportState
 from ...transport import Transport
 from .. import BaseEvaluationTask
 
 
 class EvaluationTask(BaseEvaluationTask):
-    def __init__(
-        self, transport: Transport, state: TransportState, metadata: dict, config: dict
-    ) -> None:
-        super().__init__(transport, state, metadata, config)
+    def __init__(self, transport: Transport, metadata: dict, config: dict) -> None:
+        super().__init__(transport, metadata, config)
         self._renegotiation_info_scsv = None
+        self._state = transport.get_state()
 
     def evaluate(self):
         self._renegotiation_info_scsv = (

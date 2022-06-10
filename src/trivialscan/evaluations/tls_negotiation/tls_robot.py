@@ -4,7 +4,6 @@ import logging
 import math
 import socket
 import os
-from ...transport import TransportState
 from ...transport import Transport
 from ...certificate import LeafCertificate
 from .. import BaseEvaluationTask
@@ -41,13 +40,12 @@ def powmod(x, y, z):
 
 
 class EvaluationTask(BaseEvaluationTask):
-    def __init__(
-        self, transport: Transport, state: TransportState, metadata: dict, config: dict
-    ) -> None:
-        super().__init__(transport, state, metadata, config)
-        self._leaf:LeafCertificate = None
+    def __init__(self, transport: Transport, metadata: dict, config: dict) -> None:
+        super().__init__(transport, metadata, config)
+        self._leaf: LeafCertificate = None
         self._cke_version = None
         self._cke_2and_prefix = None
+        self._state = transport.get_state()
 
     def evaluate(self) -> bool | None:
         for cert in self._state.certificates:
@@ -55,13 +53,15 @@ class EvaluationTask(BaseEvaluationTask):
                 self._leaf = cert
                 break
         if self._leaf is None:
-            logger.info('tls_robot: missing Leaf Cedrtificate')
+            logger.info("tls_robot: missing Leaf Cedrtificate")
             return None
-        if self._leaf.public_key_type not in ['RSA', 'DSA']:
-            logger.info(f'tls_robot: {self._leaf.public_key_type} not subject to TLS ROBOT attacks')
+        if self._leaf.public_key_type not in ["RSA", "DSA"]:
+            logger.info(
+                f"tls_robot: {self._leaf.public_key_type} not subject to TLS ROBOT attacks"
+            )
             return False
         if self._leaf.public_key_modulus is None:
-            logger.info('tls_robot: No public key modulus available')
+            logger.info("tls_robot: No public key modulus available")
             return None
         N = self._leaf.public_key_modulus
         e = self._leaf.public_key_exponent
@@ -119,7 +119,9 @@ class EvaluationTask(BaseEvaluationTask):
             oracle_bad3 = self._oracle(pms_bad3, messageflow=True)
             oracle_bad4 = self._oracle(pms_bad4, messageflow=True)
             if oracle_good == oracle_bad1 == oracle_bad2 == oracle_bad3 == oracle_bad4:
-                logger.info(f"Identical results ({oracle_good}), no working oracle found")
+                logger.info(
+                    f"Identical results ({oracle_good}), no working oracle found"
+                )
                 return False
             else:
                 flow = True

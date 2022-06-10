@@ -941,10 +941,16 @@ def get_certificates(
 
     return list({v.sha1_fingerprint: v for v in ret_certs}.values())
 
-def pretty_subject(subject:str):
-    return " ".join([
-        "=".join([k, v])
-        for k, v in {i.split('=')[0]:i.split('=')[1]
-        for i in subject.strip('/').split('/')}.items()
-        if k in ['O', 'OU', 'CN']
-    ])
+
+def pretty_subject(subject: str):
+    if not subject or not isinstance(subject, str):
+        return ""
+    return " ".join(
+        [
+            "=".join([k, v])
+            for k, v in {
+                i.split("=")[0]: i.split("=")[1] for i in subject.strip("/").split("/")
+            }.items()
+            if k in ["O", "OU", "CN"]
+        ]
+    )

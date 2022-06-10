@@ -1,7 +1,7 @@
 import ssl
 from OpenSSL import SSL, _util
 import idna
-from ...transport import Transport, TransportState
+from ...transport import Transport
 from ...constants import OPENSSL_VERSION_LOOKUP, PROTOCOL_TEXT_MAP, TLS1_3_LABEL
 from .. import BaseEvaluationTask
 
@@ -9,11 +9,10 @@ SSL_MODE_SEND_FALLBACK_SCSV = 0x00000080
 
 
 class EvaluationTask(BaseEvaluationTask):
-    def __init__(
-        self, transport: Transport, state: TransportState, metadata: dict, config: dict
-    ) -> None:
-        super().__init__(transport, state, metadata, config)
+    def __init__(self, transport: Transport, metadata: dict, config: dict) -> None:
+        super().__init__(transport, metadata, config)
         self._supports_fallback_scsv = None
+        self._state = transport.get_state()
 
     def evaluate(self) -> bool | None:
         # no downgrade possible using TLS 1.3

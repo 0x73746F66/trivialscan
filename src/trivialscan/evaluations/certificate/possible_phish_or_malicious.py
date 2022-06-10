@@ -6,8 +6,8 @@ from contextlib import closing
 from io import StringIO
 from requests_cache import CachedSession
 from ...constants import COMPROMISED_SHA1
-from ...transport import TransportState
 from ...transport import Transport
+from ...certificate import BaseCertificate
 from .. import BaseEvaluationTask
 
 REMOTE_CSV = "https://sslbl.abuse.ch/blacklist/sslblacklist.csv"
@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 class EvaluationTask(BaseEvaluationTask):
     def __init__(  # pylint: disable=useless-super-delegation
-        self, transport: Transport, state: TransportState, metadata: dict, config: dict
+        self, transport: Transport, metadata: dict, config: dict
     ) -> None:
-        super().__init__(transport, state, metadata, config)
+        super().__init__(transport, metadata, config)
         self._session = CachedSession(
             path.join(config.get("tmp_path_prefix", "/tmp"), "abuse.sh"),
             backend="filesystem",
@@ -27,22 +27,21 @@ class EvaluationTask(BaseEvaluationTask):
             expire_after=timedelta(minutes=5),
         )
 
-    def evaluate(self) -> bool | None:
-        for cert in self._state.certificates:
-            self.substitution_metadata["abuse.sh"] = self.abuse(cert.sha1_fingerprint)
-            self.substitution_metadata["sha1_fingerprint"] = cert.sha1_fingerprint
-            if (
-                cert.sha1_fingerprint.upper() in COMPROMISED_SHA1.keys()
-            ):  # pylint: disable=consider-iterating-dictionary
-                self.substitution_metadata["reason"] = COMPROMISED_SHA1[
-                    cert.sha1_fingerprint.upper()
-                ]
-                return True
-            if isinstance(self.substitution_metadata["abuse.sh"], dict):
-                self.substitution_metadata["reason"] = self.substitution_metadata[
-                    "abuse.sh"
-                ]["reason"]
-                return True
+    def evaluate(self, certificate: BaseCertificate) -> bool | None:
+        self.substitution_metadata["sha1_fingerprint"] = certificate.sha1_fingerprint
+        if certificate.sha1_fingerprint.upper() in COMPROMISED_SHA1:
+            self.substitution_metadata["reason"] = COMPROMISED_SHA1[
+                certificate.sha1_fingerprint.upper()
+            ]
+            return True
+        self.substitution_metadata["abuse.sh"] = self.abuse(
+            certificate.sha1_fingerprint
+        )
+        if isinstance(self.substitution_metadata["abuse.sh"], dict):
+            self.substitution_metadata["reason"] = self.substitution_metadata[
+                "abuse.sh"
+            ]["reason"]
+            return True
         return False
 
     def abuse(self, sha1_fingerprint) -> dict | bool:
@@ -51,6 +50,7 @@ class EvaluationTask(BaseEvaluationTask):
                 self._session.get(REMOTE_CSV, stream=True, allow_redirects=True)
             ) as raw:
                 logger.info(f"{REMOTE_CSV} from cache {raw.from_cache}")
+                logger.debug(raw.text)
                 buff = StringIO(raw.text)
             for item in csv.reader(
                 filter(lambda row: row[0] != "#", buff), delimiter=",", quotechar='"'

@@ -1,33 +1,32 @@
 import logging
-import requests
-from ...transport import TransportState
+from os import path
+from datetime import timedelta
+from requests_cache import CachedSession
 from ...transport import Transport
+from ...certificate import BaseCertificate
 from .. import BaseEvaluationTask
 
 logger = logging.getLogger(__name__)
 
 
 class EvaluationTask(BaseEvaluationTask):
-    def __init__(
-        self, transport: Transport, state: TransportState, metadata: dict, config: dict
-    ) -> None:
-        super().__init__(transport, state, metadata, config)
-        self._result = None
+    def __init__(self, transport: Transport, metadata: dict, config: dict) -> None:
+        super().__init__(transport, metadata, config)
+        self._session = CachedSession(
+            path.join(config.get("tmp_path_prefix", "/tmp"), "pwnedkeys.com"),
+            backend="filesystem",
+            use_temp=True,
+            expire_after=timedelta(hours=1),
+        )
 
-    def evaluate(self):
-        if isinstance(self._result, bool):
-            return self._result
-
-        results: list[bool] = []
-        for cert in self._state.certificates:
-            url = f"https://v1.pwnedkeys.com/{cert.spki_fingerprint.lower()}.jws"
-            logger.info(f"Check {url}")
-            resp = requests.get(url)
-            logger.debug(resp.text)
-            if "That key does not appear to be pwned" in resp.text:
-                results.append(False)
-            if resp.status_code == 200:
-                results.append(True)
-
-        self._result = any(results)
-        return self._result
+    def evaluate(self, certificate: BaseCertificate):
+        self.substitution_metadata["spki_fingerprint"] = certificate.spki_fingerprint
+        url = f"https://v1.pwnedkeys.com/{certificate.spki_fingerprint.lower()}.jws"
+        resp = self._session.get(url)
+        logger.info(f"{url} from cache {resp.from_cache}")
+        logger.debug(resp.text)
+        if "That key does not appear to be pwned" in resp.text:
+            return False
+        if resp.status_code == 200:
+            return True
+        return None

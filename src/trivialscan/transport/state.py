@@ -36,7 +36,6 @@ class TransportState:
     """config exists
     TODO
     tlsa                            https://www.cloudns.net/wiki/article/342/
-    possible_phish_or_malicious
     tls_long_handshake_intolerance
     http2_cleartext_support
     http_expect_ct_report_uri
@@ -49,7 +48,6 @@ class TransportState:
     http_nosniff
     http_unsafe_referrer
     http_xss_protection
-    avoid_known_weak_keys
     basic_constraints_ca
     certificate_valid_tls_usage
     common_name_defined

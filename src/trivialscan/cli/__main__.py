@@ -13,7 +13,6 @@ from rich.logging import RichHandler
 from rich.table import Column
 from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColumn
 from art import text2art
-from trivialscan.transport.state import TransportState
 from . import log
 from .. import evaluate
 from ..config import load_config, get_config
@@ -35,7 +34,7 @@ def no_progressbar(data: list):
 progressbar.progressbar = no_progressbar
 
 
-def configure() -> dict:
+def configure() -> tuple[dict, tuple[bool, bool, bool]]:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "targets",
@@ -91,6 +90,10 @@ def configure() -> dict:
         action="store_true",
     )
     parser.add_argument("--version", dest="show_version", action="store_true")
+    parser.add_argument("--hide-banner", dest="hide_banner", action="store_true")
+    parser.add_argument(
+        "--no-multiprocessing", dest="synchronous_only", action="store_true"
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "-v",
@@ -122,9 +125,12 @@ def configure() -> dict:
     )
     args = parser.parse_args()
     if args.show_version:
-        console.print(
-            f"[aquamarine3]{APP_BANNER}[/aquamarine3]\ntrivialscan=={__version__}\n{REMOTE_URL}"
-        )
+        if args.hide_banner:
+            console.print(f"trivialscan=={__version__}\n{REMOTE_URL}")
+        else:
+            console.print(
+                f"[aquamarine3]{APP_BANNER}[/aquamarine3]\ntrivialscan=={__version__}\n{REMOTE_URL}"
+            )
         sys.exit(0)
 
     log_level = logging.CRITICAL
@@ -148,7 +154,7 @@ def configure() -> dict:
         del config["defaults"]["skip_evaluations"]
     if config["defaults"].get("skip_evaluation_groups"):
         del config["defaults"]["skip_evaluation_groups"]
-    return config, args.hide_progress_bars
+    return config, (args.hide_progress_bars, args.synchronous_only, args.hide_banner)
 
 
 def _cli_config(cli_args: dict, filename: str | None) -> dict:
@@ -207,28 +213,28 @@ def wrap_evaluate(
 ) -> None:
     for target in iter(queue_in.get, None):
         log(
-            "[cyan]START[/cyan]",
+            "[cyan]START[/cyan] Enumerating TLS negotiations",
             hostname=target.get("hostname"),
             port=target.get("port", 443),
             con=progress_console,
         )
         try:
-            state, evaluations = evaluate(
+            transport, evaluations = evaluate(
                 console=progress_console,
                 evaluations=config["evaluations"],
                 **target,
                 **config["defaults"],
             )
-            if isinstance(state, TransportState):
-                log(
-                    f"[cyan]DONE![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}",
-                    hostname=state.hostname,
-                    port=state.port,
-                    con=progress_console,
-                )
-                data = state.to_dict()
-                data["evaluations"] = evaluations
-                queue_out.put(data)
+            state = transport.get_state()
+            log(
+                f"[cyan]DONE![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}",
+                hostname=state.hostname,
+                port=state.port,
+                con=progress_console,
+            )
+            data = state.to_dict()
+            data["evaluations"] = evaluations
+            queue_out.put(data)
         except Exception as ex:  # pylint: disable=broad-except
             logger.error(ex, exc_info=True)
             queue_out.put(
@@ -244,39 +250,95 @@ def wrap_evaluate(
             )
 
 
-def cli():
-    config, hide_progress_bars = configure()
-    run_start = datetime.utcnow()
-    queue_in = Queue()
-    queue_out = Queue()
+def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> list:
+    queries = []
+    progress = Progress(
+        TextColumn(
+            "Evaluating [bold cyan]{task.description}[/bold cyan]",
+            table_column=Column(ratio=2),
+        ),
+        MofNCompleteColumn(table_column=Column(ratio=1)),
+        SpinnerColumn(table_column=Column(ratio=2)),
+        transient=True,
+        disable=not show_progress,
+    )
+    task_id = progress.add_task("domains", total=len(config.get("targets")))
+    for target in config.get("targets"):
+        data = {
+            "_metadata": {
+                "transport": {
+                    "hostname": target.get("hostname"),
+                    "port": target.get("port"),
+                }
+            }
+        }
+        log(
+            "[cyan]START[/cyan] Enumerating TLS negotiations",
+            hostname=target.get("hostname"),
+            port=target.get("port", 443),
+            con=console if use_console else None,
+        )
+        try:
+            if show_progress:
+                progress.update(
+                    task_id,
+                    refresh=True,
+                    description=f'{target.get("hostname")}:{target.get("port")}',
+                )
+                progress.start()
+                transport, evaluations = evaluate(
+                    console=progress.console if use_console else None,
+                    evaluations=config["evaluations"],
+                    **target,
+                    **config["defaults"],
+                )
+                progress.advance(task_id)
+                state = transport.get_state()
+                log(
+                    f"[cyan]DONE![/cyan] {state.peer_address}",
+                    hostname=state.hostname,
+                    port=state.port,
+                    con=progress.console if use_console else None,
+                )
+                data = state.to_dict()
+                data["evaluations"] = evaluations
+            else:
+                transport, evaluations = evaluate(
+                    console=console if use_console else None,
+                    evaluations=config["evaluations"],
+                    **target,
+                    **config["defaults"],
+                )
+                log(
+                    f"[cyan]DONE![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}",
+                    hostname=state.hostname,
+                    port=state.port,
+                    con=console if use_console else None,
+                )
+                state = transport.get_state()
+                data = state.to_dict()
+                data["evaluations"] = evaluations
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.error(ex, exc_info=True)
+            data["error"] = (type(ex).__name__, ex)
+        finally:
+            progress.stop()
+        queries.append(data)
+
+    return queries
+
+
+def run_parra(config: dict, show_progress: bool, use_console: bool = False) -> list:
     queries = []
     num_targets = len(config.get("targets"))
-    use_console = any(n.get("type") == "console" for n in config.get("outputs", []))
-    if use_console:
-        console.print(
-            f"""[bold][aquamarine3]{APP_BANNER}[/aquamarine3]
-        [dark_sea_green2]SUCCESS[/dark_sea_green2] [khaki1]ISSUE[/khaki1] [light_coral]VULNERABLE[/light_coral][/bold]"""
-        )
-    log(
-        f"[cyan]INFO![/cyan] Evaluating {num_targets} domain{'s' if num_targets >1 else ''}",
-        aside="core",
-        con=console if use_console else None,
-    )
-    if hide_progress_bars:
-        the_pool = Pool(
-            cpu_count(),
-            wrap_evaluate,
-            (queue_in, queue_out, console if use_console else None, config),
-        )
-        for target in config.get("targets"):
-            queue_in.put(target)
-        for _ in range(num_targets):
-            result = queue_out.get()
-            queries.append(result)
-
-    else:
+    queue_in = Queue()
+    queue_out = Queue()
+    if show_progress:
         with Progress(
-            TextColumn("{task.description}", table_column=Column(ratio=2)),
+            TextColumn(
+                "Evaluating [bold cyan]{task.description}[/bold cyan]",
+                table_column=Column(ratio=2),
+            ),
             MofNCompleteColumn(table_column=Column(ratio=1)),
             SpinnerColumn(table_column=Column(ratio=2)),
             transient=True,
@@ -291,7 +353,7 @@ def cli():
                     config,
                 ),
             )
-            task_id = progress.add_task("Evaluating domains", total=num_targets)
+            task_id = progress.add_task("domains", total=num_targets)
             for target in config.get("targets"):
                 queue_in.put(target)
             for _ in range(num_targets):
@@ -299,10 +361,48 @@ def cli():
                 queries.append(result)
                 progress.advance(task_id)
             progress.stop()
+    else:
+        the_pool = Pool(
+            cpu_count(),
+            wrap_evaluate,
+            (queue_in, queue_out, console if use_console else None, config),
+        )
+        for target in config.get("targets"):
+            queue_in.put(target)
+        for _ in range(num_targets):
+            result = queue_out.get()
+            queries.append(result)
 
     queue_in.close()
     queue_in.join_thread()
     the_pool.close()
+
+    return queries
+
+
+def cli():
+    config, flags = configure()
+    hide_progress_bars, synchronous_only, hide_banner = flags
+    run_start = datetime.utcnow()
+    queries = []
+    num_targets = len(config.get("targets"))
+    use_console = any(n.get("type") == "console" for n in config.get("outputs", []))
+    if use_console:
+        if not hide_banner:
+            console.print(
+                f"""[bold][aquamarine3]{APP_BANNER}[/aquamarine3]
+        [dark_sea_green2]SUCCESS[/dark_sea_green2] [khaki1]ISSUE[/khaki1] [light_coral]VULNERABLE[/light_coral][/bold]"""
+            )
+    log(
+        f"[cyan]INFO![/cyan] Evaluating {num_targets} domain{'s' if num_targets >1 else ''}",
+        aside="core",
+        con=console if use_console else None,
+    )
+    if synchronous_only or num_targets == 1:
+        queries = run_seq(config, not hide_progress_bars, use_console)
+    else:
+        queries = run_parra(config, not hide_progress_bars, use_console)
+
     execution_duration_seconds = (datetime.utcnow() - run_start).total_seconds()
     json_file = "".join(
         n["path"] for n in config.get("outputs", []) if n.get("type") == "json"
