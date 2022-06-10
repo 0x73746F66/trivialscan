@@ -328,7 +328,8 @@ def run_parra(config: dict, show_progress: bool, use_console: bool = False) -> l
     if show_progress:
         with Progress(
             TextColumn(
-                "Evaluating [bold cyan]{task.description}[/bold cyan]",
+                "[bold cyan]{task.description}[/bold cyan]"
+                + f" ({cpu_count()} threads)",
                 table_column=Column(ratio=2),
             ),
             MofNCompleteColumn(table_column=Column(ratio=1)),
@@ -345,7 +346,7 @@ def run_parra(config: dict, show_progress: bool, use_console: bool = False) -> l
                     config,
                 ),
             )
-            task_id = progress.add_task("domains", total=num_targets)
+            task_id = progress.add_task("Evaluating domains", total=num_targets)
             for target in config.get("targets"):
                 queue_in.put(target)
             for _ in range(num_targets):
