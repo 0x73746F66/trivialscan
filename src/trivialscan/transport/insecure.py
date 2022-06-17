@@ -35,18 +35,16 @@ class InsecureTransport(Transport):
             SSL.TLS1_2_VERSION: constants.OPENSSL_VERSION_LOOKUP[SSL.TLS1_2_VERSION],
             SSL.TLS1_3_VERSION: constants.OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION],
         }
+        self._state.sni_support = all([use_sni, ssl.HAS_SNI])
         for version, label in tls_version_map.items():
             self.connect(
                 tls_version=version, use_sni=use_sni
             )  # Skip HTTP testing until negotiated
             if not isinstance(self.server_certificate, X509):
-                logger.info(
+                logger.warning(
                     f"{self._state.hostname}:{self._state.port} Failed {constants.OPENSSL_VERSION_LOOKUP[version]} use_sni {use_sni}"
                 )
                 continue
-
-            if all([use_sni, ssl.HAS_SNI]):
-                self._state.sni_support = True
 
             if version == SSL.TLS1_3_VERSION:
                 # server can only prefer this too, that's how TLS1.3 was intended

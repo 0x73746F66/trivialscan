@@ -55,7 +55,7 @@ setup(
     include_package_data=True,
     install_requires=install_requires,
     entry_points={
-        'console_scripts': ['trivialscan=trivialscan.cli:cli'],
+        'console_scripts': ['trivial=trivialscan.cli.__main__:main'],
     },
     packages=find_packages(where="src"),
     package_dir={"": "src"},

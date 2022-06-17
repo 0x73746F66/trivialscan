@@ -162,8 +162,14 @@ def _result_data(result: bool, task: BaseEvaluationTask, **kwargs) -> tuple[dict
             substitutions[substitution] = value
 
     metadata = {**kwargs, **substitutions}
-    label_as = label_as.format(**metadata)
-    evaluation_value = evaluation_value.format(**metadata)
+    try:
+        label_as = label_as.format(**metadata)
+    except Exception:
+        pass
+    try:
+        evaluation_value = evaluation_value.format(**metadata)
+    except Exception:
+        pass
     log_output = " ".join([evaluation_value, label_as])
 
     return {

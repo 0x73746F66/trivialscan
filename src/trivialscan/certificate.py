@@ -9,6 +9,7 @@ from OpenSSL.crypto import (
     dump_privatekey,
     dump_certificate,
     FILETYPE_PEM,
+    FILETYPE_ASN1,
     TYPE_RSA,
     TYPE_DSA,
     TYPE_DH,
@@ -45,8 +46,16 @@ class BaseCertificate:
     @property
     def private_key(self) -> str | None:
         public_key = self.x509.get_pubkey()
-        if public_key.type() in [TYPE_RSA, TYPE_DSA]:
+        if public_key.type() not in [TYPE_RSA, TYPE_DSA]:
+            return None
+        try:
+            return util.force_str(dump_privatekey(FILETYPE_ASN1, public_key))
+        except Exception as ex:
+            logger.warning(ex, exc_info=True)
+        try:
             return util.force_str(dump_privatekey(FILETYPE_PEM, public_key))
+        except Exception as ex:
+            logger.warning(ex, exc_info=True)
 
         return None
 

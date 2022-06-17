@@ -480,6 +480,8 @@ class Transport:
             conn.set_connect_state()
             conn.setblocking(1)
             util.do_handshake(conn)
+            self._state.peer_address, _ = conn.getpeername()
+            self._state.offered_ciphers = conn.get_cipher_list()
             self._state.negotiated_cipher = conn.get_cipher_name()
             self._state.negotiated_cipher_bits = conn.get_cipher_bits()
             negotiated_protocol = conn.get_protocol_version_name()
@@ -497,8 +499,6 @@ class Transport:
                 )
                 > 0
             )
-            self._state.peer_address, _ = conn.getpeername()
-            self._state.offered_ciphers = conn.get_cipher_list()
             if not isinstance(self.server_certificate, X509):
                 self.server_certificate = conn.get_peer_certificate()
                 for (_, cert) in enumerate(conn.get_peer_cert_chain()):
