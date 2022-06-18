@@ -6,6 +6,7 @@ import validators
 from rich.console import Console
 from rich.logging import RichHandler
 from art import text2art
+from .register import register
 from .scan import scan
 from ..config import load_config, get_config
 
@@ -22,23 +23,77 @@ cli = argparse.ArgumentParser(
 )
 
 
+class _HelpAction(argparse._HelpAction):
+    def __call__(self, parser, namespace, values, option_string=None):
+        parser.print_help()
+        print("\n".join(cli.format_help().splitlines()[12:]))
+        parser.exit()
+
+
 def main():
     cli.add_argument("--version", dest="show_version", action="store_true")
+    cli.add_argument(
+        "-a",
+        "--account-name",
+        help="Your unique Trivial Security account name, used for enhanced features.",
+        dest="account_name",
+        default=None,
+    )
+    group = cli.add_mutually_exclusive_group()
+    group.add_argument(
+        "-v",
+        "--errors-only",
+        help="set logging level to ERROR (default CRITICAL)",
+        dest="log_level_error",
+        action="store_true",
+    )
+    group.add_argument(
+        "-vv",
+        "--warning",
+        help="set logging level to WARNING (default CRITICAL)",
+        dest="log_level_warning",
+        action="store_true",
+    )
+    group.add_argument(
+        "-vvv",
+        "--info",
+        help="set logging level to INFO (default CRITICAL)",
+        dest="log_level_info",
+        action="store_true",
+    )
+    group.add_argument(
+        "-vvvv",
+        "--debug",
+        help="set logging level to DEBUG (default CRITICAL)",
+        dest="log_level_debug",
+        action="store_true",
+    )
     sub_parsers = cli.add_subparsers(required=True)
     register_parser = sub_parsers.add_parser(
         "register",
         prog="trivial register",
         description=cli.description,
-        help="Retrieve a cloud token for advanced features",
+        add_help=False,
+        help="Retrieve a client token for advanced features",
     )
     register_parser.set_defaults(subcommand="register")
+    register_parser.add_argument("-h", "--help", action=_HelpAction)
+    register_parser.add_argument(
+        "-c",
+        "--client-name",
+        help="Identifies this computer/server in scan reports and audit logs.",
+        dest="client_name",
+        default=None,
+    )
     scan_parser = sub_parsers.add_parser(
         "scan",
         prog="trivial scan",
         description=cli.description,
+        add_help=False,
         help="Evaluate domains for TLS related vulnerabilities",
     )
     scan_parser.set_defaults(subcommand="scan")
+    scan_parser.add_argument("-h", "--help", action=_HelpAction)
     scan_parser.add_argument(
         "targets",
         nargs="*",
@@ -96,35 +151,6 @@ def main():
     scan_parser.add_argument(
         "--no-multiprocessing", dest="synchronous_only", action="store_true"
     )
-    group = cli.add_mutually_exclusive_group()
-    group.add_argument(
-        "-v",
-        "--errors-only",
-        help="set logging level to ERROR (default CRITICAL)",
-        dest="log_level_error",
-        action="store_true",
-    )
-    group.add_argument(
-        "-vv",
-        "--warning",
-        help="set logging level to WARNING (default CRITICAL)",
-        dest="log_level_warning",
-        action="store_true",
-    )
-    group.add_argument(
-        "-vvv",
-        "--info",
-        help="set logging level to INFO (default CRITICAL)",
-        dest="log_level_info",
-        action="store_true",
-    )
-    group.add_argument(
-        "-vvvv",
-        "--debug",
-        help="set logging level to DEBUG (default CRITICAL)",
-        dest="log_level_debug",
-        action="store_true",
-    )
     args = cli.parse_args()
     if args.show_version:
         if args.hide_banner:
@@ -152,7 +178,13 @@ def main():
         handlers.append(RichHandler(rich_tracebacks=True))
     logging.basicConfig(format=log_format, level=log_level, handlers=handlers)
     if args.subcommand == "register":
-        print("Coming soon")
+        register(
+            {
+                "account_name": args.account_name,
+                "client_name": args.client_name,
+                "log_level": log_level,
+            }
+        )
     if args.subcommand == "scan":
         config = _scan_config(vars(args), args.config_file)
         if config["defaults"].get("skip_evaluations"):

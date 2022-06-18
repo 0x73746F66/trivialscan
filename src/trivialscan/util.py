@@ -827,9 +827,16 @@ def crlite_revoked(db_path: str, pem: bytes):
     if last_updated is not None and last_updated > grace_time:
         logger.info(f"Database was updated at {last_updated}, skipping.")
         update = False
-    crlite_db = CRLiteDB(db_path=db_path)
-    intermediates_db = IntermediatesDB(db_path=db_path, download_pems=True)
-
+    try:
+        crlite_db = CRLiteDB(db_path=db_path)
+        intermediates_db = IntermediatesDB(db_path=db_path, download_pems=True)
+    except ValueError as err:
+        if str(err) == "3 is not a valid HashAlgorithm":
+            # BUG https://github.com/mozilla/moz_crlite_query/issues/29
+            logger.info("Encountered known crlite bug: SHA256CTR filters")
+        else:
+            logger.error(err, exc_info=True)
+        return None
     if update:
         intermediates_db.update(
             collection_url=constants.CRLITE_INTERMEDIATES_URL,

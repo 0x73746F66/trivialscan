@@ -1,5 +1,5 @@
 import logging
-from os.path import expanduser
+from os import path
 from pathlib import Path
 from copy import deepcopy
 from urllib.parse import urlparse
@@ -10,9 +10,10 @@ __module__ = "trivialscan.config"
 
 logger = logging.getLogger(__name__)
 DEFAULT_CONFIG = ".trivialscan-config.yaml"
+CONFIG_PATH = f"{path.expanduser('~')}/.config/trivial"
 
 
-def my_construct_mapping(self, node, deep=False):
+def force_keys_as_str(self, node, deep=False):
     data = self.old_construct_mapping(node, deep)
     return {
         (str(key) if isinstance(key, (int, float)) else key): data[key] for key in data
@@ -20,7 +21,7 @@ def my_construct_mapping(self, node, deep=False):
 
 
 yaml.SafeLoader.old_construct_mapping = yaml.SafeLoader.construct_mapping
-yaml.SafeLoader.construct_mapping = my_construct_mapping
+yaml.SafeLoader.construct_mapping = force_keys_as_str
 
 
 def _deep_merge(*args) -> dict:
@@ -83,18 +84,18 @@ def _default_dict_merger(key: str, item1: dict, item2: dict) -> dict:
     return item1.update(item2)
 
 
-def _merge_lists_by_value(
+def merge_lists_by_value(
     *args, unique_key: str = "key", merge_fn=_default_dict_merger
 ) -> list:
-    assert len(args) >= 2, "_merge_lists_by_value requires at least two lists to merge"
+    assert len(args) >= 2, "merge_lists_by_value requires at least two lists to merge"
     result = deepcopy(args[0])
     if not isinstance(result, list):
-        raise AttributeError("_merge_lists_by_value only takes list arguments")
+        raise AttributeError("merge_lists_by_value only takes list arguments")
     step = 1
     while step < len(args):
         merge_list = deepcopy(args[step])
         if not isinstance(merge_list, list):
-            raise AttributeError("_merge_lists_by_value only takes list arguments")
+            raise AttributeError("merge_lists_by_value only takes list arguments")
         if not result:
             result = merge_list
             step += 1
@@ -128,7 +129,11 @@ def _merge_2_lists_of_dicts(
             )
         )
     )
-    return list({v[unique_key]: v for v in list(filter(None, result))}.values())
+    return list(
+        {
+            v.get(unique_key, hash(str(v))): v for v in list(filter(None, result))
+        }.values()
+    )
 
 
 def _validate_config(combined_config: dict) -> dict:
@@ -200,14 +205,14 @@ def combine_configs(user_conf: dict, custom_conf: dict) -> dict:
     if not outputs:
         outputs = default_values["outputs"]
     ret_config["outputs"] = outputs
-    ret_config["evaluations"] = _merge_lists_by_value(
+    ret_config["evaluations"] = merge_lists_by_value(
         default_values["evaluations"],
         user_conf.get("evaluations", []),
         custom_conf.get("evaluations", []),
         unique_key="key",
         merge_fn=_evaluation_merge,
     )
-    ret_config["targets"] = _merge_lists_by_value(
+    ret_config["targets"] = merge_lists_by_value(
         user_conf.get("targets", []),
         custom_conf.get("targets", []),
         unique_key="hostname",
@@ -216,7 +221,7 @@ def combine_configs(user_conf: dict, custom_conf: dict) -> dict:
 
 
 def get_config(custom_values: dict | None = None) -> dict:
-    user_config = load_config(f"{expanduser('~')}/{DEFAULT_CONFIG}")
+    user_config = load_config(path.join(CONFIG_PATH, DEFAULT_CONFIG))
     return combine_configs(user_config, custom_values or {})
 
 

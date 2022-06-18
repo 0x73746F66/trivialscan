@@ -9,7 +9,7 @@ try:
     install_requires = distutils.text_file.TextFile(filename=str(Path(__file__).with_name('requirements.txt'))).readlines()
 except FileNotFoundError:
     install_requires = distutils.text_file.TextFile(file=StringIO("""
-cryptography
+cryptography>=2.0
 certifi
 asn1crypto
 pyOpenSSL
@@ -33,7 +33,8 @@ url-normalize==1.4.3
 retry
 tldextract
 pyyaml
-art""")).readlines()
+art
+keyring==23.6.0""")).readlines()
 setup(
     name="trivialscan",
     version=__version__,

@@ -1,5 +1,5 @@
 # tlstrust deps
-cryptography
+cryptography>=2.0
 certifi
 asn1crypto
 pyOpenSSL
@@ -25,3 +25,4 @@ retry
 tldextract
 pyyaml
 art
+keyring==23.6.0

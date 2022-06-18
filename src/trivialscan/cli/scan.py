@@ -12,9 +12,9 @@ from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColum
 from art import text2art
 from . import log
 from .. import evaluate
+from ..config import merge_lists_by_value
 
 __module__ = "trivialscan.cli.scan"
-__version__ = "3.0.0-devel"
 APP_BANNER = text2art("trivialscan", font="tarty4")
 
 assert sys.version_info >= (3, 10), "Requires Python 3.10 or newer"
@@ -219,27 +219,33 @@ def track_delta(last: list[dict], current: list[dict]) -> list[dict]:
                 continue
             result = deepcopy(current_query)
             ddiff = DeepDiff(
-                last_query["_metadata"],
-                current_query["_metadata"],
+                last_query.get("_metadata", {}),
+                current_query.get("_metadata", {}),
                 ignore_order=True,
                 exclude_paths=exclude_paths,
             )
-            metadata = json.loads(ddiff.to_json().replace('"root[', '"metadata['))
-            result["_metadata"] = {**current_query["_metadata"], **metadata}
+            metadata = json.loads(
+                ddiff.to_json(default_mapping={datetime: str}).replace(
+                    '"root[', '"metadata['
+                )
+            )
+            result["_metadata"] = {**current_query.get("_metadata", {}), **metadata}
             result["evaluations"] = []
-            for last_evaluation in last_query["evaluations"]:
-                for current_evaluation in current_query["evaluations"]:
-                    if last_evaluation["key"] != current_evaluation["key"]:
+            for last_evaluation in last_query.get("evaluations", []):
+                for current_evaluation in current_query.get("evaluations", []):
+                    if last_evaluation.get("key") != current_evaluation.get("key"):
                         continue
                     ddiff = DeepDiff(
                         last_evaluation, current_evaluation, ignore_order=True
                     )
                     extra = json.loads(
-                        ddiff.to_json().replace('"root[', '"evaluation[')
+                        ddiff.to_json(default_mapping={datetime: str}).replace(
+                            '"root[', '"evaluation['
+                        )
                     )
                     result["evaluations"].append({**current_evaluation, **extra})
             results.append(result)
-    return results
+    return merge_lists_by_value(current, results)
 
 
 def scan(config: dict, **flags):
@@ -274,8 +280,13 @@ def scan(config: dict, **flags):
     if json_file:
         json_path = Path(json_file)
         if json_path.is_file():
-            tracking_last = json.loads(json_path.read_text(encoding="utf8"))
-            queries = track_delta(tracking_last["queries"], queries)
+            tracking_last = None
+            try:
+                tracking_last = json.loads(json_path.read_text(encoding="utf8"))
+            except json.decoder.JSONDecodeError as ex:
+                logger.warning(ex, exc_info=True)
+            if tracking_last:
+                queries = track_delta(tracking_last.get("queries", []), queries)
 
         json_path.write_text(
             json.dumps(
