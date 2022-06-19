@@ -12,12 +12,6 @@ TLS1_0_LABEL = "TLSv1 (0x301)"
 TLS1_1_LABEL = "TLSv1.1 (0x302)"
 TLS1_2_LABEL = "TLSv1.2 (0x303)"
 TLS1_3_LABEL = "TLSv1.3 (0x304)"
-# https://github.com/mozilla/moz_crlite_query/blob/main/crlite_query/query_cli.py
-CRLITE_BASE_URL = (
-    "https://firefox.settings.services.mozilla.com/v1/buckets/security-state"
-)
-CRLITE_REVOCATIONS_URL = f"{CRLITE_BASE_URL}/collections/cert-revocations/records"
-CRLITE_INTERMEDIATES_URL = f"{CRLITE_BASE_URL}/collections/intermediates/records"
 VALIDATION_OID: dict[str, str] = {
     # https://opensource.apple.com/source/security_certificates/security_certificates-55024.2/evroot.config
     # https://src.chromium.org/viewvc/chrome/trunk/src/net/cert/ev_root_ca_metadata.cc?view=markup

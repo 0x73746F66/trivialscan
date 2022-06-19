@@ -139,13 +139,17 @@ def _evaluate_wrap(
     return _cls(transport, evaluation, config["defaults"])
 
 
-def _result_data(result: bool, task: BaseEvaluationTask, **kwargs) -> tuple[dict, str]:
+def _result_data(
+    result: bool | str | None, task: BaseEvaluationTask, **kwargs
+) -> tuple[dict, str]:
     label_as = task.metadata["label_as"]
     evaluation_value = "[cyan]EMPTY[/cyan]"
     result_label = "Unknown"
     score = 0
     for anotatation in task.metadata.get("anotate_results", []):
-        if anotatation["value"] is result:
+        if isinstance(anotatation["value"], str) and anotatation["value"] == "None":
+            anotatation["value"] = None
+        if anotatation["value"] is result or anotatation["value"] == result:
             evaluation_value = anotatation["evaluation_value"]
             result_label = anotatation["display_as"]
             score = anotatation["score"]

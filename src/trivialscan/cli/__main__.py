@@ -151,6 +151,15 @@ def main():
     scan_parser.add_argument(
         "--no-multiprocessing", dest="synchronous_only", action="store_true"
     )
+    scan_parser.add_argument(
+        "--track-changes", dest="track_changes", action="store_true"
+    )
+    scan_parser.add_argument(
+        "--last-json",
+        help="Stored JSON file to be used as baseline for --track-changes (Defaults to value of --json-file)",
+        dest="previous_report",
+        default=None,
+    )
     args = cli.parse_args()
     if args.show_version:
         if args.hide_banner:
@@ -197,6 +206,8 @@ def main():
                 "hide_progress_bars": args.hide_progress_bars,
                 "synchronous_only": args.synchronous_only,
                 "hide_banner": args.hide_banner,
+                "track_changes": args.track_changes,
+                "previous_report": args.previous_report or args.json_file,
                 "log_level": log_level,
             },
         )

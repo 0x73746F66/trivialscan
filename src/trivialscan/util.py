@@ -1,15 +1,11 @@
 import logging
 import string
 import random
-import sqlite3
-from io import BytesIO
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, time
 from urllib.request import urlretrieve
-from urllib.parse import urlparse
 from binascii import hexlify
 from pathlib import Path
 from decimal import Decimal
-import requests
 import validators
 from cryptography import x509
 from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
@@ -803,64 +799,6 @@ def caa_valid(domain_name: str, cert: X509, certificate_chain: list[X509]) -> bo
             return True
 
     return False
-
-
-def crlite_revoked(db_path: str, pem: bytes):
-    sqlite3.sqlite_version_info = (3, 24)
-    from crlite_query import CRLiteDB, CRLiteQuery, IntermediatesDB
-
-    def find_attachments_base_url():
-        url = urlparse(constants.CRLITE_BASE_URL)
-        base_rsp = requests.get(f"{url.scheme}://{url.netloc}/v1/")
-        return base_rsp.json()["capabilities"]["attachments"]["base_url"]
-
-    db_dir = Path(db_path)
-    if not db_dir.is_dir():
-        db_dir.mkdir()
-
-    last_updated = None
-    last_updated_file = db_dir / ".last_updated"
-    if last_updated_file.is_file():
-        last_updated = datetime.fromtimestamp(last_updated_file.stat().st_mtime)
-    grace_time = datetime.utcnow() - timedelta(hours=6)
-    update = True
-    if last_updated is not None and last_updated > grace_time:
-        logger.info(f"Database was updated at {last_updated}, skipping.")
-        update = False
-    try:
-        crlite_db = CRLiteDB(db_path=db_path)
-        intermediates_db = IntermediatesDB(db_path=db_path, download_pems=True)
-    except ValueError as err:
-        if str(err) == "3 is not a valid HashAlgorithm":
-            # BUG https://github.com/mozilla/moz_crlite_query/issues/29
-            logger.info("Encountered known crlite bug: SHA256CTR filters")
-        else:
-            logger.error(err, exc_info=True)
-        return None
-    if update:
-        intermediates_db.update(
-            collection_url=constants.CRLITE_INTERMEDIATES_URL,
-            attachments_base_url=find_attachments_base_url(),
-        )
-        crlite_db.update(
-            collection_url=constants.CRLITE_REVOCATIONS_URL,
-            attachments_base_url=find_attachments_base_url(),
-        )
-        last_updated_file.touch()
-        logger.info(f"Status: {crlite_db}")
-
-    crlite_query = CRLiteQuery(
-        crlite_db=crlite_db,
-        intermediates_db=intermediates_db,
-    )
-    results = []
-    for result in crlite_query.query(
-        name="peer", generator=crlite_query.gen_from_pem(BytesIO(pem))
-    ):
-        logger.info(result.print_query_result(verbose=1))
-        logger.debug(result.print_query_result(verbose=3))
-        results.append(result.is_revoked())
-    return any(results)
 
 
 @retry(SSL.WantReadError, tries=3, delay=0.5)

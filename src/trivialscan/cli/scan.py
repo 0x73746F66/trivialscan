@@ -252,6 +252,8 @@ def scan(config: dict, **flags):
     hide_progress_bars = flags.get("hide_progress_bars", False)
     synchronous_only = flags.get("synchronous_only", False)
     hide_banner = flags.get("hide_banner", False)
+    track_changes = flags.get("track_changes", False)
+    previous_report = flags.get("previous_report")
     log_level = flags.get("log_level", logging.ERROR)
     run_start = datetime.utcnow()
     queries = []
@@ -279,14 +281,22 @@ def scan(config: dict, **flags):
     )
     if json_file:
         json_path = Path(json_file)
-        if json_path.is_file():
-            tracking_last = None
+        tracking_last = None
+        if previous_report:
+            prev_path = Path(previous_report)
+            if track_changes:
+                if prev_path.is_file():
+                    try:
+                        tracking_last = json.loads(prev_path.read_text(encoding="utf8"))
+                    except json.decoder.JSONDecodeError as ex:
+                        logger.warning(ex, exc_info=True)
+        if track_changes and json_file != previous_report and json_path.is_file():
             try:
                 tracking_last = json.loads(json_path.read_text(encoding="utf8"))
             except json.decoder.JSONDecodeError as ex:
                 logger.warning(ex, exc_info=True)
-            if tracking_last:
-                queries = track_delta(tracking_last.get("queries", []), queries)
+        if track_changes and tracking_last:
+            queries = track_delta(tracking_last.get("queries", []), queries)
 
         json_path.write_text(
             json.dumps(

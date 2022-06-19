@@ -1,12 +1,19 @@
-from io import StringIO
 import distutils.text_file
+import distutils.spawn
+import subprocess
+import stat
+from os import path
+from io import StringIO
+from shutil import copyfile
 from pathlib import Path
 from setuptools import setup, find_packages
+from setuptools.command.build import build
 
 __version__ = "3.0.0"
 
 try:
-    install_requires = distutils.text_file.TextFile(filename=str(Path(__file__).with_name('requirements.txt'))).readlines()
+    install_requires = distutils.text_file.TextFile(filename=str(
+        Path(__file__).with_name('requirements.txt'))).readlines()
 except FileNotFoundError:
     install_requires = distutils.text_file.TextFile(file=StringIO("""
 cryptography>=2.0
@@ -35,6 +42,33 @@ tldextract
 pyyaml
 art
 keyring==23.6.0""")).readlines()
+
+
+class BuildWrapper(build):
+    def run(self):
+        if distutils.spawn.find_executable("cargo") is None:
+            return
+        try:
+            stdout_string = subprocess.check_output(
+                ["cargo", "build"],
+                stderr=subprocess.STDOUT,
+                cwd=str(Path(__file__).with_name("rust-query-crlite"))
+            )
+            print(stdout_string)
+            copyfile(
+                path.join(str(Path(__file__).with_name("rust-query-crlite")), "target/debug/rust-query-crlite"),
+                path.join(str(Path(__file__).with_name("src")), "trivialscan/vendor/rust-query-crlite")
+            )
+            crlite = Path(path.join(str(Path(__file__).with_name("src")), "trivialscan/vendor/rust-query-crlite"))
+            crlite.chmod(crlite.stat().st_mode | stat.S_IEXEC)
+        except subprocess.CalledProcessError as cpe:
+            print(cpe.returncode)
+            print(cpe.output)
+        except OSError as err:
+            print(err)
+        build.run(self)
+
+
 setup(
     name="trivialscan",
     version=__version__,
@@ -53,7 +87,12 @@ setup(
         'Programming Language :: Python :: 3.11',
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     ],
+    cmdclass={'build': BuildWrapper},
+    zip_safe=False,
     include_package_data=True,
+    package_data={
+        "": ["**/vendor/*"]
+    },
     install_requires=install_requires,
     entry_points={
         'console_scripts': ['trivial=trivialscan.cli.__main__:main'],

@@ -342,6 +342,10 @@ evaluations:
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Detected
         score: 120
+      - value: None
+        evaluation_value: "[cyan]SKIP![/cyan]"
+        display_as: Not a Leaf Certificate
+        score: 0
 
   - key: deprecated_dnssec_algorithm
     group: dns_configuration
@@ -365,6 +369,10 @@ evaluations:
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
+      - value: None
+        evaluation_value: "[cyan]SKIP![/cyan]"
+        display_as: DNSSEC Not Valid
+        score: 0
 
   - key: private_key_known_compromised
     group: certificate
@@ -389,6 +397,10 @@ evaluations:
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Not Known Compromised
         score: 100
+      - value: None
+        evaluation_value: "[cyan]SKIP![/cyan]"
+        display_as: Not an valid pwnedkeys.com response
+        score: 0
 
   - key: deprecated_protocol_negotiated
     group: tls_negotiation
@@ -653,6 +665,10 @@ evaluations:
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
         score: -180
+      - value: None
+        evaluation_value: "[cyan]EMPTY[/cyan]"
+        display_as: Incomplete evaluation (check log with -vvv)
+        score: 0
 
   - key: revocation_crlite
     group: certificate
@@ -665,14 +681,30 @@ evaluations:
       - name: Security Advisory
         url: https://blog.mozilla.org/security/tag/crlite/
     anotate_results:
-      - value: True
+      - value: Revoked
         evaluation_value: "[light_coral]FAIL![/light_coral]"
-        display_as: Compromised
+        display_as: Revoked
         score: -200
-      - value: False
+      - value: Expired
+        evaluation_value: "[khaki1]WARN! Expired[/khaki1]"
+        display_as: Expired
+        score: 0
+      - value: Good
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Not Revoked
-        score: 50
+        score: 80
+      - value: NotCovered
+        evaluation_value: "[khaki1]WARN! NotCovered[/khaki1]"
+        display_as: NotCovered
+        score: -100
+      - value: NotEnrolled
+        evaluation_value: "[khaki1]WARN! NotEnrolled[/khaki1]"
+        display_as: NotEnrolled
+        score: -100
+      - value: None
+        evaluation_value: "[cyan]SKIP![/cyan]"
+        display_as: Not an Intermediate Certificate
+        score: 0
 
   - key: possible_phish_or_malicious
     group: certificate

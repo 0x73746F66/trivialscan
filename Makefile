@@ -10,16 +10,19 @@ help: ## This help.
 
 deps: ## install dependancies for development of this project
 	python -m pip install -U pip
-	python -m pip install -U -r requirements-dev.txt
-	python -m pip install --force-reinstall --no-cache-dir -e .
+	python -m pip install -U -r requirements.txt
 
 setup: deps ## setup for development of this project
 	pre-commit install --hook-type pre-push --hook-type pre-commit
 	@ [ -f .secrets.baseline ] || ( detect-secrets scan > .secrets.baseline )
 	yes | detect-secrets audit .secrets.baseline
 
-install: ## Install the package
+install: build ## Install the package
 	python -m pip install -U dist/trivialscan-$(shell cat ./setup.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)-py2.py3-none-any.whl
+
+install-dev: ## Install the package
+	python -m pip install -U -r requirements-dev.txt
+	python -m pip install --force-reinstall --no-cache-dir -e .
 
 check: ## check build
 	python setup.py egg_info
@@ -41,6 +44,11 @@ publish: ## upload to pypi.org
 	git tag -f $(shell cat ./setup.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)
 	git push -u origin --tags
 	python -m twine upload dist/*
+
+crlite:
+	(cd vendor/rust-query-crlite && cargo build)
+	./vendor/rust-query-crlite/target/debug/rust-query-crlite -vvv --db /tmp/.crlite_db/ --update prod x509
+	./vendor/rust-query-crlite/target/debug/rust-query-crlite -vvv --db /tmp/.crlite_db/ https ssllabs.com
 
 run-all: ## www.trivialsec.com
 	cat .development/targets.txt | xargs python -m trivialscan.cli

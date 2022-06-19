@@ -9,3 +9,5 @@ src/trivialscan.egg-info/
 .coverage
 .pytest_cache/
 trivialscan_*.json
+rust-query-crlite/target/
+src/trivialscan/vendor/
