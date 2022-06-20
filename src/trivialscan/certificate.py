@@ -6,10 +6,8 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from cryptography.x509 import extensions, PolicyInformation
 from OpenSSL.crypto import (
     X509,
-    dump_privatekey,
     dump_certificate,
     FILETYPE_PEM,
-    FILETYPE_ASN1,
     TYPE_RSA,
     TYPE_DSA,
     TYPE_DH,
@@ -25,11 +23,9 @@ logger = logging.getLogger(__name__)
 
 class BaseCertificate:
     x509: X509
-    _private_key_known_compromised: bool
 
     def __init__(self, x509: X509) -> None:
         self.x509 = x509
-        self._private_key_known_compromised = None
 
     @property
     def der(self) -> bytes:
@@ -42,22 +38,6 @@ class BaseCertificate:
     @property
     def version(self) -> int:
         return self.x509.get_version()
-
-    @property
-    def private_key(self) -> str | None:
-        public_key = self.x509.get_pubkey()
-        if public_key.type() not in [TYPE_RSA, TYPE_DSA]:
-            return None
-        try:
-            return util.force_str(dump_privatekey(FILETYPE_ASN1, public_key))
-        except Exception as ex:
-            logger.warning(ex, exc_info=True)
-        try:
-            return util.force_str(dump_privatekey(FILETYPE_PEM, public_key))
-        except Exception as ex:
-            logger.warning(ex, exc_info=True)
-
-        return None
 
     @property
     def public_key_exponent(self) -> int | None:
@@ -116,11 +96,15 @@ class BaseCertificate:
         return util.get_certificate_extensions(self.x509.to_cryptography())
 
     @property
-    def subject(self) -> str | None:
-        return "".join(
-            f"/{name.decode():s}={value.decode():s}"
+    def subject(self) -> str:
+        return " ".join(
+            f"{name.decode():s}={value.decode():s}"
             for name, value in self.x509.get_subject().get_components()
         )
+
+    @property
+    def subject_rfc4514(self) -> str:
+        return self.x509.to_cryptography().subject.rfc4514_string()
 
     @property
     def signature_algorithm(self) -> str | None:

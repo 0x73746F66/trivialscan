@@ -36,8 +36,6 @@ See [Documentation](./docs/0.index.md) section of this repository
   - ✓ Negotiated cipher (if a strong cipher, and if Forward Anonymity)
   - ✓ List all offered TLS versions
   - ✓ Server preferred protocol
-  - ✓ RSA private key
-  - ✓ DSA private key
   - ✓ Compression supported
   - ✓ Client Renegotiation supported
   - ✓ Session Resumption caching

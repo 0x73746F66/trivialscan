@@ -3,7 +3,6 @@ import sys
 from importlib import import_module
 from copy import deepcopy
 from rich.console import Console
-import progressbar
 from trivialscan.transport import Transport
 from .config import load_config, get_config
 from .cli import log
@@ -14,14 +13,8 @@ from .evaluations import BaseEvaluationTask
 
 __module__ = "trivialscan"
 
-
-def no_progressbar(data: list):
-    yield from data
-
-
 assert sys.version_info >= (3, 10), "Requires Python 3.10 or newer"
 config = get_config(custom_values=load_config())
-progressbar.progressbar = no_progressbar
 
 
 def evaluate(
@@ -79,7 +72,7 @@ def evaluate(
 
     for cert in state.certificates:
         cert_data = {
-            "certificate_subject": pretty_subject(cert.subject or ""),
+            "certificate_subject": pretty_subject(cert.subject_rfc4514 or ""),
             "sha1_fingerprint": cert.sha1_fingerprint,
             "subject_key_identifier": cert.subject_key_identifier,
             "authority_key_identifier": cert.authority_key_identifier,

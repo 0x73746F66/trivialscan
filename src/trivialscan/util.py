@@ -890,12 +890,15 @@ def get_certificates(
 def pretty_subject(subject: str):
     if not subject or not isinstance(subject, str):
         return ""
-    return " ".join(
-        [
+    try:
+        pieces = [
             "=".join([k, v])
             for k, v in {
-                i.split("=")[0]: i.split("=")[1] for i in subject.strip("/").split("/")
+                i.split("=")[0]: i.split("=")[1] for i in subject.strip().split(",")
             }.items()
             if k in ["O", "OU", "CN"]
         ]
-    )
+        return " ".join(pieces)
+    except IndexError:
+        logger.error(f"subject IndexError: {subject}")
+    return subject

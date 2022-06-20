@@ -9,7 +9,7 @@ from pathlib import Path
 from setuptools import setup, find_packages
 from setuptools.command.build import build
 
-__version__ = "3.0.0"
+__version__ = "3.0.0-devel"
 
 try:
     install_requires = distutils.text_file.TextFile(filename=str(
@@ -29,7 +29,6 @@ dnspython
 hyperframe
 moz-crlite-query
 oscrypto
-progressbar2
 requests==2.27.1
 urllib3==1.26.9
 appdirs==1.4.4
@@ -158,8 +157,6 @@ trivial scan --help
   - ✓ Negotiated cipher (if a strong cipher, and if Forward Anonymity)
   - ✓ List all offered TLS versions
   - ✓ Server preferred protocol
-  - ✓ RSA private key
-  - ✓ DSA private key
   - ✓ Compression supported
   - ✓ Client Renegotiation supported
   - ✓ Session Resumption caching
@@ -209,7 +206,6 @@ trivial scan --help
   - ✓ OCSP must staple flag
   - ✓ Public Key type
   - ✓ Public Key size
-  - ✓ Derive Private Key (PEM format)
   - ✓ Authority Key Identifier
   - ✓ Subject Key Identifier
   - ✓ TLS Extensions

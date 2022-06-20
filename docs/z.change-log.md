@@ -302,7 +302,6 @@
   - OCSP last status and time
   - OCSP stapling
   - OCSP must staple flag (rfc6066)
-  - Derive Private Key (PEM format)
   - Client Authentication expected
   - Certificate Issuer validation Type (DV, EV, OV)
 

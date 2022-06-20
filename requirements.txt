@@ -12,7 +12,6 @@ certvalidator
 dnspython
 hyperframe
 oscrypto
-progressbar2
 requests==2.27.1
 urllib3==1.26.9
 appdirs==1.4.4

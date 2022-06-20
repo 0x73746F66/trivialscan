@@ -46,6 +46,7 @@ def main():
         dest="quiet",
         action="store_true",
     )
+    cli.add_argument("--no-banner", dest="hide_banner", action="store_true")
     group = cli.add_mutually_exclusive_group()
     group.add_argument(
         "-v",
@@ -75,7 +76,7 @@ def main():
         dest="log_level_debug",
         action="store_true",
     )
-    sub_parsers = cli.add_subparsers(required=True)
+    sub_parsers = cli.add_subparsers()
     register_parser = sub_parsers.add_parser(
         "register",
         prog="trivial register",
@@ -153,7 +154,6 @@ def main():
         dest="disable_sni",
         action="store_true",
     )
-    scan_parser.add_argument("--hide-banner", dest="hide_banner", action="store_true")
     scan_parser.add_argument(
         "--no-multiprocessing", dest="synchronous_only", action="store_true"
     )
