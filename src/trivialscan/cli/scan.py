@@ -249,16 +249,20 @@ def track_delta(last: list[dict], current: list[dict]) -> list[dict]:
 
 
 def scan(config: dict, **flags):
-    hide_progress_bars = flags.get("hide_progress_bars", False)
+    no_stdout = flags.get("quiet", False)
+    hide_progress_bars = True if no_stdout else flags.get("hide_progress_bars", False)
+    hide_banner = True if no_stdout else flags.get("hide_banner", False)
     synchronous_only = flags.get("synchronous_only", False)
-    hide_banner = flags.get("hide_banner", False)
     track_changes = flags.get("track_changes", False)
     previous_report = flags.get("previous_report")
     log_level = flags.get("log_level", logging.ERROR)
     run_start = datetime.utcnow()
     queries = []
     num_targets = len(config.get("targets"))
-    use_console = any(n.get("type") == "console" for n in config.get("outputs", []))
+    use_console = (
+        any(n.get("type") == "console" for n in config.get("outputs", []))
+        and not no_stdout
+    )
     if use_console:
         if not hide_banner:
             console.print(

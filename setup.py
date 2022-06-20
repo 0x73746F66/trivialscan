@@ -125,9 +125,12 @@ For full CLI output and JSON format please look in `examples/` of the Gitlab rep
 ```py
 import trivialscan
 
-host = 'google.com'
-is_valid, results = trivialscan.analyse(host)
-print('\nValid ✓✓✓' if is_valid else '\nNot Valid. There where validation errors')
+transport, evaluations = trivialscan.evaluate(
+    hostname="ssllabs.com",
+    port=443,
+)
+is_valid = trivialscan.is_valid(transport.get_state())
+print('Valid ✓✓✓' if is_valid else 'Not Valid !!!')
 ```
 
 `python3 -m pip install pipx && pipx install trivialscan`
@@ -135,45 +138,7 @@ print('\nValid ✓✓✓' if is_valid else '\nNot Valid. There where validation 
 On the command-line:
 
 ```sh
-trivialscan --help
-```
-
-produces:
-
-```
-usage: trivialscan [-h] [-H HOST] [-p PORT] [-c CAFILES] [-C CLIENT_PEM] [-t TMP_PATH_PREFIX] [--pci-dss] [--nist-strict-mode] [--fips-nist-transition-mode] [--disable-sni]
-               [--show-private-key] [-s] [--hide-validation-details] [-O JSON_FILE] [--hide-progress-bars] [-v] [-vv] [-vvv] [-vvvv] [--version]
-               [targets ...]
-ositional arguments:
-  targets               All unnamed arguments are hosts (and ports) targets to test. ~$ trivialscan google.com:443 github.io owasp.org:80
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -H HOST, --host HOST  single host to check
-  -p PORT, --port PORT  TLS port of host
-  -c CAFILES, --cafiles CAFILES
-                        path to PEM encoded CA bundle file, url or file path accepted
-  -C CLIENT_PEM, --client-pem CLIENT_PEM
-                        path to PEM encoded client certificate, url or file path accepted
-  -t TMP_PATH_PREFIX, --tmp-path-prefix TMP_PATH_PREFIX
-                        local file path to use as a prefix when saving temporary files such as those being fetched for client authorization
-  --pci-dss             Include PCI DSS requirements assertions
-  --nist-strict-mode    Include NIST SP800-131A strict mode assertions
-  --fips-nist-transition-mode
-                        Include FIPS 140-2 transition to NIST SP800-131A assertions
-  --disable-sni         Do not negotiate SNI using INDA encoded host
-  --show-private-key    If the private key is exposed, show it in the results
-  -s, --summary-only    Do not include informational details, show only validation outcomes
-  --hide-validation-details
-                        Do not include detailed validation messages in output
-  -O JSON_FILE, --json-file JSON_FILE
-                        Store to file as JSON
-  --hide-progress-bars  Hide task progress bars
-  -v, --errors-only     set logging level to ERROR (default CRITICAL)
-  -vv, --warning        set logging level to WARNING (default CRITICAL)
-  -vvv, --info          set logging level to INFO (default CRITICAL)
-  -vvvv, --debug        set logging level to DEBUG (default CRITICAL)
-  --version
+trivial scan --help
 ```
 
 ## Features

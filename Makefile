@@ -50,44 +50,14 @@ crlite:
 	./vendor/rust-query-crlite/target/debug/rust-query-crlite -vvv --db /tmp/.crlite_db/ --update prod x509
 	./vendor/rust-query-crlite/target/debug/rust-query-crlite -vvv --db /tmp/.crlite_db/ https ssllabs.com
 
-run-all: ## www.trivialsec.com
+run-stdin: ## pipe targets from stdin
 	cat .development/targets.txt | xargs python -m trivialscan.cli
 
-run-valid: ## ssllabs.com
+run-as-module: ## Using CLI as a python module directly (dev purposes)
 	python -m trivialscan.cli ssllabs.com
 
-run-expired: ## expired.badssl.com
-	python -m trivialscan.cli expired.badssl.com
+run-cli-parallel: ## Leverage defaults using all CPU cores
+	trivial scan
 
-run-selfsigned: ## self-signed.badssl.com
-	python -m trivialscan.cli self-signed.badssl.com
-
-run-invalid-hostname: ## wrong.host.badssl.com no-common-name.badssl.com
-	python -m trivialscan.cli wrong.host.badssl.com no-common-name.badssl.com
-
-run-untrusted: ## untrusted.root.badssl.com
-	python -m trivialscan.cli untrusted.root.badssl.com
-
-run-revoked: ## no-subject.badssl.com
-	python -m trivialscan.cli no-subject.badssl.com
-
-run-broken: ## revoked.badssl.com
-	python -m trivialscan.cli revoked.badssl.com
-
-run-invalid-hpkp: ## pinning-test.badssl.com
-	python -m trivialscan.cli pinning-test.badssl.com
-
-run-incomplete-chain: ## incomplete-chain.badssl.com sha1-intermediate.badssl.com
-	python -m trivialscan.cli incomplete-chain.badssl.com sha1-intermediate.badssl.com
-
-run-missing-ct: ## no-sct.badssl.com invalid-expected-sct.badssl.com
-	python -m trivialscan.cli no-sct.badssl.com invalid-expected-sct.badssl.com
-
-run-weak: ## null.badssl.com cbc.badssl.com rc4-md5.badssl.com rc4.badssl.com 3des.badssl.com static-rsa.badssl.com sha1-2016.badssl.com
-	python -m trivialscan.cli null.badssl.com cbc.badssl.com rc4-md5.badssl.com rc4.badssl.com 3des.badssl.com -H static-rsa.badssl.com -H sha1-2016.badssl.com
-
-run-deprecated-tls: ## tls-v1-0.badssl.com tls-v1-1.badssl.com
-	python -m trivialscan.cli -H tls-v1-0.badssl.com -p 1010 -H tls-v1-1.badssl.com -p 1011
-
-run-known-pwnd: ## superfish.badssl.com edellroot.badssl.com dsdtestprovider.badssl.com preact-cli.badssl.com webpack-dev-server.badssl.com
-	python -m trivialscan.cli -H superfish.badssl.com -H edellroot.badssl.com -H dsdtestprovider.badssl.com -H preact-cli.badssl.com -H webpack-dev-server.badssl.com
+run-cli-sequential: ## Just use normal python (for clean debugging outputs)
+	trivial scan --no-multiprocessing

@@ -39,6 +39,13 @@ def main():
         dest="account_name",
         default=None,
     )
+    cli.add_argument(
+        "-q",
+        "--quiet",
+        help="show no stdout (useful in automation when producing structured data outputs)",
+        dest="quiet",
+        action="store_true",
+    )
     group = cli.add_mutually_exclusive_group()
     group.add_argument(
         "-v",
@@ -97,7 +104,7 @@ def main():
     scan_parser.add_argument(
         "targets",
         nargs="*",
-        help="All unnamed arguments are hosts (and ports) targets to test. ~$ trivialscan google.com:443 github.io owasp.org:80",
+        help="All unnamed arguments are hosts (and ports) targets to test. ~$ trivial scan google.com:443 github.io owasp.org:80",
     )
     scan_parser.add_argument(
         "-c",
@@ -135,7 +142,6 @@ def main():
         default=None,
     )
     scan_parser.add_argument(
-        "-q",
         "--hide-progress-bars",
         help="Hide task progress bars",
         dest="hide_progress_bars",
@@ -182,7 +188,7 @@ def main():
 
     handlers = []
     log_format = "%(asctime)s - %(name)s - [%(levelname)s] %(message)s"
-    if sys.stdout.isatty():
+    if not args.quiet and sys.stdout.isatty():
         log_format = "%(message)s"
         handlers.append(RichHandler(rich_tracebacks=True))
     logging.basicConfig(format=log_format, level=log_level, handlers=handlers)
@@ -208,6 +214,7 @@ def main():
                 "hide_banner": args.hide_banner,
                 "track_changes": args.track_changes,
                 "previous_report": args.previous_report or args.json_file,
+                "quiet": args.quiet,
                 "log_level": log_level,
             },
         )

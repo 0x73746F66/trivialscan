@@ -56,7 +56,7 @@ def evaluate(
     for evaluation in evaluations:
         if evaluation["group"] == "certificate":
             continue
-        task = _evaluate_wrap(
+        task = _evaluatation_module(
             evaluation, transport, skip_evaluations, skip_evaluation_groups
         )
         if not task:
@@ -92,7 +92,7 @@ def evaluate(
         for evaluation in evaluations:
             if evaluation["group"] != "certificate":
                 continue
-            task = _evaluate_wrap(
+            task = _evaluatation_module(
                 evaluation, transport, skip_evaluations, skip_evaluation_groups
             )
             if not task:
@@ -115,7 +115,7 @@ def evaluate(
     return transport, evaluation_results
 
 
-def _evaluate_wrap(
+def _evaluatation_module(
     evaluation: dict,
     transport: Transport,
     skip_evaluations: list,
