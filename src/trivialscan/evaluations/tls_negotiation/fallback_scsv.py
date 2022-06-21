@@ -12,7 +12,7 @@ class EvaluationTask(BaseEvaluationTask):
     def __init__(self, transport: Transport, metadata: dict, config: dict) -> None:
         super().__init__(transport, metadata, config)
         self._supports_fallback_scsv = None
-        self._state = transport.get_state()
+        self._state = transport.state
 
     def evaluate(self) -> bool | None:
         # no downgrade possible using TLS 1.3

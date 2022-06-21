@@ -1,31 +1,37 @@
 import logging
 import ssl
-from datetime import datetime
+from os import path
+from datetime import timedelta
 from time import sleep
 from socket import socket, AF_INET, SOCK_STREAM, MSG_PEEK
 from pathlib import Path
-from cryptography.x509 import extensions, oid, ExtensionNotFound
-from cryptography.x509.base import Certificate
 from cryptography.x509.ocsp import (
     OCSPResponse,
     load_der_ocsp_response,
     OCSPResponseStatus,
-    OCSPCertStatus,
     OCSPRequestBuilder,
 )
-from cryptography.hazmat.primitives.hashes import SHA1
+from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
 from OpenSSL import SSL, _util
 from OpenSSL.SSL import _lib as native_openssl
 from OpenSSL.crypto import X509, FILETYPE_PEM, X509Name, load_certificate
 from certifi import where
-from requests import post
+from requests_cache import CachedSession
 import validators
 import idna
 from .. import exceptions, util, constants
 from ..transport.state import TransportState
 
 __module__ = "trivialscan.transport"
+
+SUPPORTED_OCSP_HASHES: list[hashes.HashAlgorithm] = [
+    hashes.SHA1,
+    hashes.SHA224,
+    hashes.SHA256,
+    hashes.SHA384,
+    hashes.SHA512,
+]
 logger = logging.getLogger(__name__)
 
 
@@ -56,6 +62,8 @@ class Transport:
     _data_recv_size: int = 8096
     _depth: dict
     _state: TransportState
+    _ocsp: dict
+    revocation_ocsp_assertion: bytes
 
     def __init__(self, hostname: str, port: int = 443) -> None:
         if not isinstance(port, int):
@@ -72,6 +80,7 @@ class Transport:
         self._state.tls_version_interference_versions = []
         self._state.tls_version_intolerance_versions = []
         self._depth = {}
+        self._ocsp = {}
         self._client_pem_path = None
         self._cafiles = []
         self._certificate_chain = []
@@ -82,8 +91,16 @@ class Transport:
         self.certificates = []
         self.verifier_errors = []
         self.expected_client_subjects = []
+        self.revocation_ocsp_assertion = b""
+        self._session = CachedSession(
+            path.join("/tmp", "trivialscan", hostname),
+            backend="filesystem",
+            use_temp=True,
+            expire_after=timedelta(minutes=15),
+        )
 
-    def get_state(self) -> TransportState:
+    @property
+    def state(self) -> TransportState:
         return self._state
 
     def pre_client_authentication_check(self, client_pem_path: str = None) -> bool:
@@ -244,131 +261,53 @@ class Transport:
             )
         return True
 
-    def _get_ocsp_response(
-        self, issuer: Certificate, uri: str, timeout: int = 3
-    ) -> OCSPResponse:
-        builder = OCSPRequestBuilder()
-        builder = builder.add_certificate(
-            self.server_certificate.to_cryptography(), issuer, SHA1()
-        )
-        ocsp_request = builder.build()
-        try:
-            response = post(
-                uri,
-                data=ocsp_request.public_bytes(Encoding.DER),
-                headers={"Content-Type": "application/ocsp-request"},
-                timeout=timeout,
-            )
-        except Exception as ex:
-            logger.warning(ex, exc_info=True)
-            return None
-        if response.status_code != 200:
-            logger.warning(
-                f"{self._state.hostname}:{self._state.port} HTTP request returned {response.status_code}"
-            )
-            return None
-        response = load_der_ocsp_response(response.content)
-        if response.response_status != OCSPResponseStatus.SUCCESSFUL:
-            return None
-        if response.serial_number != ocsp_request.serial_number:
-            logger.debug(
-                f"{self._state.hostname}:{self._state.port} Response serial number does not match request"
-            )
-            return None
-        return response
-
-    def _ocsp_handler(self, conn: SSL.Connection, assertion: bytes, userdata) -> bool:
-        if not isinstance(self.server_certificate, X509):
-            self.server_certificate = conn.get_peer_certificate()
-            for (_, cert) in enumerate(conn.get_peer_cert_chain()):
-                self._certificate_chain.append(cert)
+    def get_ocsp_response(self, uri: str, timeout: int = 3) -> OCSPResponse:
+        ocsp_response = None
         issuer = util.issuer_from_chain(
             self.server_certificate, self._certificate_chain
         )
-        if not isinstance(issuer, X509):
-            logger.warning(
-                f"{self._state.hostname}:{self._state.port} Issuer certificate not found in chain"
+        if not issuer:
+            return None
+
+        for _hash in SUPPORTED_OCSP_HASHES:
+            builder = OCSPRequestBuilder()
+            builder = builder.add_certificate(
+                self.server_certificate.to_cryptography(),
+                issuer.to_cryptography(),
+                _hash(),
             )
-            self._state.revocation_ocsp_result = False
-            return True
-        self._state.revocation_ocsp_stapling = False
-        self._state.revocation_ocsp_must_staple = False
-        ext = None
-        try:
-            ext = self.server_certificate.to_cryptography().extensions.get_extension_for_class(
-                extensions.TLSFeature
-            )
-        except Exception:
-            pass
-        if ext is not None:
-            for feature in ext.value:
-                if feature == extensions.TLSFeatureType.status_request:
-                    logger.debug(
-                        f"{self._state.hostname}:{self._state.port} Peer presented a must-staple cert"
-                    )
-                    self._state.revocation_ocsp_must_staple = True
-                    break
-        response = None
-        if assertion == b"":
-            if self._state.revocation_ocsp_must_staple is True:
-                self._state.revocation_ocsp_result = False
-                return True  # stapled response is expected and required
+            ocsp_request = builder.build()
             try:
-                ext = self.server_certificate.to_cryptography().extensions.get_extension_for_class(
-                    extensions.AuthorityInformationAccess
+                response = self._session.post(
+                    uri,
+                    data=ocsp_request.public_bytes(Encoding.DER),
+                    headers={"Content-Type": "application/ocsp-request"},
+                    timeout=timeout,
                 )
-                if ext is None:
-                    self._state.revocation_ocsp_result = True
-                    return True  # stapled response is expected though not required, not very good but still a valid assertion
-                uris = [
-                    desc.access_location.value
-                    for desc in ext.value
-                    if desc.access_method == oid.AuthorityInformationAccessOID.OCSP
-                ]
-                if not uris:
-                    self._state.revocation_ocsp_result = True
-                    return True  # stapled response is expected though not required, without any responders it is still a valid assertion
-                for uri in uris:
-                    logger.debug(
-                        f"{self._state.hostname}:{self._state.port} Requesting OCSP from responder {uri}"
+                if response.status_code != 200:
+                    logger.warning(
+                        f"{self._state.hostname}:{self._state.port} HTTP request returned {response.status_code}"
                     )
-                    response = self._get_ocsp_response(issuer.to_cryptography(), uri)
-                    if response is None:
-                        continue
-            except ExtensionNotFound:
-                pass  # no responders
-        if response is None and assertion != b"":
-            self._state.revocation_ocsp_stapling = True
-            response = load_der_ocsp_response(assertion)
-        if response is None:
-            logger.warning(
-                f"{self._state.hostname}:{self._state.port} OCSP response is not available"
-            )
-            self._state.revocation_ocsp_result = False
-            return True
-        if response.this_update > datetime.utcnow():
-            logger.error(
-                f"{self._state.hostname}:{self._state.port} OCSP thisUpdate is future dated"
-            )
-            self._state.revocation_ocsp_result = False
-            return True
-        logger.info(f"{self._state.hostname}:{self._state.port} OCSP response received")
-        if response.revocation_reason:
-            self._state.revocation_ocsp_reason = response.revocation_reason.value
-        if response.revocation_time:
-            self._state.revocation_ocsp_time = response.revocation_time.value
-        if response.response_status.value in constants.OCSP_RESP_STATUS:
-            self._state.revocation_ocsp_response = constants.OCSP_RESP_STATUS[
-                response.response_status.value
-            ]
-        if response.certificate_status.value in constants.OCSP_CERT_STATUS:
-            self._state.revocation_ocsp_status = constants.OCSP_CERT_STATUS[
-                response.certificate_status.value
-            ]
-        self._state.revocation_ocsp_result = (
-            response.response_status == OCSPResponseStatus.SUCCESSFUL
-            and response.certificate_status == OCSPCertStatus.GOOD
-        )
+                    continue
+                ocsp_response = load_der_ocsp_response(response.content)
+                if ocsp_response.serial_number == ocsp_request.serial_number:
+                    break
+                logger.debug(
+                    f"{self._state.hostname}:{self._state.port} Response serial number does not match request"
+                )
+
+            except Exception as ex:
+                logger.warning(ex, exc_info=True)
+
+        if (
+            ocsp_response
+            and ocsp_response.response_status != OCSPResponseStatus.SUCCESSFUL
+        ):
+            return None
+        return ocsp_response
+
+    def _ocsp_handler(self, conn: SSL.Connection, assertion: bytes, userdata) -> bool:
+        self.revocation_ocsp_assertion = assertion
         return True
 
     def prepare_socket(self, timeout: int = 1):
@@ -465,7 +404,7 @@ class Transport:
             getattr(SSL, Transport._default_connect_verify_mode), self._verifier
         )
         ctx.set_max_proto_version(tls_version)
-        # ctx.set_ocsp_client_callback(self._ocsp_handler)
+        ctx.set_ocsp_client_callback(self._ocsp_handler)
         ctx.set_options(
             _util.lib.SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION
             | _util.lib.SSL_OP_LEGACY_SERVER_CONNECT
@@ -507,7 +446,7 @@ class Transport:
                     f"{self._state.hostname}:{self._state.port} Peer cert chain length: {len(self._certificate_chain)}"
                 )
             self._state.certificates = util.get_certificates(
-                self.server_certificate, self._certificate_chain, self._state.hostname
+                self.server_certificate, self._certificate_chain
             )
             if protocol is not None:
                 logger.info(

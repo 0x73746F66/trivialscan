@@ -8,4 +8,4 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self):
-        return self._transport.get_state().negotiated_cipher in NOT_KNOWN_WEAK_CIPHERS
+        return self._transport.state.negotiated_cipher in NOT_KNOWN_WEAK_CIPHERS

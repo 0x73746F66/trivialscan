@@ -128,7 +128,7 @@ transport, evaluations = trivialscan.evaluate(
     hostname="ssllabs.com",
     port=443,
 )
-is_valid = trivialscan.is_valid(transport.get_state())
+is_valid = trivialscan.is_valid(transport.state)
 print('Valid ✓✓✓' if is_valid else 'Not Valid !!!')
 ```
 

@@ -8,4 +8,4 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self):
-        return self._transport.get_state().negotiated_protocol in WEAK_PROTOCOL.keys()
+        return self._transport.state.negotiated_protocol in WEAK_PROTOCOL.keys()

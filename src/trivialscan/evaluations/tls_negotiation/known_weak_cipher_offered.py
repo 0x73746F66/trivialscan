@@ -11,7 +11,7 @@ class EvaluationTask(BaseEvaluationTask):
 
     def evaluate(self):
         results = []
-        for offered_cipher in self._transport.get_state().offered_ciphers:
+        for offered_cipher in self._transport.state.offered_ciphers:
             results.append(offered_cipher not in NOT_KNOWN_WEAK_CIPHERS)
 
         return any(results)

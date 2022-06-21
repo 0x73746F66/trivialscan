@@ -491,7 +491,7 @@ def validate_certificate_chain(
     )
 
 
-def issuer_from_chain(certificate: X509, chain: list[X509]) -> Certificate:
+def issuer_from_chain(certificate: X509, chain: list[X509]) -> X509:
     issuer = None
     issuer_name = certificate.get_issuer().CN
     if issuer_name:
@@ -813,11 +813,9 @@ def average(values: list):
     return sum(values) / len(values)
 
 
-def get_certificates(
-    leaf: X509, certificates: list[X509], hostname: str
-) -> list[BaseCertificate]:
+def get_certificates(leaf: X509, certificates: list[X509]) -> list[BaseCertificate]:
     roots: list[X509] = []
-    ret_certs = [LeafCertificate(leaf, hostname)]
+    ret_certs = [LeafCertificate(leaf)]
     leaf_aki = tlstrust_util.get_key_identifier_hex(
         leaf.to_cryptography(),
         extension=extensions.AuthorityKeyIdentifier,
@@ -868,7 +866,7 @@ def get_certificates(
             ret_certs.append(
                 IntermediateCertificate(next_cert)
                 if next_ski != leaf_ski
-                else LeafCertificate(next_cert, hostname)
+                else LeafCertificate(next_cert)
             )
             if next_ski in lookup and depth < MAX_DEPTH:
                 depth += 1
@@ -885,20 +883,3 @@ def get_certificates(
             next_chain(ski, aki_lookup)
 
     return list({v.sha1_fingerprint: v for v in ret_certs}.values())
-
-
-def pretty_subject(subject: str):
-    if not subject or not isinstance(subject, str):
-        return ""
-    try:
-        pieces = [
-            "=".join([k, v])
-            for k, v in {
-                i.split("=")[0]: i.split("=")[1] for i in subject.strip().split(",")
-            }.items()
-            if k in ["O", "OU", "CN"]
-        ]
-        return " ".join(pieces)
-    except IndexError:
-        logger.error(f"subject IndexError: {subject}")
-    return subject

@@ -141,10 +141,8 @@ def _validate_config(combined_config: dict) -> dict:
     skip_evaluation_groups = combined_config["defaults"].get(
         "skip_evaluation_groups", []
     )
-    if not combined_config.get("targets"):
-        raise RuntimeError("No targets defined")
     targets = []
-    for target in combined_config.get("targets"):
+    for target in combined_config.get("targets", []):
         hostname = target.get("hostname")
         if not hostname or not isinstance(hostname, str):
             raise AttributeError("Missing hostname")

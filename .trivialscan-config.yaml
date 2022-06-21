@@ -5,6 +5,10 @@ defaults:
   tmp_path_prefix: /tmp
   # skip_evaluations:
   #   - revocation_crlite
+  #   - tls_robot
+  #   - dnssec
+  #   - deprecated_dnssec_algorithm
+  #   - private_key_known_compromised
 
 outputs:
   - type: console

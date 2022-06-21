@@ -13,7 +13,7 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def _is_dnssec_valid(self) -> bool:
-        for cert in self._transport.get_state().certificates:
+        for cert in self._transport.state.certificates:
             if isinstance(cert, LeafCertificate):
                 self._leaf_certificate = cert
                 return cert.dnssec_valid

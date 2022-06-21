@@ -8,7 +8,7 @@ class EvaluationTask(BaseEvaluationTask):
     def __init__(self, transport: Transport, metadata: dict, config: dict) -> None:
         super().__init__(transport, metadata, config)
         self._renegotiation_info_scsv = None
-        self._state = transport.get_state()
+        self._state = transport.state
 
     def evaluate(self):
         self._renegotiation_info_scsv = (

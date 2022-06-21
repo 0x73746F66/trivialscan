@@ -9,7 +9,7 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self):
-        state = self._transport.get_state()
+        state = self._transport.state
         results = []
         for offered_cipher in state.offered_ciphers:
             results.append("-CBC-" in offered_cipher)

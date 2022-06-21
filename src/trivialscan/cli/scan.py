@@ -10,6 +10,8 @@ from rich.console import Console
 from rich.table import Column
 from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColumn
 from art import text2art
+
+from trivialscan.transport.state import TransportState
 from . import log
 from .. import evaluate
 from ..config import merge_lists_by_value
@@ -27,7 +29,7 @@ def wrap_evaluate(
 ) -> None:
     for target in iter(queue_in.get, None):
         log(
-            "[cyan]START[/cyan] Enumerating TLS negotiations",
+            "[cyan]START[/cyan] Probing TLS",
             hostname=target.get("hostname"),
             port=target.get("port", 443),
             con=progress_console,
@@ -39,7 +41,7 @@ def wrap_evaluate(
                 **target,
                 **config["defaults"],
             )
-            state = transport.get_state()
+            state = transport.state
             log(
                 f"[cyan]DONE![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}",
                 hostname=state.hostname,
@@ -87,7 +89,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
             }
         }
         log(
-            "[cyan]START[/cyan] Enumerating TLS negotiations",
+            "[cyan]START[/cyan] Probing TLS",
             hostname=target.get("hostname"),
             port=target.get("port", 443),
             con=console if use_console else None,
@@ -107,7 +109,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     **config["defaults"],
                 )
                 progress.advance(task_id)
-                state = transport.get_state()
+                state: TransportState = transport.state
                 log(
                     f"[cyan]DONE![/cyan] {state.peer_address}",
                     hostname=state.hostname,
@@ -123,14 +125,14 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     **target,
                     **config["defaults"],
                 )
-                state = transport.get_state()
+                state = transport.state
                 log(
                     f"[cyan]DONE![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}",
                     hostname=state.hostname,
                     port=state.port,
                     con=console if use_console else None,
                 )
-                state = transport.get_state()
+                state = transport.state
                 data = state.to_dict()
                 data["evaluations"] = evaluations
         except Exception as ex:  # pylint: disable=broad-except

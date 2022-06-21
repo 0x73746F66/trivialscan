@@ -24,7 +24,7 @@ class BaseEvaluationTask:
 
     @property
     def state(self) -> TransportState:
-        return self._transport.get_state()
+        return self._transport.state
 
     @property
     def metadata(self) -> dict:

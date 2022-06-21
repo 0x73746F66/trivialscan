@@ -45,7 +45,7 @@ class EvaluationTask(BaseEvaluationTask):
         self._leaf: LeafCertificate = None
         self._cke_version = None
         self._cke_2and_prefix = None
-        self._state = transport.get_state()
+        self._state = transport.state
 
     def evaluate(self) -> bool | None:
         for cert in self._state.certificates:

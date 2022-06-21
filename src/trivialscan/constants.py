@@ -1,4 +1,8 @@
 from OpenSSL import SSL
+from cryptography.x509.ocsp import (
+    OCSPResponseStatus,
+    OCSPCertStatus,
+)
 from trivialscan import pci, nist, fips
 
 __module__ = "trivialscan.constants"
@@ -480,17 +484,41 @@ WEAK_PROTOCOL: dict[str, str] = {
     TLS1_1_LABEL: f"{TLS1_1_LABEL} No longer supported by Firefox 24 or newer and Chrome 29 or newer. Deprecated in 2020 (rfc8996)",
 }
 OCSP_RESP_STATUS: dict[int, str] = {
-    0: "Successful",
-    1: "Malformed Request",
-    2: "Internal Error",
-    3: "Try Later",
-    4: "Signature Required",
-    5: "Unauthorized",
+    OCSPResponseStatus.SUCCESSFUL: "Successful",
+    OCSPResponseStatus.MALFORMED_REQUEST: "Malformed Request",
+    OCSPResponseStatus.INTERNAL_ERROR: "Internal Error",
+    OCSPResponseStatus.TRY_LATER: "Try Later",
+    OCSPResponseStatus.SIG_REQUIRED: "Signature Required",
+    OCSPResponseStatus.UNAUTHORIZED: "Unauthorized",
 }
 OCSP_CERT_STATUS: dict[int, str] = {
-    0: "Good",
-    1: "Revoked",
-    2: "Unknown",
+    OCSPCertStatus.GOOD: "Good",
+    OCSPCertStatus.REVOKED: "Revoked",
+    OCSPCertStatus.UNKNOWN: "Unknown",
+}
+SCT_PRESENT = "SCT Extension present"
+SCT_MISSING = "Missing SCT extension"
+SCT_GOOD = "SCT extension Good"
+SCT_INSUFFICIENT = "SCT extension Insufficient"
+SCT_STATUS_MAP = {
+    SCT_PRESENT: "Signed Certificate Timestamps (SCT) Extension present",
+    SCT_MISSING: "Missing Signed Certificate Timestamps (SCT) Extension",
+    SCT_GOOD: "3 or more SCT's are sufficient",
+    SCT_INSUFFICIENT: "Including less than 3 SCT's is widely scruitinised as insuffient for trust purposes",
+}
+OCSP_NO_ASSERTION = "NoAssertion"
+OCSP_INVALID_ASSERTION_DATE = "InvalidAssertionDate"
+OCSP_STAPLED_NO_RESPONDER_URL = "StapledNoResponderURL"
+OCSP_STAPLED_BUT_NOT_REQUIRED = "StapledButNotRequired"
+OCSP_NO_RESPONDER_URL = "NoResponderURL"
+OCSP_MUST_STAPLE_NOT_STAPLED = "MustStapleNotStapled"
+OCSP_STATUS_REASON_MAP = {
+    OCSP_NO_ASSERTION: "No OCSP responses from any responders or stapled",
+    OCSP_INVALID_ASSERTION_DATE: "OCSP response 'thisUpdate' is future dated",
+    OCSP_STAPLED_NO_RESPONDER_URL: "stapled response is expected though not required, without any responders it is still a valid assertion",
+    OCSP_STAPLED_BUT_NOT_REQUIRED: "stapled response is expected though not required, not very good but still a valid assertion",
+    OCSP_NO_RESPONDER_URL: "without any responders it is still a valid assertion",
+    OCSP_MUST_STAPLE_NOT_STAPLED: "stapled response was expected and required but not provided duritn TLS negotiation",
 }
 SESSION_CACHE_MODE: dict[int, str] = {
     SSL.SESS_CACHE_OFF: "no caching",

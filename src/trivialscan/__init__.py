@@ -6,9 +6,9 @@ from rich.console import Console
 from trivialscan.transport import Transport
 from .config import load_config, get_config
 from .cli import log
-from .util import pretty_subject
 from .transport.insecure import InsecureTransport
 from .transport.state import TransportState
+from .certificate import LeafCertificate
 from .evaluations import BaseEvaluationTask
 
 __module__ = "trivialscan"
@@ -34,7 +34,7 @@ def evaluate(
     if isinstance(client_certificate, str):
         transport.pre_client_authentication_check(client_pem_path=client_certificate)
     transport.connect_insecure(cafiles=cafiles, use_sni=use_sni)
-    state = transport.get_state()
+    state = transport.state
     log(
         f"[cyan]INTO![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}",
         hostname=state.hostname,
@@ -46,33 +46,11 @@ def evaluate(
         "port": state.port,
         "peer_address": state.peer_address,
     }
-    for evaluation in evaluations:
-        if evaluation["group"] == "certificate":
-            continue
-        task = _evaluatation_module(
-            evaluation, transport, skip_evaluations, skip_evaluation_groups
-        )
-        if not task:
-            log(
-                f"[cyan]SKIP![/cyan] {evaluation['label_as']}",
-                hostname=state.hostname,
-                port=state.port,
-                con=console,
-            )
-            continue
-        result = task.evaluate()
-        data, log_output = _result_data(result, task, **host_data)
-        evaluation_results.append(data)
-        log(
-            log_output,
-            hostname=state.hostname,
-            port=state.port,
-            con=console,
-        )
-
     for cert in state.certificates:
+        if isinstance(cert, LeafCertificate):
+            cert.set_transport(transport)
         cert_data = {
-            "certificate_subject": pretty_subject(cert.subject_rfc4514 or ""),
+            "certificate_subject": cert.subject or "",
             "sha1_fingerprint": cert.sha1_fingerprint,
             "subject_key_identifier": cert.subject_key_identifier,
             "authority_key_identifier": cert.authority_key_identifier,
@@ -104,6 +82,30 @@ def evaluate(
                 aside=f"SHA1:{cert.sha1_fingerprint} {state.hostname}:{state.port}",
                 con=console,
             )
+
+    for evaluation in evaluations:
+        if evaluation["group"] == "certificate":
+            continue
+        task = _evaluatation_module(
+            evaluation, transport, skip_evaluations, skip_evaluation_groups
+        )
+        if not task:
+            log(
+                f"[cyan]SKIP![/cyan] {evaluation['label_as']}",
+                hostname=state.hostname,
+                port=state.port,
+                con=console,
+            )
+            continue
+        result = task.evaluate()
+        data, log_output = _result_data(result, task, **host_data)
+        evaluation_results.append(data)
+        log(
+            log_output,
+            hostname=state.hostname,
+            port=state.port,
+            con=console,
+        )
 
     return transport, evaluation_results
 

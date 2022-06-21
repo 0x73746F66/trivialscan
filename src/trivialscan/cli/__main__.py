@@ -202,6 +202,8 @@ def main():
         )
     if args.subcommand == "scan":
         config = _scan_config(vars(args), args.config_file)
+        if not config.get("targets"):
+            raise RuntimeError("No targets defined")
         if config["defaults"].get("skip_evaluations"):
             del config["defaults"]["skip_evaluations"]
         if config["defaults"].get("skip_evaluation_groups"):
