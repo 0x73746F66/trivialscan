@@ -20,39 +20,32 @@ outputs:
 
 targets:
   - hostname: expired.badssl.com
-    port: 443
     client_certificate:
     skip_evaluations:
       - client_renegotiation
     skip_evaluation_groups:
       - dns_configuration
+  - hostname: tls-v1-1.badssl.com
+    port: 1011
   - hostname: self-signed.badssl.com
   - hostname: wrong.host.badssl.com
-  - hostname: no-common-name.badssl.com
   - hostname: untrusted.root.badssl.com
   - hostname: no-subject.badssl.com
   - hostname: revoked.badssl.com
-  - hostname: pinning-test.badssl.com
   - hostname: incomplete-chain.badssl.com
-  - hostname: sha1-intermediate.badssl.com
   - hostname: no-sct.badssl.com
   - hostname: invalid-expected-sct.badssl.com
-  - hostname: null.badssl.com
   - hostname: cbc.badssl.com
-  - hostname: rc4-md5.badssl.com
-  - hostname: rc4.badssl.com
-  - hostname: 3des.badssl.com
-  - hostname: static-rsa.badssl.com
-  - hostname: sha1-2016.badssl.com
-  - hostname: tls-v1-0.badssl.com
-    port: 1010
-  - hostname: tls-v1-1.badssl.com
-    port: 1011
   - hostname: superfish.badssl.com
-  - hostname: edellroot.badssl.com
-  - hostname: dsdtestprovider.badssl.com
-  - hostname: preact-cli.badssl.com
-  - hostname: webpack-dev-server.badssl.com
+#  - hostname: no-common-name.badssl.com
+#  - hostname: pinning-test.badssl.com
+#  - hostname: sha1-intermediate.badssl.com
+#  - hostname: static-rsa.badssl.com
+#  - hostname: sha1-2016.badssl.com
+#  - hostname: edellroot.badssl.com
+#  - hostname: dsdtestprovider.badssl.com
+#  - hostname: preact-cli.badssl.com
+#  - hostname: webpack-dev-server.badssl.com
 
 # Customise outputs, or really anything
 evaluations:

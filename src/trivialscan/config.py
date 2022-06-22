@@ -752,7 +752,16 @@ evaluations:
     issue: >
       Continued use of weak keys in certificates puts your sensitive data at risk. Exhaustive key searches or brute force attacks against certificates with weak keys are dangerous to network security.
       As computational power increases, so does the need for stronger keys.
+      Diffie-Hellman key exchange depends for its security on the presumed difficulty of solving the discrete logarithm problem.
+      By design, many Diffie-Hellman implementations use the same pre-generated prime for their field, because of the reuse of primes generating precomputation for just one prime would expose millions of implementations. This vulnerability was known as early as 1992.
+      Claims on the practical implications of the attack at the time were however disputed by security researchers but over the years it is expected that many primes were and still are being calculated practically making all primes of 2048 bit or less considered weak or vulnerable.
     references:
+      - name: RFC 8270 - Increase the Secure Shell Minimum Recommended Diffie-Hellman Modulus Size to 2048 Bits
+        url: https://datatracker.ietf.org/doc/html/rfc8270
+      - name: Eyal Ronen and Adi Shamir - Critical Review of Imperfect Forward Secrecy
+        url: http://www.wisdom.weizmann.ac.il/~eyalro/RonenShamirDhReview.pdf
+      - name: Logjam Attack - Imperfect Forward Secrecy, How Diffie-Hellman Fails in Practice
+        url: https://weakdh.org/imperfect-forward-secrecy-ccs15.pdf
       - name: TLS/SSL certificate weak key vulnerability - DigiCert
         url: https://docs.digicert.com/certificate-tools/discovery-user-guide/tlsssl-certificate-vulnerabilities/weak-keys/
     anotate_results:
@@ -767,6 +776,198 @@ evaluations:
     substitutions:
       - public_key_type
       - public_key_size
+
+  - key: weak_rsa_public_exponent
+    group: certificate
+    label_as: Known Weak RSA public key exponent {public_key_exponent}
+    issue: >
+      Using anything other than 65537 as the public exponent would effect compatibility with most hardware and software.
+      Lower isn't vulnerable with proper padding however RSA implementations are widely flawed and did not consider this security characteristic therefore in practice any low exponent could indicate weakness known to be exploited by many heavily scrutinised researchers publications.
+      Using exatly 65537 is an industry standard prescribed by certification authorities and compliance such as PCI DSS, Annex B.3 of FIP186-4, NIST Special Publication on Computer Security (SP 800-78 Rev. 1 of August 2007) does not allow public exponents e smaller than 65537.
+    references:
+      - name: Twenty Years of Attacks on the RSA Cryptosystem - Dan Boneh, Stanford University
+        url: https://www.researchgate.net/publication/2538368_Twenty_Years_of_Attacks_on_the_RSA_Cryptosystem
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 2.2.7
+            - 3.3.2
+            - 3.3.3
+            - 3.5.1
+            - 3.6.1
+            - 4.2.1
+            - 4.2.2
+            - 6.2.4
+            - 8.3.2
+            - A2
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Vulnerable
+        score: -200
+      - value: None
+        evaluation_value: "[cyan]SKIP![/cyan]"
+        display_as: Not using RSA public keys
+        score: 0
+    substitutions:
+      - public_key_exponent
+
+  - key: rsa_public_key_issue
+    group: certificate
+    label_as: RSA public key exponent {public_key_exponent} has known issues
+    issue: >
+      Using anything other than 65537 as the public exponent would effect compatibility with most hardware and software.
+      Any higher exponent would make the public RSA operation, used for encryption or signature verification, unusably slower.
+      Using a larger exponent will not decrease security, but will be more time / power consuming.
+    references:
+      - name: Twenty Years of Attacks on the RSA Cryptosystem - Dan Boneh, Stanford University
+        url: https://www.researchgate.net/publication/2538368_Twenty_Years_of_Attacks_on_the_RSA_Cryptosystem
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 20
+      - value: True
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Problematic
+        score: -500
+      - value: None
+        evaluation_value: "[cyan]SKIP![/cyan]"
+        display_as: Not using RSA public keys
+        score: 0
+    substitutions:
+      - public_key_exponent
+
+  - key: valid_common_name
+    group: certificate
+    label_as: Valid Certificate Common Name
+    issue: >
+      This is frequently a misconfiguration, i.e. the website domain name was not included in your common name by mistake.
+      However it is a very uncommon issue and is most likely indication of compromise, where a malicious attacker is targeting website owners or visitors using phishing or impersonation and have made the error unintentionally or was unable to effectively impersonate the website correctly and are relying on visitors ignoring browser warnings.
+    references:
+      - name: RFC 9110 - HTTP Semantics
+        url: https://datatracker.ietf.org/doc/html/rfc9110
+      - name: DNSimple - What is the Certificate Common Name
+        url: https://support.dnsimple.com/articles/what-is-common-name/
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 20
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+      - value: None
+        evaluation_value: "[cyan]SKIP![/cyan]"
+        display_as: Not a leaf Certificate
+        score: 0
+
+  - key: valid_host_name
+    group: certificate
+    label_as: Hostname matches Certificate
+    issue: >
+      This is frequently a misconfiguration, i.e. the website domain name was not included in your common name by mistake.
+      However it is a very uncommon issue and is most likely indication of compromise, where a malicious attacker is targeting website owners or visitors using phishing or impersonation and have made the error unintentionally or was unable to effectively impersonate the website correctly and are relying on visitors ignoring browser warnings.
+    references:
+      - name: RFC 9110 - HTTP Semantics
+        url: https://datatracker.ietf.org/doc/html/rfc9110
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 50
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -150
+      - value: None
+        evaluation_value: "[cyan]SKIP![/cyan]"
+        display_as: Not a leaf Certificate
+        score: 0
+
+  - key: certification_version
+    group: certificate
+    label_as: X.509 Certificates are in version 3
+    issue: >
+      HIPAA, Security Rule (Ref. NIST SP 800-52: Guidelines for the Selection and Use of TLS Implementations)
+      Require all the X509 certificates provided by the server are in version 3.
+    references:
+      - name: NIST SP 800-52 - Guidelines for the Selection and Use of TLS Implementations
+        url: https://www.hhs.gov/hipaa/for-professionals/security/guidance/index.html
+      - name: HIPAA / HITECH
+        url: https://www.hhs.gov/hipaa/index.html
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Compliant
+        score: 20
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Non-compliant
+        score: -50
+
+  - key: certification_expired
+    group: certificate
+    label_as: Certificate is not expired
+    issue: >
+      When visiting a website that uses an expired Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 50
+
+  - key: valid_issued_date
+    group: certificate
+    label_as: Valid NotBefore date
+    issue: >
+      When visiting a website that uses a Certificate with an invalid NotBefore date, it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 20
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: is_self_signed
+    group: certificate
+    label_as: Certificate self-signed
+    issue: >
+      Any self-signed Certificate should be untrusted as it offers no security characteristics of TLS that is based on a system that all Certificates have a Root Certificate Authory Trust Anchor.
+      When visiting a website that uses a self-signed Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Compromised
+        score: -200
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 50
+      - value: None
+        evaluation_value: "[cyan]SKIP![/cyan]"
+        display_as: Root Certificate
+        score: 0
 
 "PCI DSS 3.2.1":
   1: Configure and use firewalls to protect cardholder data

@@ -411,7 +411,7 @@ def get_ski_aki(cert: Certificate) -> tuple[str, str]:
     return ski, aki
 
 
-def extract_from_subject(cert: Certificate, name: str = "commonName"):
+def extract_from_subject(cert: Certificate, name: str = "commonName") -> str | None:
     for fields in cert.subject:
         current = str(fields.oid)
         if name in current:
@@ -430,7 +430,15 @@ def validate_common_name(common_name: str, host: str) -> bool:
         common_name_suffix = common_name.replace("*.", "")
         if validators.domain(common_name_suffix) is not True:
             return False
-        return common_name_suffix == host or host.endswith(common_name_suffix)
+        if common_name_suffix == host:
+            return True
+        if not host.endswith(common_name_suffix):
+            return False
+        # remove suffix, only subdomain remains
+        subdomain = host.replace(common_name_suffix, "").strip(".")
+        return (
+            "." not in subdomain
+        )  # further subdomains cause Chrome NET::ERR_CERT_COMMON_NAME_INVALID
     return validators.domain(common_name) is True
 
 

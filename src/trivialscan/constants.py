@@ -467,6 +467,7 @@ WEAK_KEY_SIZE: dict[str, int] = {
     "DSA": 4096,
     "EC": 233,
 }
+RSA_PUBLIC_EXPONENT_CONSTANT = 65537
 KNOWN_WEAK_KEYS: dict[str, str] = {
     "RSA": "The use RSA Encryption is considered vulnerable in certain context. 2000: Factorization of a 512-bit RSA Modulus, essentially derive a private key knowing only the public key. Verified bt EFF in 2001. Later in 2009 factorization of up to 1024-bit keys",
     "DSA": "The use DSA Encryption is considered vulnerable. 1999: HPL Laboratories demonstrated lattice attacks on DSA, a non-trivial example of the known message attack that is a total break and message forgery technique. 2010 Dimitrios Poulakis demonstrated a lattice reduction technique for single or multiple message forgery",

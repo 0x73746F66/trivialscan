@@ -1,0 +1,15 @@
+from datetime import datetime
+from ...transport import Transport
+from ...certificate import BaseCertificate
+from .. import BaseEvaluationTask
+
+
+class EvaluationTask(BaseEvaluationTask):
+    def __init__(  # pylint: disable=useless-super-delegation
+        self, transport: Transport, metadata: dict, config: dict
+    ) -> None:
+        super().__init__(transport, metadata, config)
+
+    def evaluate(self, certificate: BaseCertificate) -> bool:
+        self.substitution_metadata["not_before"] = certificate.not_before
+        return datetime.utcnow() >= datetime.fromisoformat(certificate.not_before)
