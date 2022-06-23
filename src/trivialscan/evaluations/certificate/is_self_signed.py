@@ -1,3 +1,4 @@
+from ...exceptions import EvaluationNotRelevant
 from ...transport import Transport
 from ...certificate import BaseCertificate, RootCertificate
 from ...util import is_self_signed
@@ -12,5 +13,5 @@ class EvaluationTask(BaseEvaluationTask):
 
     def evaluate(self, certificate: BaseCertificate) -> bool | None:
         if isinstance(certificate, RootCertificate) and certificate.trust_stores:
-            return None
+            raise EvaluationNotRelevant
         return is_self_signed(certificate.x509.to_cryptography())

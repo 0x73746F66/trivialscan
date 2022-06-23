@@ -1,3 +1,4 @@
+from ...exceptions import EvaluationNotRelevant
 from ...transport import Transport
 from ...certificate import BaseCertificate
 from ...constants import RSA_PUBLIC_EXPONENT_CONSTANT
@@ -12,7 +13,7 @@ class EvaluationTask(BaseEvaluationTask):
 
     def evaluate(self, certificate: BaseCertificate) -> bool | None:
         if certificate.public_key_type != "RSA":
-            return None
+            raise EvaluationNotRelevant
         self.substitution_metadata[
             "public_key_exponent"
         ] = certificate.public_key_exponent

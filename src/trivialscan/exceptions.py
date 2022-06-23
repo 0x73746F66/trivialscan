@@ -91,6 +91,14 @@ class TransportError(ConnectionError):
     """Used when Transport class specific issues are encountered that are not validation related"""
 
 
+class EvaluationNotRelevant(Exception):
+    pass
+
+
+class NoLogEvaluation(Exception):
+    pass
+
+
 class ValidationError(ValueError):
     def __init__(self, message: str = None, openssl_errno: int = None):
         if openssl_errno in X509_MESSAGES.keys():

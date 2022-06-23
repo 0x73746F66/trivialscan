@@ -1,3 +1,4 @@
+from ...exceptions import EvaluationNotRelevant
 from ...transport import Transport
 from ...certificate import BaseCertificate, LeafCertificate
 from ...util import extract_from_subject, validate_common_name
@@ -18,5 +19,5 @@ class EvaluationTask(BaseEvaluationTask):
             return False
         self.substitution_metadata["common_name"] = common_name
         if not isinstance(certificate, LeafCertificate):
-            return None
+            raise EvaluationNotRelevant
         return validate_common_name(common_name, self.transport.state.hostname)

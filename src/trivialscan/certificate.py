@@ -416,7 +416,10 @@ class LeafCertificate(BaseCertificate):
             pass
         if ext:
             for feature in ext.value:
-                if feature == extensions.TLSFeatureType.status_request:
+                if feature in [
+                    extensions.TLSFeatureType.status_request,
+                    extensions.TLSFeatureType.status_request_v2,
+                ]:
                     return True
         return False
 

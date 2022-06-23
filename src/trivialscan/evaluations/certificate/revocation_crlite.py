@@ -3,6 +3,7 @@ import subprocess
 import tempfile
 from os import path, unlink
 from pathlib import Path
+from ...exceptions import EvaluationNotRelevant
 from ...transport import Transport
 from ...certificate import BaseCertificate, IntermediateCertificate
 from .. import BaseEvaluationTask
@@ -18,12 +19,14 @@ STATUS = [
 
 
 class EvaluationTask(BaseEvaluationTask):
-    def __init__(self, transport: Transport, metadata: dict, config: dict) -> None:
+    def __init__(
+        self, transport: Transport, metadata: dict, config: dict
+    ) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(transport, metadata, config)
 
     def evaluate(self, certificate: BaseCertificate):
         if not isinstance(certificate, IntermediateCertificate):
-            return None
+            raise EvaluationNotRelevant
         tmp_path_prefix = self._configuration.get("tmp_path_prefix", "/tmp")
         db_path = path.join(tmp_path_prefix, ".crlite_db")
         tmp = tempfile.NamedTemporaryFile(delete=False, dir=tmp_path_prefix)

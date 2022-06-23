@@ -9,6 +9,7 @@ from .cli import log
 from .transport.insecure import InsecureTransport
 from .transport.state import TransportState
 from .certificate import LeafCertificate
+from .exceptions import EvaluationNotRelevant, NoLogEvaluation
 from .evaluations import BaseEvaluationTask
 
 __module__ = "trivialscan"
@@ -64,17 +65,22 @@ def evaluate(
             if evaluation["group"] != "certificate":
                 continue
             task = _evaluatation_module(
-                evaluation, transport, skip_evaluations, skip_evaluation_groups
+                evaluation,
+                transport,
+                skip_evaluations,
+                skip_evaluation_groups,
+                con=console,
             )
             if not task:
-                log(
-                    f"[cyan]SKIP![/cyan] {evaluation['label_as']}",
-                    hostname=state.hostname,
-                    port=state.port,
-                    con=console,
-                )
                 continue
-            result = task.evaluate(cert)
+            try:
+                result = task.evaluate(cert)
+            except EvaluationNotRelevant:
+                continue
+            except NoLogEvaluation:
+                data, _ = _result_data(result, task, **cert_data, **host_data)
+                evaluation_results.append(data)
+                continue
             data, log_output = _result_data(result, task, **cert_data, **host_data)
             evaluation_results.append(data)
             log(
@@ -87,17 +93,18 @@ def evaluate(
         if evaluation["group"] == "certificate":
             continue
         task = _evaluatation_module(
-            evaluation, transport, skip_evaluations, skip_evaluation_groups
+            evaluation, transport, skip_evaluations, skip_evaluation_groups, con=console
         )
         if not task:
-            log(
-                f"[cyan]SKIP![/cyan] {evaluation['label_as']}",
-                hostname=state.hostname,
-                port=state.port,
-                con=console,
-            )
             continue
-        result = task.evaluate()
+        try:
+            result = task.evaluate()
+        except EvaluationNotRelevant:
+            continue
+        except NoLogEvaluation:
+            data, _ = _result_data(result, task, **host_data)
+            evaluation_results.append(data)
+            continue
         data, log_output = _result_data(result, task, **host_data)
         evaluation_results.append(data)
         log(
@@ -115,6 +122,7 @@ def _evaluatation_module(
     transport: Transport,
     skip_evaluations: list,
     skip_evaluation_groups: list,
+    con: Console = None,
 ) -> BaseEvaluationTask | None:
     if any(
         [
@@ -123,14 +131,24 @@ def _evaluatation_module(
         ]
     ):
         return
-    _cls = getattr(
-        import_module(
-            f'.evaluations.{evaluation["group"]}.{evaluation["key"]}',
-            package="trivialscan",
-        ),
-        "EvaluationTask",
-    )
     logger.info(f'{evaluation["group"]}.{evaluation["key"]}')
+    try:
+        _cls = getattr(
+            import_module(
+                f'.evaluations.{evaluation["group"]}.{evaluation["key"]}',
+                package="trivialscan",
+            ),
+            "EvaluationTask",
+        )
+    except ModuleNotFoundError:
+        log(
+            f'[magenta]ModuleNotFoundError[/magenta] {evaluation["group"]}.{evaluation["key"]}',
+            hostname=transport.state.hostname,
+            port=transport.state.port,
+            con=con,
+        )
+        return None
+
     return _cls(transport, evaluation, config["defaults"])
 
 
@@ -163,11 +181,11 @@ def _result_data(
     metadata = {**kwargs, **substitutions}
     try:
         label_as = label_as.format(**metadata)
-    except Exception:
+    except KeyError:
         pass
     try:
         evaluation_value = evaluation_value.format(**metadata)
-    except Exception:
+    except KeyError:
         pass
     log_output = " ".join([evaluation_value, label_as])
 

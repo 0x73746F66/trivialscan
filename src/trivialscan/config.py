@@ -75,13 +75,15 @@ def _evaluation_merge(key: str, item1: dict, item2: dict) -> dict:
         )
     update_props = ["group", "label_as", "issue", "cvss2", "cvss3"]
     for prop in update_props:
-        if prop in item2:
-            return_dict[prop] = item2[prop]
+        return_dict[prop] = item2.get(prop, item1.get(prop))
+
     return return_dict
 
 
 def _default_dict_merger(key: str, item1: dict, item2: dict) -> dict:
-    return item1.update(item2)
+    merged = deepcopy(item1)
+    merged.update(item2)
+    return merged
 
 
 def merge_lists_by_value(
@@ -117,23 +119,23 @@ def _merge_2_lists_of_dicts(
 ) -> list:
     if not isinstance(list1, list) or not isinstance(list2, list):
         raise AttributeError("_merge_2_lists_of_dicts only takes list arguments")
-    result = deepcopy(list1)
-    result.extend(
-        list(
-            map(
-                lambda x, y: y
-                if x.get(unique_key) != y.get(unique_key)
-                else merge_fn(unique_key, x, y),
-                result,
-                list2,
-            )
-        )
-    )
-    return list(
-        {
-            v.get(unique_key, hash(str(v))): v for v in list(filter(None, result))
-        }.values()
-    )
+    result = []
+    index = set()
+    for item1 in list1:
+        for item2 in list2:
+            if item1.get(unique_key) == item2.get(unique_key):
+                index.add(item1.get(unique_key))
+                merged = merge_fn(unique_key, item1, item2)
+                result.append(merged)
+    for item1 in list1:
+        if item1.get(unique_key) not in index:
+            index.add(item1.get(unique_key))
+            result.append(item1)
+    for item2 in list2:
+        if item2.get(unique_key) not in index:
+            result.append(item2)
+
+    return result
 
 
 def _validate_config(combined_config: dict) -> dict:
@@ -340,10 +342,6 @@ evaluations:
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Detected
         score: 120
-      - value: None
-        evaluation_value: "[cyan]SKIP![/cyan]"
-        display_as: Not a Leaf Certificate
-        score: 0
 
   - key: deprecated_dnssec_algorithm
     group: dns_configuration
@@ -367,10 +365,6 @@ evaluations:
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
-      - value: None
-        evaluation_value: "[cyan]SKIP![/cyan]"
-        display_as: DNSSEC Not Valid
-        score: 0
 
   - key: private_key_known_compromised
     group: certificate
@@ -699,10 +693,6 @@ evaluations:
         evaluation_value: "[khaki1]WARN! NotEnrolled[/khaki1]"
         display_as: NotEnrolled
         score: -100
-      - value: None
-        evaluation_value: "[cyan]SKIP![/cyan]"
-        display_as: Not an Intermediate Certificate
-        score: 0
 
   - key: possible_phish_or_malicious
     group: certificate
@@ -814,10 +804,6 @@ evaluations:
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Vulnerable
         score: -200
-      - value: None
-        evaluation_value: "[cyan]SKIP![/cyan]"
-        display_as: Not using RSA public keys
-        score: 0
     substitutions:
       - public_key_exponent
 
@@ -840,10 +826,6 @@ evaluations:
         evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Problematic
         score: -500
-      - value: None
-        evaluation_value: "[cyan]SKIP![/cyan]"
-        display_as: Not using RSA public keys
-        score: 0
     substitutions:
       - public_key_exponent
 
@@ -867,10 +849,6 @@ evaluations:
         evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -100
-      - value: None
-        evaluation_value: "[cyan]SKIP![/cyan]"
-        display_as: Not a leaf Certificate
-        score: 0
 
   - key: valid_host_name
     group: certificate
@@ -890,10 +868,6 @@ evaluations:
         evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -150
-      - value: None
-        evaluation_value: "[cyan]SKIP![/cyan]"
-        display_as: Not a leaf Certificate
-        score: 0
 
   - key: certification_version
     group: certificate
@@ -964,10 +938,346 @@ evaluations:
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 50
-      - value: None
-        evaluation_value: "[cyan]SKIP![/cyan]"
-        display_as: Root Certificate
-        score: 0
+
+  - key: trust_javase
+    group: certificate
+    label_as: Trust Store - Java SE
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_ccadb
+    group: certificate
+    label_as: Trust Store - CCADB
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_rust
+    group: certificate
+    label_as: Trust Store - Rust
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_froyo
+    group: certificate
+    label_as: Trust Store - Android 2.2 Froyo
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_gingerbread
+    group: certificate
+    label_as: Trust Store - Android 2.3 Gingerbread
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_honeycomb
+    group: certificate
+    label_as: Trust Store - Android 3 Honeycomb
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_ice_cream_sandwich
+    group: certificate
+    label_as: Trust Store - Android 4 Ice Cream Sandwich
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_kitkat
+    group: certificate
+    label_as: Trust Store - Android 4.4 KitKat
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_nougat
+    group: certificate
+    label_as: Trust Store - Android 7 Nougat
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_oreo
+    group: certificate
+    label_as: Trust Store - Android 8 Oreo
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_pie
+    group: certificate
+    label_as: Trust Store - Android 9 Pie
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_quince_tart
+    group: certificate
+    label_as: Trust Store - Android 10 Quince Tart
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_red_velvet_cake
+    group: certificate
+    label_as: Trust Store - Android 11 Red Velvet Cake
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_snow_cone
+    group: certificate
+    label_as: Trust Store - Android 12 Snow Cone
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_tiramisu
+    group: certificate
+    label_as: Trust Store - Android 13 Tiramisu
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_upside_down_cake
+    group: certificate
+    label_as: Trust Store - Android 14 Upside Down Cake
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_certifi
+    group: certificate
+    label_as: Trust Store - certifi (Python module)
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_russian
+    group: certificate
+    label_as: Trust Store - MinTsifry Rossii (Russian)
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_libcurl
+    group: certificate
+    label_as: Trust Store - libcurl
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_dart
+    group: certificate
+    label_as: Trust Store - Dart Native
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
 
 "PCI DSS 3.2.1":
   1: Configure and use firewalls to protect cardholder data

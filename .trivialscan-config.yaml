@@ -37,25 +37,23 @@ targets:
   - hostname: invalid-expected-sct.badssl.com
   - hostname: cbc.badssl.com
   - hostname: superfish.badssl.com
-#  - hostname: no-common-name.badssl.com
-#  - hostname: pinning-test.badssl.com
-#  - hostname: sha1-intermediate.badssl.com
-#  - hostname: static-rsa.badssl.com
-#  - hostname: sha1-2016.badssl.com
-#  - hostname: edellroot.badssl.com
-#  - hostname: dsdtestprovider.badssl.com
-#  - hostname: preact-cli.badssl.com
-#  - hostname: webpack-dev-server.badssl.com
 
 # Customise outputs, or really anything
 evaluations:
-  - key: client_renegotiation
-    label_as: Client initiated TLS renegotiation
-    anotate_results:
-      - value: False
-        score: 80
-
+  # substitute a value into the output label
   - key: secure_renegotiation
     label_as: Client initiated TLS secure renegotiation {preferred_protocol}
     substitutions:
       - preferred_protocol
+
+  # reverse the result, so a trusted russian root is a FAIL instead of a PASS
+  - key: trust_russian
+    anotate_results:
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Trusted
+        score: -100
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Not Trusted
+        score: 100
