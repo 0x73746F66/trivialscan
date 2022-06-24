@@ -1,4 +1,4 @@
-from ...exceptions import NoLogEvaluation
+from ...exceptions import EvaluationNotRelevant
 from ...constants import WEAK_DNSSEC_ALGORITHMS
 from ...certificate import LeafCertificate
 from ...transport import Transport
@@ -22,7 +22,7 @@ class EvaluationTask(BaseEvaluationTask):
 
     def evaluate(self) -> bool:
         if not self._is_dnssec_valid():
-            raise NoLogEvaluation
+            raise EvaluationNotRelevant
         return (  # pylint: disable=consider-iterating-dictionary
             self._leaf_certificate.dnssec_algorithm in WEAK_DNSSEC_ALGORITHMS.keys()
         )

@@ -1,6 +1,8 @@
-from ...constants import NOT_KNOWN_WEAK_CIPHERS
+from ...exceptions import EvaluationNotImplemented
 from ...transport import Transport
 from .. import BaseEvaluationTask
+
+__version__ = "4.0"
 
 
 class EvaluationTask(BaseEvaluationTask):
@@ -10,4 +12,4 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self):
-        return self._transport.state.negotiated_cipher in NOT_KNOWN_WEAK_CIPHERS
+        raise EvaluationNotImplemented

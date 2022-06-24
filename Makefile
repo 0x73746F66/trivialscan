@@ -8,6 +8,12 @@ help: ## This help.
 
 .DEFAULT_GOAL := help
 
+clean: ## cleans python for wheel
+	find src -type f -name '*.pyc' -delete 2>/dev/null
+	find src -type d -name '__pycache__' -delete 2>/dev/null
+	rm -rf build dist **/*.egg-info .pytest_cache rust-query-crlite/target
+	rm -f **/*.zip **/*.tgz **/*.gz .coverage
+
 deps: ## install dependancies for development of this project
 	python -m pip install -U pip
 	python -m pip install -U -r requirements.txt

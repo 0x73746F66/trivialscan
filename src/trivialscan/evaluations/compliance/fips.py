@@ -1,4 +1,7 @@
-__module__ = "trivialscan.fips"
+from ...exceptions import EvaluationNotImplemented
+from ...transport import Transport
+from .. import BaseEvaluationTask
+
 __version__ = "FIPS 140-2 (NIST SP800-131A transition mode)"
 
 WEAK_KEY_SIZE = {
@@ -33,3 +36,13 @@ VALIDATION_WEAK_KEY = "fips_weak_key"
 VALIDATION_WEAK_CIPHER = "fips_weak_cipher"
 VALIDATION_WEAK_PROTOCOL = "fips_weak_protocol"
 VALIDATION_MTLS = "fips_mtls"
+
+
+class EvaluationTask(BaseEvaluationTask):
+    def __init__(  # pylint: disable=useless-super-delegation
+        self, transport: Transport, metadata: dict, config: dict
+    ) -> None:
+        super().__init__(transport, metadata, config)
+
+    def evaluate(self):
+        raise EvaluationNotImplemented

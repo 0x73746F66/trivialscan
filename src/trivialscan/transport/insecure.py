@@ -53,7 +53,6 @@ class InsecureTransport(Transport):
                 )
 
             if self._state.negotiated_protocol:
-                self.do_http(version)
                 break
 
         if not self._state.negotiated_protocol:

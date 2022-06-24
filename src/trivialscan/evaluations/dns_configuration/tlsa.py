@@ -1,4 +1,5 @@
-from ...constants import NOT_KNOWN_WEAK_CIPHERS
+from ...exceptions import EvaluationNotRelevant
+from ...certificate import LeafCertificate
 from ...transport import Transport
 from .. import BaseEvaluationTask
 
@@ -9,5 +10,8 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self):
-        return self._transport.state.negotiated_cipher in NOT_KNOWN_WEAK_CIPHERS
+    def evaluate(self) -> bool:
+        for cert in self._transport.state.certificates:
+            if isinstance(cert, LeafCertificate):
+                return cert.tlsa
+        raise EvaluationNotRelevant

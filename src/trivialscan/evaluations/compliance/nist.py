@@ -1,4 +1,7 @@
-__module__ = "trivialscan.nist"
+from ...exceptions import EvaluationNotImplemented
+from ...transport import Transport
+from .. import BaseEvaluationTask
+
 __version__ = "NIST SP800-131A (strict mode)"
 
 WEAK_KEY_SIZE = {
@@ -32,3 +35,13 @@ VALIDATION_WEAK_KEY = "nist_weak_key"
 VALIDATION_WEAK_CIPHER = "nist_weak_cipher"
 VALIDATION_WEAK_PROTOCOL = "nist_weak_protocol"
 VALIDATION_MTLS = "nist_mtls"
+
+
+class EvaluationTask(BaseEvaluationTask):
+    def __init__(  # pylint: disable=useless-super-delegation
+        self, transport: Transport, metadata: dict, config: dict
+    ) -> None:
+        super().__init__(transport, metadata, config)
+
+    def evaluate(self):
+        raise EvaluationNotImplemented

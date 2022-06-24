@@ -1,4 +1,7 @@
-__module__ = "trivialscan.pci"
+from ...exceptions import EvaluationNotImplemented
+from ...transport import Transport
+from .. import BaseEvaluationTask
+
 __version__ = "3.2.1"
 
 WEAK_KEY_SIZE = {
@@ -25,3 +28,13 @@ VALIDATION_DEPRECATED_ALGO = "pci_deprecated_algo"
 VALIDATION_KNOWN_VULN_COMPRESSION = "pci_vuln_compression"
 VALIDATION_KNOWN_VULN_RENEGOTIATION = "pci_vuln_renegotiation"
 VALIDATION_KNOWN_VULN_SESSION_RESUMPTION = "pci_vuln_session_resumption"
+
+
+class EvaluationTask(BaseEvaluationTask):
+    def __init__(  # pylint: disable=useless-super-delegation
+        self, transport: Transport, metadata: dict, config: dict
+    ) -> None:
+        super().__init__(transport, metadata, config)
+
+    def evaluate(self):
+        raise EvaluationNotImplemented

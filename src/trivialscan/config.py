@@ -243,6 +243,7 @@ defaults:
   use_sni: True
   cafiles:
   tmp_path_prefix: /tmp
+  http_path: /
 
 outputs:
   - type: console
@@ -317,6 +318,28 @@ evaluations:
         evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
         score: -40
+
+  - key: tlsa
+    group: dns_configuration
+    label_as: TLS/A
+    issue: >
+      DNS by itself is not secure, without TLS/a or DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
+    references:
+      - name: ICANN
+        url: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
+      - name: RFC 6840 - Clarifications and Implementation Notes for DNS Security
+        url: https://datatracker.ietf.org/doc/html/rfc6840
+      - name: RFC 4033 - DNS Security Introduction and Requirements
+        url: https://datatracker.ietf.org/doc/html/rfc4033
+    anotate_results:
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -200
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Detected
+        score: 120
 
   - key: dnssec
     group: dns_configuration
@@ -1278,6 +1301,536 @@ evaluations:
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Not Trusted
         score: -500
+
+  - key: basic_constraints_path_length
+    group: tls_negotiation
+    label_as: Basic Constraints Extension valid path length
+    issue: >
+      Path length gives the maximum number of intermediate certificates that may follow the root CA certificate typically (or certificate otherwise specifying the constraint) in a valid certification path.
+    references:
+      - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+        url: https://datatracker.ietf.org/doc/html/rfc5280
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 50
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -120
+
+  - key: issuer_validation_type
+    group: certificate
+    label_as: issuer_validation_type
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: leaf_ca
+    group: certificate
+    label_as: Leaf Certificate allows impersonation
+    issue: >
+      Server (leaf) certificates should not be a CA, it could enable impersonation attacks
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: revocation_ocsp_deprecated_algo
+    group: certificate
+    label_as: revocation_ocsp_deprecated_algo
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: revocation_ocsp_deprecated_sig
+    group: certificate
+    label_as: revocation_ocsp_deprecated_sig
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: revocation_ocsp_must_staple
+    group: certificate
+    label_as: revocation_ocsp_must_staple
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: revocation_ocsp_staple
+    group: certificate
+    label_as: revocation_ocsp_staple
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: revocation_ocsp
+    group: certificate
+    label_as: revocation_ocsp
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: valid_key_extended_usage
+    group: certificate
+    label_as: valid_key_extended_usage
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: valid_key_usage
+    group: certificate
+    label_as: valid_key_usage
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: client_auth_expected
+    group: certificate
+    label_as: client_auth_expected
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: client_auth_permitted
+    group: certificate
+    label_as: client_auth_permitted
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: client_auth_valid_subject
+    group: certificate
+    label_as: client_auth_valid_subject
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: client_authentication
+    group: certificate
+    label_as: client_authentication
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: compression_support
+    group: transport
+    label_as: compression_support
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: fips
+    group: compliance
+    label_as: FIPS
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: nist
+    group: compliance
+    label_as: NIST
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: pci_dss_3_2
+    group: compliance
+    label_as: PCI DSS 3.2.1
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: pci_dss_4_0
+    group: compliance
+    label_as: PCI DSS 4.0
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_coep
+    group: transport
+    label_as: header_coep
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_coop
+    group: transport
+    label_as: header_coop
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_corp
+    group: transport
+    label_as: header_corp
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_csp
+    group: transport
+    label_as: header_csp
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_expectct
+    group: transport
+    label_as: header_expectct
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_hsts
+    group: transport
+    label_as: header_hsts
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_nosniff
+    group: transport
+    label_as: header_nosniff
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_referrer_policy
+    group: transport
+    label_as: header_referrer_policy
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_xfo
+    group: transport
+    label_as: header_xfo
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_xss
+    group: transport
+    label_as: header_xss
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: proto_version_h2c
+    group: transport
+    label_as: proto_version_h2c
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: proto_version_http1_1
+    group: transport
+    label_as: proto_version_http1_1
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: proto_version_http1
+    group: transport
+    label_as: proto_version_http1
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: proto_version_http2
+    group: transport
+    label_as: proto_version_http2
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
 
 "PCI DSS 3.2.1":
   1: Configure and use firewalls to protect cardholder data

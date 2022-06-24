@@ -471,67 +471,6 @@ class Transport:
         finally:
             conn.close()
 
-    def do_http(self, tls_version: int):
-        proto_map = {
-            "HTTP/1.0": "http1_",
-            "HTTP/1.1": "http1_1_",
-        }
-        for protocol, prefix in proto_map.items():
-            logger.debug(
-                f"{self._state.hostname}:{self._state.port} protocol {protocol}"
-            )
-            ctx = self.prepare_context()
-            ctx.set_max_proto_version(tls_version)
-            conn = SSL.Connection(context=ctx, socket=self.prepare_socket())
-            if ssl.HAS_SNI:
-                conn.set_tlsext_host_name(idna.encode(self._state.hostname))
-            try:
-                conn.connect((self._state.hostname, self._state.port))
-                conn.set_connect_state()
-                conn.setblocking(1)
-                util.do_handshake(conn)
-                try:
-                    head, _ = self.do_request(conn, protocol=protocol)
-                except SSL.ZeroReturnError:
-                    conn.close()
-                    continue
-                logger.info(
-                    f"{self._state.hostname}:{self._state.port} Response headers:\n{head}"
-                )
-                self._state.http_headers = Transport.parse_header(head)
-                http_status_code = int(self._state.http_headers["response_code"])
-                http_statuses = [505]
-                http_support = self._state.http_headers["protocol"].startswith(protocol)
-                if isinstance(self._state.http_status_code, int):
-                    http_statuses.append(self._state.http_status_code)
-                if http_support:
-                    http_statuses.append(http_status_code)
-                if self._state.certificate_mtls_expected and not str(
-                    http_status_code
-                ).startswith("2"):
-                    http_statuses.append(511)
-                self._state.http_status_code = min(http_statuses)
-                setattr(self._state, f"{prefix}support", http_support)
-                if self.client_initiated_renegotiation is None:
-                    total_renegotiations = conn.total_renegotiations()
-                    try:
-                        proceed = conn.renegotiate()
-                        if proceed:
-                            conn.setblocking(0)
-                            util.do_handshake(conn)
-                            self.client_initiated_renegotiation = (
-                                conn.total_renegotiations() > total_renegotiations
-                            )
-                    except SSL.ZeroReturnError:
-                        pass
-                    except Exception as ex:
-                        logger.warning(ex, exc_info=True)
-                    self.client_initiated_renegotiation = (
-                        self.client_initiated_renegotiation is True
-                    )
-            finally:
-                conn.close()
-
     def specify_tls_version(
         self,
         min_tls_version: int = None,

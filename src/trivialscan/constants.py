@@ -3,13 +3,12 @@ from cryptography.x509.ocsp import (
     OCSPResponseStatus,
     OCSPCertStatus,
 )
-from trivialscan import pci, nist, fips
 
 __module__ = "trivialscan.constants"
 
 FAKE_PROTOCOLS: list[str] = ["TLSv1.4", "TLSv1.8", "TLSv2", "TLSv2.1", "TLSv2.3"]
-DTLSv1_0 = "DTLSv1.2 (0xfeff)"
-DTLSv1_2 = "DTLSv1.2 (0xfefd)"
+DTLS_1_0 = "DTLSv1.2 (0xfeff)"
+DTLS_1_2 = "DTLSv1.2 (0xfefd)"
 SSL2_LABEL = "SSLv2 (0x2ff)"
 SSL3_LABEL = "SSLv3 (0x300)"
 TLS1_0_LABEL = "TLSv1 (0x301)"
@@ -616,8 +615,8 @@ OPENSSL_VERSION_LOOKUP: dict[int, str] = {
     int(key): value for (value, key) in PROTOCOL_VERSION.items()
 }
 PROTOCOL_TEXT_MAP: dict[str, int] = {
-    DTLSv1_0: 0xFEFF,
-    DTLSv1_2: 0xFEFD,
+    DTLS_1_0: 0xFEFF,
+    DTLS_1_2: 0xFEFD,
     SSL2_LABEL: 0x02FF,
     SSL3_LABEL: 0x0300,
     TLS1_0_LABEL: 0x0301,
@@ -808,187 +807,6 @@ BROWSER_TRUSTED = "Trusted by browsers but not some platforms"
 SERVER_TRUSTED = "Trusted by platforms but not some browsers"
 QUESTIONABLE_TRUST = "Questionable Trust"
 
-VALIDATION_CLIENT_AUTHENTICATION = "client_authentication"
-VALIDATION_CLIENT_AUTH_USAGE = "client_certificate_permits_authentication_usage"
-VALIDATION_NOT_EXPIRED = "not_expired"
-VALIDATION_ISSUED_PAST_TENSE = "issued_past_tense"
-VALIDATION_SUBJECT_CN_DEFINED = "common_name_defined"
-VALIDATION_SUBJECT_CN_VALID = "common_name_valid"
-VALIDATION_MATCH_HOSTNAME = "match_hostname"
-VALIDATION_NOT_SELF_SIGNED = "not_self_signed"
-VALIDATION_WEAK_SIG_ALGO = "avoid_known_weak_signature_algorithm"
-VALIDATION_WEAK_KEYS = "avoid_known_weak_keys"
-VALIDATION_DEPRECATED_TLS_PROTOCOLS = "avoid_deprecated_protocols"
-VALIDATION_DEPRECATED_DNSSEC_ALGO = "avoid_deprecated_dnssec_algorithms"
-VALIDATION_BASIC_CONSTRAINTS_CA = "basic_constraints_ca"
-VALIDATION_VALID_TLS_USAGE = "certificate_valid_tls_usage"
-VALIDATION_REVOCATION = "not_revoked"
-VALIDATION_ROOT_CA_TRUST = "trusted_ca"
-VALIDATION_VALID_DNSSEC = "valid_dnssec"
-VALIDATION_VALID_CAA = "valid_caa"
-VALIDATION_OCSP_STAPLE_SATISFIED = "ocsp_staple_satisfied"
-VALIDATION_OCSP_MUST_STAPLE_SATISFIED = "ocsp_must_staple_satisfied"
-
-VALIDATION_MESSAGES: dict[str, str] = {
-    VALIDATION_CLIENT_AUTHENTICATION: "Client Authentication required",
-    VALIDATION_CLIENT_AUTH_USAGE: "Client Certificate does not permit Authentication",
-    VALIDATION_NOT_EXPIRED: "Certificate Expired",
-    VALIDATION_ISSUED_PAST_TENSE: "Certificate Issuance is future dated",
-    VALIDATION_SUBJECT_CN_DEFINED: "Certificate Subject missing common name",
-    VALIDATION_SUBJECT_CN_VALID: "malformed certificate common name",
-    VALIDATION_MATCH_HOSTNAME: "Certificate hostname mismatch",
-    VALIDATION_NOT_SELF_SIGNED: "Certificate is self signed",
-    VALIDATION_WEAK_SIG_ALGO: "Weak signature algorithm",
-    VALIDATION_WEAK_KEYS: "Known weak key",
-    VALIDATION_DEPRECATED_TLS_PROTOCOLS: "Deprecated protocols",
-    VALIDATION_DEPRECATED_DNSSEC_ALGO: "Deprecated DNSSEC algorithms",
-    VALIDATION_BASIC_CONSTRAINTS_CA: "Basic constraint (CA) violation",
-    VALIDATION_VALID_TLS_USAGE: "Certificate not valid for TLS usage",
-    VALIDATION_REVOCATION: "Certificate is revoked",
-    VALIDATION_ROOT_CA_TRUST: "Certificate not trusted",
-    VALIDATION_VALID_DNSSEC: "Invalid DNSSEC",
-    VALIDATION_VALID_CAA: "Invalid CAA",
-    VALIDATION_OCSP_STAPLE_SATISFIED: "OCSP staple expected",
-    VALIDATION_OCSP_MUST_STAPLE_SATISFIED: "OCSP must staple flag set and not satisfied",
-}
-
-STYLES = {
-    "certificate_valid": "Certificate Valid",
-    "certificate_chain_valid": "Certificate Chain Valid",
-    "certificate_chain_validation_result": "Certificate Chain Validation Result",
-    VALIDATION_CLIENT_AUTHENTICATION: "Client Authentication",
-    VALIDATION_CLIENT_AUTH_USAGE: "Provided client Certificate authentication usage",
-    VALIDATION_NOT_EXPIRED: "Certificate is not expired",
-    VALIDATION_ISSUED_PAST_TENSE: "Certificate issued in the past",
-    VALIDATION_SUBJECT_CN_DEFINED: "Subject CN was defined",
-    VALIDATION_SUBJECT_CN_VALID: "Subject CN has valid syntax",
-    VALIDATION_MATCH_HOSTNAME: "Subject CN matches the server host name",
-    VALIDATION_NOT_SELF_SIGNED: "Not a self-signed Certificate",
-    VALIDATION_WEAK_SIG_ALGO: "Avoid known weak signature algorithms",
-    VALIDATION_WEAK_KEYS: "Avoid known weak public key algorithms",
-    VALIDATION_DEPRECATED_TLS_PROTOCOLS: "Avoid deprecated TLS protocols",
-    VALIDATION_DEPRECATED_DNSSEC_ALGO: "Avoid deprecated DNSSEC algorithms",
-    VALIDATION_BASIC_CONSTRAINTS_CA: "Leaf is not a CA",
-    VALIDATION_VALID_TLS_USAGE: "Key usage appropriate for TLS",
-    VALIDATION_REVOCATION: "Certificate chain not revoked",
-    VALIDATION_ROOT_CA_TRUST: "Root CA Certificate is trusted",
-    VALIDATION_VALID_DNSSEC: "DNSSEC Valid",
-    VALIDATION_VALID_CAA: "CAA Valid",
-    VALIDATION_OCSP_STAPLE_SATISFIED: "OCSP Staple satisfied",
-    VALIDATION_OCSP_MUST_STAPLE_SATISFIED: "OCSP Must Staple satisfied",
-    pci.VALIDATION_CA_TRUST: "[PCI] CA Trust",
-    pci.VALIDATION_WEAK_KEY: "[PCI] Key Size",
-    pci.VALIDATION_WEAK_CIPHER: "[PCI] Cipher bits",
-    pci.VALIDATION_WEAK_PROTOCOL: "[PCI] Deprecated protocols",
-    pci.VALIDATION_DEPRECATED_ALGO: "[PCI] Weak algorithms",
-    pci.VALIDATION_KNOWN_VULN_COMPRESSION: "[PCI] Vulnerable compression",
-    pci.VALIDATION_KNOWN_VULN_RENEGOTIATION: "[PCI] Vulnerable renegotiation",
-    pci.VALIDATION_KNOWN_VULN_SESSION_RESUMPTION: "[PCI] Vulnerable session resumption",
-    nist.VALIDATION_CA_TRUST: "[NIST] CA Trust",
-    nist.VALIDATION_WEAK_KEY: "[NIST] Key Size",
-    nist.VALIDATION_WEAK_CIPHER: "[NIST] Cipher bits",
-    nist.VALIDATION_WEAK_PROTOCOL: "[NIST] Deprecated protocols",
-    nist.VALIDATION_MTLS: "[NIST] Require ClientAuth",
-    fips.VALIDATION_CA_TRUST: "[FIPS] CA Trust",
-    fips.VALIDATION_WEAK_KEY: "[FIPS] Key Size",
-    fips.VALIDATION_WEAK_CIPHER: "[FIPS] Cipher bits",
-    fips.VALIDATION_WEAK_PROTOCOL: "[FIPS] Deprecated protocols",
-    fips.VALIDATION_MTLS: "[FIPS] No ClientAuth for TLS1.0/1.1",
-    "certificate_version": "Certificate Version",
-    "certificate_public_key_type": "Public Key Type",
-    "certificate_public_key_curve": "Public Key Curve",
-    "certificate_public_key_size": "Public Key Size",
-    "certificate_public_key_exponent": "Public Key Exponent",
-    "certificate_private_key_pem": "Derived private key (PEM format)",
-    "certificate_signature_algorithm": "Signature Algorithm",
-    "certificate_sha256_fingerprint": "Fingerprint (sha256)",
-    "certificate_sha1_fingerprint": "Fingerprint (sha1)",
-    "certificate_md5_fingerprint": "Fingerprint (md5)",
-    "certificate_spki_fingerprint": "Fingerprint (SPKI)",
-    "certificate_serial_number": "Serial",
-    "certificate_serial_number_decimal": "Serial (decimal)",
-    "certificate_serial_number_hex": "Serial (hex)",
-    "certificate_subject": "Certificate Subject",
-    "certificate_common_name": "Certificate Subject CN",
-    "certificate_issuer": "Issuer Subject CN",
-    "certificate_issuer_country": "Issuer Country Code",
-    "certificate_not_before": "Not Before",
-    "certificate_not_after": "Not After",
-    "certificate_subject_key_identifier": "Subject Key Identifier (SKI)",
-    "certificate_authority_key_identifier": "Authority Key Identifier (AKI)",
-    "certificate_validation_type": "Certificate Owner Validation Method",
-    "certificate_known_compromised": "Compromised Certificate",
-    "certificate_key_compromised": "Compromised Private Key",
-    "client_certificate_expected": "Client Certificate Expected",
-    "certification_authority_authorization": "CAA",
-    "revocation_ocsp_status": "Revocation: OCSP",
-    "revocation_ocsp_response": "Revocation: OCSP Response",
-    "revocation_ocsp_stapling": "Revocation: OCSP Stapling",
-    "revocation_ocsp_must_staple": "Revocation: OCSP Must Staple flag",
-    "revocation_ocsp_reason": "Revocation: OCSP Revoked",
-    "revocation_ocsp_time": "Revocation: OCSP Revoked time",
-    "revocation_crlite": "Revocation: Mozilla CRLite",
-    "sni_support": "Server Name Indicator (SNI)",
-    "negotiated_protocol": "Negotiated Protocol",
-    "preferred_protocol": "Server Preferred Protocol",
-    "offered_tls_versions": "Offered TLS versions",
-    "negotiated_cipher": "Negotiated Cipher",
-    "negotiated_cipher_bits": "Negotiated Cipher bits",
-    "tls_version_intolerance": "TLS version intolerance",
-    "tls_version_intolerance_versions": "TLS version intolerance versions",
-    "tls_version_interference": "TLS version interference",
-    "tls_version_interference_versions": "TLS version interference versions",
-    "tls_long_handshake_intolerance": "TLS long handshake intolerance",
-    "weak_cipher": "Weak negotiated cipher",
-    "strong_cipher": "Strong negotiated cipher",
-    "forward_anonymity": "Forward Anonymity (FPS)",
-    "session_resumption_caching": "Session Resumption (caching)",
-    "session_resumption_tickets": "Session Resumption (tickets)",
-    "session_resumption_ticket_hint": "Session Resumption (ticket hint)",
-    "compression_support": "TLS Compression",
-    "tlsa": "TLSA/DANE",
-    "dnssec": "DNSSEC",
-    "dnssec_algorithm": "DNSSEC Algorithm",
-    "scsv": "TLS downgrade prevention (SCSV)",
-    "http_expect_ct_report_uri": "Expect-CT report-uri",
-    "http_hsts": "HSTS",
-    "http_xfo": "X-Frame-Options (XFO)",
-    "http_csp": "Content Security Policy (CSP)",
-    "http_coep": "Cross-Origin-Embedder-Policy (COEP)",
-    "http_coop": "Cross-Origin-Opener-Policy (COOP)",
-    "http_corp": "Cross-Origin-Resource-Policy (CORP)",
-    "http_nosniff": "X-Content-Type-Options nosniff",
-    "http_unsafe_referrer": "Referrer-Policy unsafe-url",
-    "http_xss_protection": "X-XSS-Protection",
-    "http_status_code": "HTTP response status code",
-    "http1_support": "HTTP/1",
-    "http1_1_support": "HTTP/1.1",
-    "http2_support": "HTTP/2",
-    "http2_cleartext_support": "HTTP/2 Cleartext",
-    "possible_phish_or_malicious": "Indicators of Phishing or Malware",
-    "trust_android": "Android",
-    "trust_android_status": "",
-    "trust_linux": "Linux",
-    "trust_linux_status": "",
-    "trust_java": "Java",
-    "trust_java_status": "",
-    "trust_certifi": "Python",
-    "trust_certifi_status": "",
-    "trust_ccadb": "Common CA Database (CCADB)",
-    "trust_ccadb_status": "",
-    "trust_russia": "MinTsifry Rossii Database (Russia)",
-    "trust_russia_status": "",
-    "trust_rustls": "Rust (Rustls crate)",
-    "trust_rustls_status": "",
-    "trust_go": "Go (gocertifi module)",
-    "trust_go_status": "",
-    "trust_node": "Node.js (certifi library)",
-    "trust_node_status": "",
-    "trust_erlang": "Erlang (certifi library)",
-    "trust_erlang_status": "",
-    "trust_ruby": "Ruby (certifi gem)",
-    "trust_ruby_status": "",
-}
 RATING_ASCII: dict[str, str] = {
     "A+": """
  █████╗    ██╗

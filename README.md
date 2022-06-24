@@ -23,19 +23,14 @@ See [Documentation](./docs/0.index.md) section of this repository
 
 - Compliance
   - PCI DSS 3.2.1
+  - PCI DSS 4.0
   - NIST SP800-131A (strict mode)
   - FIPS 140-2 (NIST SP800-131A transition mode)
-- Certificate Formats
-  - ✓ plaintext
-  - ✓ PEM
-  - ✓ ASN1/DER
-  - ✓ pyOpenSSL object
-  - ✓ python `cryptography` object
 - TLS Information
   - ✓ Negotiated protocol
+  - ✓ Server preferred protocol
   - ✓ Negotiated cipher (if a strong cipher, and if Forward Anonymity)
   - ✓ List all offered TLS versions
-  - ✓ Server preferred protocol
   - ✓ Compression supported
   - ✓ Client Renegotiation supported
   - ✓ Session Resumption caching

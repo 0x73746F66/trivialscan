@@ -9,7 +9,7 @@ from .cli import log
 from .transport.insecure import InsecureTransport
 from .transport.state import TransportState
 from .certificate import LeafCertificate
-from .exceptions import EvaluationNotRelevant, NoLogEvaluation
+from .exceptions import EvaluationNotImplemented, EvaluationNotRelevant, NoLogEvaluation
 from .evaluations import BaseEvaluationTask
 
 __module__ = "trivialscan"
@@ -47,6 +47,7 @@ def evaluate(
         "port": state.port,
         "peer_address": state.peer_address,
     }
+    # certs are passed to the evaluation method. Having them grouped is more readable
     for cert in state.certificates:
         if isinstance(cert, LeafCertificate):
             cert.set_transport(transport)
@@ -75,13 +76,18 @@ def evaluate(
                 continue
             try:
                 result = task.evaluate(cert)
+                data, log_output = _result_data(result, task, **cert_data, **host_data)
             except EvaluationNotRelevant:
                 continue
+            except EvaluationNotImplemented:
+                data, _ = _result_data(None, task, **cert_data, **host_data)
+                log_output = (
+                    f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
+                )
             except NoLogEvaluation:
                 data, _ = _result_data(result, task, **cert_data, **host_data)
                 evaluation_results.append(data)
                 continue
-            data, log_output = _result_data(result, task, **cert_data, **host_data)
             evaluation_results.append(data)
             log(
                 log_output,
@@ -89,8 +95,9 @@ def evaluate(
                 con=console,
             )
 
+    # certificates are done, compliance checks are last to be evaluated
     for evaluation in evaluations:
-        if evaluation["group"] == "certificate":
+        if evaluation["group"] in ["certificate", "compliance"]:
             continue
         task = _evaluatation_module(
             evaluation, transport, skip_evaluations, skip_evaluation_groups, con=console
@@ -99,13 +106,45 @@ def evaluate(
             continue
         try:
             result = task.evaluate()
+            data, log_output = _result_data(result, task, **host_data)
         except EvaluationNotRelevant:
             continue
+        except EvaluationNotImplemented:
+            data, _ = _result_data(None, task, **cert_data, **host_data)
+            log_output = f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
         except NoLogEvaluation:
             data, _ = _result_data(result, task, **host_data)
             evaluation_results.append(data)
             continue
-        data, log_output = _result_data(result, task, **host_data)
+        evaluation_results.append(data)
+        log(
+            log_output,
+            hostname=state.hostname,
+            port=state.port,
+            con=console,
+        )
+
+    # compliance checks are last to be evaluated
+    for evaluation in evaluations:
+        if evaluation["group"] != "compliance":
+            continue
+        task = _evaluatation_module(
+            evaluation, transport, skip_evaluations, skip_evaluation_groups, con=console
+        )
+        if not task:
+            continue
+        try:
+            result = task.evaluate()
+            data, log_output = _result_data(result, task, **host_data)
+        except EvaluationNotRelevant:
+            continue
+        except EvaluationNotImplemented:
+            data, _ = _result_data(None, task, **cert_data, **host_data)
+            log_output = f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
+        except NoLogEvaluation:
+            data, _ = _result_data(result, task, **host_data)
+            evaluation_results.append(data)
+            continue
         evaluation_results.append(data)
         log(
             log_output,
