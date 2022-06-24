@@ -15,7 +15,7 @@ clean: ## cleans python for wheel
 	rm -f **/*.zip **/*.tgz **/*.gz .coverage
 
 deps: ## install dependancies for development of this project
-	python -m pip install -U pip
+	python -m pip install --disable-pip-version-check -U pip
 	python -m pip install -U -r requirements.txt
 
 setup: deps ## setup for development of this project
@@ -27,6 +27,7 @@ install: build ## Install the package
 	python -m pip install -U dist/trivialscan-$(shell cat ./setup.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)-py2.py3-none-any.whl
 
 install-dev: ## Install the package
+	python -m pip install --disable-pip-version-check -U pip
 	python -m pip install -U -r requirements-dev.txt
 	python -m pip install --force-reinstall --no-cache-dir -e .
 

@@ -16,12 +16,11 @@ class EvaluationTask(BaseEvaluationTask):
         keep_checking = True
         while keep_checking:
             keep_checking = self._check_constraints()
-
+        # now check lengths
         for ski, constraint in self._constraints.items():
             if constraint["path_length"] < len(constraint["intermediates"]):
                 self.substitution_metadata["invalid_ski"] = ski
                 return False
-
         return True
 
     def _build_constraints(self) -> bool:

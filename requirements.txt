@@ -24,3 +24,4 @@ tldextract
 pyyaml
 art
 keyring==23.6.0
+deepdiff

@@ -40,7 +40,8 @@ retry
 tldextract
 pyyaml
 art
-keyring==23.6.0""")).readlines()
+keyring==23.6.0
+deepdiff""")).readlines()
 
 
 class BuildWrapper(build):
@@ -54,6 +55,7 @@ class BuildWrapper(build):
                 cwd=str(Path(__file__).with_name("rust-query-crlite"))
             )
             print(stdout_string)
+            Path(path.join(str(Path(__file__).with_name("src")), "trivialscan/vendor")).mkdir(parents=True, exist_ok=True)
             copyfile(
                 path.join(str(Path(__file__).with_name("rust-query-crlite")), "target/debug/rust-query-crlite"),
                 path.join(str(Path(__file__).with_name("src")), "trivialscan/vendor/rust-query-crlite")
