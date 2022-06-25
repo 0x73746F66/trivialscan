@@ -1,6 +1,6 @@
-from ...exceptions import EvaluationNotImplemented
+from ...exceptions import EvaluationNotRelevant
 from ...transport import Transport
-from ...certificate import BaseCertificate
+from ...certificate import BaseCertificate, LeafCertificate
 from .. import BaseEvaluationTask
 
 
@@ -10,5 +10,7 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self, certificate: BaseCertificate) -> bool | None:
-        raise EvaluationNotImplemented
+    def evaluate(self, certificate: BaseCertificate) -> bool:
+        if not isinstance(certificate, LeafCertificate):
+            raise EvaluationNotRelevant
+        return certificate.revocation_ocsp_must_staple

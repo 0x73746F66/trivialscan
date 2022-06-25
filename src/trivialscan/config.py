@@ -1320,21 +1320,56 @@ evaluations:
         display_as: Misconfigured
         score: -120
 
-  - key: issuer_validation_type
+  - key: strong_issuer_validation
     group: certificate
-    label_as: issuer_validation_type
+    label_as: Strong Issuer Validation
     issue: >
-      TODO
+      Domain Validated (DV) Certificates may be growing in popularity since the browsers ceased showing the organisation name along with a green padlock, but the visual change is not material to the security characteristic associated with Extended Validation (EV) Certificates. When the visual changes occurred the mainstream non-technical or the uneducated in cybersecurity masses all declared that EV Certificates are dead, but the reality and truth of the matter is EV Certificates have never been more important.
+      Let's consider some facts:
+      1. DV Certificates are extensively (almost solely) used by malicious actors of all types; targeted, watering hole, spray-and-pray, any type leverage DV Certificates because they are free, trusted, and easily to obtain anonymously
+      2. A malicious EV Certificates is inherently forged for a target, displaying the forged organisation name to a layman in the browser was an attack on the user trust; Only "IF" the layman was savvy enough they might not trust the forged cert. Today we hide the forgery and as a result there is automatic blind trust and no mechanism for a layman to see the forgery and potentially avoid the threat. To be concise, we used to offer a possible chance to thwart an attacker, now we simply force trust upon users and offer them no means to easily verify anymore. So the changes to EV Certificates in practice made things worse, not better.
+      3. Extended Validation certificates offer warranties up to $2M from my personal experience in Australia, When we are talking about a data breach like the one that happened to Equifax due to an expired EV Certificate, it matters.
+      4. Legislative, Regulatory, International or Local Privacy Laws, Accreditation held for certain practices, Contractual Obligation (like PCI DSS) - all or any of these may obligate you to utilize at the least an EV Certificate, the DV Certificate has little (if any) security assurances.
+      5. The DV Certificate Issuers generally don't offer any additional features, therefore even if you attempt to use certain features like ssl_stapling it will simply be ignored. These Issuers, (pick on Let's Encrypt for this one) simply prefer low-barrier and ease-of-use over any and all security characteristics - so if they don't care, why would you put any trust in their DV Certificates to secure your TLS connections?
+      6. An EV Certificate inherently required an out-of-band validation, that is not automated like a DV Certificate. Therefore if an ATO (Account Take-over) or DNS hijacking attack were to be successful the attacker must be persistent and sometimes be physically attacking you. Which all takes significantly more time than the near-instant time it takes for the DV Certificates to be issued. When you operate public hosted (cloud) servers, they are typically ephemeral IP Addresses. The hazard with an IP Address that changes between distinct users is there is a possibility a patient malicious actor may get assigned an IP Address previously held by a valuable customer of the service provider. The way DNS works with TTL and caches means that some requests will still attempt to connect to IP Address you now have that were intended for the previous IP Address owner. If the IP Address the malicious attacker is assigned is rDNS checked and the malicious actor doesn't find anything of value, they can easily discard the IP Address and simply request a new one over and over until they get an IP that is of value to them. This is called IP Churn, and a paper describes how this technique that is an accepted "how things work" can be combined with DV Certificates that are also accepted as "how things work", combined allow for DNS hijacking. This is a proven attack, and the attack vectors with continue to work as long as service providers assign IP Addresses that are still fresh and DV certificates are automatically issued in nanoseconds.
+      Put simply, DV Certificates are favoured by attackers and seeing one should make you sceptical, they're issued for ease-of-use and not for security purposes, and there is a trivial DNS take-over attack that can be used for targeted attacks when attackers are sufficiently motivated. An EV Certificate is the distinct opposite, attackers avoid using them unless they are desperate and motivated to ignore the risks to them, they are issued with security focus in spite of the time do validation which is an effective mitigation to the trivial DNS take-over attack.
     references:
+      - name: Hiding in Plain Sight - A Longitudinal Study of Combosquatting Abuse
+        url: https://webcache.googleusercontent.com/search?q=cache:s_bQ24QvDcQJ:https://par.nsf.gov/servlets/purl/10047386+&cd=6&hl=en&ct=clnk&gl=au
+      - name: Cloud Strife - Mitigating the Security Risks ofDomain-Validated Certificates
+        url: https://webcache.googleusercontent.com/search?q=cache:dQ4atOcEvWEJ:https://kevin.borgolte.me/files/pdf/ndss2018-cloud-strife.pdf+&cd=13&hl=en&ct=clnk&gl=au
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -150
+
+  - key: weak_issuer_validation
+    group: certificate
+    label_as: Weak Issuer Validation
+    issue: >
+      You can get issued a DV Certificate without actually validating the domain, Until 2018 the ACME protocol of Let's Encrypt did just this, relying on only SNI for the so-called DV Certificate issuance - not their fault, ACME was designed that way.
+      June 2022 there are hundreds of ACME protocol Certificate Authorities issuing DV certificates and few would have learned from the 2018 disclosure and turned off the vulnerable design feature of SNI.
+      There are a total of 10 methods of verification defined by ACME, few actually offer any security characteristics that can be said to 'Verify' Domain Ownership, in fact some are designed on purpose to offer DV certificates to customers of website hosting providors that can only modify the HTTP header reponses, or less control and can only add a HTML tag! Neitehr of these are verifying control of a domain, let alone Validate domain control! What is a DV certificate if domain validation never occured?
+      Beyond validation itself; The ACME protocol DV Certificate Issuers generally don't offer any additional features, therefore even if you attempt to use certain features like ssl_stapling it will simply be ignored. These Issuers, (pick on Let's Encrypt for this one) simply prefer low-barrier and ease-of-use over any and all security characteristics - so if they don't care, why would you put any trust in their DV Certificates to secure your TLS connections?
+    references:
+      - name: RFC 8555 - Automatic Certificate Management Environment (ACME)
+        url: https://datatracker.ietf.org/doc/html/rfc8555
+      - name: Detectify - How I exploited ACME TLS-SNI-01 issuing Let's Encrypt SSL-certs for any domain using shared hosting
+        url: https://labs.detectify.com/2018/01/12/how-i-exploited-acme-tls-sni-01-issuing-lets-encrypt-ssl-certs-for-any-domain-using-shared-hosting/
     anotate_results:
       - value: False
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
-        score: 80
+        score: 40
       - value: True
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
-        score: -200
+        score: -100
 
   - key: leaf_ca
     group: certificate
@@ -1354,7 +1389,7 @@ evaluations:
 
   - key: revocation_ocsp_deprecated_algo
     group: certificate
-    label_as: revocation_ocsp_deprecated_algo
+    label_as: Deprecated OCSP Hash Algorithm
     issue: >
       TODO
     references:
@@ -1370,7 +1405,7 @@ evaluations:
 
   - key: revocation_ocsp_deprecated_sig
     group: certificate
-    label_as: revocation_ocsp_deprecated_sig
+    label_as: Deprecated OCSP Signature Algorithm
     issue: >
       TODO
     references:
@@ -1386,50 +1421,50 @@ evaluations:
 
   - key: revocation_ocsp_must_staple
     group: certificate
-    label_as: revocation_ocsp_must_staple
+    label_as: Extension OCSP Must Staple
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
-      - value: True
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
-        score: -200
+        score: -120
 
   - key: revocation_ocsp_staple
     group: certificate
-    label_as: revocation_ocsp_staple
+    label_as: Extension OCSP Stapling
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
-        score: 80
-      - value: True
+        score: 40
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
-        score: -200
+        score: -60
 
   - key: revocation_ocsp
     group: certificate
-    label_as: revocation_ocsp
+    label_as: OCSP Revocation
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
-        display_as: Good Configuration
-        score: 80
       - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Not Revoked
+        score: 80
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
-        display_as: Misconfigured
+        display_as: Revoked
         score: -200
 
   - key: valid_key_extended_usage

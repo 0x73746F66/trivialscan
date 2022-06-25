@@ -2,6 +2,7 @@ import logging
 from os import path
 from datetime import timedelta
 from requests_cache import CachedSession
+from requests.exceptions import ConnectionError
 from ...transport import Transport
 from ...certificate import BaseCertificate
 from .. import BaseEvaluationTask
@@ -22,7 +23,10 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self, certificate: BaseCertificate):
         self.substitution_metadata["spki_fingerprint"] = certificate.spki_fingerprint
         url = f"https://v1.pwnedkeys.com/{certificate.spki_fingerprint.lower()}.jws"
-        resp = self._session.get(url)
+        try:
+            resp = self._session.get(url)
+        except ConnectionError:
+            return None
         logger.info(f"{url} from cache {resp.from_cache}")
         logger.debug(resp.text)
         if "That key does not appear to be pwned" in resp.text:

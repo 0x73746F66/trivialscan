@@ -115,6 +115,10 @@ class BaseCertificate:
         return self.x509.to_cryptography().subject.rfc4514_string()
 
     @property
+    def issuer(self) -> str:
+        return self.x509.to_cryptography().issuer.rfc4514_string()
+
+    @property
     def signature_algorithm(self) -> str | None:
         return self.x509.get_signature_algorithm().decode("ascii")
 
@@ -280,8 +284,8 @@ class LeafCertificate(BaseCertificate):
     _dnssec_valid: bool
     _dnssec_algorithm: str
     _ocsp_response: OCSPResponse
-    revocation_ocsp_hash_algorithm: str
-    revocation_ocsp_signature_hash_algorithm: str
+    _revocation_ocsp_hash_algorithm: str
+    _revocation_ocsp_signature_hash_algorithm: str
 
     def __init__(self, x509: X509, transport=None) -> None:
         super().__init__(x509)
@@ -292,8 +296,8 @@ class LeafCertificate(BaseCertificate):
         self._dnssec_valid = None
         self._dnssec_algorithm = None
         self._ocsp_response = None
-        self.revocation_ocsp_hash_algorithm = None
-        self.revocation_ocsp_signature_hash_algorithm = None
+        self._revocation_ocsp_hash_algorithm = None
+        self._revocation_ocsp_signature_hash_algorithm = None
 
     def set_transport(self, transport):
         self._transport = transport
@@ -480,8 +484,8 @@ class LeafCertificate(BaseCertificate):
             )
             return constants.OCSP_NO_ASSERTION
         logger.info(f"SHA1:{self.sha1_fingerprint} OCSP response received")
-        self.revocation_ocsp_hash_algorithm = self._ocsp_response.hash_algorithm.name
-        self.revocation_ocsp_signature_hash_algorithm = (
+        self._revocation_ocsp_hash_algorithm = self._ocsp_response.hash_algorithm.name
+        self._revocation_ocsp_signature_hash_algorithm = (
             self._ocsp_response.signature_hash_algorithm.name
         )
         if self._ocsp_response.this_update > datetime.utcnow():
@@ -493,6 +497,16 @@ class LeafCertificate(BaseCertificate):
         return constants.OCSP_CERT_STATUS.get(
             status, constants.OCSP_CERT_STATUS[OCSPCertStatus.UNKNOWN]
         )
+
+    @property
+    def revocation_ocsp_hash_algorithm(self) -> str:
+        logger.debug(self.revocation_ocsp_status)
+        return self._revocation_ocsp_hash_algorithm
+
+    @property
+    def revocation_ocsp_signature_hash_algorithm(self) -> str:
+        logger.debug(self.revocation_ocsp_status)
+        return self._revocation_ocsp_signature_hash_algorithm
 
     @property
     def revocation_ocsp_response(self) -> str:

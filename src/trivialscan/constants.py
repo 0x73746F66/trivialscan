@@ -477,6 +477,10 @@ KNOWN_WEAK_SIGNATURE_ALGORITHMS: dict[str, str] = {
     "md5WithRSAEncryption": "The use of MD5 with RSA Encryption is considered vulnerable. Arjen Lenstra and Benne de Weger 2005: vulnerable to hash collision attacks",
     "md2WithRSAEncryption": "The use of MD2 with RSA Encryption is considered vulnerable. Rogier, N. and Chauvaud, P. in 1995: vulnerable to collision, later preimage resistance, and second-preimage resistance attacks were demonstrated at BlackHat 2008 by Mark Twain",
 }
+DEPRECATED_OCSP_ALGO: dict[str, str] = {
+    "SHA1": "The use of SHA1 is considered vulnerable. Macquarie University Australia 2009: identified vulnerabilities to collision attacks, later in 2017 Marc Stevens demonstrated collision proofs",
+}
+
 WEAK_PROTOCOL: dict[str, str] = {
     SSL2_LABEL: f"{SSL2_LABEL} Deprecated in 2011 (rfc6176) with undetectable manipulator-in-the-middle exploits",
     SSL3_LABEL: f"{SSL3_LABEL} Deprecated in 2015 (rfc7568) mainly due to POODLE, a manipulator-in-the-middle exploit",
