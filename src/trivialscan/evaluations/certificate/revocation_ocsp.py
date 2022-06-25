@@ -14,9 +14,19 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self, certificate: BaseCertificate) -> bool:
         if not isinstance(certificate, LeafCertificate):
             raise EvaluationNotRelevant
-        self.substitution_metadata["revocation_ocsp_status"] = certificate.revocation_ocsp_status
-        self.substitution_metadata["revocation_ocsp_detail"] = OCSP_STATUS_REASON_MAP.get(certificate.revocation_ocsp_status)
-        self.substitution_metadata["revocation_ocsp_time"] = certificate.revocation_ocsp_time
-        self.substitution_metadata["revocation_ocsp_response"] = certificate.revocation_ocsp_response
-        self.substitution_metadata["revocation_ocsp_reason"] = certificate.revocation_ocsp_reason
+        self.substitution_metadata[
+            "revocation_ocsp_status"
+        ] = certificate.revocation_ocsp_status
+        self.substitution_metadata[
+            "revocation_ocsp_detail"
+        ] = OCSP_STATUS_REASON_MAP.get(certificate.revocation_ocsp_status)
+        self.substitution_metadata[
+            "revocation_ocsp_time"
+        ] = certificate.revocation_ocsp_time
+        self.substitution_metadata[
+            "revocation_ocsp_response"
+        ] = certificate.revocation_ocsp_response
+        self.substitution_metadata[
+            "revocation_ocsp_reason"
+        ] = certificate.revocation_ocsp_reason
         return certificate.revocation_ocsp_result

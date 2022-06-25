@@ -16,4 +16,7 @@ class EvaluationTask(BaseEvaluationTask):
             raise EvaluationNotRelevant
         if not certificate.revocation_ocsp_signature_hash_algorithm:
             return None
-        return certificate.revocation_ocsp_signature_hash_algorithm.upper() in DEPRECATED_OCSP_ALGO
+        return (
+            certificate.revocation_ocsp_signature_hash_algorithm.upper()
+            in DEPRECATED_OCSP_ALGO
+        )

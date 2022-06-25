@@ -18,5 +18,9 @@ class EvaluationTask(BaseEvaluationTask):
             raise NoLogEvaluation
         if validation_level != "DV":
             return False
-        common_name = Name.from_rfc4514_string(certificate.issuer).get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+        common_name = (
+            Name.from_rfc4514_string(certificate.issuer)
+            .get_attributes_for_oid(NameOID.COMMON_NAME)[0]
+            .value
+        )
         return common_name in QUESTIONABLE_DV_ISSUERS
