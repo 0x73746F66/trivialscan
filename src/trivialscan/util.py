@@ -12,6 +12,7 @@ from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, D
 from OpenSSL import SSL
 from OpenSSL.crypto import X509, FILETYPE_PEM, dump_certificate
 from retry.api import retry
+from asn1crypto.x509 import Certificate as asn1Certificate
 from certvalidator import CertificateValidator, ValidationContext
 from dns import resolver, dnssec, rdatatype, message, query, name as dns_name
 from dns.exception import DNSException, Timeout as DNSTimeoutError
@@ -479,7 +480,7 @@ def match_hostname(host: str, cert: Certificate) -> bool:
 
 
 def validate_certificate_chain(
-    der: bytes,
+    cert: bytes | asn1Certificate,
     pem_certificate_chain: list,
     validator_key_usage: list,
     validator_extended_key_usage: list,
@@ -491,7 +492,7 @@ def validate_certificate_chain(
         weak_hash_algos={"md2", "md5", "sha1"},
     )
     validator = CertificateValidator(
-        der, validation_context=ctx, intermediate_certs=pem_certificate_chain
+        cert, validation_context=ctx, intermediate_certs=pem_certificate_chain
     )
     return validator.validate_usage(
         key_usage=set(validator_key_usage),

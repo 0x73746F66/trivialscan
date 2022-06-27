@@ -344,7 +344,8 @@ evaluations:
   - key: dnssec
     group: dns_configuration
     label_as: DNSSEC
-    issue: DNS by itself is not secure, without DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
+    issue: >
+      DNS by itself is not secure, without DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
     references:
       - name: ICANN
         url: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
@@ -369,7 +370,8 @@ evaluations:
   - key: deprecated_dnssec_algorithm
     group: dns_configuration
     label_as: Avoid deprecated DNSSEC algorithm
-    issue: Whenever a DNS zone is signed with a SHA-1 DNSKEY algorithm it is vulnerable to chosen prefix collision attacks. This is a problem when a zone accepts updates from multiple parties, such as; TLDs, enterprises, hosting providers. It is also a problem when a key is re-used by multiple zones
+    issue: >
+      Whenever a DNS zone is signed with a SHA-1 DNSKEY algorithm it is vulnerable to chosen prefix collision attacks. This is a problem when a zone accepts updates from multiple parties, such as; TLDs, enterprises, hosting providers. It is also a problem when a key is re-used by multiple zones
     cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
     cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
     cve:
@@ -392,7 +394,8 @@ evaluations:
   - key: private_key_known_compromised
     group: certificate
     label_as: Known Compromised Private Key
-    issue: DSA keys, and RSA keys smaller than 1024 bits offer no security and should not be used at all, whether they are known to be compromised or not. The pwnedkeys database keeps records of compromised 1024 bit and larger RSA/DSA keys, as well as elliptic-curve keys on the P-256, P-384, and P-521 curves. If your private key is ever compromised, it should be considered an emergency, and your priority should be resolving the issue immediately. If an unauthorized person gains access to your private key, they can assume the identity that your certificate is intended to protect (e.g. you, your company, and/or your website)
+    issue: >
+      DSA keys, and RSA keys smaller than 1024 bits offer no security and should not be used at all, whether they are known to be compromised or not. The pwnedkeys database keeps records of compromised 1024 bit and larger RSA/DSA keys, as well as elliptic-curve keys on the P-256, P-384, and P-521 curves. If your private key is ever compromised, it should be considered an emergency, and your priority should be resolving the issue immediately. If an unauthorized person gains access to your private key, they can assume the identity that your certificate is intended to protect (e.g. you, your company, and/or your website)
     cvss2: AV:L/AC:H/Au:N/C:P/I:N/A:N
     cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N
     cve:
@@ -587,7 +590,8 @@ evaluations:
   - key: known_weak_signature_algorithm
     group: certificate
     label_as: Deprecated or known weak signature algorithm
-    issue: Using our SHA-1 chosen-prefix collision the X.509 Certificate can be forged, other attacks leverage predictable serial numbers and compromise Certificate Authorities issued Certificates
+    issue: >
+      Using the SHA-1 chosen-prefix collision the X.509 Certificate can be forged, other attacks leverage predictable serial numbers and compromise Certificate Authorities issued Certificates
     cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
     cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
     cve:
@@ -633,6 +637,25 @@ evaluations:
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 120
+
+  - key: valid_certificate_chain
+    group: tls_negotiation
+    label_as: Valid Certificate Chain
+    issue: >
+      The chain terminates with a Root CA Certificate. The Root CA Certificate is always signed by the CA itself. The signatures of all certificates in the chain must be verified up to the Root CA Certificate.
+      Each certificate in the chain is checked to ensure it is not expired and the chain path is complete.
+      When the root certificates are available in trust-store, this script will use its public key to verify the root certificate, once it verifies it will verify trust the intermediate certificate and eventually the server (leaf) certificate to complete the chain.
+      Only one valid chain from trusted root to the leaf certificate is needed to be compatible with web browsers, however the entire certificate chain should be valid to be considered trustworthy as any compromised certificate in any chain would allow malicious attackers to sign a leaf certificate which would be considered valid in the parallel chain.
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
 
   - key: tls_robot
     group: tls_negotiation
@@ -765,6 +788,7 @@ evaluations:
     issue: >
       Continued use of weak keys in certificates puts your sensitive data at risk. Exhaustive key searches or brute force attacks against certificates with weak keys are dangerous to network security.
       As computational power increases, so does the need for stronger keys.
+      If this is not the leaf certificate it is a root or intermediate which signs other digital certificates with its private key, if the private key is weak it may be compromised and all the rest of the issued certificates become useless.
       Diffie-Hellman key exchange depends for its security on the presumed difficulty of solving the discrete logarithm problem.
       By design, many Diffie-Hellman implementations use the same pre-generated prime for their field, because of the reuse of primes generating precomputation for just one prime would expose millions of implementations. This vulnerability was known as early as 1992.
       Claims on the practical implications of the attack at the time were however disputed by security researchers but over the years it is expected that many primes were and still are being calculated practically making all primes of 2048 bit or less considered weak or vulnerable.
@@ -1391,8 +1415,12 @@ evaluations:
     group: certificate
     label_as: Deprecated OCSP Hash Algorithm
     issue: >
-      TODO
+      Using the SHA-1 chosen-prefix collision the OCSP Assertion can be forged
+    cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
+    cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
     references:
+      - name: CA/Browser Forum
+        url: https://cabforum.org/2014/10/16/ballot-118-sha-1-sunset/
     anotate_results:
       - value: False
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1407,8 +1435,12 @@ evaluations:
     group: certificate
     label_as: Deprecated OCSP Signature Algorithm
     issue: >
-      TODO
+      Using the SHA-1 chosen-prefix collision the OCSP Assertion can be forged
+    cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
+    cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
     references:
+      - name: CA/Browser Forum
+        url: https://cabforum.org/2014/10/16/ballot-118-sha-1-sunset/
     anotate_results:
       - value: False
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1421,9 +1453,12 @@ evaluations:
 
   - key: revocation_ocsp_must_staple
     group: certificate
-    label_as: Extension OCSP Must Staple
+    label_as: OCSP Must Staple Extension
     issue: >
-      TODO
+      The security benefit characteristics of OCSP can only be enforced when the 'Must Staple' flag is present.
+      Failing to include the must staple extension in a Domain Validated (DV) or Organisation Validated (OV) Certificate will allow most web browsers and HTTP clients to 'soft-fail' the OCSP check and continue with TLS without an OCSP assertion or knowledge of revocation status.
+      In some web browsers and HTTP clients an Extended Validation (EV) certificate will hard-fail when an OCSP assertion is not obtained, but this functionality should not be relied upon as there have been many changes made by web browsers that are divergent from standards and break assumed security guarantees suddenly become a vulnerability.
+      Everywhere the OCSP Must Staple Extension is accepted, it will be enforced for all certificates regardless of validation semantics.
     references:
     anotate_results:
       - value: True
@@ -1437,9 +1472,9 @@ evaluations:
 
   - key: revocation_ocsp_staple
     group: certificate
-    label_as: Extension OCSP Stapling
+    label_as: OCSP Stapling Extension
     issue: >
-      TODO
+      When an OCSP assertion is not included 'stapled' with the certificate, an weakness in the clients ability to obtain a remote assertion, when the client attempts to establish a connection with the OCSP responder an additional MITM attack vector is available and forged OCSP assertions may be provided allowing an attacker to sppof the revocation status of a certificate to cause a denial of service or establish trust where otherwise a compromise would have been detected.
     references:
     anotate_results:
       - value: True
@@ -1455,7 +1490,7 @@ evaluations:
     group: certificate
     label_as: OCSP Revocation
     issue: >
-      TODO
+      A revoked certificate that remains in use is an indication of misconfiuguration, misuse, or abuse.
     references:
     anotate_results:
       - value: True
@@ -1467,37 +1502,22 @@ evaluations:
         display_as: Revoked
         score: -200
 
-  - key: valid_key_extended_usage
+  - key: valid_key_usage_leaf
     group: certificate
-    label_as: valid_key_extended_usage
+    label_as: Leaf Certificate valid for TLS usage
     issue: >
-      TODO
+      If the server (leaf) certificate was issued to serve the purpose of providing a TLS connection from the server-side.
+      Any failure to include the correct signed (by the issuer) values would indicate a forged certificate and compromised connection.
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
-        display_as: Misconfigured
-        score: -200
-
-  - key: valid_key_usage
-    group: certificate
-    label_as: valid_key_usage
-    issue: >
-      TODO
-    references:
-    anotate_results:
       - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
-        display_as: Good Configuration
-        score: 80
-      - value: True
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
-        score: -200
+        score: -120
 
   - key: client_auth_expected
     group: certificate
@@ -1567,17 +1587,25 @@ evaluations:
     group: transport
     label_as: compression_support
     issue: >
-      TODO
+      Multiple compression vulnerabilities exist across all SS/TLS versions when HTTPS transport naively utilises compression without taking proper care to mitigate all known attacks.
+      Due to the nature and trivial complexity of most compression related attacks, and mitigated both known and inknown threats may be a futile effort, it is best practice to avoid compression and instead rely on minimising the data being transmitted to only what is needed.
+    cve:
+      - CVE-2022-32206
+      - CVE-2022-1271
+      - CVE-2020-5933
+      - CVE-2018-25032
+      - CVE-2013-3587
+      - CVE-2012-4929
     references:
     anotate_results:
       - value: False
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
-        score: 80
+        score: 180
       - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        evaluation_value: "[khaki1]WARN![/khaki1]"
         display_as: Misconfigured
-        score: -200
+        score: -100
 
   - key: fips
     group: compliance
