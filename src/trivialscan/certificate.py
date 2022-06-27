@@ -249,6 +249,24 @@ class BaseCertificate:
         return ret
 
 
+class ClientCertificate(BaseCertificate):
+    def __init__(self, x509: X509) -> None:  # pylint: disable=useless-super-delegation
+        super().__init__(x509)
+
+    @property
+    def trust_stores(self) -> list[dict]:
+        return (
+            []
+            if not self.subject_key_identifier
+            else TrustStore(self.subject_key_identifier).to_dict().get("trust_stores")
+        )
+
+    def to_dict(self) -> dict:
+        ret = super().to_dict()
+        ret["type"] = "client"
+        return ret
+
+
 class RootCertificate(BaseCertificate):
     def __init__(self, x509: X509) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(x509)

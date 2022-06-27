@@ -10,8 +10,10 @@ from .register import register
 from .scan import scan
 from ..config import load_config, get_config
 
+
 __module__ = "trivialscan.cli"
 __version__ = "3.0.0-devel"
+
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
 APP_BANNER = text2art("trivialscan", font="tarty4")
 
@@ -256,7 +258,13 @@ def _scan_config(cli_args: dict, filename: str | None) -> dict:
         }
         for _target in config["targets"]:
             if parsed.hostname == _target["hostname"]:
-                target = {**_target, **target}
+                target["client_certificate"] = _target.get(
+                    "client_certificate", target["client_certificate"]
+                )
+                target["skip_evaluations"] = _target.get("skip_evaluations", [])
+                target["skip_evaluation_groups"] = _target.get(
+                    "skip_evaluation_groups", []
+                )
                 break
         targets.append(target)
     if targets:

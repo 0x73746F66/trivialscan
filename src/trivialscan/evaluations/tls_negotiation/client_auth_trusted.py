@@ -1,6 +1,5 @@
-from ...exceptions import EvaluationNotImplemented
+from ...exceptions import EvaluationNotRelevant
 from ...transport import Transport
-from ...certificate import BaseCertificate
 from .. import BaseEvaluationTask
 
 
@@ -10,5 +9,7 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self, certificate: BaseCertificate) -> bool | None:
-        raise EvaluationNotImplemented
+    def evaluate(self) -> bool | None:
+        if not self.transport.state.certificate_mtls_expected:
+            raise EvaluationNotRelevant
+        return self.transport.client_certificate_trusted

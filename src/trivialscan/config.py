@@ -1520,68 +1520,80 @@ evaluations:
         score: -120
 
   - key: client_auth_expected
-    group: certificate
-    label_as: client_auth_expected
+    group: tls_negotiation
+    label_as: Client Certificate (MTLS) expected
     issue: >
-      TODO
+      The server indivated client certificate subject's it will accept, or the client presented a Certificate to initiate an MTLS connection with this server.
     references:
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
-        display_as: Good Configuration
-        score: 80
       - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
-        display_as: Misconfigured
-        score: -200
+        evaluation_value: "[cyan]INFO![/cyan]"
+        display_as: Client Certificate Expected
+        score: 0
 
   - key: client_auth_permitted
-    group: certificate
-    label_as: client_auth_permitted
+    group: tls_negotiation
+    label_as: Certificate was issued for the prupose of client Authentication
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -150
+
+  - key: client_auth_trusted
+    group: tls_negotiation
+    label_as: Client Certificate (MTLS) Trusted
+    issue: >
+      TODO
+    references:
+    anotate_results:
       - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 120
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
         score: -200
 
   - key: client_auth_valid_subject
-    group: certificate
-    label_as: client_auth_valid_subject
+    group: tls_negotiation
+    label_as: Server accepted Client Certificate
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
-        score: 80
-      - value: True
+        score: 100
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
-        score: -200
+        score: -150
 
   - key: client_authentication
-    group: certificate
-    label_as: client_authentication
+    group: tls_negotiation
+    label_as: Client Authentication Established
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
-        score: 80
-      - value: True
+        score: 200
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
-        score: -200
+        score: -500
 
   - key: compression_support
     group: transport

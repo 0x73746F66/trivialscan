@@ -19,15 +19,15 @@ outputs:
   "6.5.4": Insecure communications
 
 targets:
+  - hostname: client.badssl.com
+    client_certificate: .development/badssl.com-client.pem
   - hostname: expired.badssl.com
-    client_certificate:
     skip_evaluations:
       - client_renegotiation
     skip_evaluation_groups:
       - dns_configuration
   - hostname: tls-v1-1.badssl.com
     port: 1011
-  - hostname: self-signed.badssl.com
   - hostname: wrong.host.badssl.com
   - hostname: untrusted.root.badssl.com
   - hostname: no-subject.badssl.com

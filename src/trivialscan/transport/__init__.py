@@ -22,6 +22,7 @@ import validators
 import idna
 from .. import exceptions, util, constants
 from ..transport.state import TransportState
+from ..certificate import ClientCertificate
 
 __module__ = "trivialscan.transport"
 
@@ -48,8 +49,10 @@ class Transport:
     http1_1_headers: dict
     session_cache_mode: str
     server_certificate: X509
-    client_certificate: X509
+    _client_certificate: X509
+    client_certificate: ClientCertificate
     client_certificate_match: bool
+    client_certificate_trusted: bool
     client_initiated_renegotiation: bool
     tls_downgrade: bool
     _cafiles: list
@@ -85,8 +88,10 @@ class Transport:
         self._cafiles = []
         self._certificate_chain = []
         self.server_certificate = None
-        self.client_certificate = None
+        self._state.certificate_mtls_expected = None
+        self._client_certificate = None
         self.client_certificate_match = None
+        self.client_certificate_trusted = None
         self.client_initiated_renegotiation = None
         self.certificates = []
         self.verifier_errors = []
@@ -143,123 +148,32 @@ class Transport:
         util.do_handshake(conn)
         self.expected_client_subjects = conn.get_client_ca_list()
         conn.close()
+        logger.info(
+            f"{self._state.hostname}:{self._state.port} Checking client certificate"
+        )
+        self._client_certificate = load_certificate(
+            FILETYPE_PEM, Path(self._client_pem_path).read_bytes()
+        )
+        self.client_certificate = ClientCertificate(self._client_certificate)
+        self.client_certificate_trusted = any(
+            [
+                trust_store["is_trusted"]
+                for trust_store in self.client_certificate.trust_stores
+            ]
+        )
         if len(self.expected_client_subjects) > 0:
-            logger.info(
-                f"{self._state.hostname}:{self._state.port} Checking client certificate"
-            )
-            self.client_certificate = load_certificate(
-                FILETYPE_PEM, Path(self._client_pem_path).read_bytes()
-            )
             logger.debug(
-                f"{self._state.hostname}:{self._state.port} issuer subject: {self.client_certificate.get_issuer().commonName}"
+                f"{self._state.hostname}:{self._state.port} issuer subject: {self._client_certificate.get_issuer().commonName}"
             )
             for check in self.expected_client_subjects:
                 logger.debug(
                     f"{self._state.hostname}:{self._state.port} expected subject: {check.commonName}"
                 )
-                if self.client_certificate.get_issuer().commonName == check.commonName:
-                    self.client_certificate_match = True
-                    return True
-        return False
+                self.client_certificate_match = (
+                    self._client_certificate.get_issuer().commonName == check.commonName
+                )
 
-    def do_request(
-        self,
-        conn: SSL.Connection,
-        method: str = "HEAD",
-        uri_path: str = "/",
-        protocol: str = "HTTP/1.1",
-        request_compression: bool = True,
-    ):
-        if method.upper() not in ["HEAD", "GET", "OPTIONS"]:
-            raise AttributeError(f"method {method} not supported")
-        if protocol.upper() not in ["HTTP/1.0", "HTTP/1.1"]:
-            raise AttributeError(f"protocol {protocol} not supported")
-        if not isinstance(uri_path, str):
-            raise AttributeError("uri_path not supported")
-        if not uri_path.startswith("/"):
-            uri_path = f"/{uri_path}"
-
-        request = [
-            f"{method.upper()} {uri_path} {protocol}",
-            f"Host: {self._state.hostname}",
-            "Accept: */*",
-            "Cache-Control: max-age=0",
-            "Connection: close",
-            "Content-Length: 0",
-            "User-Agent: pypi.org/project/trivialscan",
-        ]
-        if request_compression is True:
-            request.append("Accept-Encoding: compress, gzip")
-        request = "\r\n".join(request) + "\r\n\r\n"
-        logger.info(f"{self._state.hostname}:{self._state.port} Request:\n{request}")
-        head = b""
-        try:
-            conn.sendall(request.encode())
-            while not head.endswith(b"\r\n\r\n"):
-                if Transport.is_connection_closed(conn):
-                    break
-                head += conn.recv(1)
-        except ConnectionResetError:
-            pass
-        except SSL.ZeroReturnError:
-            pass
-        except SSL.SysCallError:
-            pass
-        if method.upper() in ["HEAD", "OPTIONS"] or protocol.upper() == "HTTP/2":
-            return head.decode(), None
-        body = b""
-        try:
-            while b"\r\n\r\n" not in body:
-                if Transport.is_connection_closed(conn):
-                    break
-                data = conn.recv(Transport._data_recv_size)
-                if len(data) == 0:
-                    break
-                body += data
-        except ConnectionResetError:
-            pass
-        except SSL.ZeroReturnError:
-            pass
-        return head.decode(), body.decode()
-
-    def _protocol_handler(
-        self, conn: SSL.Connection, protocol: str = "HTTP/1.1"
-    ) -> bool:
-        proto_map = {
-            "HTTP/1.0": "http1_",
-            "HTTP/1.1": "http1_1_",
-        }
-        logger.debug(f"{self._state.hostname}:{self._state.port} protocol {protocol}")
-        head, _ = self.do_request(conn, protocol=protocol)
-        logger.info(
-            f"{self._state.hostname}:{self._state.port} Response headers:\n{head}"
-        )
-        header = Transport.parse_header(head)
-        prefix = proto_map[protocol]
-        response_code = int(header["response_code"])
-        setattr(self, f"{prefix}support", header["protocol"].startswith(protocol))
-        setattr(self, f"{prefix}code", response_code)
-        setattr(self, f"{prefix}status", header["response_status"])
-        setattr(self, f"{prefix}response_proto", header["protocol"])
-        setattr(self, f"{prefix}headers", header["headers"])
-        if self.client_initiated_renegotiation is None:
-            total_renegotiations = conn.total_renegotiations()
-            proceed = conn.renegotiate()
-            if proceed:
-                try:
-                    conn.setblocking(0)
-                    util.do_handshake(conn)
-                    self.client_initiated_renegotiation = (
-                        conn.total_renegotiations() > total_renegotiations
-                    )
-                except SSL.ZeroReturnError:
-                    pass
-                except Exception as ex:
-                    logger.warning(ex, exc_info=True)
-            self.client_initiated_renegotiation = (
-                self.client_initiated_renegotiation is True
-            )
-        return True
+        return self.client_certificate_match and self.client_certificate_trusted
 
     def get_ocsp_response(self, uri: str, timeout: int = 3) -> OCSPResponse:
         ocsp_response = None
@@ -393,9 +307,7 @@ class Transport:
             self.verifier_errors.append((server_cert, errno))
         return True
 
-    def connect(
-        self, tls_version: int, use_sni: bool = False, protocol: str = None
-    ) -> None:
+    def connect(self, tls_version: int, use_sni: bool = False) -> None:
         logger.info(
             f"{self._state.hostname}:{self._state.port} Trying {constants.OPENSSL_VERSION_LOOKUP[tls_version]}"
         )
@@ -438,6 +350,7 @@ class Transport:
                 )
                 > 0
             )
+            self.expected_client_subjects = conn.get_client_ca_list()
             if not isinstance(self.server_certificate, X509):
                 self.server_certificate = conn.get_peer_certificate()
                 for (_, cert) in enumerate(conn.get_peer_cert_chain()):
@@ -448,11 +361,6 @@ class Transport:
             self._state.certificates = util.get_certificates(
                 self.server_certificate, self._certificate_chain
             )
-            if protocol is not None:
-                logger.info(
-                    f"{self._state.hostname}:{self._state.port} Trying protocol {protocol}"
-                )
-                self._protocol_handler(conn, protocol)
             conn.shutdown()
         except SSL.Error as err:
             if all(
