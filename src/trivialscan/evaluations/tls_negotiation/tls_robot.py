@@ -53,15 +53,16 @@ class EvaluationTask(BaseEvaluationTask):
                 self._leaf = cert
                 break
         if self._leaf is None:
-            logger.info("tls_robot: missing Leaf Cedrtificate")
+            self.substitution_metadata["tls_robot"] = "missing Leaf Cedrtificate"
             return None
         if self._leaf.public_key_type not in ["RSA", "DSA"]:
-            logger.info(
-                f"tls_robot: {self._leaf.public_key_type} not subject to TLS ROBOT attacks"
-            )
+            self.substitution_metadata[
+                "tls_robot"
+            ] = f"{self._leaf.public_key_type} not subject to TLS ROBOT attacks"
             return False
         if self._leaf.public_key_modulus is None:
             logger.info("tls_robot: No public key modulus available")
+            self.substitution_metadata["tls_robot"] = "No public key modulus available"
             return None
         N = self._leaf.public_key_modulus
         e = self._leaf.public_key_exponent
@@ -119,9 +120,9 @@ class EvaluationTask(BaseEvaluationTask):
             oracle_bad3 = self._oracle(pms_bad3, messageflow=True)
             oracle_bad4 = self._oracle(pms_bad4, messageflow=True)
             if oracle_good == oracle_bad1 == oracle_bad2 == oracle_bad3 == oracle_bad4:
-                logger.info(
-                    f"Identical results ({oracle_good}), no working oracle found"
-                )
+                self.substitution_metadata[
+                    "tls_robot"
+                ] = f"Identical results ({oracle_good}), no working oracle found"
                 return False
             else:
                 flow = True
@@ -142,7 +143,9 @@ class EvaluationTask(BaseEvaluationTask):
             or oracle_bad3 != oracle_bad_verify3
             or oracle_bad4 != oracle_bad_verify4
         ):
-            logger.warning("Getting inconsistent results, aborting.")
+            self.substitution_metadata[
+                "tls_robot"
+            ] = "aborted with inconsistent results"
             return None
         # If the response to the invalid PKCS#1 request (oracle_bad1) is equal to both
         # requests starting with 0002, we have a weak oracle. This is because the only
@@ -150,9 +153,13 @@ class EvaluationTask(BaseEvaluationTask):
         # correctly formatted PKCS#1 message with 0x00 on a correct position. This
         # makes our oracle weak
         if oracle_bad1 == oracle_bad2 == oracle_bad3:
-            logger.info("The oracle is weak, the attack could take too long")
+            self.substitution_metadata[
+                "tls_robot"
+            ] = "The oracle is weak, the attack could take too long"
         else:
-            logger.warning("The oracle is strong, real attack is possible")
+            self.substitution_metadata[
+                "tls_robot"
+            ] = "The oracle is strong, real attack is possible"
 
         return True
 

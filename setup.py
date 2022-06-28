@@ -41,7 +41,8 @@ tldextract
 pyyaml
 art
 keyring==23.6.0
-deepdiff""")).readlines()
+deepdiff
+pycryptodome==3.15.0""")).readlines()
 
 
 class BuildWrapper(build):

@@ -124,6 +124,13 @@ def main():
         default=None,
     )
     scan_parser.add_argument(
+        "-H",
+        "--http-path",
+        help="path us use when testing HTTP requests, for headers and vulnerabilities. Defaulsts to '/'",
+        dest="http_path",
+        default="/",
+    )
+    scan_parser.add_argument(
         "-t",
         "--tmp-path-prefix",
         help="local file path to use as a prefix when saving temporary files such as those being fetched for client authorization",
@@ -206,6 +213,8 @@ def main():
         config = _scan_config(vars(args), args.config_file)
         if not config.get("targets"):
             raise RuntimeError("No targets defined")
+        if config["defaults"].get("http_request_path"):
+            del config["defaults"]["http_request_path"]
         if config["defaults"].get("skip_evaluations"):
             del config["defaults"]["skip_evaluations"]
         if config["defaults"].get("skip_evaluation_groups"):
@@ -255,11 +264,15 @@ def _scan_config(cli_args: dict, filename: str | None) -> dict:
             "hostname": parsed.hostname,
             "port": 443 if not parsed.port else parsed.port,
             "client_certificate": cli_args.get("client_pem"),
+            "http_request_path": cli_args.get("http_path"),
         }
         for _target in config["targets"]:
             if parsed.hostname == _target["hostname"]:
                 target["client_certificate"] = _target.get(
                     "client_certificate", target["client_certificate"]
+                )
+                target["http_request_path"] = _target.get(
+                    "http_request_path", target["http_request_path"]
                 )
                 target["skip_evaluations"] = _target.get("skip_evaluations", [])
                 target["skip_evaluation_groups"] = _target.get(

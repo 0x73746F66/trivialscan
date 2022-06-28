@@ -298,10 +298,11 @@ evaluations:
         display_as: Good Configuration
         score: 100
 
-  - key: compression_support
-    group: tls_negotiation
-    label_as: TLS Compression (CRIME/BEAST)
-    issue: Server supports TLS compression which may allow CRIME/BEAST attack
+  - key: crime_vuln
+    group: transport
+    label_as: CRIME/BEAST Vulnerability
+    issue: >
+      Server supports TLS compression which may allow CRIME/BEAST attacks
     cvss2: AV:N/AC:H/Au:N/C:P/I:N/A:N
     cvss3: AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N
     cve:
@@ -313,11 +314,11 @@ evaluations:
       - value: False
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Not Detected
-        score: 40
+        score: 80
       - value: True
-        evaluation_value: "[khaki1]WARN![/khaki1]"
-        display_as: Misconfigured
-        score: -40
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Vulnerable
+        score: -180
 
   - key: tlsa
     group: dns_configuration
@@ -1597,7 +1598,7 @@ evaluations:
 
   - key: compression_support
     group: transport
-    label_as: compression_support
+    label_as: HTTPS transport compression
     issue: >
       Multiple compression vulnerabilities exist across all SS/TLS versions when HTTPS transport naively utilises compression without taking proper care to mitigate all known attacks.
       Due to the nature and trivial complexity of most compression related attacks, and mitigated both known and inknown threats may be a futile effort, it is best practice to avoid compression and instead rely on minimising the data being transmitted to only what is needed.
@@ -1607,7 +1608,6 @@ evaluations:
       - CVE-2020-5933
       - CVE-2018-25032
       - CVE-2013-3587
-      - CVE-2012-4929
     references:
     anotate_results:
       - value: False

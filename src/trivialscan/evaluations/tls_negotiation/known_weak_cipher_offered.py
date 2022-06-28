@@ -10,8 +10,10 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self):
-        results = []
+        results = set()
         for offered_cipher in self._transport.state.offered_ciphers:
-            results.append(offered_cipher not in NOT_KNOWN_WEAK_CIPHERS)
+            if offered_cipher not in NOT_KNOWN_WEAK_CIPHERS:
+                results.add(offered_cipher)
 
-        return any(results)
+        self.substitution_metadata["offered_weak_ciphers"] = " ".join(results)
+        return len(results) > 0

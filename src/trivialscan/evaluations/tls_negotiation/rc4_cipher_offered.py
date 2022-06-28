@@ -9,8 +9,10 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self):
-        results = []
+        results = set()
         for offered_cipher in self._transport.state.offered_ciphers:
-            results.append("RC4" in offered_cipher)
+            if "RC4" in offered_cipher:
+                results.add(offered_cipher)
 
-        return any(results)
+        self.substitution_metadata["offered_rc4_ciphers"] = " ".join(results)
+        return len(results) > 0

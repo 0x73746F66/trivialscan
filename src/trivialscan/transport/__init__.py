@@ -38,15 +38,6 @@ logger = logging.getLogger(__name__)
 
 class Transport:
     _client_pem_path: str
-    http2_response_frame: str
-    http1_code: int
-    http1_status: str
-    http1_response_proto: str
-    http1_headers: dict
-    http1_1_code: int
-    http1_1_status: str
-    http1_1_response_proto: str
-    http1_1_headers: dict
     session_cache_mode: str
     server_certificate: X509
     _client_certificate: X509
@@ -461,41 +452,3 @@ class Transport:
             logger.exception(ex)
             return False
         return False
-
-    @staticmethod
-    def parse_header(head: str) -> dict:
-        ret = {"headers": {}, "response_code": 0, "response_status": "", "protocol": ""}
-        i = 0
-        for line in head.splitlines():
-            i += 1
-            if len(line) == 0:
-                continue
-            if i == 1 and len(line.split(" ")) >= 2:
-                ret["protocol"], ret["response_code"], *extra = line.split(" ")
-                ret["response_status"] = " ".join(extra)
-            else:
-                header = line.split(":")[0].lower()
-                value = ":".join(line.split(":")[1:]).strip()
-                if header in ret["headers"]:
-                    prev = ret["headers"][header].split(", ")
-                    ret["headers"][header] = ", ".join([value] + prev)
-                else:
-                    ret["headers"][header] = value
-        return ret
-
-    def header_exists(self, name: str, includes_value: str = None) -> bool:
-        if not isinstance(name, str):
-            raise AttributeError(
-                f"Invalid value for name, got {type(name)} expected str"
-            )
-        if includes_value is not None:
-            if not isinstance(includes_value, str):
-                raise AttributeError(
-                    f"Invalid value for includes_value, got {type(includes_value)} expected str"
-                )
-            return (
-                name in self._state.http_headers
-                and includes_value in self._state.http_headers[name]
-            )
-        else:
-            return name in self._state.http_headers

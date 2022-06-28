@@ -21,6 +21,7 @@ config = get_config(custom_values=load_config())
 def evaluate(
     hostname: str,
     port: int = 443,
+    http_request_path: str = "/",
     evaluations: list = config.get("evaluations"),
     skip_evaluations: list = config["defaults"].get("skip_evaluations", []),
     skip_evaluation_groups: list = config["defaults"].get("skip_evaluation_groups", []),
@@ -102,6 +103,15 @@ def evaluate(
         task = _evaluatation_module(
             evaluation, transport, skip_evaluations, skip_evaluation_groups, con=console
         )
+        if evaluation["group"] == "transport":
+            task.do_request(http_request_path)
+            if task.skip:
+                log(
+                    f"[cyan]SKIP![/cyan] (robots.txt) {evaluation['label_as']}",
+                    hostname=state.hostname,
+                    port=state.port,
+                    con=console,
+                )
         if not task:
             continue
         try:
@@ -162,6 +172,7 @@ def _evaluatation_module(
     skip_evaluations: list,
     skip_evaluation_groups: list,
     con: Console = None,
+    **kwargs,
 ) -> BaseEvaluationTask | None:
     if any(
         [
@@ -188,7 +199,7 @@ def _evaluatation_module(
         )
         return None
 
-    return _cls(transport, evaluation, config["defaults"])
+    return _cls(transport, evaluation, config["defaults"], **kwargs)
 
 
 def _result_data(

@@ -9,9 +9,10 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self):
-        state = self._transport.state
-        results = []
-        for offered_cipher in state.offered_ciphers:
-            results.append("-CBC-" in offered_cipher)
+        results = set()
+        for offered_cipher in self._transport.state.offered_ciphers:
+            if "-CBC-" in offered_cipher:
+                results.add(offered_cipher)
 
-        return any(results)
+        self.substitution_metadata["offered_cbc_ciphers"] = " ".join(results)
+        return len(results) > 0
