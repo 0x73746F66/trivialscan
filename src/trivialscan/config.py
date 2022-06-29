@@ -1619,6 +1619,54 @@ evaluations:
         display_as: Misconfigured
         score: -100
 
+  - key: session_resumption_caching
+    group: tls_negotiation
+    label_as: Session resumption caching
+    issue: >
+      TBA
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: True
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: session_resumption_ticket_hint
+    group: tls_negotiation
+    label_as: Session resumption ticket hints
+    issue: >
+      TBA
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: True
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: session_resumption_tickets
+    group: tls_negotiation
+    label_as: Session resumption tickets
+    issue: >
+      TBA
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: True
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+
   - key: fips
     group: compliance
     label_as: FIPS

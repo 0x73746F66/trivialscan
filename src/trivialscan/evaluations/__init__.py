@@ -83,18 +83,16 @@ class BaseEvaluationTask:
 
     def _parse_robots_path(self, contents: str, http_request_path: str) -> bool:
         track = False
-        trail_slash = (
-            http_request_path[len(http_request_path) - 1 :] == "/"  # flake8: noqa
-        )
+        trail_slash = http_request_path[len(http_request_path) - 1 :] == "/"
         for line in contents.splitlines():
+            trim_path = http_request_path[: len(http_request_path) - 1].strip()
             if track:
                 if not line.startswith("Disallow:"):
                     track = False
                 else:
                     disallow = line.replace("Disallow:", "").strip()
                     if (
-                        trail_slash
-                        and disallow == http_request_path[: len(http_request_path) - 1]
+                        trail_slash and trim_path and disallow == trim_path
                     ) or disallow == http_request_path:
                         return True
             if line.startswith("User-agent:") and "trivialscan" in line:

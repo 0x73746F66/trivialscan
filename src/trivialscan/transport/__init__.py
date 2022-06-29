@@ -58,6 +58,9 @@ class Transport:
     _state: TransportState
     _ocsp: dict
     revocation_ocsp_assertion: bytes
+    session_ticket_hints: bool
+    session_tickets: bool
+    session_cache_mode: str
 
     def __init__(self, hostname: str, port: int = 443) -> None:
         if not isinstance(port, int):
