@@ -18,9 +18,3 @@ class EvaluationTask(BaseEvaluationTask):
                 self.header_exists(name="content-encoding", includes_value="br"),
             ]
         )
-
-    def header_exists(self, name: str, includes_value: str) -> bool:
-        return (
-            name in self._response.headers
-            and includes_value in self._response.headers[name]
-        )

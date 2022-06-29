@@ -46,12 +46,6 @@ repos:
       - id: black
         files: src
 
-  - repo: https://github.com/PyCQA/flake8
-    rev: 4.0.1
-    hooks:
-      - id: flake8
-        args: [--max-line-length=9999]
-
   - repo: local
     hooks:
       # - id: pylint

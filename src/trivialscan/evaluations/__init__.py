@@ -3,6 +3,8 @@ from os import path
 from datetime import timedelta
 from requests_cache import CachedSession
 from requests import Response
+from requests.exceptions import SSLError
+from urllib3.util.ssl_match_hostname import CertificateError
 from ..transport import TransportState
 from ..transport import Transport
 
@@ -41,7 +43,7 @@ class BaseEvaluationTask:
     def metadata(self) -> dict:
         return self._metadata
 
-    def do_request(self, http_request_path: str):
+    def do_request(self, http_request_path: str) -> bool:
         self._response = None
         self._session = CachedSession(
             path.join(
@@ -51,9 +53,9 @@ class BaseEvaluationTask:
             use_temp=True,
             expire_after=timedelta(minutes=15),
         )
-        self.skip = self._check_robots(http_request_path)
+        self.skip = self._deny_robots(http_request_path)
         if self.skip:
-            return
+            return False
         self._response = self._do_request(
             http_request_path,
             "GET",
@@ -63,36 +65,45 @@ class BaseEvaluationTask:
             url = f"https://{self._transport.state.hostname}:{self._transport.state.port}{http_request_path}"
             logger.info(f"{url} from cache {self._response.from_cache}")
             logger.debug(self._response.text)
-            return
-        self.skip = True
+            return True
+        return False
 
-    def _check_robots(self, http_request_path: str) -> bool:
+    def _deny_robots(self, http_request_path: str) -> bool:
         head_response = self._do_request(
             "/robots.txt", headers={"user-agent": "pypi.org/project/trivialscan"}
         )
         if not head_response or head_response.status_code != 200:
-            return True
+            return False
         response = self._do_request(
             "/robots.txt", "GET", headers={"user-agent": "pypi.org/project/trivialscan"}
         )
         if response.status_code != 200:
-            return True
+            return False
         return self._parse_robots_path(response.text, http_request_path)
 
     def _parse_robots_path(self, contents: str, http_request_path: str) -> bool:
         track = False
+        trail_slash = (
+            http_request_path[len(http_request_path) - 1 :] == "/"  # flake8: noqa
+        )
         for line in contents.splitlines():
-            if track and line.startswith("Disallow:"):
-                if line.replace("Disallow:", "").strip().startswith(http_request_path):
-                    return False
-            if line.startswith("User-agent: trivialscan"):
+            if track:
+                if not line.startswith("Disallow:"):
+                    track = False
+                else:
+                    disallow = line.replace("Disallow:", "").strip()
+                    if (
+                        trail_slash
+                        and disallow == http_request_path[: len(http_request_path) - 1]
+                    ) or disallow == http_request_path:
+                        return True
+            if line.startswith("User-agent:") and "trivialscan" in line:
                 track = True
                 continue
-            if line.startswith("User-agent: *"):
+            if line == "User-agent: *":
                 track = True
                 continue
-            track = False
-        return True
+        return False
 
     def _do_request(
         self, req_path: str, method: str = "HEAD", headers: dict = None
@@ -100,5 +111,11 @@ class BaseEvaluationTask:
         url = f"https://{self._transport.state.hostname}:{self._transport.state.port}{req_path}"
         try:
             return self._session.request(method, url, headers=headers)
-        except ConnectionError:
+        except (SSLError, ConnectionError, CertificateError):
             return None
+
+    def header_exists(self, name: str, includes_value: str) -> bool:
+        return (
+            name in self._response.headers
+            and includes_value in self._response.headers[name]
+        )

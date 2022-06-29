@@ -1,5 +1,4 @@
 import logging
-from ...exceptions import EvaluationNotImplemented
 from ...transport import Transport
 from .. import BaseEvaluationTask
 
@@ -11,10 +10,6 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self) -> bool | None:
-        raise EvaluationNotImplemented
-
-    def header_exists(self, name: str, includes_value: str) -> bool:
-        return (
-            name in self._response.headers
-            and includes_value in self._response.headers[name]
+        return self.header_exists(
+            name="cross-origin-resource-policy", includes_value="same-origin"
         )

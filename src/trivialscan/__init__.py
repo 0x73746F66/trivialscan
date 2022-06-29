@@ -75,6 +75,7 @@ def evaluate(
             )
             if not task:
                 continue
+            result = None
             try:
                 result = task.evaluate(cert)
                 data, log_output = _result_data(result, task, **cert_data, **host_data)
@@ -104,14 +105,20 @@ def evaluate(
             evaluation, transport, skip_evaluations, skip_evaluation_groups, con=console
         )
         if evaluation["group"] == "transport":
-            task.do_request(http_request_path)
+            response = task.do_request(http_request_path)
+            log_line = None
+            if not response:
+                log_line = f"[cyan]SKIP![/cyan] (Missing HTTP Response) {evaluation['label_as']}"
             if task.skip:
+                log_line = f"[cyan]SKIP![/cyan] (robots.txt) {evaluation['label_as']}"
+            if log_line:
                 log(
-                    f"[cyan]SKIP![/cyan] (robots.txt) {evaluation['label_as']}",
+                    log_line,
                     hostname=state.hostname,
                     port=state.port,
                     con=console,
                 )
+                continue
         if not task:
             continue
         try:

@@ -1,5 +1,5 @@
 from tlstrust import TrustStore, context
-from ...exceptions import EvaluationNotRelevant
+from ...exceptions import EvaluationNotRelevant, NoLogEvaluation
 from ...transport import Transport
 from ...certificate import BaseCertificate, RootCertificate
 from .. import BaseEvaluationTask
@@ -14,6 +14,8 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self, certificate: BaseCertificate) -> bool | None:
         if not isinstance(certificate, RootCertificate):
             raise EvaluationNotRelevant
+        if not certificate.subject_key_identifier:
+            raise NoLogEvaluation
 
         return TrustStore(certificate.subject_key_identifier).check_trust(
             context_type=context.PLATFORM_ANDROID8

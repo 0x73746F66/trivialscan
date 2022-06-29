@@ -1685,119 +1685,119 @@ evaluations:
 
   - key: header_coep
     group: transport
-    label_as: header_coep
+    label_as: Require Cross-Origin-Embedder-Policy
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
-      - value: True
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
         score: -200
 
   - key: header_coop
     group: transport
-    label_as: header_coop
+    label_as: Same-Origin Cross-Origin-Opener-Policy
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
-      - value: True
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
         score: -200
 
   - key: header_corp
     group: transport
-    label_as: header_corp
+    label_as: Same-Origin Cross-Origin-Resource-Policy
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
-      - value: True
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
         score: -200
 
   - key: header_csp
     group: transport
-    label_as: header_csp
+    label_as: Content-Security-Policy
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
-      - value: True
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
         score: -200
 
   - key: header_expectct
     group: transport
-    label_as: header_expectct
+    label_as: Certificate Transparency Report URI
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
-      - value: True
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
         score: -200
 
   - key: header_hsts
     group: transport
-    label_as: header_hsts
+    label_as: HTTP Strict-Transport-Security
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
-      - value: True
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
         score: -200
 
   - key: header_nosniff
     group: transport
-    label_as: header_nosniff
+    label_as: nosniff X-Content-Type-Options
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
-      - value: True
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
         score: -200
 
   - key: header_referrer_policy
     group: transport
-    label_as: header_referrer_policy
+    label_as: unsafe URL Referrer-Policy
     issue: >
       TODO
     references:
@@ -1813,32 +1813,32 @@ evaluations:
 
   - key: header_xfo
     group: transport
-    label_as: header_xfo
+    label_as: Safe HTML iframe options
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
-      - value: True
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
         score: -200
 
   - key: header_xss
     group: transport
-    label_as: header_xss
+    label_as: Block mode XSS-Protection
     issue: >
       TODO
     references:
     anotate_results:
-      - value: False
+      - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
-      - value: True
+      - value: False
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
         score: -200

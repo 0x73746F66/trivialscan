@@ -268,12 +268,10 @@ def _scan_config(cli_args: dict, filename: str | None) -> dict:
         }
         for _target in config["targets"]:
             if parsed.hostname == _target["hostname"]:
-                target["client_certificate"] = _target.get(
-                    "client_certificate", target["client_certificate"]
-                )
-                target["http_request_path"] = _target.get(
-                    "http_request_path", target["http_request_path"]
-                )
+                if not cli_args.get("client_pem"):
+                    target["client_certificate"] = _target.get("client_certificate")
+                if not cli_args.get("http_path"):
+                    target["http_request_path"] = _target.get("http_request_path")
                 target["skip_evaluations"] = _target.get("skip_evaluations", [])
                 target["skip_evaluation_groups"] = _target.get(
                     "skip_evaluation_groups", []
