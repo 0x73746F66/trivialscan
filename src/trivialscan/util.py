@@ -1,11 +1,13 @@
 import logging
 import string
 import random
+import signal
 from datetime import datetime, date, time
 from urllib.request import urlretrieve
 from binascii import hexlify
 from pathlib import Path
 from decimal import Decimal
+from functools import wraps
 import validators
 from cryptography import x509
 from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
@@ -32,6 +34,29 @@ __module__ = "trivialscan.util"
 
 logger = logging.getLogger(__name__)
 MAX_DEPTH = 8
+
+
+class TimeoutError(Exception):
+    pass
+
+
+def timeout(seconds, error_message="Function call timed out"):
+    def decorated(func):
+        def _handle_timeout(signum, frame):
+            raise TimeoutError(error_message)
+
+        def wrapper(*args, **kwargs):
+            signal.signal(signal.SIGALRM, _handle_timeout)
+            signal.alarm(seconds)
+            try:
+                result = func(*args, **kwargs)
+            finally:
+                signal.alarm(0)
+            return result
+
+        return wraps(func)(wrapper)
+
+    return decorated
 
 
 def force_str(s, encoding="utf-8", strings_only=False, errors="strict"):

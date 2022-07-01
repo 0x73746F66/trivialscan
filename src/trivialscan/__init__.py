@@ -5,6 +5,7 @@ from copy import deepcopy
 from rich.console import Console
 from trivialscan.transport import Transport
 from .config import load_config, get_config
+from .util import TimeoutError
 from .cli import log
 from .transport.insecure import InsecureTransport
 from .transport.state import TransportState
@@ -86,6 +87,9 @@ def evaluate(
                 log_output = (
                     f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
                 )
+            except TimeoutError:
+                data, _ = _result_data(None, task, **cert_data, **host_data)
+                log_output = f"[cyan]SKIP![/INFO] Slow evaluation detected for {evaluation['label_as']}"
             except NoLogEvaluation:
                 data, _ = _result_data(result, task, **cert_data, **host_data)
                 evaluation_results.append(data)
@@ -129,6 +133,9 @@ def evaluate(
         except EvaluationNotImplemented:
             data, _ = _result_data(None, task, **cert_data, **host_data)
             log_output = f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
+        except TimeoutError:
+            data, _ = _result_data(None, task, **cert_data, **host_data)
+            log_output = f"[cyan]SKIP![/INFO] Slow evaluation detected for {evaluation['label_as']}"
         except NoLogEvaluation:
             data, _ = _result_data(result, task, **host_data)
             evaluation_results.append(data)
@@ -158,6 +165,9 @@ def evaluate(
         except EvaluationNotImplemented:
             data, _ = _result_data(None, task, **cert_data, **host_data)
             log_output = f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
+        except TimeoutError:
+            data, _ = _result_data(None, task, **cert_data, **host_data)
+            log_output = f"[cyan]SKIP![/INFO] Slow evaluation detected for {evaluation['label_as']}"
         except NoLogEvaluation:
             data, _ = _result_data(result, task, **host_data)
             evaluation_results.append(data)

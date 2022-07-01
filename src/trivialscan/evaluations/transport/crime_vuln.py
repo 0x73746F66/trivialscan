@@ -4,6 +4,7 @@ import string
 import zlib
 from Crypto.Cipher import AES, ARC4
 from Crypto import Random
+from ...util import timeout
 from ...exceptions import EvaluationNotRelevant
 from ...transport import Transport
 from .. import BaseEvaluationTask
@@ -58,6 +59,7 @@ class EvaluationTask(BaseEvaluationTask):
         self._known = "secret="
         self._secret = f"{self._known}2ac8a4ea7909bccb4c81cefd3f7765d4"
 
+    @timeout(10)
     def evaluate(self) -> bool | None:
         cbc_results = []
         rc4_results = []
