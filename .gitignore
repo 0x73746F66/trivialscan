@@ -8,6 +8,6 @@ src/trivialscan.egg-info/
 **/__pycache__/
 .coverage
 .pytest_cache/
-trivialscan_*.json
+.development/results/*.json
 rust-query-crlite/target/
 src/trivialscan/vendor/

@@ -14,7 +14,11 @@ defaults:
 outputs:
   - type: console
   - type: json
-    path: .development/trivialscan_results.json
+    path: .development/results/{date_iso8601}.json
+  - type: json
+    path: .development/results/{date_year}-{date_month}-{date_day}.json
+  - type: json
+    path: .development/results/all.json
 
 "PCI DSS 3.2.1":
   "6.5.4": Insecure communications

@@ -1,20 +1,16 @@
-from copy import deepcopy
 import sys
 import logging
-import json
 from multiprocessing import Pool, cpu_count, Queue
-from pathlib import Path
 from datetime import datetime
-from deepdiff import DeepDiff
 from rich.console import Console
 from rich.table import Column
 from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColumn
 from art import text2art
-
-from trivialscan.transport.state import TransportState
 from . import log
 from .. import evaluate
-from ..config import merge_lists_by_value
+from ..transport.state import TransportState
+from ..outputs.json import save_to
+
 
 __module__ = "trivialscan.cli.scan"
 APP_BANNER = text2art("trivialscan", font="tarty4")
@@ -198,65 +194,11 @@ def run_parra(config: dict, show_progress: bool, use_console: bool = False) -> l
     return queries
 
 
-def track_delta(last: list[dict], current: list[dict]) -> list[dict]:
-    exclude_paths = [
-        "root['http']['headers']['headers']['date']",
-        "root['iterable_item_added']",
-        "root['iterable_item_removed']",
-        "root['dictionary_item_added']",
-        "root['dictionary_item_removed']",
-        "root['attribute_added']",
-        "root['attribute_removed']",
-        "root['type_changes']",
-        "root['values_changed']",
-        "root['repetition_change']",
-    ]
-    results = []
-    for last_query in last:
-        for current_query in current:
-            if (
-                last_query["_metadata"]["transport"]["hostname"]
-                != current_query["_metadata"]["transport"]["hostname"]
-            ):
-                continue
-            result = deepcopy(current_query)
-            ddiff = DeepDiff(
-                last_query.get("_metadata", {}),
-                current_query.get("_metadata", {}),
-                ignore_order=True,
-                exclude_paths=exclude_paths,
-            )
-            metadata = json.loads(
-                ddiff.to_json(default_mapping={datetime: str}).replace(
-                    '"root[', '"metadata['
-                )
-            )
-            result["_metadata"] = {**current_query.get("_metadata", {}), **metadata}
-            result["evaluations"] = []
-            for last_evaluation in last_query.get("evaluations", []):
-                for current_evaluation in current_query.get("evaluations", []):
-                    if last_evaluation.get("key") != current_evaluation.get("key"):
-                        continue
-                    ddiff = DeepDiff(
-                        last_evaluation, current_evaluation, ignore_order=True
-                    )
-                    extra = json.loads(
-                        ddiff.to_json(default_mapping={datetime: str}).replace(
-                            '"root[', '"evaluation['
-                        )
-                    )
-                    result["evaluations"].append({**current_evaluation, **extra})
-            results.append(result)
-    return merge_lists_by_value(current, results)
-
-
 def scan(config: dict, **flags):
     no_stdout = flags.get("quiet", False)
     hide_progress_bars = True if no_stdout else flags.get("hide_progress_bars", False)
     hide_banner = True if no_stdout else flags.get("hide_banner", False)
     synchronous_only = flags.get("synchronous_only", False)
-    track_changes = flags.get("track_changes", False)
-    previous_report = flags.get("previous_report")
     log_level = flags.get("log_level", logging.ERROR)
     run_start = datetime.utcnow()
     queries = []
@@ -282,31 +224,14 @@ def scan(config: dict, **flags):
         queries = run_parra(config, not hide_progress_bars, use_console)
 
     execution_duration_seconds = (datetime.utcnow() - run_start).total_seconds()
-    json_file = "".join(
+    json_output = [
         n["path"] for n in config.get("outputs", []) if n.get("type") == "json"
-    )
-    if json_file:
-        json_path = Path(json_file)
-        tracking_last = None
-        if previous_report:
-            prev_path = Path(previous_report)
-            if track_changes:
-                if prev_path.is_file():
-                    try:
-                        tracking_last = json.loads(prev_path.read_text(encoding="utf8"))
-                    except json.decoder.JSONDecodeError as ex:
-                        logger.warning(ex, exc_info=True)
-        if track_changes and json_file != previous_report and json_path.is_file():
-            try:
-                tracking_last = json.loads(json_path.read_text(encoding="utf8"))
-            except json.decoder.JSONDecodeError as ex:
-                logger.warning(ex, exc_info=True)
-        if track_changes and tracking_last:
-            queries = track_delta(tracking_last.get("queries", []), queries)
-
-        json_path.write_text(
-            json.dumps(
-                {
+    ]
+    if json_output:
+        for json_file in json_output:
+            json_path = save_to(
+                template_filename=json_file,
+                data={
                     "generator": "trivialscan",
                     "targets": [
                         f"{target.get('hostname')}:{target.get('port')}"
@@ -316,17 +241,14 @@ def scan(config: dict, **flags):
                     "date": datetime.utcnow().replace(microsecond=0).isoformat(),
                     "queries": queries,
                 },
-                sort_keys=True,
-                indent=4,
-                default=str,
-            ),
-            encoding="utf8",
-        )
-        log(
-            f"[cyan]SAVED[/cyan] {json_file}",
-            aside="core",
-            con=console if use_console else None,
-        )
+                track_changes=flags.get("track_changes", False),
+                tracking_template_filename=flags.get("previous_report"),
+            )
+            log(
+                f"[cyan]SAVED[/cyan] {json_path}",
+                aside="core",
+                con=console if use_console else None,
+            )
 
     log(
         "[cyan]TOTAL[/cyan] Execution duration %.1f seconds"
