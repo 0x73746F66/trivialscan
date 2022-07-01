@@ -34,6 +34,7 @@ def wrap_evaluate(
             transport, evaluations = evaluate(
                 console=progress_console,
                 evaluations=config["evaluations"],
+                resume_checkpoint=config["defaults"].get("checkpoint", False),
                 **target,
                 **config["defaults"],
             )
@@ -101,6 +102,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 transport, evaluations = evaluate(
                     console=progress.console if use_console else None,
                     evaluations=config["evaluations"],
+                    resume_checkpoint=config["defaults"].get("checkpoint", False),
                     **target,
                     **config["defaults"],
                 )

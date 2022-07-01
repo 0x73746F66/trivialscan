@@ -21,6 +21,7 @@ from cryptography.x509.ocsp import (
 from OpenSSL.crypto import (
     X509,
     dump_certificate,
+    load_certificate,
     FILETYPE_PEM,
     TYPE_RSA,
     TYPE_DSA,
@@ -37,18 +38,18 @@ logger = logging.getLogger(__name__)
 
 
 class BaseCertificate:
-    x509: X509
+    pem: str
 
     def __init__(self, x509: X509) -> None:
-        self.x509 = x509
+        self.pem = util.force_str(dump_certificate(FILETYPE_PEM, x509))
 
     @property
     def der(self) -> bytes:
         return PEM_cert_to_DER_cert(self.pem)
 
     @property
-    def pem(self) -> str:
-        return util.force_str(dump_certificate(FILETYPE_PEM, self.x509))
+    def x509(self) -> X509:
+        return load_certificate(FILETYPE_PEM, self.pem)
 
     @property
     def version(self) -> int:

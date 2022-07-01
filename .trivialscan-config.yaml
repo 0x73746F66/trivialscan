@@ -1,5 +1,6 @@
 ---
 defaults:
+  checkpoint: True
   use_sni: True
   cafiles:
   tmp_path_prefix: /tmp

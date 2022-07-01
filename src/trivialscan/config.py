@@ -320,8 +320,24 @@ evaluations:
         display_as: Vulnerable
         score: -180
 
+  - key: caa
+    group: certificate
+    label_as: Certification Authority Authorization
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -200
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Detected
+        score: 120
+
   - key: tlsa
-    group: dns_configuration
+    group: certificate
     label_as: TLS/A
     issue: >
       DNS by itself is not secure, without TLS/a or DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
@@ -343,7 +359,7 @@ evaluations:
         score: 120
 
   - key: dnssec
-    group: dns_configuration
+    group: certificate
     label_as: DNSSEC
     issue: >
       DNS by itself is not secure, without DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
@@ -369,7 +385,7 @@ evaluations:
         score: 120
 
   - key: deprecated_dnssec_algorithm
-    group: dns_configuration
+    group: certificate
     label_as: Avoid deprecated DNSSEC algorithm
     issue: >
       Whenever a DNS zone is signed with a SHA-1 DNSKEY algorithm it is vulnerable to chosen prefix collision attacks. This is a problem when a zone accepts updates from multiple parties, such as; TLDs, enterprises, hosting providers. It is also a problem when a key is re-used by multiple zones

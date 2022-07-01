@@ -1,6 +1,6 @@
 from ...exceptions import EvaluationNotRelevant
-from ...certificate import LeafCertificate
 from ...transport import Transport
+from ...certificate import BaseCertificate, LeafCertificate
 from .. import BaseEvaluationTask
 
 
@@ -10,8 +10,7 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self) -> bool:
-        for cert in self._transport.state.certificates:
-            if isinstance(cert, LeafCertificate):
-                return cert.tlsa
-        raise EvaluationNotRelevant
+    def evaluate(self, certificate: BaseCertificate) -> bool | None:
+        if not isinstance(certificate, LeafCertificate):
+            raise EvaluationNotRelevant
+        return certificate.dnssec_valid

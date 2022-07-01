@@ -15,7 +15,13 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.serialization import Encoding
 from OpenSSL import SSL, _util
 from OpenSSL.SSL import _lib as native_openssl
-from OpenSSL.crypto import X509, FILETYPE_PEM, X509Name, load_certificate
+from OpenSSL.crypto import (
+    X509,
+    FILETYPE_PEM,
+    X509Name,
+    load_certificate,
+    dump_certificate,
+)
 from certifi import where
 from requests_cache import CachedSession
 import validators
@@ -39,8 +45,8 @@ logger = logging.getLogger(__name__)
 class Transport:
     _client_pem_path: str
     session_cache_mode: str
-    server_certificate: X509
-    _client_certificate: X509
+    _server_certificate: bytes
+    _client_certificate: bytes
     client_certificate: ClientCertificate
     client_certificate_match: bool
     client_certificate_trusted: bool
@@ -50,7 +56,7 @@ class Transport:
     verifier_errors: list[tuple[X509], int]
     expected_client_subjects: list[X509Name]
     tmp_path_prefix: str = "/tmp"
-    _certificate_chain: list[X509]
+    _certificate_chain: list[bytes]
     _default_connect_method: str = "SSLv23_METHOD"
     _default_connect_verify_mode: str = "VERIFY_NONE"
     _data_recv_size: int = 8096
@@ -81,7 +87,7 @@ class Transport:
         self._client_pem_path = None
         self._cafiles = []
         self._certificate_chain = []
-        self.server_certificate = None
+        self._server_certificate = None
         self._state.certificate_mtls_expected = None
         self._client_certificate = None
         self.client_certificate_match = None
@@ -101,6 +107,24 @@ class Transport:
     @property
     def state(self) -> TransportState:
         return self._state
+
+    @property
+    def server_certificate(self) -> X509 | None:
+        if not self._server_certificate:
+            return None
+        return load_certificate(FILETYPE_PEM, self._server_certificate)
+
+    @property
+    def certificate_chain(self) -> list[X509]:
+        if not self._certificate_chain:
+            return []
+        return [load_certificate(FILETYPE_PEM, pem) for pem in self._certificate_chain]
+
+    @property
+    def client_certificate(self) -> X509 | None:
+        if not self._client_certificate:
+            return None
+        return load_certificate(FILETYPE_PEM, self._client_certificate)
 
     def pre_client_authentication_check(self, client_pem_path: str = None) -> bool:
         if not isinstance(self._state.port, int):
@@ -145,35 +169,31 @@ class Transport:
         logger.info(
             f"{self._state.hostname}:{self._state.port} Checking client certificate"
         )
-        self._client_certificate = load_certificate(
-            FILETYPE_PEM, Path(self._client_pem_path).read_bytes()
-        )
-        self.client_certificate = ClientCertificate(self._client_certificate)
+        self._client_certificate = Path(self._client_pem_path).read_bytes()
+        client_certificate = ClientCertificate(self.client_certificate)
         self.client_certificate_trusted = any(
             [
                 trust_store["is_trusted"]
-                for trust_store in self.client_certificate.trust_stores
+                for trust_store in client_certificate.trust_stores
             ]
         )
         if len(self.expected_client_subjects) > 0:
             logger.debug(
-                f"{self._state.hostname}:{self._state.port} issuer subject: {self._client_certificate.get_issuer().commonName}"
+                f"{self._state.hostname}:{self._state.port} issuer subject: {self.client_certificate.get_issuer().commonName}"
             )
             for check in self.expected_client_subjects:
                 logger.debug(
                     f"{self._state.hostname}:{self._state.port} expected subject: {check.commonName}"
                 )
                 self.client_certificate_match = (
-                    self._client_certificate.get_issuer().commonName == check.commonName
+                    self.client_certificate.get_issuer().commonName == check.commonName
                 )
 
         return self.client_certificate_match and self.client_certificate_trusted
 
     def get_ocsp_response(self, uri: str, timeout: int = 3) -> OCSPResponse:
         ocsp_response = None
-        issuer = util.issuer_from_chain(
-            self.server_certificate, self._certificate_chain
-        )
+        issuer = util.issuer_from_chain(self.server_certificate, self.certificate_chain)
         if not issuer:
             return None
 
@@ -318,7 +338,7 @@ class Transport:
         conn = SSL.Connection(context=ctx, socket=self.prepare_socket())
         conn.request_ocsp()
         if all([use_sni, ssl.HAS_SNI]):
-            logger.info(f"{self._state.hostname}:{self._state.port} using SNI")
+            logger.debug(f"{self._state.hostname}:{self._state.port} using SNI")
             conn.set_tlsext_host_name(idna.encode(self._state.hostname))
         try:
             conn.connect((self._state.hostname, self._state.port))
@@ -345,15 +365,17 @@ class Transport:
                 > 0
             )
             self.expected_client_subjects = conn.get_client_ca_list()
-            if not isinstance(self.server_certificate, X509):
-                self.server_certificate = conn.get_peer_certificate()
-                for (_, cert) in enumerate(conn.get_peer_cert_chain()):
-                    self._certificate_chain.append(cert)
-                logger.debug(
-                    f"{self._state.hostname}:{self._state.port} Peer cert chain length: {len(self._certificate_chain)}"
-                )
+            server_certificate = conn.get_peer_certificate()
+            self._server_certificate = dump_certificate(
+                FILETYPE_PEM, server_certificate
+            )
+            for (_, cert) in enumerate(conn.get_peer_cert_chain()):
+                self._certificate_chain.append(dump_certificate(FILETYPE_PEM, cert))
+            logger.debug(
+                f"{self._state.hostname}:{self._state.port} Peer cert chain length: {len(self._certificate_chain)}"
+            )
             self._state.certificates = util.get_certificates(
-                self.server_certificate, self._certificate_chain
+                self.server_certificate, self.certificate_chain
             )
             conn.shutdown()
         except SSL.Error as err:
