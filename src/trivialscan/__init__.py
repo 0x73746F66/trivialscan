@@ -122,7 +122,7 @@ def evaluate(
                     )
                 except TimeoutError:
                     data, _ = _result_data(None, task, **cert_data, **host_data)
-                    log_output = f"[cyan]SKIP![/INFO] Slow evaluation detected for {evaluation['label_as']}"
+                    log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
                 except NoLogEvaluation:
                     data, _ = _result_data(result, task, **cert_data, **host_data)
                     evaluation_results.append(data)
@@ -181,7 +181,7 @@ def evaluate(
                 )
             except TimeoutError:
                 data, _ = _result_data(None, task, **host_data)
-                log_output = f"[cyan]SKIP![/INFO] Slow evaluation detected for {evaluation['label_as']}"
+                log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
             except NoLogEvaluation:
                 data, _ = _result_data(result, task, **host_data)
                 evaluation_results.append(data)
@@ -224,7 +224,7 @@ def evaluate(
                 )
             except TimeoutError:
                 data, _ = _result_data(None, task, **host_data)
-                log_output = f"[cyan]SKIP![/INFO] Slow evaluation detected for {evaluation['label_as']}"
+                log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
             except NoLogEvaluation:
                 data, _ = _result_data(result, task, **host_data)
                 evaluation_results.append(data)
