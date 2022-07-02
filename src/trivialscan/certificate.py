@@ -359,12 +359,6 @@ class LeafCertificate(BaseCertificate):
         return self._dnssec
 
     @property
-    def dnssec_valid(self) -> bool:
-        if not isinstance(self._dnssec_valid, bool):
-            self._dnssec_valid = util.dnssec_valid(self._transport.state.hostname)
-        return self._dnssec_valid
-
-    @property
     def dnssec_algorithm(self) -> str | None:
         if isinstance(self._dnssec_algorithm, str):
             return self._dnssec_algorithm

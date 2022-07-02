@@ -320,9 +320,25 @@ evaluations:
         display_as: Vulnerable
         score: -180
 
-  - key: caa
+  - key: caa_present
     group: certificate
-    label_as: Certification Authority Authorization
+    label_as: Certification Authority Authorization (CAA) Present
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Detected
+        score: 40
+
+  - key: caa_valid
+    group: certificate
+    label_as: Certification Authority Authorization (CAA) Valid
     issue: >
       TODO
     references:
@@ -333,7 +349,7 @@ evaluations:
         score: -200
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
-        display_as: Detected
+        display_as: Good Configuration
         score: 120
 
   - key: tlsa
@@ -358,9 +374,35 @@ evaluations:
         display_as: Detected
         score: 120
 
-  - key: dnssec
+  - key: dnssec_present
     group: certificate
-    label_as: DNSSEC
+    label_as: DNSSEC Present
+    issue: >
+      DNS by itself is not secure, without DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
+    references:
+      - name: ICANN
+        url: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
+      - name: RFC 6014 - Cryptographic Algorithm Identifier Allocation for DNSSEC
+        url: https://datatracker.ietf.org/doc/html/rfc6014
+      - name: RFC 6840 - Clarifications and Implementation Notes for DNS Security
+        url: https://datatracker.ietf.org/doc/html/rfc6840
+      - name: RFC 4956 - DNS Security (DNSSEC) Opt-In
+        url: https://datatracker.ietf.org/doc/html/rfc4956
+      - name: RFC 4033 - DNS Security Introduction and Requirements
+        url: https://datatracker.ietf.org/doc/html/rfc4033
+    anotate_results:
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -100
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Detected
+        score: 60
+
+  - key: dnssec_valid
+    group: certificate
+    label_as: DNSSEC Valid
     issue: >
       DNS by itself is not secure, without DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
     references:
@@ -381,7 +423,7 @@ evaluations:
         score: -200
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
-        display_as: Detected
+        display_as: Good Configuration
         score: 120
 
   - key: deprecated_dnssec_algorithm
@@ -407,6 +449,38 @@ evaluations:
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
+
+  - key: transparency_present
+    group: certificate
+    label_as: Certificate Transparency present
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Detected
+        score: 60
+
+  - key: transparency_trustworthy
+    group: certificate
+    label_as: Trustworthy Certificate Transparency
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -200
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 120
 
   - key: private_key_known_compromised
     group: certificate

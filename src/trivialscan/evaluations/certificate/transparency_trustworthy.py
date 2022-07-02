@@ -1,4 +1,4 @@
-from ...constants import WEAK_DNSSEC_ALGORITHMS
+from ...constants import SCT_GOOD, SCT_STATUS_MAP
 from ...exceptions import EvaluationNotRelevant
 from ...transport import Transport
 from ...certificate import BaseCertificate, LeafCertificate
@@ -12,8 +12,9 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self, certificate: BaseCertificate) -> bool | None:
-        if not isinstance(certificate, LeafCertificate) or not certificate.dnssec:
+        if not isinstance(certificate, LeafCertificate):
             raise EvaluationNotRelevant
-        return (  # pylint: disable=consider-iterating-dictionary
-            certificate.dnssec_algorithm in WEAK_DNSSEC_ALGORITHMS.keys()
-        )
+        self.substitution_metadata[
+            "certificate_transparency_description"
+        ] = SCT_STATUS_MAP.get(certificate.transparency)
+        return certificate.transparency == SCT_GOOD

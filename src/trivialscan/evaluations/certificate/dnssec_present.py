@@ -13,4 +13,4 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self, certificate: BaseCertificate) -> bool | None:
         if not isinstance(certificate, LeafCertificate):
             raise EvaluationNotRelevant
-        return certificate.dnssec_valid
+        return certificate.dnssec

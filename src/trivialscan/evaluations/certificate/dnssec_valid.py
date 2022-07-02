@@ -1,4 +1,4 @@
-from ...constants import WEAK_DNSSEC_ALGORITHMS
+from ...util import dnssec_valid
 from ...exceptions import EvaluationNotRelevant
 from ...transport import Transport
 from ...certificate import BaseCertificate, LeafCertificate
@@ -12,8 +12,6 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self, certificate: BaseCertificate) -> bool | None:
-        if not isinstance(certificate, LeafCertificate) or not certificate.dnssec:
+        if not isinstance(certificate, LeafCertificate):
             raise EvaluationNotRelevant
-        return (  # pylint: disable=consider-iterating-dictionary
-            certificate.dnssec_algorithm in WEAK_DNSSEC_ALGORITHMS.keys()
-        )
+        return dnssec_valid(self.transport.state.hostname)
