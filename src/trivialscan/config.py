@@ -1007,6 +1007,22 @@ evaluations:
         display_as: Misconfigured
         score: -150
 
+  - key: h2c
+    group: transport
+    label_as: HTTP/2 cleartext
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 50
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
   - key: certification_version
     group: certificate
     label_as: X.509 Certificates are in version 3

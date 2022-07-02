@@ -31,22 +31,20 @@ def wrap_evaluate(
             con=progress_console,
         )
         try:
-            transport, evaluations = evaluate(
+            transport = evaluate(
                 console=progress_console,
                 evaluations=config["evaluations"],
                 resume_checkpoint=config["defaults"].get("checkpoint", False),
                 **target,
                 **config["defaults"],
             )
-            state = transport.state
             log(
-                f"[cyan]DONE![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}",
-                hostname=state.hostname,
-                port=state.port,
+                f"[cyan]DONE![/cyan] Negotiated {transport.state.negotiated_protocol} {transport.state.peer_address}",
+                hostname=transport.state.hostname,
+                port=transport.state.port,
                 con=progress_console,
             )
-            data = state.to_dict()
-            data["evaluations"] = evaluations
+            data = transport.state.to_dict()
             queue_out.put(data)
         except Exception as ex:  # pylint: disable=broad-except
             logger.error(ex, exc_info=True)
@@ -99,7 +97,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     description=f'{target.get("hostname")}:{target.get("port")}',
                 )
                 progress.start()
-                transport, evaluations = evaluate(
+                transport = evaluate(
                     console=progress.console if use_console else None,
                     evaluations=config["evaluations"],
                     resume_checkpoint=config["defaults"].get("checkpoint", False),
@@ -107,32 +105,29 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     **config["defaults"],
                 )
                 progress.advance(task_id)
-                state: TransportState = transport.state
                 log(
-                    f"[cyan]DONE![/cyan] {state.peer_address}",
-                    hostname=state.hostname,
-                    port=state.port,
+                    f"[cyan]DONE![/cyan] {transport.state.peer_address} {transport.state.http_response_title or ''}",
+                    hostname=transport.state.hostname,
+                    port=transport.state.port,
                     con=progress.console if use_console else None,
                 )
-                data = state.to_dict()
-                data["evaluations"] = evaluations
+                data = transport.state.to_dict()
+
             else:
-                transport, evaluations = evaluate(
+                transport = evaluate(
                     console=console if use_console else None,
                     evaluations=config["evaluations"],
                     **target,
                     **config["defaults"],
                 )
-                state = transport.state
                 log(
-                    f"[cyan]DONE![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}",
-                    hostname=state.hostname,
-                    port=state.port,
+                    f"[cyan]DONE![/cyan] Negotiated {transport.state.negotiated_protocol} {transport.state.peer_address}",
+                    hostname=transport.state.hostname,
+                    port=transport.state.port,
                     con=console if use_console else None,
                 )
-                state = transport.state
-                data = state.to_dict()
-                data["evaluations"] = evaluations
+                data = transport.state.to_dict()
+
         except Exception as ex:  # pylint: disable=broad-except
             logger.error(ex, exc_info=True)
             data["error"] = (type(ex).__name__, ex)

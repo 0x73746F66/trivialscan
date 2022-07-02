@@ -43,6 +43,22 @@ class BaseEvaluationTask:
     def metadata(self) -> dict:
         return self._metadata
 
+    @property
+    def response_status(self) -> dict | None:
+        return self._response.status_code
+
+    @property
+    def response_headers(self) -> dict | None:
+        return {k: v for k, v in self._response.headers.items()}
+
+    @property
+    def response_text(self) -> str | None:
+        return self._response.text
+
+    @property
+    def response_json(self) -> dict | list | None:
+        return self._response.json()
+
     def do_request(self, http_request_path: str) -> bool:
         self._response = None
         self._session = CachedSession(

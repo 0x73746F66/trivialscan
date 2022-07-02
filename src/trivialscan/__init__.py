@@ -1,6 +1,7 @@
 from asyncio.log import logger
 import sys
 from importlib import import_module
+from hashlib import sha1
 from copy import deepcopy
 from rich.console import Console
 from trivialscan.transport import Transport
@@ -34,7 +35,7 @@ def evaluate(
     tmp_path_prefix: str = config["defaults"].get("tmp_path_prefix", "/tmp"),
     console: Console = None,
     **kwargs,
-) -> tuple[TransportState, list[dict]]:
+) -> Transport:
     checkpoint1 = f"transport{hostname}{port}".encode("utf-8")
     checkpoint2 = f"certificates{hostname}{port}".encode("utf-8")
     checkpoint3 = f"evaluations{hostname}{port}".encode("utf-8")
@@ -52,17 +53,16 @@ def evaluate(
         transport.connect_insecure(cafiles=cafiles, use_sni=use_sni)
         checkpoint.set(checkpoint1, transport)
 
-    state = transport.state
     log(
-        f"[cyan]INTO![/cyan] Negotiated {state.negotiated_protocol} {state.peer_address}",
-        hostname=state.hostname,
-        port=state.port,
+        f"[cyan]INTO![/cyan] Negotiated {transport.state.negotiated_protocol} {transport.state.peer_address}",
+        hostname=transport.state.hostname,
+        port=transport.state.port,
         con=console,
     )
     host_data = {
         "hostname": hostname,
         "port": port,
-        "peer_address": state.peer_address,
+        "peer_address": transport.state.peer_address,
         "http_request_path": http_request_path,
     }
     configuration = {
@@ -77,10 +77,9 @@ def evaluate(
     }
     # certs are passed to the evaluation method. Having them grouped is more readable
     if resume_checkpoint and checkpoint.unfinished(checkpoint2):
-        evaluation_results = checkpoint.resume(checkpoint2)
+        transport.state.evaluations = checkpoint.resume(checkpoint2)
     else:
-        evaluation_results = []
-        for cert in state.certificates:
+        for cert in transport.state.certificates:
             if isinstance(cert, LeafCertificate):
                 cert.set_transport(transport)
             cert_data = {
@@ -91,7 +90,7 @@ def evaluate(
             }
             log(
                 f"[cyan]INFO![/cyan] {cert_data['certificate_subject']}",
-                aside=f"SHA1:{cert.sha1_fingerprint} {state.hostname}:{state.port}",
+                aside=f"SHA1:{cert.sha1_fingerprint} {transport.state.hostname}:{transport.state.port}",
                 con=console,
             )
             for evaluation in evaluations:
@@ -125,19 +124,19 @@ def evaluate(
                     log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
                 except NoLogEvaluation:
                     data, _ = _result_data(result, task, **cert_data, **host_data)
-                    evaluation_results.append(data)
+                    transport.state.evaluations.append(data)
                     continue
-                evaluation_results.append(data)
+                transport.state.evaluations.append(data)
                 log(
                     log_output,
-                    aside=f"SHA1:{cert.sha1_fingerprint} {state.hostname}:{state.port}",
+                    aside=f"SHA1:{cert.sha1_fingerprint} {transport.state.hostname}:{transport.state.port}",
                     con=console,
                 )
-        checkpoint.set(checkpoint2, evaluation_results)
+        checkpoint.set(checkpoint2, transport.state.evaluations)
 
     # certificates are done, compliance checks are last to be evaluated
     if resume_checkpoint and checkpoint.unfinished(checkpoint3):
-        evaluation_results = checkpoint.resume(checkpoint3)
+        transport.state.evaluations = checkpoint.resume(checkpoint3)
     else:
         for evaluation in evaluations:
             if evaluation["group"] in ["certificate", "compliance"]:
@@ -162,11 +161,20 @@ def evaluate(
                 if log_line:
                     log(
                         log_line,
-                        hostname=state.hostname,
-                        port=state.port,
+                        hostname=transport.state.hostname,
+                        port=transport.state.port,
                         con=console,
                     )
                     continue
+                transport.state.http_headers = task.response_headers
+                transport.state.http_status_code = task.response_status
+                if task.response_text:
+                    transport.state.http_response_title = util.html_find_match(
+                        task.response_text, "title"
+                    )
+                    transport.state.http_response_hash = sha1(
+                        task.response_text.encode()
+                    ).hexdigest()
             if not task:
                 continue
             try:
@@ -184,20 +192,20 @@ def evaluate(
                 log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
             except NoLogEvaluation:
                 data, _ = _result_data(result, task, **host_data)
-                evaluation_results.append(data)
+                transport.state.evaluations.append(data)
                 continue
-            evaluation_results.append(data)
+            transport.state.evaluations.append(data)
             log(
                 log_output,
-                hostname=state.hostname,
-                port=state.port,
+                hostname=transport.state.hostname,
+                port=transport.state.port,
                 con=console,
             )
-        checkpoint.set(checkpoint3, evaluation_results)
+        checkpoint.set(checkpoint3, transport.state.evaluations)
 
     # compliance checks are last to be evaluated
     if resume_checkpoint and checkpoint.unfinished(checkpoint4):
-        evaluation_results = checkpoint.resume(checkpoint4)
+        transport.state.evaluations = checkpoint.resume(checkpoint4)
     else:
         for evaluation in evaluations:
             if evaluation["group"] != "compliance":
@@ -227,23 +235,23 @@ def evaluate(
                 log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
             except NoLogEvaluation:
                 data, _ = _result_data(result, task, **host_data)
-                evaluation_results.append(data)
+                transport.state.evaluations.append(data)
                 continue
-            evaluation_results.append(data)
+            transport.state.evaluations.append(data)
             log(
                 log_output,
-                hostname=state.hostname,
-                port=state.port,
+                hostname=transport.state.hostname,
+                port=transport.state.port,
                 con=console,
             )
-        checkpoint.set(checkpoint4, evaluation_results)
+        checkpoint.set(checkpoint4, transport.state.evaluations)
 
     checkpoint.clear(checkpoint1)
     checkpoint.clear(checkpoint2)
     checkpoint.clear(checkpoint3)
     checkpoint.clear(checkpoint4)
 
-    return transport, evaluation_results
+    return transport
 
 
 def _evaluatation_module(
@@ -274,8 +282,8 @@ def _evaluatation_module(
     except ModuleNotFoundError:
         log(
             f'[magenta]ModuleNotFoundError[/magenta] {evaluation["group"]}.{evaluation["key"]}',
-            hostname=transport.state.hostname,
-            port=transport.state.port,
+            hostname=transport.transport.state.hostname,
+            port=transport.transport.state.port,
             con=con,
         )
         return None

@@ -8,18 +8,17 @@ class EvaluationTask(BaseEvaluationTask):
     def __init__(self, transport: Transport, metadata: dict, config: dict) -> None:
         super().__init__(transport, metadata, config)
         self._renegotiation_info_scsv = None
-        self._state = transport.state
 
     def evaluate(self):
         self._renegotiation_info_scsv = (
-            "TLS_EMPTY_RENEGOTIATION_INFO_SCSV" in self._state.offered_ciphers
+            "TLS_EMPTY_RENEGOTIATION_INFO_SCSV" in self._transport.state.offered_ciphers
         )
         # no downgrade possible using TLS 1.3
         if not self._renegotiation_info_scsv and all(
             [
-                self._state.preferred_protocol
+                self._transport.state.preferred_protocol
                 == OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION],
-                self._state.negotiated_protocol
+                self._transport.state.negotiated_protocol
                 == OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION],
             ]
         ):

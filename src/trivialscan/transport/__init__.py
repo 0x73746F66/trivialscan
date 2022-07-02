@@ -61,7 +61,7 @@ class Transport:
     _default_connect_verify_mode: str = "VERIFY_NONE"
     _data_recv_size: int = 8096
     _depth: dict
-    _state: TransportState
+    state: TransportState
     _ocsp: dict
     revocation_ocsp_assertion: bytes
     session_ticket_hints: bool
@@ -75,20 +75,20 @@ class Transport:
             )
         if validators.domain(hostname) is not True:
             raise ValueError(f"provided an invalid domain {hostname}")
-        self._state = TransportState()
-        self._state.hostname = hostname
-        self._state.port = port
-        self._state.offered_tls_versions = []
-        self._state.offered_ciphers = []
-        self._state.tls_version_interference_versions = []
-        self._state.tls_version_intolerance_versions = []
+        self.state = TransportState()
+        self.state.hostname = hostname
+        self.state.port = port
+        self.state.offered_tls_versions = []
+        self.state.offered_ciphers = []
+        self.state.tls_version_interference_versions = []
+        self.state.tls_version_intolerance_versions = []
         self._depth = {}
         self._ocsp = {}
         self._client_pem_path = None
         self._cafiles = []
         self._certificate_chain = []
         self._server_certificate = None
-        self._state.certificate_mtls_expected = None
+        self.state.certificate_mtls_expected = None
         self._client_certificate = None
         self.client_certificate_match = None
         self.client_certificate_trusted = None
@@ -103,10 +103,6 @@ class Transport:
             use_temp=True,
             expire_after=timedelta(minutes=15),
         )
-
-    @property
-    def state(self) -> TransportState:
-        return self._state
 
     @property
     def server_certificate(self) -> X509 | None:
@@ -127,47 +123,46 @@ class Transport:
         return load_certificate(FILETYPE_PEM, self._client_certificate)
 
     def pre_client_authentication_check(self, client_pem_path: str = None) -> bool:
-        if not isinstance(self._state.port, int):
+        if not isinstance(self.state.port, int):
             raise TypeError(
-                f"provided an invalid type {type(self._state.port)} for port, expected int"
+                f"provided an invalid type {type(self.state.port)} for port, expected int"
             )
-        if validators.domain(self._state.hostname) is not True:
-            raise ValueError(f"provided an invalid domain {self._state.hostname}")
+        if validators.domain(self.state.hostname) is not True:
+            raise ValueError(f"provided an invalid domain {self.state.hostname}")
         if not isinstance(client_pem_path, str):
             raise TypeError(
                 f"provided an invalid type {type(client_pem_path)} for client_pem_path, expected str"
             )
 
-        self._state.certificate_mtls_expected = True
+        self.state.certificate_mtls_expected = True
         self.client_certificate_match = False
         valid_client_pem = util.filter_valid_files_urls(
             [client_pem_path], self.tmp_path_prefix
         )
         if valid_client_pem is False:
             logger.error(
-                f"{self._state.hostname}:{self._state.port} client_pem_path was provided but is not a valid URL or file does not exist"
+                f"{self.state.hostname}:{self.state.port} client_pem_path was provided but is not a valid URL or file does not exist"
             )
             return False
         if isinstance(valid_client_pem, list) and len(valid_client_pem) == 1:
             self._client_pem_path = valid_client_pem[0]
         logger.info(
-            f"{self._state.hostname}:{self._state.port} Negotiating with the server to derive expected client certificate subjects"
+            f"{self.state.hostname}:{self.state.port} Negotiating with the server to derive expected client certificate subjects"
         )
         ctx = SSL.Context(method=getattr(SSL, Transport._default_connect_method))
         ctx.load_verify_locations(cafile=where())
         ctx.verify_mode = SSL.VERIFY_NONE
         ctx.check_hostname = False
         conn = SSL.Connection(ctx, self.prepare_socket())
-        conn.connect((self._state.hostname, self._state.port))
+        conn.connect((self.state.hostname, self.state.port))
         if ssl.HAS_SNI:
-            conn.set_tlsext_host_name(idna.encode(self._state.hostname))
+            conn.set_tlsext_host_name(idna.encode(self.state.hostname))
         conn.setblocking(1)
-        conn.set_connect_state()
         util.do_handshake(conn)
         self.expected_client_subjects = conn.get_client_ca_list()
         conn.close()
         logger.info(
-            f"{self._state.hostname}:{self._state.port} Checking client certificate"
+            f"{self.state.hostname}:{self.state.port} Checking client certificate"
         )
         self._client_certificate = Path(self._client_pem_path).read_bytes()
         client_certificate = ClientCertificate(self.client_certificate)
@@ -179,11 +174,11 @@ class Transport:
         )
         if len(self.expected_client_subjects) > 0:
             logger.debug(
-                f"{self._state.hostname}:{self._state.port} issuer subject: {self.client_certificate.get_issuer().commonName}"
+                f"{self.state.hostname}:{self.state.port} issuer subject: {self.client_certificate.get_issuer().commonName}"
             )
             for check in self.expected_client_subjects:
                 logger.debug(
-                    f"{self._state.hostname}:{self._state.port} expected subject: {check.commonName}"
+                    f"{self.state.hostname}:{self.state.port} expected subject: {check.commonName}"
                 )
                 self.client_certificate_match = (
                     self.client_certificate.get_issuer().commonName == check.commonName
@@ -214,14 +209,14 @@ class Transport:
                 )
                 if response.status_code != 200:
                     logger.warning(
-                        f"{self._state.hostname}:{self._state.port} HTTP request returned {response.status_code}"
+                        f"{self.state.hostname}:{self.state.port} HTTP request returned {response.status_code}"
                     )
                     continue
                 ocsp_response = load_der_ocsp_response(response.content)
                 if ocsp_response.serial_number == ocsp_request.serial_number:
                     break
                 logger.debug(
-                    f"{self._state.hostname}:{self._state.port} Response serial number does not match request"
+                    f"{self.state.hostname}:{self.state.port} Response serial number does not match request"
                 )
 
             except Exception as ex:
@@ -268,7 +263,7 @@ class Transport:
         ctx.load_verify_locations(cafile=where())
         for cafile in self._cafiles:
             ctx.load_verify_locations(cafile=cafile)
-        if self._state.certificate_mtls_expected and isinstance(
+        if self.state.certificate_mtls_expected and isinstance(
             self._client_pem_path, str
         ):
             ctx.use_certificate_file(
@@ -297,13 +292,12 @@ class Transport:
             ctx.wrap_socket(
                 sock,
                 do_handshake_on_connect=False,
-                server_hostname=self._state.hostname,
+                server_hostname=self.state.hostname,
             ),
         )
-        conn.connect((self._state.hostname, self._state.port))
-        conn.set_connect_state()
+        conn.connect((self.state.hostname, self.state.port))
         if all([ssl.HAS_SNI, use_sni]):
-            conn.set_tlsext_host_name(idna.encode(self._state.hostname))
+            conn.set_tlsext_host_name(idna.encode(self.state.hostname))
         conn.setblocking(1)
         return conn
 
@@ -323,7 +317,7 @@ class Transport:
 
     def connect(self, tls_version: int, use_sni: bool = False) -> None:
         logger.info(
-            f"{self._state.hostname}:{self._state.port} Trying {constants.OPENSSL_VERSION_LOOKUP[tls_version]}"
+            f"{self.state.hostname}:{self.state.port} Trying {constants.OPENSSL_VERSION_LOOKUP[tls_version]}"
         )
         ctx = self.prepare_context()
         ctx.set_verify(
@@ -338,20 +332,19 @@ class Transport:
         conn = SSL.Connection(context=ctx, socket=self.prepare_socket())
         conn.request_ocsp()
         if all([use_sni, ssl.HAS_SNI]):
-            logger.debug(f"{self._state.hostname}:{self._state.port} using SNI")
-            conn.set_tlsext_host_name(idna.encode(self._state.hostname))
+            logger.debug(f"{self.state.hostname}:{self.state.port} using SNI")
+            conn.set_tlsext_host_name(idna.encode(self.state.hostname))
         try:
-            conn.connect((self._state.hostname, self._state.port))
-            conn.set_connect_state()
+            conn.connect((self.state.hostname, self.state.port))
             conn.setblocking(1)
             util.do_handshake(conn)
-            self._state.peer_address, _ = conn.getpeername()
-            self._state.offered_ciphers = conn.get_cipher_list()
-            self._state.negotiated_cipher = conn.get_cipher_name()
-            self._state.negotiated_cipher_bits = conn.get_cipher_bits()
+            self.state.peer_address, _ = conn.getpeername()
+            self.state.offered_ciphers = conn.get_cipher_list()
+            self.state.negotiated_cipher = conn.get_cipher_name()
+            self.state.negotiated_cipher_bits = conn.get_cipher_bits()
             negotiated_protocol = conn.get_protocol_version_name()
-            self._state.negotiated_protocol = f"{negotiated_protocol} ({hex(constants.PROTOCOL_VERSION[negotiated_protocol])})"
-            self._state.offered_tls_versions.append(self._state.negotiated_protocol)
+            self.state.negotiated_protocol = f"{negotiated_protocol} ({hex(constants.PROTOCOL_VERSION[negotiated_protocol])})"
+            self.state.offered_tls_versions.append(self.state.negotiated_protocol)
             self.session_cache_mode = constants.SESSION_CACHE_MODE[
                 native_openssl.SSL_CTX_get_session_cache_mode(conn._context._context)
             ]
@@ -372,9 +365,9 @@ class Transport:
             for (_, cert) in enumerate(conn.get_peer_cert_chain()):
                 self._certificate_chain.append(dump_certificate(FILETYPE_PEM, cert))
             logger.debug(
-                f"{self._state.hostname}:{self._state.port} Peer cert chain length: {len(self._certificate_chain)}"
+                f"{self.state.hostname}:{self.state.port} Peer cert chain length: {len(self._certificate_chain)}"
             )
-            self._state.certificates = util.get_certificates(
+            self.state.certificates = util.get_certificates(
                 self.server_certificate, self.certificate_chain
             )
             conn.shutdown()

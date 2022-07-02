@@ -10,10 +10,17 @@ from decimal import Decimal
 from functools import wraps
 import validators
 from cryptography import x509
-from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
+from cryptography.x509 import (
+    Certificate,
+    extensions,
+    SubjectAlternativeName,
+    DNSName,
+    Name,
+)
 from OpenSSL import SSL
 from OpenSSL.crypto import X509, FILETYPE_PEM, dump_certificate
 from retry.api import retry
+from bs4 import BeautifulSoup as bs
 from asn1crypto.x509 import Certificate as asn1Certificate
 from certvalidator import CertificateValidator, ValidationContext
 from dns import resolver, dnssec, rdatatype, message, query, name as dns_name
@@ -152,7 +159,7 @@ def get_san(cert: Certificate) -> list:
         ).value.get_values_for_type(DNSName)
     except extensions.ExtensionNotFound as ex:
         logger.debug(ex, stack_info=True)
-    return san
+    return sorted(san)
 
 
 def get_basic_constraints(cert: Certificate) -> tuple[bool, int]:
@@ -468,6 +475,14 @@ def validate_common_name(common_name: str, host: str) -> bool:
     return validators.domain(common_name) is True
 
 
+def from_subject(subject: Name, field: str = "commonName") -> str | None:
+    for fields in subject:
+        current = str(fields.oid)
+        if field in current:
+            return fields.value
+    return None
+
+
 def match_hostname(host: str, cert: Certificate) -> bool:
     if not isinstance(host, str):
         raise ValueError("invalid host provided")
@@ -485,10 +500,9 @@ def match_hostname(host: str, cert: Certificate) -> bool:
     valid_common_name = False
     wildcard_hosts = set()
     domains = set()
-    for fields in cert.subject:
-        current = str(fields.oid)
-        if "commonName" in current:
-            valid_common_name = validate_common_name(fields.value, host)
+    common_name = from_subject(cert.subject)
+    if common_name:
+        valid_common_name = validate_common_name(common_name, host)
     for san in certificate_san:
         if san.startswith("*."):
             wildcard_hosts.add(san)
@@ -917,3 +931,13 @@ def get_certificates(leaf: X509, certificates: list[X509]) -> list[BaseCertifica
             next_chain(ski, aki_lookup)
 
     return list({v.sha1_fingerprint: v for v in ret_certs}.values())
+
+
+def html_find_match(content: str, query: str) -> str | None:
+    results = None
+    soup = bs(content, "html.parser")
+    something = soup.find(query)
+    if something and isinstance(something.string, str):
+        results = something.string.strip()
+
+    return results

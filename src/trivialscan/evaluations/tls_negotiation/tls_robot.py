@@ -46,11 +46,10 @@ class EvaluationTask(BaseEvaluationTask):
         self._leaf: LeafCertificate = None
         self._cke_version = None
         self._cke_2and_prefix = None
-        self._state = transport.state
 
     @timeout(10)
     def evaluate(self) -> bool | None:
-        for cert in self._state.certificates:
+        for cert in self._transport.state.certificates:
             if isinstance(cert, LeafCertificate):
                 self._leaf = cert
                 break
@@ -170,10 +169,16 @@ class EvaluationTask(BaseEvaluationTask):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             if not ENABLE_FASTOPEN:
-                s.connect((self._state.peer_address, self._state.port))
+                s.connect(
+                    (self._transport.state.peer_address, self._transport.state.port)
+                )
                 s.sendall(ch)
             else:
-                s.sendto(ch, MSG_FASTOPEN, (self._state.peer_address, self._state.port))
+                s.sendto(
+                    ch,
+                    MSG_FASTOPEN,
+                    (self._transport.state.peer_address, self._transport.state.port),
+                )
             s.settimeout(TIMEOUT)
             buf = bytearray.fromhex("")
             i = 0

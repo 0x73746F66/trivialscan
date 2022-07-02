@@ -42,7 +42,8 @@ pyyaml
 art
 keyring==23.6.0
 deepdiff
-pycryptodome==3.15.0""")).readlines()
+pycryptodome==3.15.0
+beautifulsoup4==4.11.1""")).readlines()
 
 
 class BuildWrapper(build):

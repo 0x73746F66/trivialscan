@@ -1,5 +1,6 @@
 import hashlib
 import logging
+from urllib.parse import quote_plus
 from typing import cast
 from datetime import datetime
 from ssl import PEM_cert_to_DER_cert
@@ -230,6 +231,17 @@ class BaseCertificate:
                 for info in ext["cRLDistributionPoints"]:
                     urls.add(info["full_name"])
         return list(urls)
+
+    @property
+    def external_refs(self) -> str:
+        issuer_cn = util.from_subject(self.x509.to_cryptography().issuer)
+        return {
+            "crt.sh": f"https://crt.sh/?sha1={self.sha1_fingerprint}",
+            "censys.io": "https://search.censys.io/certificates?q=parsed.fingerprint_sha1%3A{self.sha1_fingerprint}",
+            "urlscan.io": f"https://urlscan.io/search/#page.tlsIssuer%3A%22{quote_plus(issuer_cn)}%22"
+            if issuer_cn
+            else None,
+        }
 
     def to_dict(self) -> dict:
         keys = [
