@@ -39,12 +39,10 @@ class Trivialscan:
         port: int = 443,
         client_certificate: str = None,
     ) -> TLSTransport:
+        use_cp = self.config["defaults"].get("checkpoint")
         checkpoint1 = f"resume{hostname}{port}".encode("utf-8")
-        self._checkpoints.add(checkpoint1)
         try:
-            if self.config["defaults"].get("checkpoint") and checkpoint.unfinished(
-                checkpoint1
-            ):
+            if use_cp and checkpoint.unfinished(checkpoint1):
                 transport = checkpoint.resume(checkpoint1)
             else:
                 transport = InsecureTransport(hostname, port)
@@ -59,7 +57,9 @@ class Trivialscan:
                     cafiles=self.config["defaults"].get("cafiles"),
                     use_sni=self.config["defaults"].get("use_sni"),
                 )
-                checkpoint.set(checkpoint1, transport)
+                if use_cp:
+                    checkpoint.set(checkpoint1, transport)
+                    self._checkpoints.add(checkpoint1)
         except TransportError as err:
             log(
                 f"[light_coral]{type(err).__name__}[/light_coral] {err}",
@@ -243,12 +243,11 @@ class Trivialscan:
         self,
         transport: TLSTransport,
     ):
+        use_cp = self.config["defaults"].get("checkpoint")
         checkpoint_name = f"certificates{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
             "utf-8"
         )
-        if self.config["defaults"].get("checkpoint") and checkpoint.unfinished(
-            checkpoint_name
-        ):
+        if use_cp and checkpoint.unfinished(checkpoint_name):
             transport.store.evaluations = checkpoint.resume(checkpoint_name)
         else:
             for cert in transport.store.tls_state.certificates:
@@ -296,8 +295,9 @@ class Trivialscan:
                         aside=f"SHA1:{cert.sha1_fingerprint} {transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
                         con=self._console,
                     )
-            checkpoint.set(checkpoint_name, transport.store.evaluations)
-            self._checkpoints.add(checkpoint_name)
+            if use_cp:
+                checkpoint.set(checkpoint_name, transport.store.evaluations)
+                self._checkpoints.add(checkpoint_name)
 
         return transport
 
@@ -306,12 +306,11 @@ class Trivialscan:
         group: str,
         transport: TLSTransport,
     ):
+        use_cp = self.config["defaults"].get("checkpoint")
         checkpoint_name = f"{group}{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
             "utf-8"
         )
-        if self.config["defaults"].get("checkpoint") and checkpoint.unfinished(
-            checkpoint_name
-        ):
+        if use_cp and checkpoint.unfinished(checkpoint_name):
             transport.store.evaluations = checkpoint.resume(checkpoint_name)
         else:
             for evaluation in self.config.get("evaluations", []):
@@ -347,8 +346,9 @@ class Trivialscan:
                     port=transport.store.tls_state.port,
                     con=self._console,
                 )
-            checkpoint.set(checkpoint_name, transport.store.evaluations)
-            self._checkpoints.add(checkpoint_name)
+            if use_cp:
+                checkpoint.set(checkpoint_name, transport.store.evaluations)
+                self._checkpoints.add(checkpoint_name)
 
         return transport
 
@@ -356,12 +356,11 @@ class Trivialscan:
         self,
         transport: TLSTransport,
     ):
+        use_cp = self.config["defaults"].get("checkpoint")
         checkpoint_name = f"transport{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
             "utf-8"
         )
-        if self.config["defaults"].get("checkpoint") and checkpoint.unfinished(
-            checkpoint_name
-        ):
+        if use_cp and checkpoint.unfinished(checkpoint_name):
             transport.store.evaluations = checkpoint.resume(checkpoint_name)
         else:
             for evaluation in self.config.get("evaluations", []):
@@ -397,8 +396,9 @@ class Trivialscan:
                     port=transport.store.tls_state.port,
                     con=self._console,
                 )
-            checkpoint.set(checkpoint_name, transport.store.evaluations)
-            self._checkpoints.add(checkpoint_name)
+            if use_cp:
+                checkpoint.set(checkpoint_name, transport.store.evaluations)
+                self._checkpoints.add(checkpoint_name)
 
         return transport
 
