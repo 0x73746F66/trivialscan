@@ -69,7 +69,6 @@ class TLSTransport:
     revocation_ocsp_assertion: bytes
     session_ticket_hints: bool
     session_tickets: bool
-    session_cache_mode: str
 
     def __init__(self, hostname: str, port: int = 443) -> None:
         if not isinstance(port, int):
@@ -96,6 +95,9 @@ class TLSTransport:
         self.client_certificate_match = None
         self.client_certificate_trusted = None
         self.client_initiated_renegotiation = None
+        self.session_cache_mode = None
+        self.session_ticket_hints = None
+        self.session_tickets = None
         self.certificates = []
         self.verifier_errors = []
         self.expected_client_subjects = []
