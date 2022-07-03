@@ -8,7 +8,8 @@ from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColum
 from art import text2art
 from . import log
 from .. import trivialscan
-from ..outputs.json import save_to
+from ..util import camel_to_snake
+from ..outputs.json import save_to, save_partial
 
 
 __module__ = "trivialscan.cli.scan"
@@ -42,7 +43,52 @@ def wrap_trivialscan(
                 con=progress_console,
             )
             data = transport.store.to_dict()
+            save_partial(
+                config=config,
+                when="per_host",
+                data_type="host",
+                data=data,
+                hostname=transport.store.tls_state.hostname,
+                port=transport.store.tls_state.port,
+                peer_address=transport.store.tls_state.peer_address,
+                negotiated_protocol=transport.store.tls_state.negotiated_protocol,
+                negotiated_cipher=transport.store.tls_state.negotiated_cipher,
+            )
+            for cert in transport.store.tls_state.certificates:
+                save_partial(
+                    config=config,
+                    when="per_certificate",
+                    data_type="certificate",
+                    data={
+                        **cert.to_dict(),
+                        **{
+                            "evaluations": [
+                                e
+                                for e in transport.store.evaluations
+                                if e["group"] == "certificate"
+                                and e["metadata"].get("sha1_fingerprint")
+                                == cert.sha1_fingerprint
+                            ]
+                        },
+                    },
+                    hostname=transport.store.tls_state.hostname,
+                    port=transport.store.tls_state.port,
+                    certificate_type=camel_to_snake(type(cert).__name__),
+                    sha1_fingerprint=cert.sha1_fingerprint,
+                    md5_fingerprint=cert.md5_fingerprint,
+                    sha256_fingerprint=cert.sha256_fingerprint,
+                    serial_number_hex=cert.serial_number_hex,
+                    public_key_type=cert.public_key_type,
+                    public_key_size=cert.public_key_size,
+                    subject_key_identifier=cert.subject_key_identifier,
+                    spki_fingerprint=cert.spki_fingerprint,
+                    version=cert.version,
+                    validation_level=cert.validation_level,
+                    not_before=cert.not_before,
+                    not_after=cert.not_after,
+                )
             queue_out.put(data)
+
         except Exception as ex:  # pylint: disable=broad-except
             logger.error(ex, exc_info=True)
             queue_out.put(
@@ -128,6 +174,50 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
         finally:
             progress.stop()
         queries.append(data)
+        save_partial(
+            config=config,
+            when="per_host",
+            data_type="host",
+            data=data,
+            hostname=transport.store.tls_state.hostname,
+            port=transport.store.tls_state.port,
+            peer_address=transport.store.tls_state.peer_address,
+            negotiated_protocol=transport.store.tls_state.negotiated_protocol,
+            negotiated_cipher=transport.store.tls_state.negotiated_cipher,
+        )
+        for cert in transport.store.tls_state.certificates:
+            save_partial(
+                config=config,
+                when="per_certificate",
+                data_type="certificate",
+                data={
+                    **cert.to_dict(),
+                    **{
+                        "evaluations": [
+                            e
+                            for e in transport.store.evaluations
+                            if e["group"] == "certificate"
+                            and e["metadata"].get("sha1_fingerprint")
+                            == cert.sha1_fingerprint
+                        ]
+                    },
+                },
+                hostname=transport.store.tls_state.hostname,
+                port=transport.store.tls_state.port,
+                certificate_type=camel_to_snake(type(cert).__name__),
+                sha1_fingerprint=cert.sha1_fingerprint,
+                md5_fingerprint=cert.md5_fingerprint,
+                sha256_fingerprint=cert.sha256_fingerprint,
+                serial_number_hex=cert.serial_number_hex,
+                public_key_type=cert.public_key_type,
+                public_key_size=cert.public_key_size,
+                subject_key_identifier=cert.subject_key_identifier,
+                spki_fingerprint=cert.spki_fingerprint,
+                version=cert.version,
+                validation_level=cert.validation_level,
+                not_before=cert.not_before,
+                not_after=cert.not_after,
+            )
 
     return queries
 
@@ -215,8 +305,31 @@ def scan(config: dict, **flags):
         queries = run_parra(config, not hide_progress_bars, use_console)
 
     execution_duration_seconds = (datetime.utcnow() - run_start).total_seconds()
+    save_final(config, flags, queries, execution_duration_seconds, use_console)
+
+    log(
+        "[cyan]TOTAL[/cyan] Execution duration %.1f seconds"
+        % execution_duration_seconds,
+        aside="core",
+        con=console if use_console else None,
+    )
+    for result in queries:
+        if result.get("error"):
+            err, msg = result["error"]
+            log(
+                f"[light_coral]ERROR[/light_coral] {msg}",
+                aside=err,
+                con=console if use_console else None,
+            )
+            if not use_console and log_level >= logging.ERROR:
+                print(err)
+
+
+def save_final(config, flags, queries, execution_duration_seconds, use_console):
     json_output = [
-        n["path"] for n in config.get("outputs", []) if n.get("type") == "json"
+        n["path"]
+        for n in config.get("outputs", [])
+        if n.get("type") == "json" and n.get("when", "final") == "final"
     ]
     if json_output:
         for json_file in json_output:
@@ -240,20 +353,3 @@ def scan(config: dict, **flags):
                 aside="core",
                 con=console if use_console else None,
             )
-
-    log(
-        "[cyan]TOTAL[/cyan] Execution duration %.1f seconds"
-        % execution_duration_seconds,
-        aside="core",
-        con=console if use_console else None,
-    )
-    for result in queries:
-        if result.get("error"):
-            err, msg = result["error"]
-            log(
-                f"[light_coral]ERROR[/light_coral] {msg}",
-                aside=err,
-                con=console if use_console else None,
-            )
-            if not use_console and log_level >= logging.ERROR:
-                print(err)

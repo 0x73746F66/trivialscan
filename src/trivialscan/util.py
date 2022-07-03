@@ -941,3 +941,7 @@ def html_find_match(content: str, query: str) -> str | None:
         results = something.string.strip()
 
     return results
+
+
+def camel_to_snake(s):
+    return "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")

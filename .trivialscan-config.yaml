@@ -19,6 +19,13 @@ outputs:
     path: .development/results/{date_year}-{date_month}-{date_day}.json
   - type: json
     path: .development/results/all.json
+    when: final
+  - type: json
+    path: .development/results/{hostname}_{port}.json
+    when: per_host
+  - type: json
+    path: .development/results/{hostname}_{port}_{sha1_fingerprint}.json
+    when: per_certificate
 
 "PCI DSS 3.2.1":
   "6.5.4": Insecure communications
