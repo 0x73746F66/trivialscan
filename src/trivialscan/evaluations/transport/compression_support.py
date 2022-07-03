@@ -1,20 +1,18 @@
-import logging
-from ...transport import Transport
+from ...transport import TLSTransport
 from .. import BaseEvaluationTask
-
-logger = logging.getLogger(__name__)
 
 
 class EvaluationTask(BaseEvaluationTask):
-    def __init__(self, transport: Transport, metadata: dict, config: dict) -> None:
+    def __init__(self, transport: TLSTransport, metadata: dict, config: dict) -> None:
         super().__init__(transport, metadata, config)
 
     def evaluate(self) -> bool | None:
-        return any(
-            [
-                self.header_exists(name="content-encoding", includes_value="gzip"),
-                self.header_exists(name="content-encoding", includes_value="compress"),
-                self.header_exists(name="content-encoding", includes_value="deflate"),
-                self.header_exists(name="content-encoding", includes_value="br"),
-            ]
-        )
+        results = []
+        compression = ["gzip", "bz", "deflate", "compress"]
+        for state in self.transport.store.http_states:
+            for method in compression:
+                results.append(
+                    state.header_exists(name="content-encoding", includes_value=method)
+                )
+
+        return any(results)

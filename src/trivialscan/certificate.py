@@ -358,14 +358,16 @@ class LeafCertificate(BaseCertificate):
     def certification_authority_authorization(self) -> bool:
         if not isinstance(self._certification_authority_authorization, bool):
             self._certification_authority_authorization = util.caa_exist(
-                self._transport.state.hostname
+                self._transport.store.tls_state.hostname
             )
         return self._certification_authority_authorization
 
     @property
     def dnssec(self) -> bool:
         if not isinstance(self._dnssec_answer, Answer):
-            self._dnssec_answer = util.get_dnssec_answer(self._transport.state.hostname)
+            self._dnssec_answer = util.get_dnssec_answer(
+                self._transport.store.tls_state.hostname
+            )
         if not isinstance(self._dnssec, bool):
             self._dnssec = isinstance(self._dnssec_answer, Answer)
         return self._dnssec
@@ -375,7 +377,9 @@ class LeafCertificate(BaseCertificate):
         if isinstance(self._dnssec_algorithm, str):
             return self._dnssec_algorithm
         if not isinstance(self._dnssec_answer, Answer):
-            self._dnssec_answer = util.get_dnssec_answer(self._transport.state.hostname)
+            self._dnssec_answer = util.get_dnssec_answer(
+                self._transport.store.tls_state.hostname
+            )
         if isinstance(self._dnssec_answer, Answer):
             algorithm = int(self._dnssec_answer[0].to_text().split()[6])
             self._dnssec_algorithm = (
@@ -390,7 +394,7 @@ class LeafCertificate(BaseCertificate):
         tlsa_ext = util.get_extensions_by_oid(
             self.x509.to_cryptography(), constants.TLSA_EXTENSION_OID
         )
-        tlsa_dns = util.get_tlsa_answer(self._transport.state.hostname)
+        tlsa_dns = util.get_tlsa_answer(self._transport.store.tls_state.hostname)
         return isinstance(tlsa_ext, extensions.Extension) or tlsa_dns is not None
 
     @property
@@ -422,7 +426,7 @@ class LeafCertificate(BaseCertificate):
                     ]
                     for uri in uris:
                         logger.debug(
-                            f"{self._transport.state.hostname}:{self._transport.state.port} Requesting OCSP from responder {uri}"
+                            f"{self._transport.store.tls_state.hostname}:{self._transport.store.tls_state.port} Requesting OCSP from responder {uri}"
                         )
                         response = self._transport.get_ocsp_response(uri)
                         if response is None:

@@ -8,7 +8,7 @@ from certvalidator.errors import (
 )
 from ...util import validate_certificate_chain, gather_key_usages
 from ...certificate import LeafCertificate
-from ...transport import Transport
+from ...transport import TLSTransport
 from .. import BaseEvaluationTask
 
 logger = logging.getLogger(__file__)
@@ -19,13 +19,13 @@ class EvaluationTask(BaseEvaluationTask):
     _leaf_certificate: LeafCertificate
 
     def __init__(  # pylint: disable=useless-super-delegation
-        self, transport: Transport, metadata: dict, config: dict
+        self, transport: TLSTransport, metadata: dict, config: dict
     ) -> None:
         super().__init__(transport, metadata, config)
 
     def evaluate(self) -> bool | None:
         leaf = None
-        for cert in self._transport.state.certificates:
+        for cert in self.transport.store.tls_state.certificates:
             if isinstance(cert, LeafCertificate):
                 leaf = cert
                 break

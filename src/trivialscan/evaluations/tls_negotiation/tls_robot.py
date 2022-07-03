@@ -5,7 +5,7 @@ import math
 import socket
 import os
 from ...util import timeout
-from ...transport import Transport
+from ...transport import TLSTransport
 from ...certificate import LeafCertificate
 from .. import BaseEvaluationTask
 
@@ -41,7 +41,7 @@ def powmod(x, y, z):
 
 
 class EvaluationTask(BaseEvaluationTask):
-    def __init__(self, transport: Transport, metadata: dict, config: dict) -> None:
+    def __init__(self, transport: TLSTransport, metadata: dict, config: dict) -> None:
         super().__init__(transport, metadata, config)
         self._leaf: LeafCertificate = None
         self._cke_version = None
@@ -49,7 +49,7 @@ class EvaluationTask(BaseEvaluationTask):
 
     @timeout(10)
     def evaluate(self) -> bool | None:
-        for cert in self._transport.state.certificates:
+        for cert in self.transport.store.tls_state.certificates:
             if isinstance(cert, LeafCertificate):
                 self._leaf = cert
                 break
@@ -170,14 +170,20 @@ class EvaluationTask(BaseEvaluationTask):
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             if not ENABLE_FASTOPEN:
                 s.connect(
-                    (self._transport.state.peer_address, self._transport.state.port)
+                    (
+                        self.transport.store.tls_state.peer_address,
+                        self.transport.store.tls_state.port,
+                    )
                 )
                 s.sendall(ch)
             else:
                 s.sendto(
                     ch,
                     MSG_FASTOPEN,
-                    (self._transport.state.peer_address, self._transport.state.port),
+                    (
+                        self.transport.store.tls_state.peer_address,
+                        self.transport.store.tls_state.port,
+                    ),
                 )
             s.settimeout(TIMEOUT)
             buf = bytearray.fromhex("")

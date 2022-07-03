@@ -1,367 +1,438 @@
-from asyncio.log import logger
 import sys
+import logging
 from importlib import import_module
-from hashlib import sha1
 from copy import deepcopy
 from rich.console import Console
-from trivialscan.transport import Transport
 from .config import load_config, get_config
 from .util import TimeoutError
 from .cli import log
+from .transport import TLSTransport, HTTPTransport
 from .transport.insecure import InsecureTransport
-from .transport.state import TransportState
 from .certificate import LeafCertificate
-from .exceptions import EvaluationNotImplemented, EvaluationNotRelevant, NoLogEvaluation
+from .exceptions import (
+    EvaluationNotImplemented,
+    EvaluationNotRelevant,
+    NoLogEvaluation,
+    TransportError,
+)
 from .evaluations import BaseEvaluationTask
 from .outputs import checkpoint
 
 __module__ = "trivialscan"
 
 assert sys.version_info >= (3, 10), "Requires Python 3.10 or newer"
-config = get_config(custom_values=load_config())
+logger = logging.getLogger(__name__)
 
 
-def evaluate(
-    hostname: str,
-    port: int = 443,
-    http_request_path: str = "/",
-    evaluations: list = config.get("evaluations"),
-    skip_evaluations: list = config["defaults"].get("skip_evaluations", []),
-    skip_evaluation_groups: list = config["defaults"].get("skip_evaluation_groups", []),
-    use_sni: bool = config["defaults"].get("use_sni"),
-    cafiles: str = config["defaults"].get("cafiles"),
-    resume_checkpoint: bool = config["defaults"].get("checkpoint", False),
-    client_certificate: str = None,
-    tmp_path_prefix: str = config["defaults"].get("tmp_path_prefix", "/tmp"),
-    console: Console = None,
-    **kwargs,
-) -> Transport:
-    checkpoint1 = f"transport{hostname}{port}".encode("utf-8")
-    checkpoint2 = f"certificates{hostname}{port}".encode("utf-8")
-    checkpoint3 = f"evaluations{hostname}{port}".encode("utf-8")
-    checkpoint4 = f"compliance{hostname}{port}".encode("utf-8")
+class Trivialscan:
+    _checkpoints: set = set()
+    _console: Console = None
+    config: dict = get_config(custom_values=load_config())
 
-    if resume_checkpoint and checkpoint.unfinished(checkpoint1):
-        transport = checkpoint.resume(checkpoint1)
-    else:
-        transport = InsecureTransport(hostname, port)
-        transport.tmp_path_prefix = tmp_path_prefix
-        if isinstance(client_certificate, str):
-            transport.pre_client_authentication_check(
-                client_pem_path=client_certificate
-            )
-        transport.connect_insecure(cafiles=cafiles, use_sni=use_sni)
-        checkpoint.set(checkpoint1, transport)
+    def __init__(self, console: Console = None, **kwargs) -> None:
+        self.config = kwargs.get("config", self.config)
+        self._console = console
 
-    log(
-        f"[cyan]INTO![/cyan] Negotiated {transport.state.negotiated_protocol} {transport.state.peer_address}",
-        hostname=transport.state.hostname,
-        port=transport.state.port,
-        con=console,
-    )
-    host_data = {
-        "hostname": hostname,
-        "port": port,
-        "peer_address": transport.state.peer_address,
-        "http_request_path": http_request_path,
-    }
-    configuration = {
-        **{
-            "use_sni": use_sni,
-            "cafiles": cafiles,
-            "client_certificate": client_certificate,
-            "tmp_path_prefix": tmp_path_prefix,
-        },
-        **host_data,
-        **kwargs,
-    }
-    # certs are passed to the evaluation method. Having them grouped is more readable
-    if resume_checkpoint and checkpoint.unfinished(checkpoint2):
-        transport.state.evaluations = checkpoint.resume(checkpoint2)
-    else:
-        for cert in transport.state.certificates:
-            if isinstance(cert, LeafCertificate):
-                cert.set_transport(transport)
-            cert_data = {
-                "certificate_subject": cert.subject or "",
-                "sha1_fingerprint": cert.sha1_fingerprint,
-                "subject_key_identifier": cert.subject_key_identifier,
-                "authority_key_identifier": cert.authority_key_identifier,
-            }
+    def tls_probe(
+        self,
+        hostname: str,
+        port: int = 443,
+        client_certificate: str = None,
+    ) -> TLSTransport:
+        checkpoint1 = f"resume{hostname}{port}".encode("utf-8")
+        self._checkpoints.add(checkpoint1)
+        try:
+            if self.config["defaults"].get("checkpoint") and checkpoint.unfinished(
+                checkpoint1
+            ):
+                transport = checkpoint.resume(checkpoint1)
+            else:
+                transport = InsecureTransport(hostname, port)
+                transport.tmp_path_prefix = self.config["defaults"].get(
+                    "tmp_path_prefix", "/tmp"
+                )
+                if isinstance(client_certificate, str):
+                    transport.pre_client_authentication_check(
+                        client_pem_path=client_certificate
+                    )
+                transport.connect_insecure(
+                    cafiles=self.config["defaults"].get("cafiles"),
+                    use_sni=self.config["defaults"].get("use_sni"),
+                )
+                checkpoint.set(checkpoint1, transport)
+        except TransportError as err:
             log(
-                f"[cyan]INFO![/cyan] {cert_data['certificate_subject']}",
-                aside=f"SHA1:{cert.sha1_fingerprint} {transport.state.hostname}:{transport.state.port}",
-                con=console,
+                f"[light_coral]{type(err).__name__}[/light_coral] {err}",
+                hostname=hostname,
+                port=port,
+                con=self._console,
             )
-            for evaluation in evaluations:
-                if evaluation["group"] != "certificate":
+
+        return transport
+
+    def http_probe(
+        self,
+        hostname: str,
+        request_path: str,
+        port: int = 443,
+        client_certificate: str = None,
+        tmp_path_prefix: str = config["defaults"].get("tmp_path_prefix", "/tmp"),
+    ) -> HTTPTransport:
+        transport = HTTPTransport(
+            hostname=hostname,
+            port=port,
+            tmp_path_prefix=tmp_path_prefix,
+        )
+        transport.do_request(
+            http_request_path=request_path,
+            cafiles=self.config["defaults"].get("cafiles"),
+            client_certificate=client_certificate,
+        )
+
+        return transport
+
+    def _shared_config_for_tasks(self) -> dict:
+        return {
+            "use_sni": self.config["defaults"].get("use_sni"),
+            "cafiles": self.config["defaults"].get("cafiles"),
+            "tmp_path_prefix": self.config["defaults"].get("tmp_path_prefix"),
+        }
+
+    def execute_evaluations(self, transport: TLSTransport):
+        if transport.store.tls_state.negotiated_protocol:
+            log(
+                f"[cyan]INTO![/cyan] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
+                hostname=transport.store.tls_state.hostname,
+                port=transport.store.tls_state.port,
+                con=self._console,
+            )
+        # certs are passed to the evaluation method. Having them grouped is more readable
+        transport = self.evaluate_certificates(
+            transport=transport,
+        )
+        transport = self.evaluate_transports(
+            transport=transport,
+        )
+        # specifics are done, compliance checks are last to be evaluated, do the rest now
+        transport = self.evaluate_generic(
+            "tls_negotiation",
+            transport=transport,
+        )
+        # compliance checks are last to be evaluated
+        transport = self.evaluate_generic(
+            "compliance",
+            transport=transport,
+        )
+        for cp in self._checkpoints:
+            checkpoint.clear(cp)
+
+        return transport
+
+    def _evaluatation_module(
+        self,
+        evaluation: dict,
+        transport: TLSTransport,
+        **kwargs,
+    ) -> BaseEvaluationTask | None:
+        if any(
+            [
+                evaluation["group"]
+                in self.config["defaults"].get("skip_evaluation_groups", []),
+                evaluation["key"]
+                in self.config["defaults"].get("skip_evaluations", []),
+            ]
+        ):
+            return
+        logger.info(f'{evaluation["group"]}.{evaluation["key"]}')
+        try:
+            _cls = getattr(
+                import_module(
+                    f'.evaluations.{evaluation["group"]}.{evaluation["key"]}',
+                    package="trivialscan",
+                ),
+                "EvaluationTask",
+            )
+        except ModuleNotFoundError:
+            log(
+                f'[magenta]ModuleNotFoundError[/magenta] {evaluation["group"]}.{evaluation["key"]}',
+                hostname=transport.store.tls_state.hostname,
+                port=transport.store.tls_state.port,
+                con=self._console,
+            )
+            return None
+
+        return _cls(transport, evaluation, self._shared_config_for_tasks(), **kwargs)
+
+    def _result_data(
+        self, result: bool | str | None, task: BaseEvaluationTask, **kwargs
+    ) -> tuple[dict, str]:
+        label_as = task.metadata["label_as"]
+        evaluation_value = "[cyan]EMPTY[/cyan]"
+        result_label = "Unknown"
+        score = 0
+        for anotatation in task.metadata.get("anotate_results", []):
+            if isinstance(anotatation["value"], str) and anotatation["value"] == "None":
+                anotatation["value"] = None
+            if anotatation["value"] is result or anotatation["value"] == result:
+                evaluation_value = anotatation["evaluation_value"]
+                result_label = anotatation["display_as"]
+                score = anotatation["score"]
+                break
+
+        substitutions = deepcopy(task.substitution_metadata)
+        for substitution in task.metadata.get("substitutions", []):
+            value = None
+            if hasattr(task.transport.store.tls_state, substitution):
+                value = getattr(task.transport.store.tls_state, substitution)
+            elif hasattr(task.transport.store, substitution):
+                value = getattr(task.transport.store, substitution)
+            elif hasattr(task.transport, substitution):
+                value = getattr(task.transport, substitution)
+            if value:
+                substitutions[substitution] = value
+
+        metadata = {**kwargs, **substitutions}
+        try:
+            label_as = label_as.format(**metadata)
+        except KeyError:
+            pass
+        try:
+            evaluation_value = evaluation_value.format(**metadata)
+        except KeyError:
+            pass
+        log_output = " ".join([evaluation_value, label_as])
+
+        return {
+            "name": label_as,
+            "key": task.metadata["key"],
+            "group": task.metadata["group"],
+            "cve": task.metadata.get("cve", []),
+            "cvss2": task.metadata.get("cvss2", []),
+            "cvss3": task.metadata.get("cvss3", []),
+            "result": result,
+            "result_label": result_label,
+            "score": score,
+            "references": task.metadata.get("references", []),
+            "description": task.metadata["issue"],
+            "metadata": metadata,
+            "compliance": self._compliance_detail(task.metadata.get("compliance", {})),
+        }, log_output
+
+    def _compliance_detail(self, compliance: dict) -> list:
+        result = []
+        for ctype, _cval in compliance.items():
+            for _compliance in _cval:
+                cname = f"{ctype} {_compliance['version']}"
+                if cname not in self.config:
+                    result.append({**{"compliance": ctype}, **_compliance})
                     continue
-                task = _evaluatation_module(
+                if ctype == "PCI DSS":
+                    for requirement in _compliance.get("requirements", []) or []:
+                        if str(requirement) in self.config[cname]:
+                            result.append(
+                                {
+                                    "compliance": ctype,
+                                    "version": str(_compliance["version"]),
+                                    "requirement": str(requirement),
+                                    "description": self.config[cname][str(requirement)],
+                                }
+                            )
+        return result
+
+    def evaluate_certificates(
+        self,
+        transport: TLSTransport,
+    ):
+        checkpoint_name = f"certificates{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
+            "utf-8"
+        )
+        if self.config["defaults"].get("checkpoint") and checkpoint.unfinished(
+            checkpoint_name
+        ):
+            transport.store.evaluations = checkpoint.resume(checkpoint_name)
+        else:
+            for cert in transport.store.tls_state.certificates:
+                if isinstance(cert, LeafCertificate):
+                    cert.set_transport(transport)
+                cert_data = {
+                    "certificate_subject": cert.subject or "",
+                    "sha1_fingerprint": cert.sha1_fingerprint,
+                    "subject_key_identifier": cert.subject_key_identifier,
+                    "authority_key_identifier": cert.authority_key_identifier,
+                }
+                log(
+                    f"[cyan]INFO![/cyan] {cert_data['certificate_subject']}",
+                    aside=f"SHA1:{cert.sha1_fingerprint} {transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
+                    con=self._console,
+                )
+                for evaluation in self.config.get("evaluations", []):
+                    if evaluation["group"] != "certificate":
+                        continue
+                    task: BaseEvaluationTask = self._evaluatation_module(
+                        evaluation,
+                        transport,
+                    )
+                    if not task:
+                        continue
+                    result = None
+                    try:
+                        result = task.evaluate(cert)
+                        data, log_output = self._result_data(result, task, **cert_data)
+                    except EvaluationNotRelevant:
+                        continue
+                    except EvaluationNotImplemented:
+                        data, _ = self._result_data(None, task, **cert_data)
+                        log_output = f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
+                    except TimeoutError:
+                        data, _ = self._result_data(None, task, **cert_data)
+                        log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
+                    except NoLogEvaluation:
+                        data, _ = self._result_data(result, task, **cert_data)
+                        transport.store.evaluations.append(data)
+                        continue
+                    transport.store.evaluations.append(data)
+                    log(
+                        log_output,
+                        aside=f"SHA1:{cert.sha1_fingerprint} {transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
+                        con=self._console,
+                    )
+            checkpoint.set(checkpoint_name, transport.store.evaluations)
+            self._checkpoints.add(checkpoint_name)
+
+        return transport
+
+    def evaluate_generic(
+        self,
+        group: str,
+        transport: TLSTransport,
+    ):
+        checkpoint_name = f"{group}{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
+            "utf-8"
+        )
+        if self.config["defaults"].get("checkpoint") and checkpoint.unfinished(
+            checkpoint_name
+        ):
+            transport.store.evaluations = checkpoint.resume(checkpoint_name)
+        else:
+            for evaluation in self.config.get("evaluations", []):
+                if evaluation["group"] != group:
+                    continue
+                task = self._evaluatation_module(
                     evaluation,
                     transport,
-                    skip_evaluations,
-                    skip_evaluation_groups,
-                    configuration,
-                    con=console,
                 )
                 if not task:
                     continue
-                result = None
                 try:
-                    result = task.evaluate(cert)
-                    data, log_output = _result_data(
-                        result, task, **cert_data, **host_data
-                    )
+                    result = task.evaluate()
+                    data, log_output = self._result_data(result, task)
                 except EvaluationNotRelevant:
                     continue
                 except EvaluationNotImplemented:
-                    data, _ = _result_data(None, task, **cert_data, **host_data)
+                    data, _ = self._result_data(None, task)
                     log_output = (
                         f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
                     )
                 except TimeoutError:
-                    data, _ = _result_data(None, task, **cert_data, **host_data)
+                    data, _ = self._result_data(None, task)
                     log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
                 except NoLogEvaluation:
-                    data, _ = _result_data(result, task, **cert_data, **host_data)
-                    transport.state.evaluations.append(data)
+                    data, _ = self._result_data(result, task)
+                    transport.store.evaluations.append(data)
                     continue
-                transport.state.evaluations.append(data)
+                transport.store.evaluations.append(data)
                 log(
                     log_output,
-                    aside=f"SHA1:{cert.sha1_fingerprint} {transport.state.hostname}:{transport.state.port}",
-                    con=console,
+                    hostname=transport.store.tls_state.hostname,
+                    port=transport.store.tls_state.port,
+                    con=self._console,
                 )
-        checkpoint.set(checkpoint2, transport.state.evaluations)
+            checkpoint.set(checkpoint_name, transport.store.evaluations)
+            self._checkpoints.add(checkpoint_name)
 
-    # certificates are done, compliance checks are last to be evaluated
-    if resume_checkpoint and checkpoint.unfinished(checkpoint3):
-        transport.state.evaluations = checkpoint.resume(checkpoint3)
-    else:
-        for evaluation in evaluations:
-            if evaluation["group"] in ["certificate", "compliance"]:
-                continue
-            task = _evaluatation_module(
-                evaluation,
-                transport,
-                skip_evaluations,
-                skip_evaluation_groups,
-                configuration,
-                con=console,
-            )
-            if evaluation["group"] == "transport":
-                response = task.do_request(http_request_path)
-                log_line = None
-                if not response:
-                    log_line = f"[cyan]SKIP![/cyan] (Missing HTTP Response) {evaluation['label_as']}"
-                if task.skip:
-                    log_line = (
-                        f"[cyan]SKIP![/cyan] (robots.txt) {evaluation['label_as']}"
-                    )
-                if log_line:
-                    log(
-                        log_line,
-                        hostname=transport.state.hostname,
-                        port=transport.state.port,
-                        con=console,
-                    )
-                    continue
-                transport.state.http_headers = task.response_headers
-                transport.state.http_status_code = task.response_status
-                if task.response_text:
-                    transport.state.http_response_title = util.html_find_match(
-                        task.response_text, "title"
-                    )
-                    transport.state.http_response_hash = sha1(
-                        task.response_text.encode()
-                    ).hexdigest()
-            if not task:
-                continue
-            try:
-                result = task.evaluate()
-                data, log_output = _result_data(result, task, **host_data)
-            except EvaluationNotRelevant:
-                continue
-            except EvaluationNotImplemented:
-                data, _ = _result_data(None, task, **host_data)
-                log_output = (
-                    f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
-                )
-            except TimeoutError:
-                data, _ = _result_data(None, task, **host_data)
-                log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
-            except NoLogEvaluation:
-                data, _ = _result_data(result, task, **host_data)
-                transport.state.evaluations.append(data)
-                continue
-            transport.state.evaluations.append(data)
-            log(
-                log_output,
-                hostname=transport.state.hostname,
-                port=transport.state.port,
-                con=console,
-            )
-        checkpoint.set(checkpoint3, transport.state.evaluations)
+        return transport
 
-    # compliance checks are last to be evaluated
-    if resume_checkpoint and checkpoint.unfinished(checkpoint4):
-        transport.state.evaluations = checkpoint.resume(checkpoint4)
-    else:
-        for evaluation in evaluations:
-            if evaluation["group"] != "compliance":
-                continue
-            task = _evaluatation_module(
-                evaluation,
-                transport,
-                skip_evaluations,
-                skip_evaluation_groups,
-                configuration,
-                con=console,
-            )
-            if not task:
-                continue
-            try:
-                result = task.evaluate()
-                data, log_output = _result_data(result, task, **host_data)
-            except EvaluationNotRelevant:
-                continue
-            except EvaluationNotImplemented:
-                data, _ = _result_data(None, task, **host_data)
-                log_output = (
-                    f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
-                )
-            except TimeoutError:
-                data, _ = _result_data(None, task, **host_data)
-                log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
-            except NoLogEvaluation:
-                data, _ = _result_data(result, task, **host_data)
-                transport.state.evaluations.append(data)
-                continue
-            transport.state.evaluations.append(data)
-            log(
-                log_output,
-                hostname=transport.state.hostname,
-                port=transport.state.port,
-                con=console,
-            )
-        checkpoint.set(checkpoint4, transport.state.evaluations)
-
-    checkpoint.clear(checkpoint1)
-    checkpoint.clear(checkpoint2)
-    checkpoint.clear(checkpoint3)
-    checkpoint.clear(checkpoint4)
-
-    return transport
-
-
-def _evaluatation_module(
-    evaluation: dict,
-    transport: Transport,
-    skip_evaluations: list,
-    skip_evaluation_groups: list,
-    configuration: dict,
-    con: Console = None,
-    **kwargs,
-) -> BaseEvaluationTask | None:
-    if any(
-        [
-            evaluation["group"] in skip_evaluation_groups,
-            evaluation["key"] in skip_evaluations,
-        ]
+    def evaluate_transports(
+        self,
+        transport: TLSTransport,
     ):
-        return
-    logger.info(f'{evaluation["group"]}.{evaluation["key"]}')
-    try:
-        _cls = getattr(
-            import_module(
-                f'.evaluations.{evaluation["group"]}.{evaluation["key"]}',
-                package="trivialscan",
-            ),
-            "EvaluationTask",
+        checkpoint_name = f"transport{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
+            "utf-8"
         )
-    except ModuleNotFoundError:
-        log(
-            f'[magenta]ModuleNotFoundError[/magenta] {evaluation["group"]}.{evaluation["key"]}',
-            hostname=transport.transport.state.hostname,
-            port=transport.transport.state.port,
-            con=con,
+        if self.config["defaults"].get("checkpoint") and checkpoint.unfinished(
+            checkpoint_name
+        ):
+            transport.store.evaluations = checkpoint.resume(checkpoint_name)
+        else:
+            for evaluation in self.config.get("evaluations", []):
+                if evaluation["group"] != "transport":
+                    continue
+                task = self._evaluatation_module(
+                    evaluation,
+                    transport,
+                )
+                if not task:
+                    continue
+                try:
+                    result = task.evaluate()
+                    data, log_output = self._result_data(result, task)
+                except EvaluationNotRelevant:
+                    continue
+                except EvaluationNotImplemented:
+                    data, _ = self._result_data(None, task)
+                    log_output = (
+                        f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
+                    )
+                except TimeoutError:
+                    data, _ = self._result_data(None, task)
+                    log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
+                except NoLogEvaluation:
+                    data, _ = self._result_data(result, task)
+                    transport.store.evaluations.append(data)
+                    continue
+                transport.store.evaluations.append(data)
+                log(
+                    log_output,
+                    hostname=transport.store.tls_state.hostname,
+                    port=transport.store.tls_state.port,
+                    con=self._console,
+                )
+            checkpoint.set(checkpoint_name, transport.store.evaluations)
+            self._checkpoints.add(checkpoint_name)
+
+        return transport
+
+
+def trivialscan(
+    hostname: str,
+    port: int = 443,
+    http_request_paths: list[str] = ["/"],
+    client_certificate: str = None,
+    config: dict = None,
+    console: Console = None,
+    **kwargs,
+) -> TLSTransport:
+    if config:
+        scanner = Trivialscan(console=console, config=config)
+    else:
+        scanner = Trivialscan(console=console)
+    transport = scanner.tls_probe(
+        hostname=hostname,
+        port=port,
+    )
+    for request_path in http_request_paths:
+        response: HTTPTransport = scanner.http_probe(
+            hostname=hostname,
+            port=port,
+            request_path=request_path,
+            client_certificate=client_certificate,
         )
-        return None
-
-    return _cls(transport, evaluation, configuration, **kwargs)
-
-
-def _result_data(
-    result: bool | str | None, task: BaseEvaluationTask, **kwargs
-) -> tuple[dict, str]:
-    label_as = task.metadata["label_as"]
-    evaluation_value = "[cyan]EMPTY[/cyan]"
-    result_label = "Unknown"
-    score = 0
-    for anotatation in task.metadata.get("anotate_results", []):
-        if isinstance(anotatation["value"], str) and anotatation["value"] == "None":
-            anotatation["value"] = None
-        if anotatation["value"] is result or anotatation["value"] == result:
-            evaluation_value = anotatation["evaluation_value"]
-            result_label = anotatation["display_as"]
-            score = anotatation["score"]
-            break
-
-    substitutions = deepcopy(task.substitution_metadata)
-    for substitution in task.metadata.get("substitutions", []):
-        value = None
-        if hasattr(task.state, substitution):
-            value = getattr(task.state, substitution)
-        if hasattr(task.transport, substitution):
-            value = getattr(task.transport, substitution)
-        if value:
-            substitutions[substitution] = value
-
-    metadata = {**kwargs, **substitutions}
-    try:
-        label_as = label_as.format(**metadata)
-    except KeyError:
-        pass
-    try:
-        evaluation_value = evaluation_value.format(**metadata)
-    except KeyError:
-        pass
-    log_output = " ".join([evaluation_value, label_as])
-
-    return {
-        "name": label_as,
-        "key": task.metadata["key"],
-        "group": task.metadata["group"],
-        "cve": task.metadata.get("cve", []),
-        "cvss2": task.metadata.get("cvss2", []),
-        "cvss3": task.metadata.get("cvss3", []),
-        "result": result,
-        "result_label": result_label,
-        "score": score,
-        "references": task.metadata.get("references", []),
-        "description": task.metadata["issue"],
-        "metadata": metadata,
-        "compliance": _compliance_detail(task.metadata.get("compliance", {})),
-    }, log_output
-
-
-def _compliance_detail(compliance: dict) -> list:
-    result = []
-    for ctype, _cval in compliance.items():
-        for _compliance in _cval:
-            cname = f"{ctype} {_compliance['version']}"
-            if cname not in config:
-                result.append({**{"compliance": ctype}, **_compliance})
-                continue
-            if ctype == "PCI DSS":
-                for requirement in _compliance.get("requirements", []) or []:
-                    if str(requirement) in config[cname]:
-                        result.append(
-                            {
-                                "compliance": ctype,
-                                "version": str(_compliance["version"]),
-                                "requirement": str(requirement),
-                                "description": config[cname][str(requirement)],
-                            }
-                        )
-    return result
+        if response.state:
+            transport.store.http_states.append(response.state)
+            log(
+                f"[cyan]INFO![/cyan] GET {request_path} {response.state.response_status}",
+                hostname=hostname,
+                port=port,
+                con=console,
+            )
+    return scanner.execute_evaluations(transport)

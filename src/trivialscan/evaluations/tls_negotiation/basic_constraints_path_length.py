@@ -1,4 +1,4 @@
-from ...transport import Transport
+from ...transport import TLSTransport
 from ...certificate import IntermediateCertificate, RootCertificate
 from .. import BaseEvaluationTask
 from ...util import get_basic_constraints
@@ -6,7 +6,7 @@ from ...util import get_basic_constraints
 
 class EvaluationTask(BaseEvaluationTask):
     def __init__(  # pylint: disable=useless-super-delegation
-        self, transport: Transport, metadata: dict, config: dict
+        self, transport: TLSTransport, metadata: dict, config: dict
     ) -> None:
         super().__init__(transport, metadata, config)
         self._constraints = {}
@@ -25,7 +25,7 @@ class EvaluationTask(BaseEvaluationTask):
 
     def _build_constraints(self) -> bool:
         new = False
-        for cert in self._transport.state.certificates:
+        for cert in self.transport.store.tls_state.certificates:
             if not isinstance(cert, (RootCertificate, IntermediateCertificate)):
                 continue
             _, path_length = get_basic_constraints(cert.x509.to_cryptography())
@@ -41,7 +41,7 @@ class EvaluationTask(BaseEvaluationTask):
     def _check_constraints(self) -> bool:
         new = False
         for prev_ski, _ in self._constraints.items():
-            for cert in self._transport.state.certificates:
+            for cert in self.transport.store.tls_state.certificates:
                 if not isinstance(cert, IntermediateCertificate):
                     continue
                 if cert.authority_key_identifier == prev_ski:

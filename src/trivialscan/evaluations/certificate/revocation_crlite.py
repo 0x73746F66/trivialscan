@@ -4,7 +4,7 @@ import tempfile
 from os import path, unlink
 from pathlib import Path
 from ...exceptions import EvaluationNotRelevant
-from ...transport import Transport
+from ...transport import TLSTransport
 from ...certificate import BaseCertificate, IntermediateCertificate
 from .. import BaseEvaluationTask
 
@@ -20,7 +20,7 @@ STATUS = [
 
 class EvaluationTask(BaseEvaluationTask):
     def __init__(
-        self, transport: Transport, metadata: dict, config: dict
+        self, transport: TLSTransport, metadata: dict, config: dict
     ) -> None:  # pylint: disable=useless-super-delegation
         super().__init__(transport, metadata, config)
 

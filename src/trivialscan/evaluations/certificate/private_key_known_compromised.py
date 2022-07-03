@@ -3,7 +3,7 @@ from os import path
 from datetime import timedelta
 from requests_cache import CachedSession
 from requests.exceptions import ConnectionError
-from ...transport import Transport
+from ...transport import TLSTransport
 from ...certificate import BaseCertificate
 from .. import BaseEvaluationTask
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class EvaluationTask(BaseEvaluationTask):
-    def __init__(self, transport: Transport, metadata: dict, config: dict) -> None:
+    def __init__(self, transport: TLSTransport, metadata: dict, config: dict) -> None:
         super().__init__(transport, metadata, config)
         self._session = CachedSession(
             path.join(config.get("tmp_path_prefix", "/tmp"), "pwnedkeys.com"),

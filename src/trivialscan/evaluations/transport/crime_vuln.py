@@ -6,7 +6,7 @@ from Crypto.Cipher import AES, ARC4
 from Crypto import Random
 from ...util import timeout
 from ...exceptions import EvaluationNotRelevant
-from ...transport import Transport
+from ...transport import TLSTransport
 from .. import BaseEvaluationTask
 
 IV = Random.new().read(AES.block_size)
@@ -54,7 +54,7 @@ class EvaluationTask(BaseEvaluationTask):
     data to be parsed real simply
     """
 
-    def __init__(self, transport: Transport, metadata: dict, config: dict) -> None:
+    def __init__(self, transport: TLSTransport, metadata: dict, config: dict) -> None:
         super().__init__(transport, metadata, config)
         self._known = "secret="
         self._secret = f"{self._known}2ac8a4ea7909bccb4c81cefd3f7765d4"
@@ -63,7 +63,7 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self) -> bool | None:
         cbc_results = []
         rc4_results = []
-        for offered_cipher in self.transport.state.offered_ciphers:
+        for offered_cipher in self.transport.store.tls_state.offered_ciphers:
             cbc_results.append("-CBC-" in offered_cipher)
             rc4_results.append("RC4" in offered_cipher)
         if not any(cbc_results + rc4_results):

@@ -6,7 +6,7 @@ from contextlib import closing
 from io import StringIO
 from requests_cache import CachedSession
 from ...constants import COMPROMISED_SHA1
-from ...transport import Transport
+from ...transport import TLSTransport
 from ...certificate import BaseCertificate
 from .. import BaseEvaluationTask
 
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class EvaluationTask(BaseEvaluationTask):
     def __init__(  # pylint: disable=useless-super-delegation
-        self, transport: Transport, metadata: dict, config: dict
+        self, transport: TLSTransport, metadata: dict, config: dict
     ) -> None:
         super().__init__(transport, metadata, config)
         self._session = CachedSession(

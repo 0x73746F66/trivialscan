@@ -128,11 +128,11 @@ For full CLI output and JSON format please look in `examples/` of the Gitlab rep
 ```py
 import trivialscan
 
-transport, evaluations = trivialscan.evaluate(
+transport, evaluations = trivialscan.tlsprobe(
     hostname="ssllabs.com",
     port=443,
 )
-is_valid = trivialscan.is_valid(transport.state)
+is_valid = trivialscan.is_valid(transport.store)
 print('Valid ✓✓✓' if is_valid else 'Not Valid !!!')
 ```
 

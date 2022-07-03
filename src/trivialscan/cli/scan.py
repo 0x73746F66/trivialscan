@@ -7,8 +7,7 @@ from rich.table import Column
 from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColumn
 from art import text2art
 from . import log
-from .. import evaluate
-from ..transport.state import TransportState
+from .. import trivialscan
 from ..outputs.json import save_to
 
 
@@ -20,7 +19,7 @@ console = Console()
 logger = logging.getLogger(__name__)
 
 
-def wrap_evaluate(
+def wrap_trivialscan(
     queue_in, queue_out, progress_console: Console = None, config: dict = None
 ) -> None:
     for target in iter(queue_in.get, None):
@@ -31,20 +30,18 @@ def wrap_evaluate(
             con=progress_console,
         )
         try:
-            transport = evaluate(
+            transport = trivialscan(
                 console=progress_console,
-                evaluations=config["evaluations"],
-                resume_checkpoint=config["defaults"].get("checkpoint", False),
+                config=config,
                 **target,
-                **config["defaults"],
             )
             log(
-                f"[cyan]DONE![/cyan] Negotiated {transport.state.negotiated_protocol} {transport.state.peer_address}",
-                hostname=transport.state.hostname,
-                port=transport.state.port,
+                f"[cyan]DONE![/cyan] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
+                hostname=transport.store.tls_state.hostname,
+                port=transport.store.tls_state.port,
                 con=progress_console,
             )
-            data = transport.state.to_dict()
+            data = transport.store.to_dict()
             queue_out.put(data)
         except Exception as ex:  # pylint: disable=broad-except
             logger.error(ex, exc_info=True)
@@ -97,36 +94,33 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     description=f'{target.get("hostname")}:{target.get("port")}',
                 )
                 progress.start()
-                transport = evaluate(
+                transport = trivialscan(
                     console=progress.console if use_console else None,
-                    evaluations=config["evaluations"],
-                    resume_checkpoint=config["defaults"].get("checkpoint", False),
+                    config=config,
                     **target,
-                    **config["defaults"],
                 )
                 progress.advance(task_id)
                 log(
-                    f"[cyan]DONE![/cyan] {transport.state.peer_address} {transport.state.http_response_title or ''}",
-                    hostname=transport.state.hostname,
-                    port=transport.state.port,
+                    f"[cyan]DONE![/cyan] {transport.store.tls_state.peer_address}",
+                    hostname=transport.store.tls_state.hostname,
+                    port=transport.store.tls_state.port,
                     con=progress.console if use_console else None,
                 )
-                data = transport.state.to_dict()
+                data = transport.store.to_dict()
 
             else:
-                transport = evaluate(
+                transport = trivialscan(
                     console=console if use_console else None,
-                    evaluations=config["evaluations"],
+                    config=config,
                     **target,
-                    **config["defaults"],
                 )
                 log(
-                    f"[cyan]DONE![/cyan] Negotiated {transport.state.negotiated_protocol} {transport.state.peer_address}",
-                    hostname=transport.state.hostname,
-                    port=transport.state.port,
+                    f"[cyan]DONE![/cyan] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
+                    hostname=transport.store.tls_state.hostname,
+                    port=transport.store.tls_state.port,
                     con=console if use_console else None,
                 )
-                data = transport.state.to_dict()
+                data = transport.store.to_dict()
 
         except Exception as ex:  # pylint: disable=broad-except
             logger.error(ex, exc_info=True)
@@ -156,7 +150,7 @@ def run_parra(config: dict, show_progress: bool, use_console: bool = False) -> l
         ) as progress:
             the_pool = Pool(
                 cpu_count(),
-                wrap_evaluate,
+                wrap_trivialscan,
                 (
                     queue_in,
                     queue_out,
@@ -175,7 +169,7 @@ def run_parra(config: dict, show_progress: bool, use_console: bool = False) -> l
     else:
         the_pool = Pool(
             cpu_count(),
-            wrap_evaluate,
+            wrap_trivialscan,
             (queue_in, queue_out, console if use_console else None, config),
         )
         for target in config.get("targets"):

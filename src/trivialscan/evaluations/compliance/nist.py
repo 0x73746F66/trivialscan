@@ -1,5 +1,5 @@
 from ...exceptions import EvaluationNotImplemented
-from ...transport import Transport
+from ...transport import TLSTransport
 from .. import BaseEvaluationTask
 
 __version__ = "NIST SP800-131A (strict mode)"
@@ -39,7 +39,7 @@ VALIDATION_MTLS = "nist_mtls"
 
 class EvaluationTask(BaseEvaluationTask):
     def __init__(  # pylint: disable=useless-super-delegation
-        self, transport: Transport, metadata: dict, config: dict
+        self, transport: TLSTransport, metadata: dict, config: dict
     ) -> None:
         super().__init__(transport, metadata, config)
 

@@ -264,14 +264,15 @@ def _scan_config(cli_args: dict, filename: str | None) -> dict:
             "hostname": parsed.hostname,
             "port": 443 if not parsed.port else parsed.port,
             "client_certificate": cli_args.get("client_pem"),
-            "http_request_path": cli_args.get("http_path"),
+            "http_request_paths": [cli_args.get("http_path", "/")],
         }
         for _target in config["targets"]:
             if parsed.hostname == _target["hostname"]:
                 if not cli_args.get("client_pem"):
                     target["client_certificate"] = _target.get("client_certificate")
-                if not cli_args.get("http_path"):
-                    target["http_request_path"] = _target.get("http_request_path")
+                target["http_request_paths"] = _target.get(
+                    "http_request_paths", cli_args.get("http_path")
+                )
                 target["skip_evaluations"] = _target.get("skip_evaluations", [])
                 target["skip_evaluation_groups"] = _target.get(
                     "skip_evaluation_groups", []

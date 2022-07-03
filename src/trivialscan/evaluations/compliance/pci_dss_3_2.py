@@ -1,5 +1,5 @@
 from ...exceptions import EvaluationNotImplemented
-from ...transport import Transport
+from ...transport import TLSTransport
 from .. import BaseEvaluationTask
 
 __version__ = "3.2.1"
@@ -32,7 +32,7 @@ VALIDATION_KNOWN_VULN_SESSION_RESUMPTION = "pci_vuln_session_resumption"
 
 class EvaluationTask(BaseEvaluationTask):
     def __init__(  # pylint: disable=useless-super-delegation
-        self, transport: Transport, metadata: dict, config: dict
+        self, transport: TLSTransport, metadata: dict, config: dict
     ) -> None:
         super().__init__(transport, metadata, config)
 

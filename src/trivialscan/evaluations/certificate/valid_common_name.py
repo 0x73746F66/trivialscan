@@ -1,5 +1,5 @@
 from ...exceptions import EvaluationNotRelevant
-from ...transport import Transport
+from ...transport import TLSTransport
 from ...certificate import BaseCertificate, LeafCertificate
 from ...util import extract_from_subject, validate_common_name
 from .. import BaseEvaluationTask
@@ -7,7 +7,7 @@ from .. import BaseEvaluationTask
 
 class EvaluationTask(BaseEvaluationTask):
     def __init__(  # pylint: disable=useless-super-delegation
-        self, transport: Transport, metadata: dict, config: dict
+        self, transport: TLSTransport, metadata: dict, config: dict
     ) -> None:
         super().__init__(transport, metadata, config)
 
@@ -20,4 +20,6 @@ class EvaluationTask(BaseEvaluationTask):
         self.substitution_metadata["common_name"] = common_name
         if not isinstance(certificate, LeafCertificate):
             raise EvaluationNotRelevant
-        return validate_common_name(common_name, self.transport.state.hostname)
+        return validate_common_name(
+            common_name, self.transport.store.tls_state.hostname
+        )

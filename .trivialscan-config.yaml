@@ -4,7 +4,6 @@ defaults:
   use_sni: True
   cafiles:
   tmp_path_prefix: /tmp
-  http_request_path: /
   # skip_evaluations:
   #   - revocation_crlite
   #   - tls_robot
@@ -43,7 +42,11 @@ targets:
   - hostname: cbc.badssl.com
   - hostname: superfish.badssl.com
   - hostname: www.ssllabs.com
-    http_request_path: /ssltest/analyze
+    http_request_paths:
+      - /
+      - /ssltest
+      - /ssltest/analyze
+    # robots.txt forbids /ssltest/analyze
 
 # Customise outputs, or really anything
 evaluations:
