@@ -333,8 +333,11 @@ evaluations:
     group: certificate
     label_as: Certification Authority Authorization (CAA) Present
     issue: >
-      TODO
+      The lack of any CAA records authorizes normal unrestricted issuance.
+      It is recommended that you create CAA records for your approved CAs to minimize business impact. With CAA, you can minimize the risk of certificate issuance by unauthorized CAs and help create a more secure and transparent online ecosystem.
     references:
+      - name: RFC 8659 - DNS Certification Authority Authorization (CAA) Resource Record
+        url: https://datatracker.ietf.org/doc/html/rfc8659
     anotate_results:
       - value: False
         evaluation_value: "[khaki1]WARN![/khaki1]"
@@ -349,8 +352,17 @@ evaluations:
     group: certificate
     label_as: Certification Authority Authorization (CAA) Valid
     issue: >
-      TODO
+      Certificate authorities implementing CAA perform a DNS lookup for CAA resource records, and if any are found, ensure that they are listed as an authorized party before issuing a digital certificate.
+      Third parties monitoring certificate authority behavior might check newly issued certificates against the domain's CAA records. RFC 8659 states; CAA records MAY be used by Certificate Evaluators as a possible indicator of a security policy violation. Such use SHOULD take into account the possibility that published CAA records changed between the time a certificate was issued and the time at which the certificate was observed by the Certificate Evaluator.
+      The CAA records can help with the enforcement of your corporate policies on approved CAs. By aligning the CAA records with the list of corporate approved CAs, the risk of non-compliance to the policy is minimized.
+      If CAA records exist but do not include an approved or preferred CA for a specific domain, the issuance of certificates by that CA to the domain cannot proceed until the creation of the appropriate CAA record is completed.
     references:
+      - name: RFC 8659 - DNS Certification Authority Authorization (CAA) Resource Record
+        url: https://datatracker.ietf.org/doc/html/rfc8659
+      - name: Ignoring CAA based on another CA's Certificate Transparency disclosure
+        url: https://wiki.mozilla.org/CA/Camerfirma_Issues#Issue_F:_Ignoring_CAA_based_on_another_CA.27s_Certificate_Transparency_disclosure_.28Nov._2017.29
+      - name: Let's Encrypt? Let's revoke 3 million HTTPS certificates
+        url: https://www.theregister.com/2020/03/03/lets_encrypt_cert_revocation/
     anotate_results:
       - value: False
         evaluation_value: "[khaki1]WARN![/khaki1]"
@@ -463,8 +475,11 @@ evaluations:
     group: certificate
     label_as: Certificate Transparency present
     issue: >
-      TODO
+      CT brings transparency to the SSL/TLS certificate system that supports the web. SSL/TLS protocols underpin HTTPS and Web PKI. A lack of transparency weakens the reliability and effectiveness of encrypted connections, which can compromise critical TLS/SSL mechanisms. As a result, they can enable a wide range of security attacks, such as website spoofing, server impersonation, and man-in-the-middle attacks.
+      Web PKI depends on CAs acting as trustworthy gatekeepers by issuing certificates only to the right parties and by avoiding giving additional permissions accidentally to those parties. An important part of how CAs meet these obligations is to design their systems so they are resilient to failure.
     references:
+      - name: Certificate Transparency step by step
+        url: https://certificate.transparency.dev/howctworks/
     anotate_results:
       - value: False
         evaluation_value: "[khaki1]WARN![/khaki1]"
@@ -481,6 +496,8 @@ evaluations:
     issue: >
       TODO
     references:
+      - name: Chrome Google Group - Certificate Transparency Policy
+        url: https://groups.google.com/a/chromium.org/g/ct-policy/c/fCt4Bm03GsI
     anotate_results:
       - value: False
         evaluation_value: "[khaki1]WARN![/khaki1]"

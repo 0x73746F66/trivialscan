@@ -40,10 +40,7 @@ class EvaluationTask(BaseEvaluationTask):
         try:
             validate_certificate_chain(
                 dump_certificate(FILETYPE_PEM, cert.x509),
-                [
-                    dump_certificate(FILETYPE_PEM, x509)
-                    for x509 in self.transport._certificate_chain
-                ],
+                [pem for pem in self.transport._certificate_chain],
                 validator_key_usage,
                 validator_extended_key_usage,
             )
@@ -56,7 +53,7 @@ class EvaluationTask(BaseEvaluationTask):
             self.substitution_metadata[RESULT_KEY] = str(ex)
             return False
         except Exception as ex:
-            logger.warning(ex, stack_info=True)
+            logger.warning(ex, exc_info=True)
             self.substitution_metadata[RESULT_KEY] = str(ex)
             return False
 

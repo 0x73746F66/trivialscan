@@ -108,7 +108,7 @@ def filter_valid_files_urls(inputs: list[str], tmp_path_prefix: str = "/tmp"):
             try:
                 urlretrieve(test, local_path)
             except Exception as ex:
-                logger.error(ex, stack_info=True)
+                logger.error(ex, exc_info=True)
             file_path = Path(local_path)
             if not file_path.is_file():
                 return False
@@ -135,7 +135,7 @@ def is_self_signed(cert: Certificate) -> bool:
             ).value.key_identifier
         ).decode("utf-8")
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
+        logger.debug(ex, exc_info=True)
         certificate_is_self_signed = True
     try:
         subject_key_identifier = hexlify(
@@ -144,7 +144,7 @@ def is_self_signed(cert: Certificate) -> bool:
             ).value.digest
         ).decode("utf-8")
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
+        logger.debug(ex, exc_info=True)
         certificate_is_self_signed = True
     if subject_key_identifier == authority_key_identifier:
         certificate_is_self_signed = True
@@ -158,7 +158,7 @@ def get_san(cert: Certificate) -> list:
             SubjectAlternativeName
         ).value.get_values_for_type(DNSName)
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
+        logger.debug(ex, exc_info=True)
     return sorted(san)
 
 
@@ -169,7 +169,7 @@ def get_basic_constraints(cert: Certificate) -> tuple[bool, int]:
             extensions.BasicConstraints
         ).value
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
+        logger.debug(ex, exc_info=True)
     if not isinstance(basic_constraints, extensions.BasicConstraints):
         return None, None
     return basic_constraints.ca, basic_constraints.path_length
@@ -181,13 +181,13 @@ def key_usage_exists(cert: Certificate, key: str) -> bool:
     try:
         key_usage = cert.extensions.get_extension_for_class(extensions.KeyUsage).value
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
+        logger.debug(ex, exc_info=True)
     try:
         ext_key_usage = cert.extensions.get_extension_for_class(
             extensions.ExtendedKeyUsage
         ).value
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
+        logger.debug(ex, exc_info=True)
     if key_usage is None and ext_key_usage is None:
         logger.warning("no key usages could not be found")
         return False
@@ -496,7 +496,7 @@ def match_hostname(host: str, cert: Certificate) -> bool:
             x509.SubjectAlternativeName
         ).value.get_values_for_type(x509.DNSName)
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
+        logger.debug(ex, exc_info=True)
     valid_common_name = False
     wildcard_hosts = set()
     domains = set()

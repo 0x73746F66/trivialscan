@@ -67,6 +67,13 @@ class Trivialscan:
                 port=port,
                 con=self._console,
             )
+        if transport.store.tls_state.negotiated_protocol:
+            log(
+                f"[cyan]INTO![/cyan] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
+                hostname=transport.store.tls_state.hostname,
+                port=transport.store.tls_state.port,
+                con=self._console,
+            )
 
         return transport
 
@@ -83,11 +90,17 @@ class Trivialscan:
             port=port,
             tmp_path_prefix=tmp_path_prefix,
         )
-        transport.do_request(
+        if transport.do_request(
             http_request_path=request_path,
             cafiles=self.config["defaults"].get("cafiles"),
             client_certificate=client_certificate,
-        )
+        ):
+            log(
+                f"[cyan]INFO![/cyan] GET {request_path} {transport.state.response_status}",
+                hostname=hostname,
+                port=port,
+                con=self._console,
+            )
 
         return transport
 
@@ -99,13 +112,6 @@ class Trivialscan:
         }
 
     def execute_evaluations(self, transport: TLSTransport):
-        if transport.store.tls_state.negotiated_protocol:
-            log(
-                f"[cyan]INTO![/cyan] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
-                hostname=transport.store.tls_state.hostname,
-                port=transport.store.tls_state.port,
-                con=self._console,
-            )
         # certs are passed to the evaluation method. Having them grouped is more readable
         transport = self.evaluate_certificates(
             transport=transport,
@@ -429,10 +435,4 @@ def trivialscan(
         )
         if response.state:
             transport.store.http_states.append(response.state)
-            log(
-                f"[cyan]INFO![/cyan] GET {request_path} {response.state.response_status}",
-                hostname=hostname,
-                port=port,
-                con=console,
-            )
     return scanner.execute_evaluations(transport)

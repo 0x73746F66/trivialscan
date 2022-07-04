@@ -132,6 +132,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
             port=target.get("port", 443),
             con=console if use_console else None,
         )
+        transport = None
         try:
             if show_progress:
                 progress.update(
@@ -174,6 +175,8 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
         finally:
             progress.stop()
         queries.append(data)
+        if not transport:
+            continue
         save_partial(
             config=config,
             when="per_host",
