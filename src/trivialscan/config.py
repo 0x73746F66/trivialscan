@@ -139,6 +139,7 @@ def _merge_2_lists_of_dicts(
 
 
 def _validate_config(combined_config: dict) -> dict:
+    http_request_path = combined_config["defaults"].get("http_request_path", "/")
     skip_evaluations = combined_config["defaults"].get("skip_evaluations", [])
     skip_evaluation_groups = combined_config["defaults"].get(
         "skip_evaluation_groups", []
@@ -161,6 +162,14 @@ def _validate_config(combined_config: dict) -> dict:
             target.get("port") is None or target.get("port") == 0
         ):  # falsey type coercion
             target["port"] = 443
+        target["http_request_paths"] = list(
+            set(
+                [
+                    http_request_path,
+                    *target.get("http_request_paths", []),
+                ]
+            )
+        )
         target["skip_evaluations"] = [
             *skip_evaluations,
             *target.get("skip_evaluations", []),
@@ -171,7 +180,7 @@ def _validate_config(combined_config: dict) -> dict:
         ]
         targets.append(target)
     combined_config["targets"] = targets
-    # TODO: more config validations
+
     return combined_config
 
 

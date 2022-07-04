@@ -4,6 +4,7 @@ defaults:
   use_sni: True
   cafiles:
   tmp_path_prefix: /tmp
+  http_request_path: /
   # skip_evaluations:
   #   - revocation_crlite
   #   - tls_robot
