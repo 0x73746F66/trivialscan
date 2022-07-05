@@ -10,7 +10,8 @@ idna
 tlstrust==2.6.4
 certvalidator
 dnspython
-hyperframe
+h2==4.1.0
+hpack==4.0.0
 oscrypto
 requests==2.27.1
 urllib3==1.26.9

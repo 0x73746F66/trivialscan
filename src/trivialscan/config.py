@@ -1041,8 +1041,10 @@ evaluations:
     group: transport
     label_as: HTTP/2 cleartext
     issue: >
-      TODO
+      This will lead to a communication channel establised over an insecure network connection
     references:
+      - name: RFC 7540 - Hypertext Transfer Protocol Version 2 (HTTP/2)
+        url: https://datatracker.ietf.org/doc/html/rfc7540
     anotate_results:
       - value: False
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1110,7 +1112,7 @@ evaluations:
     group: certificate
     label_as: Certificate self-signed
     issue: >
-      Any self-signed Certificate should be untrusted as it offers no security characteristics of TLS that is based on a system that all Certificates have a Root Certificate Authory Trust Anchor.
+      Any self-signed Certificate should be untrusted as it offers no security characteristics of TLS that is based on a system that all Certificates have a Root Certificate Authority Trust Anchor.
       When visiting a website that uses a self-signed Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1127,7 +1129,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Java SE
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1144,7 +1146,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - CCADB
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1161,7 +1163,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Rust
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1178,7 +1180,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Android 2.2 Froyo
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1195,7 +1197,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Android 2.3 Gingerbread
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1212,7 +1214,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Android 3 Honeycomb
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1229,7 +1231,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Android 4 Ice Cream Sandwich
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1246,7 +1248,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Android 4.4 KitKat
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1263,7 +1265,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Android 7 Nougat
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1280,7 +1282,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Android 8 Oreo
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1297,7 +1299,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Android 9 Pie
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1314,7 +1316,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Android 10 Quince Tart
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1331,7 +1333,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Android 11 Red Velvet Cake
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1348,7 +1350,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Android 12 Snow Cone
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1365,7 +1367,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Android 13 Tiramisu
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1382,7 +1384,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Android 14 Upside Down Cake
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1399,7 +1401,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - certifi (Python module)
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1416,7 +1418,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - MinTsifry Rossii (Russian)
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1433,7 +1435,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - libcurl
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1450,7 +1452,7 @@ evaluations:
     group: certificate
     label_as: Trust Store - Dart Native
     issue: >
-      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authory, as it offers no security characteristics of TLS built on Trust Anchor system.
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
     anotate_results:
@@ -1672,8 +1674,11 @@ evaluations:
     group: tls_negotiation
     label_as: Certificate was issued for the prupose of client Authentication
     issue: >
-      TODO
+      If the Certificate being used for client Authentication (MTLS) was not issued for that purpose then most properly configured servers will drop the connection.
+      If either the client Certificate or TLS server is misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
     references:
+      - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+        url: https://datatracker.ietf.org/doc/html/rfc5280
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1688,8 +1693,11 @@ evaluations:
     group: tls_negotiation
     label_as: Client Certificate (MTLS) Trusted
     issue: >
-      TODO
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
     references:
+      - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+        url: https://datatracker.ietf.org/doc/html/rfc5280
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1704,8 +1712,11 @@ evaluations:
     group: tls_negotiation
     label_as: Server accepted Client Certificate
     issue: >
-      TODO
+      If the Certificate being used for client Authentication (MTLS) was not matched to a subject sent by the server to indicate accepted client Certificates then most properly configured servers will drop the connection.
+      If a connection is established and the TLS server was misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
     references:
+      - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+        url: https://datatracker.ietf.org/doc/html/rfc5280
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1720,7 +1731,8 @@ evaluations:
     group: tls_negotiation
     label_as: Client Authentication Established
     issue: >
-      TODO
+      A client Certificate was presented and Mutual Authentication (MTLS) expected, if the presented client Certificate did not match the server sent subjects or the Certificate was not issued by a trusted Root Certificate Authority this connection attempt should not be considered secure.
+      If a connection is established and the TLS server was misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
     references:
     anotate_results:
       - value: True
@@ -1871,8 +1883,11 @@ evaluations:
     group: transport
     label_as: Block reading clipboard contents
     issue: >
-      TODO
+      Websites are not expected to read contents of the users' clipboard, which commonly contains private or sensitive information.
+      A webserver can instruct web browsers to block this feature so that any malicious scripts cannot leverage the API.
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1887,8 +1902,11 @@ evaluations:
     group: transport
     label_as: Block the use of deprecated APIs
     issue: >
-      TODO
+      Websites that are maintained should not be utilising deprecated features, that commonly exhibit insecure functionality or vulnerable to abuse.
+      A webserver can instruct web browsers to block these features so that any malicious scripts cannot leverage the API.
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1903,8 +1921,10 @@ evaluations:
     group: transport
     label_as: Policy-controlled browser features
     issue: >
-      TODO
+      A webserver can instruct web browsers to allowlist on the features the site owner intends to utilise, blocking all unused features so that any malicious scripts cannot leverage the unused features or API.
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1919,8 +1939,11 @@ evaluations:
     group: transport
     label_as: Require Cross-Origin-Embedder-Policy
     issue: >
-      TODO
+      The server sent a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using CORP or CORS).
+      The default configuration when this is not sent allows the document to fetch cross-origin resources which leaves users' vulnerable to cross-site scripting (XSS) attacks.
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1935,8 +1958,11 @@ evaluations:
     group: transport
     label_as: Same-Origin Cross-Origin-Opener-Policy
     issue: >
-      TODO
+      The server sent a response header allows you to ensure a top-level document does not share a browsing context group with cross-origin documents.
+      COOP will process-isolate your document and potential attackers can't access your global object if they were to open it in a popup, preventing a set of cross-origin attacks dubbed XS-Leaks.
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1951,8 +1977,11 @@ evaluations:
     group: transport
     label_as: Same-Origin Cross-Origin-Resource-Policy
     issue: >
-      TODO
+      The server sent a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (CORS).
+      The default configuration when this is not sent allows the document to fetch cross-origin resources which leaves users' vulnerable to cross-site scripting (XSS) attacks.
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Resource-Policy
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1967,8 +1996,10 @@ evaluations:
     group: transport
     label_as: Content-Security-Policy
     issue: >
-      TODO
+      The server sent a response header allows web site administrators to control resources the user agent is allowed to load for a given page. With a few exceptions, policies mostly involve specifying server origins and script endpoints. This helps guard against cross-site scripting attacks cross-site scripting (XSS)
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1983,8 +2014,10 @@ evaluations:
     group: transport
     label_as: Upgrade Insecure Requests
     issue: >
-      TODO
+      The server sent a response header to inform supporting browsers to ensure TLS is used even when misconfigured scripts attempt insecure connections.
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/upgrade-insecure-requests
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1999,8 +2032,10 @@ evaluations:
     group: transport
     label_as: Certificate Transparency Report URI
     issue: >
-      TODO
+      The server sent a response header to inform supporting browsers to ensure opt in to reporting and/or enforcement of Certificate Transparency requirements, to prevent the use of misissued certificates for that site from going unnoticed.
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expect-CT
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -2015,8 +2050,10 @@ evaluations:
     group: transport
     label_as: HTTP Strict-Transport-Security
     issue: >
-      TODO
+      The server sent a response header to inform supporting browsers that the site should only be accessed using HTTPS, and that any future attempts to access it using HTTP should automatically be converted to HTTPS.
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -2031,8 +2068,10 @@ evaluations:
     group: transport
     label_as: nosniff X-Content-Type-Options
     issue: >
-      TODO
+      The server sent a response header to inform supporting browsers that the MIME types advertised in the Content-Type headers should be followed and not be changed. The header allows you to avoid MIME type sniffing by saying that the MIME types are deliberately configured.
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -2047,8 +2086,11 @@ evaluations:
     group: transport
     label_as: unsafe URL Referrer-Policy
     issue: >
-      TODO
+      The Referrer-Policy HTTP header controls how much referrer information (sent with the Referer header) should be included with requests.
+      This policy will leak potentially-private information from HTTPS resource URLs to insecure origins. Carefully consider the impact of this setting.
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
     anotate_results:
       - value: False
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -2063,8 +2105,11 @@ evaluations:
     group: transport
     label_as: Safe HTML iframe options
     issue: >
-      TODO
+      The server sent a response header to inform supporting browsers whether or not a browser should be allowed to render a page in a <frame>, <iframe>, <embed> or <object>. Sites can use this to avoid click-jacking attacks, by ensuring that their content is not embedded into other sites.
+      The added security is provided only if the user accessing the document is using a browser that supports X-Frame-Options.
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -2079,78 +2124,16 @@ evaluations:
     group: transport
     label_as: Block mode XSS-Protection
     issue: >
-      TODO
+      The server sent a response header to inform supporting browsers to stop pages from loading when they detect reflected cross-site scripting (XSS) attacks. These protections are largely unnecessary in modern browsers when sites implement a strong Content-Security-Policy that disables the use of inline JavaScript ('unsafe-inline').
     references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Good Configuration
         score: 80
       - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
-        display_as: Misconfigured
-        score: -200
-
-  - key: proto_version_h2c
-    group: transport
-    label_as: proto_version_h2c
-    issue: >
-      TODO
-    references:
-    anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
-        display_as: Good Configuration
-        score: 80
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
-        display_as: Misconfigured
-        score: -200
-
-  - key: proto_version_http1_1
-    group: transport
-    label_as: proto_version_http1_1
-    issue: >
-      TODO
-    references:
-    anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
-        display_as: Good Configuration
-        score: 80
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
-        display_as: Misconfigured
-        score: -200
-
-  - key: proto_version_http1
-    group: transport
-    label_as: proto_version_http1
-    issue: >
-      TODO
-    references:
-    anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
-        display_as: Good Configuration
-        score: 80
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
-        display_as: Misconfigured
-        score: -200
-
-  - key: proto_version_http2
-    group: transport
-    label_as: proto_version_http2
-    issue: >
-      TODO
-    references:
-    anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
-        display_as: Good Configuration
-        score: 80
-      - value: True
         evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
         score: -200

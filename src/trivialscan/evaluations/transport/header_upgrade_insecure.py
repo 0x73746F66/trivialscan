@@ -16,6 +16,11 @@ class EvaluationTask(BaseEvaluationTask):
                     name="content-security-policy",
                     includes_value="upgrade-insecure-requests",
                 )
+                and "upgrade-insecure-requests" in state.response_headers
+                and state.header_exists(
+                    name="upgrade-insecure-requests",
+                    includes_value="1",
+                )
             )
             if not exists:
                 missing.append(state.request_url)

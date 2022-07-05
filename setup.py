@@ -26,7 +26,8 @@ idna
 tlstrust==2.6.4
 certvalidator
 dnspython
-hyperframe
+h2==4.1.0
+hpack==4.0.0
 moz-crlite-query
 oscrypto
 requests==2.27.1
