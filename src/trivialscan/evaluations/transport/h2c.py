@@ -2,7 +2,6 @@ import logging
 import socket
 import ssl
 from h2.connection import H2Connection
-from urllib.parse import urlparse
 from ...transport import TLSTransport
 from .. import BaseEvaluationTask
 
@@ -17,9 +16,6 @@ class EvaluationTask(BaseEvaluationTask):
         results = []
         for state in self.transport.store.http_states:
             try:
-                url = urlparse(
-                    f"https://{self.transport.store.tls_state.hostname}:{self.transport.store.tls_state.port}{state.request_url}"
-                )
                 connection = ssl.wrap_socket(
                     socket.socket(socket.AF_INET, socket.SOCK_STREAM),
                     ssl_version=ssl.PROTOCOL_TLS,
@@ -29,7 +25,12 @@ class EvaluationTask(BaseEvaluationTask):
                 logger.warning(ex, exc_info=True)
                 continue
             try:
-                connection.connect((url.hostname, url.port))
+                connection.connect(
+                    (
+                        self.transport.store.tls_state.hostname,
+                        self.transport.store.tls_state.port,
+                    )
+                )
                 addl_conn_str = b", HTTP2-Settings"
                 request = (
                     b"GET "
@@ -52,7 +53,7 @@ class EvaluationTask(BaseEvaluationTask):
                 connection.sendall(request)
                 h2_connection = H2Connection()
                 h2_connection.initiate_upgrade_connection()
-                _, success = self.get_upgrade_response(connection, url)
+                _, success = self.get_upgrade_response(connection)
                 results.append(success)
 
             except Exception as ex:
@@ -64,7 +65,7 @@ class EvaluationTask(BaseEvaluationTask):
 
         return any(results)
 
-    def get_upgrade_response(self, connection, url):
+    def get_upgrade_response(self, connection):
         data = b""
         while b"\r\n\r\n" not in data:
             data += connection.recv(8192)
@@ -72,7 +73,7 @@ class EvaluationTask(BaseEvaluationTask):
         # An upgrade response begins HTTP/1.1 101 Switching Protocols.
         split_headers = headers.split()
         if split_headers[1] != b"101":
-            logger.debug("Failed to upgrade: " + url.geturl())
+            logger.debug("Failed to upgrade")
             return None, False
 
         return rest, True
