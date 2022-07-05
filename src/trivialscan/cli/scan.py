@@ -43,7 +43,7 @@ def wrap_trivialscan(
                 con=progress_console,
             )
             data = transport.store.to_dict()
-            save_partial(
+            log_files = save_partial(
                 config=config,
                 when="per_host",
                 data_type="host",
@@ -54,8 +54,14 @@ def wrap_trivialscan(
                 negotiated_protocol=transport.store.tls_state.negotiated_protocol,
                 negotiated_cipher=transport.store.tls_state.negotiated_cipher,
             )
+            for log_file in log_files:
+                log(
+                    f"[cyan]SAVED[/cyan] {log_file}",
+                    aside="core",
+                    con=progress_console,
+                )
             for cert in transport.store.tls_state.certificates:
-                save_partial(
+                log_files = save_partial(
                     config=config,
                     when="per_certificate",
                     data_type="certificate",
@@ -87,6 +93,12 @@ def wrap_trivialscan(
                     not_before=cert.not_before,
                     not_after=cert.not_after,
                 )
+                for log_file in log_files:
+                    log(
+                        f"[cyan]SAVED[/cyan] {log_file}",
+                        aside="core",
+                        con=progress_console,
+                    )
             queue_out.put(data)
 
         except Exception as ex:  # pylint: disable=broad-except
@@ -177,7 +189,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
         queries.append(data)
         if not transport:
             continue
-        save_partial(
+        log_files = save_partial(
             config=config,
             when="per_host",
             data_type="host",
@@ -188,8 +200,14 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
             negotiated_protocol=transport.store.tls_state.negotiated_protocol,
             negotiated_cipher=transport.store.tls_state.negotiated_cipher,
         )
+        for log_file in log_files:
+            log(
+                f"[cyan]SAVED[/cyan] {log_file}",
+                aside="core",
+                con=console if use_console else None,
+            )
         for cert in transport.store.tls_state.certificates:
-            save_partial(
+            log_files = save_partial(
                 config=config,
                 when="per_certificate",
                 data_type="certificate",
@@ -221,6 +239,12 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 not_before=cert.not_before,
                 not_after=cert.not_after,
             )
+            for log_file in log_files:
+                log(
+                    f"[cyan]SAVED[/cyan] {log_file}",
+                    aside="core",
+                    con=console if use_console else None,
+                )
 
     return queries
 

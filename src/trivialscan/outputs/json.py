@@ -43,7 +43,8 @@ def save_to(
     return json_path.absolute().as_posix()
 
 
-def save_partial(config, when: str, data_type: str, data, **kwargs):
+def save_partial(config, when: str, data_type: str, data, **kwargs) -> list[str]:
+    files = []
     json_output = [
         n["path"]
         for n in config.get("outputs", [])
@@ -51,15 +52,18 @@ def save_partial(config, when: str, data_type: str, data, **kwargs):
     ]
     if json_output:
         for json_file in json_output:
-            save_to(
-                template_filename=json_file,
-                data={
-                    "generator": "trivialscan",
-                    "date": datetime.utcnow().replace(microsecond=0).isoformat(),
-                    data_type: data,
-                },
-                **kwargs
+            files.append(
+                save_to(
+                    template_filename=json_file,
+                    data={
+                        "generator": "trivialscan",
+                        "date": datetime.utcnow().replace(microsecond=0).isoformat(),
+                        data_type: data,
+                    },
+                    **kwargs
+                )
             )
+    return files
 
 
 def parse_host_filename(
