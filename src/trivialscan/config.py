@@ -494,10 +494,14 @@ evaluations:
     group: certificate
     label_as: Trustworthy Certificate Transparency
     issue: >
-      TODO
+      Certificate Transparency (CT) is a mechanism which helps domain owners and industry watch dogs detect misissuance.
+      Misissuance occurs when a Certificate Authority (CA) issues an SSL certificate improperly. This may mean that the CA included incorrect information in the certificate, issued the certificate to someone who did not represent the organization or domain, or was even compromised.
+      Some browsers require certificates to have proof of being logged with certificate transparency, Safari requires up to 3 SCTs and Chrome requires between 3 and 5. The policies are far more complex than this so the generalised best practice is using at least 3 distinct SCTs per certificate.
     references:
       - name: Chrome Google Group - Certificate Transparency Policy
         url: https://groups.google.com/a/chromium.org/g/ct-policy/c/fCt4Bm03GsI
+      - name: Apple - Certificate Transparency policy
+        url: https://support.apple.com/en-ca/HT205280
     anotate_results:
       - value: False
         evaluation_value: "[khaki1]WARN![/khaki1]"
@@ -1863,6 +1867,54 @@ evaluations:
         display_as: Misconfigured
         score: -200
 
+  - key: header_block_clipboard
+    group: transport
+    label_as: Block reading clipboard contents
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_block_deprecated
+    group: transport
+    label_as: Block the use of deprecated APIs
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_permissions_policy
+    group: transport
+    label_as: Policy-controlled browser features
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
   - key: header_coep
     group: transport
     label_as: Require Cross-Origin-Embedder-Policy
@@ -1914,6 +1966,22 @@ evaluations:
   - key: header_csp
     group: transport
     label_as: Content-Security-Policy
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_upgrade_insecure
+    group: transport
+    label_as: Upgrade Insecure Requests
     issue: >
       TODO
     references:
