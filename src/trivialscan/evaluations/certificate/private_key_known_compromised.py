@@ -8,9 +8,12 @@ from ...certificate import BaseCertificate
 from .. import BaseEvaluationTask
 
 logger = logging.getLogger(__name__)
+BASE_URL = "https://v1.pwnedkeys.com"
 
 
 class EvaluationTask(BaseEvaluationTask):
+    probe_info: str = BASE_URL
+
     def __init__(self, transport: TLSTransport, metadata: dict, config: dict) -> None:
         super().__init__(transport, metadata, config)
         self._session = CachedSession(
@@ -22,7 +25,7 @@ class EvaluationTask(BaseEvaluationTask):
 
     def evaluate(self, certificate: BaseCertificate):
         self.substitution_metadata["spki_fingerprint"] = certificate.spki_fingerprint
-        url = f"https://v1.pwnedkeys.com/{certificate.spki_fingerprint.lower()}.jws"
+        url = f"{BASE_URL}/{certificate.spki_fingerprint.lower()}.jws"
         try:
             resp = self._session.get(url)
         except ConnectionError:

@@ -54,6 +54,8 @@ class EvaluationTask(BaseEvaluationTask):
     data to be parsed real simply
     """
 
+    probe_info: str = "Active network scan"
+
     def __init__(self, transport: TLSTransport, metadata: dict, config: dict) -> None:
         super().__init__(transport, metadata, config)
         self._known = "secret="

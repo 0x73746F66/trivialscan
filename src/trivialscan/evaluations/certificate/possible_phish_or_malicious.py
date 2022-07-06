@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class EvaluationTask(BaseEvaluationTask):
+    probe_info: str = REMOTE_CSV
+
     def __init__(  # pylint: disable=useless-super-delegation
         self, transport: TLSTransport, metadata: dict, config: dict
     ) -> None:

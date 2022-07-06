@@ -9,6 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 class EvaluationTask(BaseEvaluationTask):
+    probe_info: str = "Protocol HTTP/2"
+
     def __init__(self, transport: TLSTransport, metadata: dict, config: dict) -> None:
         super().__init__(transport, metadata, config)
 

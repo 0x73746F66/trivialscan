@@ -288,7 +288,7 @@ evaluations:
         display_as: Not Known Compromised
         score: 100
       - value: None
-        evaluation_value: "[cyan]SKIP![/cyan]"
+        evaluation_value: "[bold][cyan]SKIP![/cyan][/bold]"
         display_as: Not an valid pwnedkeys.com response
         score: 0
 
@@ -576,7 +576,7 @@ evaluations:
         display_as: Misconfigured
         score: -180
       - value: None
-        evaluation_value: "[cyan]EMPTY[/cyan]"
+        evaluation_value: "[bold][cyan]INFO![/cyan][/bold]"
         display_as: Incomplete evaluation (check log with -vvv)
         score: 0
 
@@ -1417,7 +1417,7 @@ evaluations:
     references:
     anotate_results:
       - value: True
-        evaluation_value: "[cyan]INFO![/cyan]"
+        evaluation_value: "[bold][cyan]INFO![/cyan][/bold]"
         display_as: Client Certificate Expected
         score: 0
 

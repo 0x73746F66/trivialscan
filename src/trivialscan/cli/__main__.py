@@ -173,6 +173,9 @@ def main():
         "--resume-checkpoint", dest="resume_checkpoint", action="store_true"
     )
     scan_parser.add_argument(
+        "--hide-probe-info", dest="hide_probing", action="store_true"
+    )
+    scan_parser.add_argument(
         "--last-json",
         help="Stored JSON file to be used as baseline for --track-changes (Defaults to value of --json-file)",
         dest="previous_report",
@@ -184,7 +187,7 @@ def main():
             console.print(f"trivialscan=={__version__}\n{REMOTE_URL}")
         else:
             console.print(
-                f"[aquamarine3]{APP_BANNER}[/aquamarine3]\ntrivialscan=={__version__}\n{REMOTE_URL}"
+                f"[bold][dark_cyan]{APP_BANNER}[/dark_cyan][/bold]\ntrivialscan=={__version__}\n{REMOTE_URL}"
             )
         sys.exit(0)
 
@@ -251,6 +254,8 @@ def _scan_config(cli_args: dict, filename: str | None) -> dict:
     config["defaults"]["tmp_path_prefix"] = cli_args.get(
         "tmp_path_prefix", config["defaults"]["tmp_path_prefix"]
     )
+    if cli_args.get("hide_probing", False):
+        config["defaults"]["hide_probe_info"] = True
     if cli_args.get("resume_checkpoint", False):
         config["defaults"]["resume_checkpoint"] = True
     if cli_args.get("disable_sni"):

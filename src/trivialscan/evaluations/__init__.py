@@ -1,6 +1,5 @@
 import logging
 from requests_cache import CachedSession
-from requests import Response
 from ..certificate import BaseCertificate
 from ..transport import TLSTransport
 
@@ -8,11 +7,11 @@ logger = logging.getLogger(__name__)
 
 
 class BaseEvaluationTask:
-    _response: Response
     _session: CachedSession
     transport: TLSTransport
     metadata: dict
     substitution_metadata: dict
+    probe_info: str | None = None
 
     def __init__(
         self,

@@ -24,12 +24,6 @@ def wrap_trivialscan(
     queue_in, queue_out, progress_console: Console = None, config: dict = None
 ) -> None:
     for target in iter(queue_in.get, None):
-        log(
-            "[cyan]START[/cyan] Probing TLS",
-            hostname=target.get("hostname"),
-            port=target.get("port", 443),
-            con=progress_console,
-        )
         try:
             transport = trivialscan(
                 console=progress_console,
@@ -37,7 +31,7 @@ def wrap_trivialscan(
                 **target,
             )
             log(
-                f"[cyan]DONE![/cyan] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
+                f"[bold][cyan]DONE![/cyan][/bold] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
                 con=progress_console,
@@ -56,7 +50,7 @@ def wrap_trivialscan(
             )
             for log_file in log_files:
                 log(
-                    f"[cyan]SAVED[/cyan] {log_file}",
+                    f"[bold][cyan]SAVED[/cyan][/bold] {log_file}",
                     aside="core",
                     con=progress_console,
                 )
@@ -95,7 +89,7 @@ def wrap_trivialscan(
                 )
                 for log_file in log_files:
                     log(
-                        f"[cyan]SAVED[/cyan] {log_file}",
+                        f"[bold][cyan]SAVED[/cyan][/bold] {log_file}",
                         aside="core",
                         con=progress_console,
                     )
@@ -138,12 +132,6 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 }
             }
         }
-        log(
-            "[cyan]START[/cyan] Probing TLS",
-            hostname=target.get("hostname"),
-            port=target.get("port", 443),
-            con=console if use_console else None,
-        )
         transport = None
         try:
             if show_progress:
@@ -160,7 +148,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 )
                 progress.advance(task_id)
                 log(
-                    f"[cyan]DONE![/cyan] {transport.store.tls_state.peer_address}",
+                    f"[bold][cyan]DONE![/cyan][/bold] {transport.store.tls_state.peer_address}",
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
                     con=progress.console if use_console else None,
@@ -174,7 +162,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     **target,
                 )
                 log(
-                    f"[cyan]DONE![/cyan] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
+                    f"[bold][cyan]DONE![/cyan][/bold] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
                     con=console if use_console else None,
@@ -202,7 +190,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
         )
         for log_file in log_files:
             log(
-                f"[cyan]SAVED[/cyan] {log_file}",
+                f"[bold][cyan]SAVED[/cyan][/bold] {log_file}",
                 aside="core",
                 con=console if use_console else None,
             )
@@ -241,7 +229,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
             )
             for log_file in log_files:
                 log(
-                    f"[cyan]SAVED[/cyan] {log_file}",
+                    f"[bold][cyan]SAVED[/cyan][/bold] {log_file}",
                     aside="core",
                     con=console if use_console else None,
                 )
@@ -318,11 +306,11 @@ def scan(config: dict, **flags):
     if use_console:
         if not hide_banner:
             console.print(
-                f"""[bold][aquamarine3]{APP_BANNER}[/aquamarine3]
+                f"""[bold][dark_cyan]{APP_BANNER}[/dark_cyan]
         [dark_sea_green2]SUCCESS[/dark_sea_green2] [khaki1]ISSUE[/khaki1] [light_coral]VULNERABLE[/light_coral][/bold]"""
             )
     log(
-        f"[cyan]INFO![/cyan] Evaluating {num_targets} domain{'s' if num_targets >1 else ''}",
+        f"[bold][cyan]INFO![/cyan][/bold] Evaluating {num_targets} domain{'s' if num_targets >1 else ''}",
         aside="core",
         con=console if use_console else None,
     )
@@ -335,7 +323,7 @@ def scan(config: dict, **flags):
     save_final(config, flags, queries, execution_duration_seconds, use_console)
 
     log(
-        "[cyan]TOTAL[/cyan] Execution duration %.1f seconds"
+        "[bold][cyan]TOTAL[/cyan][/bold] Execution duration %.1f seconds"
         % execution_duration_seconds,
         aside="core",
         con=console if use_console else None,
@@ -376,7 +364,7 @@ def save_final(config, flags, queries, execution_duration_seconds, use_console):
                 tracking_template_filename=flags.get("previous_report"),
             )
             log(
-                f"[cyan]SAVED[/cyan] {json_path}",
+                f"[bold][cyan]SAVED[/cyan][/bold] {json_path}",
                 aside="core",
                 con=console if use_console else None,
             )

@@ -39,6 +39,7 @@ class Trivialscan:
         port: int = 443,
         client_certificate: str = None,
     ) -> TLSTransport:
+        show_probe = not self.config["defaults"].get("hide_probe_info", False)
         use_cp = self.config["defaults"].get("checkpoint")
         resume_cp = self.config["defaults"].get("resume_checkpoint")
         checkpoint1 = f"resume{hostname}{port}".encode("utf-8")
@@ -46,7 +47,7 @@ class Trivialscan:
         try:
             if resume_cp and checkpoint.unfinished(checkpoint1):
                 log(
-                    "[cyan]INFO![/cyan] Attempting to resume last scan from saved checkpoint",
+                    "[bold][cyan]INFO![/cyan][/bold] Attempting to resume last scan from saved checkpoint",
                     hostname=hostname,
                     port=port,
                     con=self._console,
@@ -56,6 +57,13 @@ class Trivialscan:
                 self._checkpoints.add(checkpoint1)
                 self._checkpoints.add(checkpoint2)
             else:
+                if show_probe:
+                    log(
+                        "[bold][cyan]PROBE[/cyan][/bold] Protocol SSL/TLS",
+                        hostname=hostname,
+                        port=port,
+                        con=self._console,
+                    )
                 transport = InsecureTransport(hostname, port)
                 if isinstance(client_certificate, str):
                     transport.pre_client_authentication_check(
@@ -88,7 +96,7 @@ class Trivialscan:
             )
         if transport.store.tls_state.negotiated_protocol:
             log(
-                f"[cyan]INTO![/cyan] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
+                f"[bold][cyan]INFO![/cyan][/bold] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
                 con=self._console,
@@ -104,18 +112,26 @@ class Trivialscan:
         client_certificate: str = None,
         tmp_path_prefix: str = config["defaults"].get("tmp_path_prefix", "/tmp"),
     ) -> HTTPTransport:
+        show_probe = not self.config["defaults"].get("hide_probe_info", False)
         transport = HTTPTransport(
             hostname=hostname,
             port=port,
             tmp_path_prefix=tmp_path_prefix,
         )
+        if show_probe:
+            log(
+                "[bold][cyan]PROBE[/cyan][/bold] Protocol: HTTP/1 HTTP/1.1",
+                hostname=hostname,
+                port=port,
+                con=self._console,
+            )
         if transport.do_request(
             http_request_path=request_path,
             cafiles=self.config["defaults"].get("cafiles"),
             client_certificate=client_certificate,
         ):
             log(
-                f"[cyan]INFO![/cyan] GET {request_path} {transport.state.response_status}",
+                f"[bold][cyan]INFO![/cyan][/bold] GET {request_path} {transport.state.response_status}",
                 hostname=hostname,
                 port=port,
                 con=self._console,
@@ -192,7 +208,7 @@ class Trivialscan:
         self, result: bool | str | None, task: BaseEvaluationTask, **kwargs
     ) -> tuple[dict, str]:
         label_as = task.metadata["label_as"]
-        evaluation_value = "[cyan]EMPTY[/cyan]"
+        evaluation_value = "[bold][cyan]INFO![/cyan][/bold]"
         result_label = "Unknown"
         score = 0
         for anotatation in task.metadata.get("anotate_results", []):
@@ -268,6 +284,7 @@ class Trivialscan:
         self,
         transport: TLSTransport,
     ):
+        show_probe = not self.config["defaults"].get("hide_probe_info", False)
         use_cp = self.config["defaults"].get("checkpoint")
         resume_cp = self.config["defaults"].get("resume_checkpoint")
         checkpoint_name = f"certificates{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
@@ -275,7 +292,7 @@ class Trivialscan:
         )
         if resume_cp and checkpoint.unfinished(checkpoint_name):
             log(
-                "[cyan]INFO![/cyan] Attempting to resume last scan from saved checkpoint",
+                "[bold][cyan]INFO![/cyan][/bold] Attempting to resume last scan from saved checkpoint",
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
                 con=self._console,
@@ -291,7 +308,7 @@ class Trivialscan:
                     "authority_key_identifier": cert.authority_key_identifier,
                 }
                 log(
-                    f"[cyan]INFO![/cyan] {cert_data['certificate_subject']}",
+                    f"[bold][cyan]INFO![/cyan][/bold] {cert_data['certificate_subject']}",
                     aside=f"SHA1:{cert.sha1_fingerprint} {transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
                     con=self._console,
                 )
@@ -304,6 +321,13 @@ class Trivialscan:
                     )
                     if not task:
                         continue
+                    if show_probe and task.probe_info:
+                        log(
+                            f"[bold][cyan]PROBE[/cyan][/bold] {task.probe_info}",
+                            hostname=transport.store.tls_state.hostname,
+                            port=transport.store.tls_state.port,
+                            con=self._console,
+                        )
                     result = None
                     try:
                         result = task.evaluate(cert)
@@ -337,6 +361,7 @@ class Trivialscan:
         group: str,
         transport: TLSTransport,
     ):
+        show_probe = not self.config["defaults"].get("hide_probe_info", False)
         use_cp = self.config["defaults"].get("checkpoint")
         resume_cp = self.config["defaults"].get("resume_checkpoint")
         checkpoint_name = f"{group}{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
@@ -344,7 +369,7 @@ class Trivialscan:
         )
         if resume_cp and checkpoint.unfinished(checkpoint_name):
             log(
-                "[cyan]INFO![/cyan] Attempting to resume last scan from saved checkpoint",
+                "[bold][cyan]INFO![/cyan][/bold] Attempting to resume last scan from saved checkpoint",
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
                 con=self._console,
@@ -361,6 +386,13 @@ class Trivialscan:
                 )
                 if not task:
                     continue
+                if show_probe and task.probe_info:
+                    log(
+                        f"[bold][cyan]PROBE[/cyan][/bold] {task.probe_info}",
+                        hostname=transport.store.tls_state.hostname,
+                        port=transport.store.tls_state.port,
+                        con=self._console,
+                    )
                 try:
                     result = task.evaluate()
                     data, log_output = self._result_data(result, task)
@@ -395,6 +427,7 @@ class Trivialscan:
         self,
         transport: TLSTransport,
     ):
+        show_probe = not self.config["defaults"].get("hide_probe_info", False)
         use_cp = self.config["defaults"].get("checkpoint")
         resume_cp = self.config["defaults"].get("resume_checkpoint")
         checkpoint_name = f"transport{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
@@ -402,7 +435,7 @@ class Trivialscan:
         )
         if resume_cp and checkpoint.unfinished(checkpoint_name):
             log(
-                "[cyan]INFO![/cyan] Attempting to resume last scan from saved checkpoint",
+                "[bold][cyan]INFO![/cyan][/bold] Attempting to resume last scan from saved checkpoint",
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
                 con=self._console,
@@ -419,6 +452,13 @@ class Trivialscan:
                 )
                 if not task:
                     continue
+                if show_probe and task.probe_info:
+                    log(
+                        f"[bold][cyan]PROBE[/cyan][/bold] {task.probe_info}",
+                        hostname=transport.store.tls_state.hostname,
+                        port=transport.store.tls_state.port,
+                        con=self._console,
+                    )
                 try:
                     result = task.evaluate()
                     data, log_output = self._result_data(result, task)
@@ -460,9 +500,9 @@ def trivialscan(
     **kwargs,
 ) -> TLSTransport:
     if config:
-        scanner = Trivialscan(console=console, config=config)
+        scanner = Trivialscan(console=console, config=config, **kwargs)
     else:
-        scanner = Trivialscan(console=console)
+        scanner = Trivialscan(console=console, **kwargs)
     transport = scanner.tls_probe(
         hostname=hostname,
         port=port,
