@@ -25,13 +25,12 @@ from OpenSSL.SSL import _lib as native_openssl
 from OpenSSL.crypto import (
     X509,
     FILETYPE_PEM,
-    X509Name,
     load_certificate,
     dump_certificate,
 )
 from .. import exceptions, util, constants
 from .state import TransportStore, HTTPState
-from ..certificate import BaseCertificate, ClientCertificate
+from ..certificate import ClientCertificate
 
 __module__ = "trivialscan.transport"
 
@@ -327,6 +326,7 @@ class TLSTransport:
         ctx.set_options(
             _util.lib.SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION
             | _util.lib.SSL_OP_LEGACY_SERVER_CONNECT
+            | _util.lib.SSL_OP_TLS_ROLLBACK_BUG
         )
         conn = SSL.Connection(context=ctx, socket=self.prepare_socket())
         conn.request_ocsp()
@@ -414,7 +414,11 @@ class TLSTransport:
             raise TypeError(f"response_wait {type(response_wait)}, int supported")
         protocol = None
         ctx = self.prepare_context()
-        ctx.set_options(_util.lib.SSL_OP_TLS_ROLLBACK_BUG)
+        ctx.set_options(
+            _util.lib.SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION
+            | _util.lib.SSL_OP_LEGACY_SERVER_CONNECT
+            | _util.lib.SSL_OP_TLS_ROLLBACK_BUG
+        )
         try:
             if min_tls_version is not None:
                 logger.info(

@@ -30,9 +30,9 @@ evaluations:
         display_as: Not Detected
         score: 60
       - value: True
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
         display_as: Misconfigured
-        score: -60
+        score: -120
 
   - key: secure_renegotiation
     group: tls_negotiation
