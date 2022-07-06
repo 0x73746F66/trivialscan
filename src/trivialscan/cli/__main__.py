@@ -170,6 +170,9 @@ def main():
         "--track-changes", dest="track_changes", action="store_true"
     )
     scan_parser.add_argument(
+        "--resume-checkpoint", dest="resume_checkpoint", action="store_true"
+    )
+    scan_parser.add_argument(
         "--last-json",
         help="Stored JSON file to be used as baseline for --track-changes (Defaults to value of --json-file)",
         dest="previous_report",
@@ -248,6 +251,8 @@ def _scan_config(cli_args: dict, filename: str | None) -> dict:
     config["defaults"]["tmp_path_prefix"] = cli_args.get(
         "tmp_path_prefix", config["defaults"]["tmp_path_prefix"]
     )
+    if cli_args.get("resume_checkpoint", False):
+        config["defaults"]["resume_checkpoint"] = True
     if cli_args.get("disable_sni"):
         config["defaults"]["use_sni"] = False
     config.setdefault("targets", [])

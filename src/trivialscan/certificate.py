@@ -411,7 +411,7 @@ class LeafCertificate(BaseCertificate):
 
     @property
     def revocation_ocsp_stapling(self) -> bool | None:
-        assertion = self._transport.revocation_ocsp_assertion or b""
+        assertion = self._transport._revocation_ocsp_assertion or b""
         response = None
         if assertion == b"":
             try:
@@ -464,7 +464,7 @@ class LeafCertificate(BaseCertificate):
                 status, constants.OCSP_CERT_STATUS[OCSPCertStatus.UNKNOWN]
             )
 
-        assertion = self._transport.revocation_ocsp_assertion or b""
+        assertion = self._transport._revocation_ocsp_assertion or b""
         if assertion == b"" and self.revocation_ocsp_must_staple:
             return constants.OCSP_MUST_STAPLE_NOT_STAPLED
         try:

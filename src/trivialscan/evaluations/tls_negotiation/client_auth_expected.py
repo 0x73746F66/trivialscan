@@ -12,7 +12,7 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self) -> bool:
         if (
             self.transport.store.tls_state.certificate_mtls_expected
-            or len(self.transport.expected_client_subjects) > 0
+            or len(self.transport.store.tls_state.expected_client_subjects) > 0
         ):
             return True
         raise EvaluationNotRelevant

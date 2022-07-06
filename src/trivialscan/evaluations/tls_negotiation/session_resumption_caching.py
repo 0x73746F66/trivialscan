@@ -9,7 +9,7 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self):
-        return self.transport.session_cache_mode in [
+        return self.transport.store.tls_state.session_resumption_cache_mode in [
             "session_resumption_both",
             "session_resumption_caching",
         ]

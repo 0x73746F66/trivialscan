@@ -1,4 +1,5 @@
 from ...transport import TLSTransport
+from ...exceptions import EvaluationNotImplemented
 from .. import BaseEvaluationTask
 
 
@@ -9,4 +10,5 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self):
-        return self.transport.client_initiated_renegotiation
+        # self.transport.store.tls_state.client_initiated_renegotiation
+        raise EvaluationNotImplemented

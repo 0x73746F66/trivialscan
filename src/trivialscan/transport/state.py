@@ -3,7 +3,17 @@ from hashlib import sha1
 from datetime import datetime
 from urllib.parse import urlparse
 from requests import Response
-from ..certificate import BaseCertificate
+from OpenSSL.crypto import (
+    load_certificate,
+    FILETYPE_PEM,
+)
+from ..certificate import (
+    BaseCertificate,
+    ClientCertificate,
+    IntermediateCertificate,
+    LeafCertificate,
+    RootCertificate,
+)
 from ..util import html_find_match
 
 __module__ = "trivialscan.transport.state"
@@ -90,6 +100,9 @@ class TLSState:
     sni_support: bool = None
     peer_address: str = None
     certificate_mtls_expected: bool = None
+    client_certificate_trusted: bool = None
+    client_certificate_match: bool = None
+    expected_client_subjects: list[str] = []
     certificates: list[BaseCertificate] = []
     negotiated_protocol: str = None
     preferred_protocol: str = None
@@ -98,7 +111,7 @@ class TLSState:
     tls_version_intolerance_versions: list = []
     tls_version_interference: bool = None
     tls_version_interference_versions: list = []
-    session_resumption_caching: bool = None
+    session_resumption_cache_mode: str = None
     session_resumption_tickets: bool = None
     session_resumption_ticket_hint: bool = None
     offered_ciphers: list = []
@@ -106,23 +119,85 @@ class TLSState:
     negotiated_cipher: str = None
     negotiated_cipher_bits: int = None
 
-    def from_transport(self, transport):
-        self.hostname = getattr(transport, "hostname", self.hostname)
-        self.port = getattr(transport, "port", self.port)
-        self.sni_support = getattr(transport, "sni_support", self.sni_support)
-        self.peer_address = getattr(transport, "peer_address", self.peer_address)
-        return self
-
-    def from_http_state(self, state: HTTPState):
-        self.hostname = getattr(state, "hostname", self.hostname)
-        self.port = getattr(state, "port", self.port)
-        self.sni_support = getattr(state, "sni_support", self.sni_support)
-        self.peer_address = getattr(state, "peer_address", self.peer_address)
-        return self
+    def from_dict(self, data: dict) -> None:
+        for certificate in data.get("certificates", []):
+            if certificate["type"] == "root":
+                self.certificates.append(
+                    RootCertificate(
+                        load_certificate(FILETYPE_PEM, certificate["pem"].encode())
+                    )
+                )
+            if certificate["type"] == "leaf":
+                self.certificates.append(
+                    LeafCertificate(
+                        load_certificate(FILETYPE_PEM, certificate["pem"].encode())
+                    )
+                )
+            if certificate["type"] == "intermediate":
+                self.certificates.append(
+                    IntermediateCertificate(
+                        load_certificate(FILETYPE_PEM, certificate["pem"].encode())
+                    )
+                )
+            if certificate["type"] == "client":
+                self.certificates.append(
+                    ClientCertificate(
+                        load_certificate(FILETYPE_PEM, certificate["pem"].encode())
+                    )
+                )
+        self.hostname = data.get("_transport", {}).get("hostname")
+        self.port = data.get("_transport", {}).get("port", 443)
+        self.peer_address = data.get("_transport", {}).get("peer_address")
+        self.sni_support = data.get("client", {}).get("sni_support")
+        self.certificate_mtls_expected = data.get("client", {}).get(
+            "certificate_mtls_expected"
+        )
+        self.client_certificate_trusted = data.get("client", {}).get(
+            "certificate_trusted"
+        )
+        self.client_certificate_match = data.get("client", {}).get("certificate_match")
+        self.expected_client_subjects = data.get("client", {}).get(
+            "expected_client_subjects", []
+        )
+        self.negotiated_protocol = data.get("protocol", {}).get("negotiated")
+        self.preferred_protocol = data.get("protocol", {}).get("preferred")
+        self.offered_tls_versions = data.get("protocol", {}).get("offered", [])
+        self.tls_version_intolerance = data.get("version_intolerance", {}).get("result")
+        self.tls_version_intolerance_versions = data.get("version_intolerance", {}).get(
+            "versions", []
+        )
+        self.tls_version_interference = data.get("version_interference", {}).get(
+            "result"
+        )
+        self.tls_version_interference_versions = data.get(
+            "version_interference", {}
+        ).get("versions", [])
+        self.session_resumption_cache_mode = data.get("session_resumption", {}).get(
+            "cache_mode"
+        )
+        self.session_resumption_tickets = data.get("session_resumption", {}).get(
+            "tickets"
+        )
+        self.session_resumption_ticket_hint = data.get("session_resumption", {}).get(
+            "ticket_hint"
+        )
+        self.offered_ciphers = data.get("cipher", {}).get("offered", [])
+        self.forward_anonymity = data.get("cipher", {}).get("forward_anonymity")
+        self.negotiated_cipher = data.get("cipher", {}).get("negotiated")
+        self.negotiated_cipher_bits = data.get("cipher", {}).get("negotiated_bits")
 
     def to_dict(self, include_transport: bool = False) -> dict:
         data = {
             "certificates": [cert.to_dict() for cert in self.certificates],
+            "client": {
+                "sni_support": self.sni_support,
+                "certificate_mtls_expected": self.certificate_mtls_expected,
+                "certificate_trusted": self.client_certificate_trusted,
+                "certificate_match": self.client_certificate_match,
+                "expected_client_subjects": sorted(
+                    list(set(self.expected_client_subjects))
+                ),
+            },
             "cipher": {
                 "forward_anonymity": self.forward_anonymity,
                 "offered": sorted(list(set(self.offered_ciphers))),
@@ -143,12 +218,10 @@ class TLSState:
                 "versions": sorted(list(set(self.tls_version_interference_versions))),
             },
             "session_resumption": {
-                "caching": self.session_resumption_caching,
+                "cache_mode": self.session_resumption_cache_mode,
                 "tickets": self.session_resumption_tickets,
                 "ticket_hint": self.session_resumption_ticket_hint,
             },
-            "certificate_mtls_expected": self.certificate_mtls_expected,
-            "sni_support": self.sni_support,
         }
         if include_transport:
             data["_transport"] = {
@@ -164,6 +237,12 @@ class TransportStore:
     tls_state: TLSState = TLSState()
     http_states: list[HTTPState] = []
     evaluations: list = []
+
+    def __init__(self, **kwargs) -> None:
+        if kwargs.get("evaluations"):
+            self.evaluations = kwargs["evaluations"]
+        if kwargs.get("tls"):
+            self.tls_state.from_dict(kwargs.get("tls"))
 
     def to_dict(self) -> dict:
         data = {

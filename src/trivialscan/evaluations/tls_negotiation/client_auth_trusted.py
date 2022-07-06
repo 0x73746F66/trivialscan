@@ -12,4 +12,4 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self) -> bool | None:
         if not self.transport.store.tls_state.certificate_mtls_expected:
             raise EvaluationNotRelevant
-        return self.transport.client_certificate_trusted
+        return self.transport.store.tls_state.client_certificate_trusted

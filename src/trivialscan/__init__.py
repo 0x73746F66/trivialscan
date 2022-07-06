@@ -40,18 +40,29 @@ class Trivialscan:
         client_certificate: str = None,
     ) -> TLSTransport:
         use_cp = self.config["defaults"].get("checkpoint")
+        resume_cp = self.config["defaults"].get("resume_checkpoint")
         checkpoint1 = f"resume{hostname}{port}".encode("utf-8")
+        checkpoint2 = f"resumedata{hostname}{port}".encode("utf-8")
         try:
-            if use_cp and checkpoint.unfinished(checkpoint1):
-                transport = checkpoint.resume(checkpoint1)
+            if resume_cp and checkpoint.unfinished(checkpoint1):
+                log(
+                    "[cyan]INFO![/cyan] Attempting to resume last scan from saved checkpoint",
+                    hostname=hostname,
+                    port=port,
+                    con=self._console,
+                )
+                transport: TLSTransport = checkpoint.resume(checkpoint1)
+                transport.store.tls_state.from_dict(checkpoint.resume(checkpoint2))
+                self._checkpoints.add(checkpoint1)
+                self._checkpoints.add(checkpoint2)
             else:
                 transport = InsecureTransport(hostname, port)
-                transport.tmp_path_prefix = self.config["defaults"].get(
-                    "tmp_path_prefix", "/tmp"
-                )
                 if isinstance(client_certificate, str):
                     transport.pre_client_authentication_check(
-                        client_pem_path=client_certificate
+                        client_pem_path=client_certificate,
+                        tmp_path_prefix=self.config["defaults"].get(
+                            "tmp_path_prefix", "/tmp"
+                        ),
                     )
                 transport.connect_insecure(
                     cafiles=self.config["defaults"].get("cafiles"),
@@ -59,7 +70,15 @@ class Trivialscan:
                 )
                 if use_cp:
                     checkpoint.set(checkpoint1, transport)
+                    certs = []
+                    for cert in transport.store.tls_state.certificates:
+                        if isinstance(cert, LeafCertificate):
+                            cert.set_transport(transport)
+                        certs.append(cert)
+                    transport.store.tls_state.certificates = certs
+                    checkpoint.set(checkpoint2, transport.store.to_dict())
                     self._checkpoints.add(checkpoint1)
+                    self._checkpoints.add(checkpoint2)
         except TransportError as err:
             log(
                 f"[light_coral]{type(err).__name__}[/light_coral] {err}",
@@ -250,15 +269,21 @@ class Trivialscan:
         transport: TLSTransport,
     ):
         use_cp = self.config["defaults"].get("checkpoint")
+        resume_cp = self.config["defaults"].get("resume_checkpoint")
         checkpoint_name = f"certificates{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
             "utf-8"
         )
-        if use_cp and checkpoint.unfinished(checkpoint_name):
+        if resume_cp and checkpoint.unfinished(checkpoint_name):
+            log(
+                "[cyan]INFO![/cyan] Attempting to resume last scan from saved checkpoint",
+                hostname=transport.store.tls_state.hostname,
+                port=transport.store.tls_state.port,
+                con=self._console,
+            )
             transport.store.evaluations = checkpoint.resume(checkpoint_name)
+            self._checkpoints.add(checkpoint_name)
         else:
             for cert in transport.store.tls_state.certificates:
-                if isinstance(cert, LeafCertificate):
-                    cert.set_transport(transport)
                 cert_data = {
                     "certificate_subject": cert.subject or "",
                     "sha1_fingerprint": cert.sha1_fingerprint,
@@ -313,11 +338,19 @@ class Trivialscan:
         transport: TLSTransport,
     ):
         use_cp = self.config["defaults"].get("checkpoint")
+        resume_cp = self.config["defaults"].get("resume_checkpoint")
         checkpoint_name = f"{group}{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
             "utf-8"
         )
-        if use_cp and checkpoint.unfinished(checkpoint_name):
+        if resume_cp and checkpoint.unfinished(checkpoint_name):
+            log(
+                "[cyan]INFO![/cyan] Attempting to resume last scan from saved checkpoint",
+                hostname=transport.store.tls_state.hostname,
+                port=transport.store.tls_state.port,
+                con=self._console,
+            )
             transport.store.evaluations = checkpoint.resume(checkpoint_name)
+            self._checkpoints.add(checkpoint_name)
         else:
             for evaluation in self.config.get("evaluations", []):
                 if evaluation["group"] != group:
@@ -363,11 +396,19 @@ class Trivialscan:
         transport: TLSTransport,
     ):
         use_cp = self.config["defaults"].get("checkpoint")
+        resume_cp = self.config["defaults"].get("resume_checkpoint")
         checkpoint_name = f"transport{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
             "utf-8"
         )
-        if use_cp and checkpoint.unfinished(checkpoint_name):
+        if resume_cp and checkpoint.unfinished(checkpoint_name):
+            log(
+                "[cyan]INFO![/cyan] Attempting to resume last scan from saved checkpoint",
+                hostname=transport.store.tls_state.hostname,
+                port=transport.store.tls_state.port,
+                con=self._console,
+            )
             transport.store.evaluations = checkpoint.resume(checkpoint_name)
+            self._checkpoints.add(checkpoint_name)
         else:
             for evaluation in self.config.get("evaluations", []):
                 if evaluation["group"] != "transport":

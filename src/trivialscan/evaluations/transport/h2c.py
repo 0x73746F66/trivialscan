@@ -60,8 +60,11 @@ class EvaluationTask(BaseEvaluationTask):
                 logger.warning(ex, exc_info=True)
                 continue
             finally:
-                connection.shutdown(socket.SHUT_RDWR)
-                connection.close()
+                try:
+                    connection.shutdown(socket.SHUT_RDWR)
+                    connection.close()
+                except Exception as ex:
+                    logger.debug(ex, exc_info=True)
 
         return any(results)
 

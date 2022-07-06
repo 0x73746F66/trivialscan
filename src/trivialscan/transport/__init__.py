@@ -31,7 +31,7 @@ from OpenSSL.crypto import (
 )
 from .. import exceptions, util, constants
 from .state import TransportStore, HTTPState
-from ..certificate import ClientCertificate
+from ..certificate import BaseCertificate, ClientCertificate
 
 __module__ = "trivialscan.transport"
 
@@ -47,18 +47,11 @@ logger = logging.getLogger(__name__)
 
 class TLSTransport:
     _client_pem_path: str
-    session_cache_mode: str
     _server_certificate: bytes
     _client_certificate: bytes
     client_certificate: ClientCertificate
-    client_certificate_match: bool
-    client_certificate_trusted: bool
-    client_initiated_renegotiation: bool
-    tls_downgrade: bool
     _cafiles: list
-    verifier_errors: list[tuple[X509], int]
-    expected_client_subjects: list[X509Name]
-    tmp_path_prefix: str = "/tmp"
+    _verifier_errors: list[tuple[X509], int]
     _certificate_chain: list[bytes]
     _default_connect_method: str = "SSLv23_METHOD"
     _default_connect_verify_mode: str = "VERIFY_NONE"
@@ -66,9 +59,7 @@ class TLSTransport:
     _depth: dict
     store: TransportStore
     _ocsp: dict
-    revocation_ocsp_assertion: bytes
-    session_ticket_hints: bool
-    session_tickets: bool
+    _revocation_ocsp_assertion: bytes
 
     def __init__(self, hostname: str, port: int = 443) -> None:
         if not isinstance(port, int):
@@ -92,16 +83,8 @@ class TLSTransport:
         self._certificate_chain = []
         self._server_certificate = None
         self._client_certificate = None
-        self.client_certificate_match = None
-        self.client_certificate_trusted = None
-        self.client_initiated_renegotiation = None
-        self.session_cache_mode = None
-        self.session_ticket_hints = None
-        self.session_tickets = None
-        self.certificates = []
-        self.verifier_errors = []
-        self.expected_client_subjects = []
-        self.revocation_ocsp_assertion = b""
+        self._verifier_errors = []
+        self._revocation_ocsp_assertion = b""
         self._session = CachedSession(
             path.join("/tmp", "trivialscan", hostname),
             backend="filesystem",
@@ -127,7 +110,9 @@ class TLSTransport:
             return None
         return load_certificate(FILETYPE_PEM, self._client_certificate)
 
-    def pre_client_authentication_check(self, client_pem_path: str = None) -> bool:
+    def pre_client_authentication_check(
+        self, client_pem_path: str = None, tmp_path_prefix: str = "/tmp"
+    ) -> bool:
         if not isinstance(self.store.tls_state.port, int):
             raise TypeError(
                 f"provided an invalid type {type(self.store.tls_state.port)} for port, expected int"
@@ -142,9 +127,9 @@ class TLSTransport:
             )
 
         self.store.tls_state.certificate_mtls_expected = True
-        self.client_certificate_match = False
+        self.store.tls_state.client_certificate_match = False
         valid_client_pem = util.filter_valid_files_urls(
-            [client_pem_path], self.tmp_path_prefix
+            [client_pem_path], tmp_path_prefix
         )
         if valid_client_pem is False:
             logger.error(
@@ -166,32 +151,39 @@ class TLSTransport:
             conn.set_tlsext_host_name(idna.encode(self.store.tls_state.hostname))
         conn.setblocking(1)
         util.do_handshake(conn)
-        self.expected_client_subjects = conn.get_client_ca_list()
+        self.store.tls_state.expected_client_subjects = [
+            ",".join(f"{name.decode()}={value.decode()}".strip())
+            for subject in conn.get_client_ca_list()
+            for name, value in subject.get_components()
+        ]
         conn.close()
         logger.info(
             f"{self.store.tls_state.hostname}:{self.store.tls_state.port} Checking client certificate"
         )
         self._client_certificate = Path(self._client_pem_path).read_bytes()
         client_certificate = ClientCertificate(self.client_certificate)
-        self.client_certificate_trusted = any(
+        self.store.tls_state.client_certificate_trusted = any(
             [
                 trust_store["is_trusted"]
                 for trust_store in client_certificate.trust_stores
             ]
         )
-        if len(self.expected_client_subjects) > 0:
+        if len(self.store.tls_state.expected_client_subjects) > 0:
             logger.debug(
                 f"{self.store.tls_state.hostname}:{self.store.tls_state.port} issuer subject: {self.client_certificate.get_issuer().commonName}"
             )
-            for check in self.expected_client_subjects:
+            for check in self.store.tls_state.expected_client_subjects:
                 logger.debug(
                     f"{self.store.tls_state.hostname}:{self.store.tls_state.port} expected subject: {check.commonName}"
                 )
-                self.client_certificate_match = (
+                self.store.tls_state.client_certificate_match = (
                     self.client_certificate.get_issuer().commonName == check.commonName
                 )
 
-        return self.client_certificate_match and self.client_certificate_trusted
+        return (
+            self.store.tls_state.client_certificate_match
+            and self.store.tls_state.client_certificate_trusted
+        )
 
     def get_ocsp_response(self, uri: str, timeout: int = 3) -> OCSPResponse:
         ocsp_response = None
@@ -237,7 +229,7 @@ class TLSTransport:
         return ocsp_response
 
     def _ocsp_handler(self, conn: SSL.Connection, assertion: bytes, userdata) -> bool:
-        self.revocation_ocsp_assertion = assertion
+        self._revocation_ocsp_assertion = assertion
         return True
 
     def prepare_socket(self, timeout: int = 1):
@@ -319,7 +311,7 @@ class TLSTransport:
         # preverify_ok indicates, whether the verification of the server certificate in question was passed (preverify_ok=1) or not (preverify_ok=0)
         # https://www.openssl.org/docs/man1.0.2/man1/verify.html
         if errno in exceptions.X509_MESSAGES.keys():
-            self.verifier_errors.append((server_cert, errno))
+            self._verifier_errors.append((server_cert, errno))
         return True
 
     def connect(self, tls_version: int, use_sni: bool = False) -> None:
@@ -356,19 +348,27 @@ class TLSTransport:
             self.store.tls_state.offered_tls_versions.append(
                 self.store.tls_state.negotiated_protocol
             )
-            self.session_cache_mode = constants.SESSION_CACHE_MODE[
-                native_openssl.SSL_CTX_get_session_cache_mode(conn._context._context)
-            ]
-            self.session_tickets = (
+            self.store.tls_state.session_resumption_cache_mode = (
+                constants.SESSION_CACHE_MODE[
+                    native_openssl.SSL_CTX_get_session_cache_mode(
+                        conn._context._context
+                    )
+                ]
+            )
+            self.store.tls_state.session_resumption_tickets = (
                 native_openssl.SSL_SESSION_has_ticket(conn.get_session()._session) == 1
             )
-            self.session_ticket_hints = (
+            self.store.tls_state.session_resumption_ticket_hint = (
                 native_openssl.SSL_SESSION_get_ticket_lifetime_hint(
                     conn.get_session()._session
                 )
                 > 0
             )
-            self.expected_client_subjects = conn.get_client_ca_list()
+            self.store.tls_state.expected_client_subjects = [
+                ",".join(f"{name.decode()}={value.decode()}".strip())
+                for subject in conn.get_client_ca_list()
+                for name, value in subject.get_components()
+            ]
             server_certificate = conn.get_peer_certificate()
             self._server_certificate = dump_certificate(
                 FILETYPE_PEM, server_certificate

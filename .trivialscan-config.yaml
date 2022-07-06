@@ -58,12 +58,6 @@ targets:
 
 # Customise outputs, or really anything
 evaluations:
-  # substitute a value into the output label
-  - key: secure_renegotiation
-    label_as: Client initiated TLS secure renegotiation {preferred_protocol}
-    substitutions:
-      - preferred_protocol
-
   # reverse the result, so a trusted russian root is a FAIL instead of a PASS
   - key: trust_russian
     anotate_results:
@@ -75,3 +69,9 @@ evaluations:
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
         display_as: Not Trusted
         score: 100
+
+  # substitute a value into the output label
+  - key: secure_renegotiation
+    label_as: Client initiated TLS secure renegotiation {preferred_protocol}
+    substitutions:
+      - preferred_protocol

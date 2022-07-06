@@ -9,4 +9,4 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self):
-        return self.transport.session_tickets
+        return self.transport.store.tls_state.session_resumption_tickets

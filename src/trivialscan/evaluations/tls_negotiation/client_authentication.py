@@ -13,6 +13,6 @@ class EvaluationTask(BaseEvaluationTask):
         if not self.transport.store.tls_state.certificate_mtls_expected:
             raise EvaluationNotRelevant
         return (
-            self.transport.client_certificate_match
-            and self.transport.client_certificate_trusted
+            self.transport.store.tls_state.client_certificate_match
+            and self.transport.store.tls_state.client_certificate_trusted
         )
