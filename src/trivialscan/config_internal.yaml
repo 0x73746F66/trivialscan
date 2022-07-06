@@ -21,6 +21,16 @@ evaluations:
       - CVE-2011-1473
       - CVE-2011-5094
       - CVE-2021-3449
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: RFC 5746 - Transport Layer Security Renegotiation Indication Extension
         url: https://datatracker.ietf.org/doc/html/rfc5746
@@ -45,6 +55,16 @@ evaluations:
       - CVE-2011-1473
       - CVE-2011-5094
       - CVE-2021-3449
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: RFC 5746 - Transport Layer Security Renegotiation Indication Extension
         url: https://datatracker.ietf.org/doc/html/rfc5746
@@ -67,6 +87,16 @@ evaluations:
     cvss3: AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N
     cve:
       - CVE-2012-4929
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: RFC 3749 - Transport Layer Security Protocol Compression Methods
         url: https://datatracker.ietf.org/doc/html/rfc3749
@@ -86,6 +116,17 @@ evaluations:
     issue: >
       The lack of any CAA records authorizes normal unrestricted issuance.
       It is recommended that you create CAA records for your approved CAs to minimize business impact. With CAA, you can minimize the risk of certificate issuance by unauthorized CAs and help create a more secure and transparent online ecosystem.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.8
+            - 6.5.10
+            - 8.6
+        - version: 4.0
+          requirements:
+            - 6.2.1
+            - 6.2.4
     references:
       - name: RFC 8659 - DNS Certification Authority Authorization (CAA) Resource Record
         url: https://datatracker.ietf.org/doc/html/rfc8659
@@ -107,6 +148,17 @@ evaluations:
       Third parties monitoring certificate authority behavior might check newly issued certificates against the domain's CAA records. RFC 8659 states; CAA records MAY be used by Certificate Evaluators as a possible indicator of a security policy violation. Such use SHOULD take into account the possibility that published CAA records changed between the time a certificate was issued and the time at which the certificate was observed by the Certificate Evaluator.
       The CAA records can help with the enforcement of your corporate policies on approved CAs. By aligning the CAA records with the list of corporate approved CAs, the risk of non-compliance to the policy is minimized.
       If CAA records exist but do not include an approved or preferred CA for a specific domain, the issuance of certificates by that CA to the domain cannot proceed until the creation of the appropriate CAA record is completed.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.8
+            - 6.5.10
+            - 8.6
+        - version: 4.0
+          requirements:
+            - 6.2.1
+            - 6.2.4
     references:
       - name: RFC 8659 - DNS Certification Authority Authorization (CAA) Resource Record
         url: https://datatracker.ietf.org/doc/html/rfc8659
@@ -129,6 +181,17 @@ evaluations:
     label_as: TLS/A
     issue: >
       DNS by itself is not secure, without TLS/a or DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.8
+            - 6.5.10
+            - 8.6
+        - version: 4.0
+          requirements:
+            - 6.2.1
+            - 6.2.4
     references:
       - name: ICANN
         url: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
@@ -151,6 +214,17 @@ evaluations:
     label_as: DNSSEC Present
     issue: >
       DNS by itself is not secure, without DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.8
+            - 6.5.10
+            - 8.6
+        - version: 4.0
+          requirements:
+            - 6.2.1
+            - 6.2.4
     references:
       - name: ICANN
         url: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
@@ -177,6 +251,17 @@ evaluations:
     label_as: DNSSEC Valid
     issue: >
       DNS by itself is not secure, without DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.8
+            - 6.5.10
+            - 8.6
+        - version: 4.0
+          requirements:
+            - 6.2.1
+            - 6.2.4
     references:
       - name: ICANN
         url: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
@@ -207,6 +292,17 @@ evaluations:
     cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
     cve:
       - CVE-2019-14855
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.8
+            - 6.5.10
+            - 8.6
+        - version: 4.0
+          requirements:
+            - 6.2.1
+            - 6.2.4
     references:
       - name: Cambridge University Information Services
         url: https://www.dns.cam.ac.uk/news/2020-01-09-sha-mbles.html
@@ -248,6 +344,16 @@ evaluations:
       Certificate Transparency (CT) is a mechanism which helps domain owners and industry watch dogs detect misissuance.
       Misissuance occurs when a Certificate Authority (CA) issues an SSL certificate improperly. This may mean that the CA included incorrect information in the certificate, issued the certificate to someone who did not represent the organization or domain, or was even compromised.
       Some browsers require certificates to have proof of being logged with certificate transparency, Safari requires up to 3 SCTs and Chrome requires between 3 and 5. The policies are far more complex than this so the generalised best practice is using at least 3 distinct SCTs per certificate.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
       - name: Chrome Google Group - Certificate Transparency Policy
         url: https://groups.google.com/a/chromium.org/g/ct-policy/c/fCt4Bm03GsI
@@ -273,6 +379,16 @@ evaluations:
     cve:
       - CVE-2007-3108
       - CVE-2008-0166
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: Security Advisory
         url: https://www.debian.org/security/2008/dsa-1571
@@ -306,6 +422,19 @@ evaluations:
       - CVE-2014-8730
       - CVE-2014-0160
       - CVE-2009-3555
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
     references:
       - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
         url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
@@ -332,6 +461,19 @@ evaluations:
     cve:
       - CVE-2014-6321
       - CVE-2008-0166
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
     references:
       - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
         url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
@@ -361,6 +503,19 @@ evaluations:
     cve:
       - CVE-2014-6321
       - CVE-2008-0166
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
     references:
       - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
         url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
@@ -377,10 +532,22 @@ evaluations:
   - key: rc4_cipher_offered
     group: tls_negotiation
     label_as: Known exploited and deprecated RC4 ciphers offered
-    issue: TBA
+    issue: >
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
     references:
-      - name:
-        url:
     anotate_results:
       - value: False
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -394,10 +561,22 @@ evaluations:
   - key: cbc_cipher_offered
     group: tls_negotiation
     label_as: Known exploited and deprecated CBC ciphers offered
-    issue: TBA
+    issue: >
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
     references:
-      - name:
-        url:
     anotate_results:
       - value: False
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -411,10 +590,22 @@ evaluations:
   - key: strong_cipher_negotiated
     group: tls_negotiation
     label_as: Strong ciphers negotiated
-    issue: TBA
+    issue: >
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
     references:
-      - name:
-        url:
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -428,10 +619,22 @@ evaluations:
   - key: strong_cipher_offered
     group: tls_negotiation
     label_as: Strong ciphers offered
-    issue: TBA
+    issue: >
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
     references:
-      - name:
-        url:
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -445,10 +648,22 @@ evaluations:
   - key: only_strong_ciphers_offered
     group: tls_negotiation
     label_as: Only strong ciphers offered
-    issue: TBA
+    issue: >
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
     references:
-      - name:
-        url:
     anotate_results:
       - value: True
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -469,6 +684,19 @@ evaluations:
     cve:
       - CVE-2005-4900
       - CVE-2019-14855
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
     references:
       - name: Disclosure Paper
         url: https://shattered.io/
@@ -497,6 +725,16 @@ evaluations:
     cve:
       - CVE-2014-3566
       - CVE-2014-8730
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: RFC 7507 - TLS Fallback Signaling Cipher Suite Value (SCSV) for Preventing Protocol Downgrade Attacks
         url: https://datatracker.ietf.org/doc/html/rfc7507
@@ -518,6 +756,16 @@ evaluations:
       Each certificate in the chain is checked to ensure it is not expired and the chain path is complete.
       When the root certificates are available in trust-store, this script will use its public key to verify the root certificate, once it verifies it will verify trust the intermediate certificate and eventually the server (leaf) certificate to complete the chain.
       Only one valid chain from trusted root to the leaf certificate is needed to be compatible with web browsers, however the entire certificate chain should be valid to be considered trustworthy as any compromised certificate in any chain would allow malicious attackers to sign a leaf certificate which would be considered valid in the parallel chain.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -553,6 +801,16 @@ evaluations:
       - CVE-2017-15533
       - CVE-2018-9192
       - CVE-2018-9194
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: CERT/CC
         url: https://www.kb.cert.org/vuls/id/144389
@@ -587,6 +845,16 @@ evaluations:
     cvss2: AV:L/AC:H/Au:N/C:P/I:N/A:N
     cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N
     cve:
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
       - name: Security Advisory
         url: https://blog.mozilla.org/security/tag/crlite/
@@ -664,6 +932,19 @@ evaluations:
       Diffie-Hellman key exchange depends for its security on the presumed difficulty of solving the discrete logarithm problem.
       By design, many Diffie-Hellman implementations use the same pre-generated prime for their field, because of the reuse of primes generating precomputation for just one prime would expose millions of implementations. This vulnerability was known as early as 1992.
       Claims on the practical implications of the attack at the time were however disputed by security researchers but over the years it is expected that many primes were and still are being calculated practically making all primes of 2048 bit or less considered weak or vulnerable.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
     references:
       - name: RFC 8270 - Increase the Secure Shell Minimum Recommended Diffie-Hellman Modulus Size to 2048 Bits
         url: https://datatracker.ietf.org/doc/html/rfc8270
@@ -733,6 +1014,19 @@ evaluations:
       Using anything other than 65537 as the public exponent would effect compatibility with most hardware and software.
       Any higher exponent would make the public RSA operation, used for encryption or signature verification, unusably slower.
       Using a larger exponent will not decrease security, but will be more time / power consuming.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
     references:
       - name: Twenty Years of Attacks on the RSA Cryptosystem - Dan Boneh, Stanford University
         url: https://www.researchgate.net/publication/2538368_Twenty_Years_of_Attacks_on_the_RSA_Cryptosystem
@@ -754,6 +1048,16 @@ evaluations:
     issue: >
       This is frequently a misconfiguration, i.e. the website domain name was not included in your common name by mistake.
       However it is a very uncommon issue and is most likely indication of compromise, where a malicious attacker is targeting website owners or visitors using phishing or impersonation and have made the error unintentionally or was unable to effectively impersonate the website correctly and are relying on visitors ignoring browser warnings.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
       - name: RFC 9110 - HTTP Semantics
         url: https://datatracker.ietf.org/doc/html/rfc9110
@@ -775,6 +1079,16 @@ evaluations:
     issue: >
       This is frequently a misconfiguration, i.e. the website domain name was not included in your common name by mistake.
       However it is a very uncommon issue and is most likely indication of compromise, where a malicious attacker is targeting website owners or visitors using phishing or impersonation and have made the error unintentionally or was unable to effectively impersonate the website correctly and are relying on visitors ignoring browser warnings.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
       - name: RFC 9110 - HTTP Semantics
         url: https://datatracker.ietf.org/doc/html/rfc9110
@@ -793,6 +1107,16 @@ evaluations:
     label_as: HTTP/2 cleartext
     issue: >
       This will lead to a communication channel establised over an insecure network connection
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: RFC 7540 - Hypertext Transfer Protocol Version 2 (HTTP/2)
         url: https://datatracker.ietf.org/doc/html/rfc7540
@@ -832,6 +1156,16 @@ evaluations:
     label_as: Certificate is not expired
     issue: >
       When visiting a website that uses an expired Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -848,6 +1182,16 @@ evaluations:
     label_as: Valid NotBefore date
     issue: >
       When visiting a website that uses a Certificate with an invalid NotBefore date, it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -865,6 +1209,16 @@ evaluations:
     issue: >
       Any self-signed Certificate should be untrusted as it offers no security characteristics of TLS that is based on a system that all Certificates have a Root Certificate Authority Trust Anchor.
       When visiting a website that uses a self-signed Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -882,6 +1236,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -899,6 +1263,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -916,6 +1290,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -933,6 +1317,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -950,6 +1344,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -967,6 +1371,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -984,6 +1398,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1001,6 +1425,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1018,6 +1452,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1035,6 +1479,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1052,6 +1506,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1069,6 +1533,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1086,6 +1560,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1103,6 +1587,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1120,6 +1614,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1137,6 +1641,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1154,6 +1668,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1171,6 +1695,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1188,6 +1722,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1205,6 +1749,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1221,6 +1775,16 @@ evaluations:
     label_as: Basic Constraints Extension valid path length
     issue: >
       Path length gives the maximum number of intermediate certificates that may follow the root CA certificate typically (or certificate otherwise specifying the constraint) in a valid certification path.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
       - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
         url: https://datatracker.ietf.org/doc/html/rfc5280
@@ -1247,6 +1811,16 @@ evaluations:
       5. The DV Certificate Issuers generally don't offer any additional features, therefore even if you attempt to use certain features like ssl_stapling it will simply be ignored. These Issuers, (pick on Let's Encrypt for this one) simply prefer low-barrier and ease-of-use over any and all security characteristics - so if they don't care, why would you put any trust in their DV Certificates to secure your TLS connections?
       6. An EV Certificate inherently required an out-of-band validation, that is not automated like a DV Certificate. Therefore if an ATO (Account Take-over) or DNS hijacking attack were to be successful the attacker must be persistent and sometimes be physically attacking you. Which all takes significantly more time than the near-instant time it takes for the DV Certificates to be issued. When you operate public hosted (cloud) servers, they are typically ephemeral IP Addresses. The hazard with an IP Address that changes between distinct users is there is a possibility a patient malicious actor may get assigned an IP Address previously held by a valuable customer of the service provider. The way DNS works with TTL and caches means that some requests will still attempt to connect to IP Address you now have that were intended for the previous IP Address owner. If the IP Address the malicious attacker is assigned is rDNS checked and the malicious actor doesn't find anything of value, they can easily discard the IP Address and simply request a new one over and over until they get an IP that is of value to them. This is called IP Churn, and a paper describes how this technique that is an accepted "how things work" can be combined with DV Certificates that are also accepted as "how things work", combined allow for DNS hijacking. This is a proven attack, and the attack vectors with continue to work as long as service providers assign IP Addresses that are still fresh and DV certificates are automatically issued in nanoseconds.
       Put simply, DV Certificates are favoured by attackers and seeing one should make you sceptical, they're issued for ease-of-use and not for security purposes, and there is a trivial DNS take-over attack that can be used for targeted attacks when attackers are sufficiently motivated. An EV Certificate is the distinct opposite, attackers avoid using them unless they are desperate and motivated to ignore the risks to them, they are issued with security focus in spite of the time do validation which is an effective mitigation to the trivial DNS take-over attack.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
       - name: Hiding in Plain Sight - A Longitudinal Study of Combosquatting Abuse
         url: https://webcache.googleusercontent.com/search?q=cache:s_bQ24QvDcQJ:https://par.nsf.gov/servlets/purl/10047386+&cd=6&hl=en&ct=clnk&gl=au
@@ -1270,6 +1844,16 @@ evaluations:
       June 2022 there are hundreds of ACME protocol Certificate Authorities issuing DV certificates and few would have learned from the 2018 disclosure and turned off the vulnerable design feature of SNI.
       There are a total of 10 methods of verification defined by ACME, few actually offer any security characteristics that can be said to 'Verify' Domain Ownership, in fact some are designed on purpose to offer DV certificates to customers of website hosting providors that can only modify the HTTP header responses, or less control and can only add a HTML tag! Neitehr of these are verifying control of a domain, let alone Validate domain control! What is a DV certificate if domain validation never occurred?
       Beyond validation itself; The ACME protocol DV Certificate Issuers generally don't offer any additional features, therefore even if you attempt to use certain features like ssl_stapling it will simply be ignored. These Issuers, (pick on Let's Encrypt for this one) simply prefer low-barrier and ease-of-use over any and all security characteristics - so if they don't care, why would you put any trust in their DV Certificates to secure your TLS connections?
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: RFC 8555 - Automatic Certificate Management Environment (ACME)
         url: https://datatracker.ietf.org/doc/html/rfc8555
@@ -1290,6 +1874,16 @@ evaluations:
     label_as: Leaf Certificate allows impersonation
     issue: >
       Server (leaf) certificates should not be a CA, it could enable impersonation attacks
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
     anotate_results:
       - value: False
@@ -1308,6 +1902,16 @@ evaluations:
       Using the SHA-1 chosen-prefix collision the OCSP Assertion can be forged
     cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
     cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
       - name: CA/Browser Forum
         url: https://cabforum.org/2014/10/16/ballot-118-sha-1-sunset/
@@ -1328,6 +1932,16 @@ evaluations:
       Using the SHA-1 chosen-prefix collision the OCSP Assertion can be forged
     cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
     cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
       - name: CA/Browser Forum
         url: https://cabforum.org/2014/10/16/ballot-118-sha-1-sunset/
@@ -1349,6 +1963,16 @@ evaluations:
       Failing to include the must staple extension in a Domain Validated (DV) or Organisation Validated (OV) Certificate will allow most web browsers and HTTP clients to 'soft-fail' the OCSP check and continue with TLS without an OCSP assertion or knowledge of revocation status.
       In some web browsers and HTTP clients an Extended Validation (EV) certificate will hard-fail when an OCSP assertion is not obtained, but this functionality should not be relied upon as there have been many changes made by web browsers that are divergent from standards and break assumed security guarantees suddenly become a vulnerability.
       Everywhere the OCSP Must Staple Extension is accepted, it will be enforced for all certificates regardless of validation semantics.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1365,6 +1989,16 @@ evaluations:
     label_as: OCSP Stapling Extension
     issue: >
       When an OCSP assertion is not included 'stapled' with the certificate, an weakness in the clients ability to obtain a remote assertion, when the client attempts to establish a connection with the OCSP responder an additional MITM attack vector is available and forged OCSP assertions may be provided allowing an attacker to sppof the revocation status of a certificate to cause a denial of service or establish trust where otherwise a compromise would have been detected.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1381,6 +2015,16 @@ evaluations:
     label_as: OCSP Revocation
     issue: >
       A revoked certificate that remains in use is an indication of misconfiuguration, misuse, or abuse.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1398,6 +2042,16 @@ evaluations:
     issue: >
       If the server (leaf) certificate was issued to serve the purpose of providing a TLS connection from the server-side.
       Any failure to include the correct signed (by the issuer) values would indicate a forged certificate and compromised connection.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1414,6 +2068,16 @@ evaluations:
     label_as: Client Certificate (MTLS) expected
     issue: >
       The server indivated client certificate subject's it will accept, or the client presented a Certificate to initiate an MTLS connection with this server.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1427,6 +2091,16 @@ evaluations:
     issue: >
       If the Certificate being used for client Authentication (MTLS) was not issued for that purpose then most properly configured servers will drop the connection.
       If either the client Certificate or TLS server is misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
       - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
         url: https://datatracker.ietf.org/doc/html/rfc5280
@@ -1446,6 +2120,16 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
       - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
         url: https://datatracker.ietf.org/doc/html/rfc5280
@@ -1465,6 +2149,16 @@ evaluations:
     issue: >
       If the Certificate being used for client Authentication (MTLS) was not matched to a subject sent by the server to indicate accepted client Certificates then most properly configured servers will drop the connection.
       If a connection is established and the TLS server was misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
       - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
         url: https://datatracker.ietf.org/doc/html/rfc5280
@@ -1484,6 +2178,16 @@ evaluations:
     issue: >
       A client Certificate was presented and Mutual Authentication (MTLS) expected, if the presented client Certificate did not match the server sent subjects or the Certificate was not issued by a trusted Root Certificate Authority this connection attempt should not be considered secure.
       If a connection is established and the TLS server was misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
     references:
     anotate_results:
       - value: True
@@ -1507,6 +2211,16 @@ evaluations:
       - CVE-2020-5933
       - CVE-2018-25032
       - CVE-2013-3587
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
     anotate_results:
       - value: False
@@ -1522,7 +2236,17 @@ evaluations:
     group: tls_negotiation
     label_as: Session resumption caching
     issue: >
-      TBA
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
     anotate_results:
       - value: False
@@ -1538,7 +2262,17 @@ evaluations:
     group: tls_negotiation
     label_as: Session resumption ticket hints
     issue: >
-      TBA
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
     anotate_results:
       - value: False
@@ -1554,7 +2288,17 @@ evaluations:
     group: tls_negotiation
     label_as: Session resumption tickets
     issue: >
-      TBA
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
     anotate_results:
       - value: False
@@ -1636,6 +2380,16 @@ evaluations:
     issue: >
       Websites are not expected to read contents of the users' clipboard, which commonly contains private or sensitive information.
       A webserver can instruct web browsers to block this feature so that any malicious scripts cannot leverage the API.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
@@ -1655,6 +2409,16 @@ evaluations:
     issue: >
       Websites that are maintained should not be utilising deprecated features, that commonly exhibit insecure functionality or vulnerable to abuse.
       A webserver can instruct web browsers to block these features so that any malicious scripts cannot leverage the API.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
@@ -1673,6 +2437,16 @@ evaluations:
     label_as: Policy-controlled browser features
     issue: >
       A webserver can instruct web browsers to allowlist on the features the site owner intends to utilise, blocking all unused features so that any malicious scripts cannot leverage the unused features or API.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
@@ -1692,6 +2466,16 @@ evaluations:
     issue: >
       The server sent a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using CORP or CORS).
       The default configuration when this is not sent allows the document to fetch cross-origin resources which leaves users' vulnerable to cross-site scripting (XSS) attacks.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
@@ -1711,6 +2495,16 @@ evaluations:
     issue: >
       The server sent a response header allows you to ensure a top-level document does not share a browsing context group with cross-origin documents.
       COOP will process-isolate your document and potential attackers can't access your global object if they were to open it in a popup, preventing a set of cross-origin attacks dubbed XS-Leaks.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy
@@ -1730,6 +2524,16 @@ evaluations:
     issue: >
       The server sent a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (CORS).
       The default configuration when this is not sent allows the document to fetch cross-origin resources which leaves users' vulnerable to cross-site scripting (XSS) attacks.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Resource-Policy
@@ -1748,6 +2552,16 @@ evaluations:
     label_as: Content-Security-Policy
     issue: >
       The server sent a response header allows web site administrators to control resources the user agent is allowed to load for a given page. With a few exceptions, policies mostly involve specifying server origins and script endpoints. This helps guard against cross-site scripting attacks cross-site scripting (XSS)
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
@@ -1766,6 +2580,16 @@ evaluations:
     label_as: Upgrade Insecure Requests
     issue: >
       The server sent a response header to inform supporting browsers to ensure TLS is used even when misconfigured scripts attempt insecure connections.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/upgrade-insecure-requests
@@ -1784,6 +2608,16 @@ evaluations:
     label_as: Certificate Transparency Report URI
     issue: >
       The server sent a response header to inform supporting browsers to ensure opt in to reporting and/or enforcement of Certificate Transparency requirements, to prevent the use of misissued certificates for that site from going unnoticed.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expect-CT
@@ -1802,6 +2636,16 @@ evaluations:
     label_as: HTTP Strict-Transport-Security
     issue: >
       The server sent a response header to inform supporting browsers that the site should only be accessed using HTTPS, and that any future attempts to access it using HTTP should automatically be converted to HTTPS.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
@@ -1820,6 +2664,16 @@ evaluations:
     label_as: nosniff X-Content-Type-Options
     issue: >
       The server sent a response header to inform supporting browsers that the MIME types advertised in the Content-Type headers should be followed and not be changed. The header allows you to avoid MIME type sniffing by saying that the MIME types are deliberately configured.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
@@ -1839,6 +2693,16 @@ evaluations:
     issue: >
       The Referrer-Policy HTTP header controls how much referrer information (sent with the Referer header) should be included with requests.
       This policy will leak potentially-private information from HTTPS resource URLs to insecure origins. Carefully consider the impact of this setting.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
@@ -1858,6 +2722,16 @@ evaluations:
     issue: >
       The server sent a response header to inform supporting browsers whether or not a browser should be allowed to render a page in a <frame>, <iframe>, <embed> or <object>. Sites can use this to avoid click-jacking attacks, by ensuring that their content is not embedded into other sites.
       The added security is provided only if the user accessing the document is using a browser that supports X-Frame-Options.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
@@ -1876,6 +2750,16 @@ evaluations:
     label_as: Block mode XSS-Protection
     issue: >
       The server sent a response header to inform supporting browsers to stop pages from loading when they detect reflected cross-site scripting (XSS) attacks. These protections are largely unnecessary in modern browsers when sites implement a strong Content-Security-Policy that disables the use of inline JavaScript ('unsafe-inline').
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
     references:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
@@ -2146,7 +3030,7 @@ evaluations:
   "3.4.1": PAN is masked when displayed (the BIN and last four digits are the maximum number of digits to be displayed), such that only personnel with a legitimate business need can see more than the BIN and last four digits of the PAN.
   "3.4.2": >
     When using remote-access technologies, technical controls prevent copy and/or relocation of PAN for all personnel, except for those with documented, explicit authorization and a legitimate, defined business need.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "3.5": Primary account number (PAN) is secured wherever it is stored.
   "3.5.1": >
     PAN is rendered unreadable anywhere it is stored by using any of the following approaches:
@@ -2157,13 +3041,13 @@ evaluations:
     - Strong cryptography with associated key-management processes and procedures.
   "3.5.1.1": >
     Hashes used to render PAN unreadable (per the first bullet of Requirement 3.5.1) are keyed cryptographic hashes of the entire PAN, with associated key-management processes and procedures in accordance with Requirements 3.6 and 3.7.
-    Note": This requirement is considered a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is considered a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "3.5.1.2": >
     If disk-level or partition-level encryption (rather than file-, column-, or field-level database encryption) is used to render PAN unreadable, it is implemented only as follows:
     - On removable electronic media
     OR
     - If used for non-removable electronic media, PAN is also rendered unreadable via another mechanism that meets Requirement 3.5.1.
-    Note": This requirement is considered a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment
+    Note: This requirement is considered a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment
   "3.5.1.3": >
     If disk-level or partition-level encryption is used (rather than file-, column-, or field--level database encryption) to render PAN unreadable, it is managed as follows:
     - Logical access is managed separately and independently of native operating system authentication and access control mechanisms.
@@ -2227,7 +3111,7 @@ evaluations:
     - The encryption strength is appropriate for the encryption methodology in use.
   "4.2.1.1": >
     An inventory of the entity's trusted keys and certificates used to protect PAN during transmission is maintained.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "4.2.1.2": >
     Wireless networks transmitting PAN or connected to the CDE use industry best practices to implement strong cryptography for authentication and transmission.
   "4.2.2": PAN is secured with strong cryptography whenever it is sent via end-user messaging technologies.
@@ -2254,7 +3138,7 @@ evaluations:
     - Confirmation whether such system components continue to not require anti-malware protection.
   "5.2.3.1": >
     The frequency of periodic evaluations of system components identified as not at risk for malware is defined in the entity's targeted risk analysis, which is performed according to all elements specified in Requirement 12.3.1.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "5.3": Anti-malware mechanisms and processes are active, maintained, and monitored.
   "5.3.1": The anti-malware solution(s) is kept current via automatic updates.
   "5.3.2": >
@@ -2264,19 +3148,19 @@ evaluations:
     - Performs continuous behavioral analysis of systems or processes.
   "5.3.2.1": >
     If periodic malware scans are performed to meet Requirement 5.3.2, the frequency of scans is defined in the entity's targeted risk analysis, which is performed according to all elements specified in Requirement 12.3.1.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "5.3.3": >
     For removable electronic media, the anti-malware solution(s):
     - Performs automatic scans of when the media is inserted, connected, or logically mounted,
     OR
     - Performs continuous behavioral analysis of systems or processes when the media is inserted, connected, or logically mounted.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "5.3.4": Audit logs for the anti-malware solution(s) are enabled and retained in accordance with Requirement 10.5.1.
   "5.3.5": Anti-malware mechanisms cannot be disabled or altered by users, unless specifically documented, and authorized by management on a case-by-case basis for a limited time period.
   "5.4": Anti-phishing mechanisms protect users against phishing attacks.
   "5.4.1": >
     Processes and automated mechanisms are in place to detect and protect personnel against phishing attacks.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "6": Develop and Maintain Secure Systems and Software
   "6.1": Processes and mechanisms for developing and maintaining secure systems and software are defined and understood.
   "6.1.1": >
@@ -2323,7 +3207,7 @@ evaluations:
     - Vulnerabilities for bespoke and custom, and third-party software (for example operating systems and databases) are covered.
   "6.3.2": >
     An inventory of bespoke and custom software, and third-party software components incorporated into bespoke and custom software is maintained to facilitate vulnerability and patch management.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "6.3.3": >
     All system components are protected from known vulnerabilities by installing applicable security patches/updates as follows:
     - Critical or high-security patches/updates (identified according to the risk ranking process at Requirement 6.3.1) are installed within one month of release.
@@ -2344,20 +3228,20 @@ evaluations:
     - Actively running and up to date as applicable.
     - Generating audit logs.
     - Configured to either block web-based attacks or generate an alert that is immediately investigated.
-    Note": This requirement will be superseded by Requirement 6.4.2 after 31 March 2025 when Requirement 6.4.2 becomes effective.
+    Note: This requirement will be superseded by Requirement 6.4.2 after 31 March 2025 when Requirement 6.4.2 becomes effective.
   "6.4.2": >
     For public-facing web applications, an automated technical solution is deployed that continually detects and prevents web-based attacks, with at least the following:
     - Is installed in front of public-facing web applications and is configured to detect and prevent web-based attacks.
     - Actively running and up to date as applicable.
     - Generating audit logs.
     - Configured to either block web-based attacks or generate an alert that is immediately investigated.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment. This new requirement will replace Requirement 6.4.1 once its effective date is reached.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment. This new requirement will replace Requirement 6.4.1 once its effective date is reached.
   "6.4.3": >
     All payment page scripts that are loaded and executed in the consumer's browser are managed as follows:
     - A method is implemented to confirm that each script is authorized.
     - A method is implemented to assure the integrity of each script.
     - An inventory of all scripts is maintained with written justification as to why each is necessary.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "6.5": Changes to all system components are managed securely.
   "6.5.1": >
     Changes to all system components in the production environment are made according to established procedures that include:
@@ -2398,19 +3282,19 @@ evaluations:
     - To ensure user accounts and access remain appropriate based on job function.
     - Any inappropriate access is addressed.
     - Management acknowledges that access remains appropriate.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "7.2.5": >
     All application and system accounts and related access privileges are assigned and managed as follows:
     - Based on the least privileges necessary for the operability of the system or application.
     - Access is limited to the systems, applications, or processes that specifically require their use.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "7.2.5.1": >
     All access by application and system accounts and related access privileges are reviewed as follows:
     - Periodically (at the frequency defined in the entity's targeted risk analysis, which is performed according to all elements specified in Requirement 12.3.1).
     - The application/system access remains appropriate for the function being performed.
     - Any inappropriate access is addressed.
     - Management acknowledges that access remains appropriate.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "7.2.6": >
     All user access to query repositories of stored cardholder data is restricted as follows:
     - Via applications or other programmatic methods, with access and allowed actions based on user roles and least privileges.
@@ -2471,7 +3355,7 @@ evaluations:
     If passwords/passphrases are used as authentication factors to meet Requirement 8.3.1, they meet the following minimum level of complexity:
     - A minimum length of 12 characters (or IF the system does not support 12 characters, a minimum length of eight characters).
     - Contain both numeric and alphabetic characters.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment. Until 31 March 2025, passwords must be a minimum length of seven characters in accordance with PCI DSS v3.2.1 Requirement 8.2.3.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment. Until 31 March 2025, passwords must be a minimum length of seven characters in accordance with PCI DSS v3.2.1 Requirement 8.2.3.
   "8.3.7": Individuals are not allowed to submit a new password/passphrase that is the same as any of the last four passwords/passphrases used.
   "8.3.8": >
     Authentication policies and procedures are documented and communicated to all users including:
@@ -2488,13 +3372,13 @@ evaluations:
     Additional requirement for service providers only: If passwords/passphrases are used as the only authentication factor for customer user access to cardholder data (i.e., in any single-factor authentication implementation), then guidance is provided to customer users including:
     - Guidance for customers to change their user passwords/passphrases periodically.
     - Guidance as to when, and under what circumstances, passwords/passphrases are to be changed.
-    Note": This requirement for service providers will be superseded by Requirement 8.3.10.1 as of 31 March 2025.
+    Note: This requirement for service providers will be superseded by Requirement 8.3.10.1 as of 31 March 2025.
   "8.3.10.1": >
     Additional requirement for service providers only: If passwords/passphrases are used as the only authentication factor for customer user access (i.e., in any single-factor authentication implementation) then either:
     - Passwords/passphrases are changed at least once every 90 days,
     OR
     - The security posture of accounts is dynamically analyzed, and real-time access to resources is automatically determined accordingly.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment. Until this requirement is effective on 31 March 2025, service providers may meet either Requirement 8.3.10 or 8.3.10.1.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment. Until this requirement is effective on 31 March 2025, service providers may meet either Requirement 8.3.10 or 8.3.10.1.
   "8.3.11": >
     Where authentication factors such as physical or logical security tokens, smart cards, or certificates are used:
     - Factors are assigned to an individual user and not shared among multiple users.
@@ -2503,7 +3387,7 @@ evaluations:
   "8.4.1": MFA is implemented for all non-console access into the CDE for personnel with administrative access.
   "8.4.2": >
     MFA is implemented for all access into the CDE.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "8.4.3": >
     MFA is implemented for all remote network access originating from outside the entity's network that could access or impact the CDE as follows:
     - All remote access by all personnel, both users and administrators, originating from outside the entity's network.
@@ -2515,7 +3399,7 @@ evaluations:
     - MFA systems cannot be bypassed by any users, including administrative users unless specifically documented, and authorized by management on an exception basis, for a limited time period.
     - At least two different types of authentication factors are used.
     - Success of all authentication factors is required before access is granted.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "8.6": Use of application and system accounts and associated authentication factors is strictly managed.
   "8.6.1": >
     If accounts used by systems or applications can be used for interactive login, they are managed as follows:
@@ -2525,15 +3409,15 @@ evaluations:
     - Interactive use is explicitly approved by management.
     - Individual user identity is confirmed before access to account is granted.
     - Every action taken is attributable to an individual user.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "8.6.2": >
     Passwords/passphrases for any application and system accounts that can be used for interactive login are not hard coded in scripts, configuration/property files, or bespoke and custom source code.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "8.6.3": >
     Passwords/passphrases for any application and system accounts are protected against misuse as follows:
     - Passwords/passphrases are changed periodically (at the frequency defined in the entity's targeted risk analysis, which is performed according to all elements specified in Requirement 12.3.1) and upon suspicion or confirmation of compromise.
     - Passwords/passphrases are constructed with sufficient complexity appropriate for how frequently the entity changes the passwords/passphrases.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "9": Restrict Physical Access to Cardholder Data
   "9.1": Processes and mechanisms for restricting physical access to cardholder data are defined and understood.
   "9.1.1": >
@@ -2613,7 +3497,7 @@ evaluations:
     - Device serial number or other methods of unique identification.
   "9.5.1.2": >
     POI device surfaces are periodically inspected to detect tampering and unauthorized substitution.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "9.5.1.2.1": The frequency of periodic POI device inspections and the type of inspections performed is defined in the entity's targeted risk analysis, which is performed according to all elements specified in Requirement 12.3.1.
   "9.5.1.3": >
     Training is provided for personnel in POI environments to be aware of attempted tampering or replacement of POI devices, and includes:
@@ -2668,11 +3552,11 @@ evaluations:
     - Logs of all servers and system components that perform security functions (for example, network security controls, intrusion-detection systems/intrusion-prevention systems (IDS/IPS), authentication servers).
   "10.4.1.1": >
     Automated mechanisms are used to perform audit log reviews.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "10.4.2": Logs of all other system components (those not specified in Requirement 10.4.1) are reviewed periodically.
   "10.4.2.1": >
     The frequency of periodic log reviews for all other system components (not defined in Requirement 10.4.1) is defined in the entity's targeted risk analysis, which is performed according to all elements specified in Requirement 12.3.1
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "10.4.3": Exceptions and anomalies identified during the review process are addressed.
   "10.5": Audit log history is retained and available for analysis.
   "10.5.1": Retain audit log history for at least 12 months, with at least the most recent three months immediately available for analysis.
@@ -2701,7 +3585,7 @@ evaluations:
     - Logical access controls.
     - Audit logging mechanisms.
     - Segmentation controls (if used).
-    Note": This requirement will be superseded by Requirement 10.7.2 as of 31 March 2025.
+    Note: This requirement will be superseded by Requirement 10.7.2 as of 31 March 2025.
   "10.7.2": >
     Failures of critical security control systems are detected, alerted, and addressed promptly, including but not limited to failure of the following critical security control systems:
     - Network security controls.
@@ -2714,7 +3598,7 @@ evaluations:
     - Segmentation controls (if used).
     - Audit log review mechanisms.
     - Automated security testing tools (if used).
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment and will supersede Requirement 10.7.1.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment and will supersede Requirement 10.7.1.
   "10.7.3": >
     Failures of any critical security controls systems are responded to promptly, including but not limited to:
     - Restoring security functions.
@@ -2724,7 +3608,7 @@ evaluations:
     - Determining whether further actions are required as a result of the security failure.
     - Implementing controls to prevent the cause of failure from reoccurring.
     - Resuming monitoring of security controls.
-    Note": This is a current v3.2.1 requirement that applies to service providers only. However, this requirement is a best practice for all other entities until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This is a current v3.2.1 requirement that applies to service providers only. However, this requirement is a best practice for all other entities until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "11": Test Security of Systems and Networks Regularly
   "11.1": Processes and mechanisms for regularly testing security of systems and networks are defined and understood.
   "11.1.1": >
@@ -2754,13 +3638,13 @@ evaluations:
     All other applicable vulnerabilities (those not ranked as high-risk or critical per the entity's vulnerability risk rankings defined at Requirement 6.3.1) are managed as follows:
     - Addressed based on the risk defined in the entity's targeted risk analysis, which is performed according to all elements specified in Requirement 12.3.1.
     - Rescans are conducted as needed.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "11.3.1.2": >
     Internal vulnerability scans are performed via authenticated scanning as follows:
     - Systems that are unable to accept credentials for authenticated scanning are documented.
     - Sufficient privileges are used for those systems that accept credentials for scanning.
     - If accounts used for authenticated scanning can be used for interactive login, they are managed in accordance with Requirement 8.2.2.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "11.3.1.3": >
     Internal vulnerability scans are performed after any significant change as follows:
     - High-risk and critical vulnerabilities (per the entity's vulnerability risk rankings defined at Requirement 6.3.1) are resolved.
@@ -2827,7 +3711,7 @@ evaluations:
     - Organizational independence of the tester exists (not required to be a QSA or ASV).
   "11.4.7": >
     Additional requirement for multi-tenant service providers only: Multi-tenant service providers support their customers for external penetration testing per Requirement 11.4.3 and 11.4.4.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "11.5": Network intrusions and unexpected file changes are detected and responded to.
   "11.5.1": >
     Intrusion-detection and/or intrusion-prevention techniques are used to detect and/or prevent intrusions into the network as follows:
@@ -2837,7 +3721,7 @@ evaluations:
     - All intrusion-detection and prevention engines, baselines, and signatures are kept up to date.
   "11.5.1.1": >
     Additional requirement for service providers only: Intrusion-detection and/or intrusion-prevention techniques detect, alert on/prevent, and address covert malware communication channels.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "11.5.2": >
     A change-detection mechanism (for example, file integrity monitoring tools) is deployed as follows:
     - To alert personnel to unauthorized modification (including changes, additions, and deletions) of critical files.
@@ -2851,7 +3735,7 @@ evaluations:
     - At least once every seven days
     OR
     - Periodically (at the frequency defined in the entity's targeted risk analysis, which is performed according to all elements specified in Requirement 12.3.1).
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "12": Support Information Security with Organizational Policies and Programs
   "12.1": A comprehensive information security policy that governs and provides direction for protection of the entity's information assets is known and current.
   "12.1.1": >
@@ -2881,7 +3765,7 @@ evaluations:
     - Resulting analysis that determines, and includes justification for, how frequently the requirement must be performed to minimize the likelihood of the threat being realized.
     - Review of each targeted risk analysis at least once every 12 months to determine whether the results are still valid or if an updated risk analysis is needed.
     - Performance of updated risk analyses when needed, as determined by the annual review.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "12.3.2": >
     A targeted risk analysis is performed for each PCI DSS requirement that the entity meets with the customized approach, to include:
     - Documented evidence detailing each element specified in Appendix D: Customized Approach (including, at a minimum, a controls matrix and risk analysis).
@@ -2892,14 +3776,14 @@ evaluations:
     - An up-to-date inventory of all cryptographic cipher suites and protocols in use, including purpose and where used.
     - Active monitoring of industry trends regarding continued viability of all cryptographic cipher suites and protocols in use.
     - A documented strategy to respond to anticipated changes in cryptographic vulnerabilities.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "12.3.4": >
     Hardware and software technologies in use are reviewed at least once every 12 months, including at least the following:
     - Analysis that the technologies continue to receive security fixes from vendors promptly.
     - Analysis that the technologies continue to support (and do not preclude) the entity's PCI DSS compliance.
     - Documentation of any industry announcements or trends related to a technology, such as when a vendor has announced \u201cend of life\u201d plans for a technology.
     - Documentation of a plan, approved by senior management, to remediate outdated technologies, including those for which vendors have announced \u201cend of life\u201d plans.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "12.4": PCI DSS compliance is managed.
   "12.4.1": >
     Additional requirement for service providers only: Responsibility is established by executive management for the protection of cardholder data and a PCI DSS compliance program to include:
@@ -2930,17 +3814,17 @@ evaluations:
     - Confirming that all identified data flows, account data, system components, segmentation controls, and connections from third parties with access to the CDE are included in scope.
   "12.5.2.1": >
     Additional requirement for service providers only: PCI DSS scope is documented and confirmed by the entity at least once every six months and upon significant change to the in-scope environment. At a minimum, the scoping validation includes all the elements specified in Requirement 12.5.2.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "12.5.3": >
     Additional requirement for service providers only: Significant changes to organizational structure result in a documented (internal) review of the impact to PCI DSS scope and applicability of controls, with results communicated to executive management.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "12.6": Security awareness education is an ongoing activity.
   "12.6.1": A formal security awareness program is implemented to make all personnel aware of the entity's information security policy and procedures, and their role in protecting the cardholder data.
   "12.6.2": >
     The security awareness program is:
     - Reviewed at least once every 12 months, and
     - Updated as needed to address any new threats and vulnerabilities that may impact the security of the entity's CDE, or the information provided to personnel about their role in protecting cardholder data.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "12.6.3": >
     Personnel receive security awareness training as follows:
     - Upon hire and at least once every 12 months.
@@ -2950,10 +3834,10 @@ evaluations:
     Security awareness training includes awareness of threats and vulnerabilities that could impact the security of the CDE, including but not limited to:
     - Phishing and related attacks.
     - Social engineering.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "12.6.3.2": >
     Security awareness training includes awareness about the acceptable use of end-user technologies in accordance with Requirement 12.2.1.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "12.7": Personnel are screened to reduce risks from insider threats.
   "12.7.1": Potential personnel who will have access to the CDE are screened, within the constraints of local laws, prior to hire to minimize the risk of attacks from internal sources.
   "12.8": Risk to information assets associated with third-party service provider (TPSP) relationships is managed.
@@ -2990,7 +3874,7 @@ evaluations:
   "12.10.4": Personnel responsible for responding to suspected and confirmed security incidents are appropriately and periodically trained on their incident response responsibilities.
   "12.10.4.1": >
     The frequency of periodic training for incident response personnel is defined in the entity's targeted risk analysis, which is performed according to all elements specified in Requirement 12.3.1.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "12.10.5": >
     The security incident response plan includes monitoring and responding to alerts from security monitoring systems, including but not limited to:
     - Intrusion-detection and intrusion-prevention systems.
@@ -3005,19 +3889,19 @@ evaluations:
     - Identifying whether sensitive authentication data is stored with PAN.
     - Determining where the account data came from and how it ended up where it was not expected.
     - Remediating data leaks or process gaps that resulted in the account data being where it was not expected.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "A1": Additional PCI DSS Requirements for Multi-Tenant Service Providers
   "A1.1": Multi-tenant service providers protect and separate all customer environments and data.
   "A1.1.1": >
     Logical separation is implemented as follows:
     - The provider cannot access its customers' environments without authorization.
     - Customers cannot access the provider's environment without authorization.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "A1.1.2": Controls are implemented such that each customer only has permission to access its own cardholder data and CDE.
   "A1.1.3": Controls are implemented such that each customer can only access resources allocated to them.
   "A1.1.4": >
     The effectiveness of logical separation controls used to separate customer environments is confirmed at least once every six months via penetration testing.
-    Note": This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
+    Note: This requirement is a best practice until 31 March 2025, after which it will be required and must be fully considered during a PCI DSS assessment.
   "A1.2": Multi-tenant service providers facilitate logging and incident response for all customers.
   "A1.2.1": >
     Audit log capability is enabled for each customer's environment that is consistent with PCI DSS Requirement 10, including:
