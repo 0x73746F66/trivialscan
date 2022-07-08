@@ -1,0 +1,9 @@
+---
+defaults:
+  use_sni: True
+  cafiles:
+  tmp_path_prefix: /tmp
+  http_path: /
+
+outputs:
+  - type: console

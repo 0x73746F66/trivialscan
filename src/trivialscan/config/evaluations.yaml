@@ -1,0 +1,2799 @@
+---
+evaluations:
+  - key: client_renegotiation
+    group: tls_negotiation
+    label_as: Client initiated TLS renegotiation
+    issue: >
+      Server accepts client-initiated insecure renegotiation, numerous exploits exists and many have been assigned CVE
+    cvss2: AV:N/AC:M/Au:N/C:N/I:N/A:C
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H
+    cve:
+      - CVE-2009-3555
+      - CVE-2011-1473
+      - CVE-2011-5094
+      - CVE-2021-3449
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1008
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: RFC 5746 - Transport Layer Security Renegotiation Indication Extension
+        url: https://datatracker.ietf.org/doc/html/rfc5746
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Not Detected
+        score: 60
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -120
+
+  - key: secure_renegotiation
+    group: tls_negotiation
+    label_as: Secure Renegotiation
+    issue: Client initiated TLS renegotiation allows attackers to leverage known exploits for lower protocols, prevention is possible when implementing Secure Renegotiation described in RFC-5746 section 3.3 implemented using the renegotiation_info extension or the spurious cipher TLS_EMPTY_RENEGOTIATION_INFO_SCSV
+    cvss2: AV:N/AC:M/Au:N/C:N/I:N/A:C
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H
+    cve:
+      - CVE-2009-3555
+      - CVE-2011-1473
+      - CVE-2011-5094
+      - CVE-2021-3449
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: RFC 5746 - Transport Layer Security Renegotiation Indication Extension
+        url: https://datatracker.ietf.org/doc/html/rfc5746
+    anotate_results:
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -120
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 100
+
+  - key: crime_vuln
+    group: transport
+    label_as: CRIME/BEAST Vulnerability
+    issue: >
+      Server supports TLS compression which may allow CRIME/BEAST attacks
+    cvss2: AV:N/AC:H/Au:N/C:P/I:N/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N
+    cve:
+      - CVE-2012-4929
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: RFC 3749 - Transport Layer Security Protocol Compression Methods
+        url: https://datatracker.ietf.org/doc/html/rfc3749
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Not Detected
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Vulnerable
+        score: -180
+
+  - key: caa_present
+    group: certificate
+    label_as: Certification Authority Authorization (CAA) Present
+    issue: >
+      The lack of any CAA records authorizes normal unrestricted issuance.
+      It is recommended that you create CAA records for your approved CAs to minimize business impact. With CAA, you can minimize the risk of certificate issuance by unauthorized CAs and help create a more secure and transparent online ecosystem.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.8
+            - 6.5.10
+            - 8.6
+        - version: 4.0
+          requirements:
+            - 6.2.1
+            - 6.2.4
+    references:
+      - name: RFC 8659 - DNS Certification Authority Authorization (CAA) Resource Record
+        url: https://datatracker.ietf.org/doc/html/rfc8659
+    anotate_results:
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Detected
+        score: 40
+
+  - key: caa_valid
+    group: certificate
+    label_as: Certification Authority Authorization (CAA) Valid
+    issue: >
+      Certificate authorities implementing CAA perform a DNS lookup for CAA resource records, and if any are found, ensure that they are listed as an authorized party before issuing a digital certificate.
+      Third parties monitoring certificate authority behavior might check newly issued certificates against the domain's CAA records. RFC 8659 states; CAA records MAY be used by Certificate Evaluators as a possible indicator of a security policy violation. Such use SHOULD take into account the possibility that published CAA records changed between the time a certificate was issued and the time at which the certificate was observed by the Certificate Evaluator.
+      The CAA records can help with the enforcement of your corporate policies on approved CAs. By aligning the CAA records with the list of corporate approved CAs, the risk of non-compliance to the policy is minimized.
+      If CAA records exist but do not include an approved or preferred CA for a specific domain, the issuance of certificates by that CA to the domain cannot proceed until the creation of the appropriate CAA record is completed.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.8
+            - 6.5.10
+            - 8.6
+        - version: 4.0
+          requirements:
+            - 6.2.1
+            - 6.2.4
+    references:
+      - name: RFC 8659 - DNS Certification Authority Authorization (CAA) Resource Record
+        url: https://datatracker.ietf.org/doc/html/rfc8659
+      - name: Ignoring CAA based on another CA's Certificate Transparency disclosure
+        url: https://wiki.mozilla.org/CA/Camerfirma_Issues#Issue_F:_Ignoring_CAA_based_on_another_CA.27s_Certificate_Transparency_disclosure_.28Nov._2017.29
+      - name: Let's Encrypt? Let's revoke 3 million HTTPS certificates
+        url: https://www.theregister.com/2020/03/03/lets_encrypt_cert_revocation/
+    anotate_results:
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -200
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 120
+
+  - key: tlsa
+    group: certificate
+    label_as: TLS/A
+    issue: >
+      DNS by itself is not secure, without TLS/a or DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.8
+            - 6.5.10
+            - 8.6
+        - version: 4.0
+          requirements:
+            - 6.2.1
+            - 6.2.4
+    references:
+      - name: ICANN
+        url: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
+      - name: RFC 6840 - Clarifications and Implementation Notes for DNS Security
+        url: https://datatracker.ietf.org/doc/html/rfc6840
+      - name: RFC 4033 - DNS Security Introduction and Requirements
+        url: https://datatracker.ietf.org/doc/html/rfc4033
+    anotate_results:
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -200
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Detected
+        score: 120
+
+  - key: dnssec_present
+    group: certificate
+    label_as: DNSSEC Present
+    issue: >
+      DNS by itself is not secure, without DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.8
+            - 6.5.10
+            - 8.6
+        - version: 4.0
+          requirements:
+            - 6.2.1
+            - 6.2.4
+    references:
+      - name: ICANN
+        url: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
+      - name: RFC 6014 - Cryptographic Algorithm Identifier Allocation for DNSSEC
+        url: https://datatracker.ietf.org/doc/html/rfc6014
+      - name: RFC 6840 - Clarifications and Implementation Notes for DNS Security
+        url: https://datatracker.ietf.org/doc/html/rfc6840
+      - name: RFC 4956 - DNS Security (DNSSEC) Opt-In
+        url: https://datatracker.ietf.org/doc/html/rfc4956
+      - name: RFC 4033 - DNS Security Introduction and Requirements
+        url: https://datatracker.ietf.org/doc/html/rfc4033
+    anotate_results:
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -100
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Detected
+        score: 60
+
+  - key: dnssec_valid
+    group: certificate
+    label_as: DNSSEC Valid
+    issue: >
+      DNS by itself is not secure, without DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.8
+            - 6.5.10
+            - 8.6
+        - version: 4.0
+          requirements:
+            - 6.2.1
+            - 6.2.4
+    references:
+      - name: ICANN
+        url: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
+      - name: RFC 6014 - Cryptographic Algorithm Identifier Allocation for DNSSEC
+        url: https://datatracker.ietf.org/doc/html/rfc6014
+      - name: RFC 6840 - Clarifications and Implementation Notes for DNS Security
+        url: https://datatracker.ietf.org/doc/html/rfc6840
+      - name: RFC 4956 - DNS Security (DNSSEC) Opt-In
+        url: https://datatracker.ietf.org/doc/html/rfc4956
+      - name: RFC 4033 - DNS Security Introduction and Requirements
+        url: https://datatracker.ietf.org/doc/html/rfc4033
+    anotate_results:
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 120
+
+  - key: deprecated_dnssec_algorithm
+    group: certificate
+    label_as: Avoid deprecated DNSSEC algorithm
+    issue: >
+      Whenever a DNS zone is signed with a SHA-1 DNSKEY algorithm it is vulnerable to chosen prefix collision attacks. This is a problem when a zone accepts updates from multiple parties, such as; TLDs, enterprises, hosting providers. It is also a problem when a key is re-used by multiple zones
+    cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
+    cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+    cve:
+      - CVE-2019-14855
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.8
+            - 6.5.10
+            - 8.6
+        - version: 4.0
+          requirements:
+            - 6.2.1
+            - 6.2.4
+    references:
+      - name: Cambridge University Information Services
+        url: https://www.dns.cam.ac.uk/news/2020-01-09-sha-mbles.html
+      - name: Disclosure Paper
+        url: https://sha-mbles.github.io/
+    anotate_results:
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -100
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+
+  - key: transparency_present
+    group: certificate
+    label_as: Certificate Transparency present
+    issue: >
+      CT brings transparency to the SSL/TLS certificate system that supports the web. SSL/TLS protocols underpin HTTPS and Web PKI. A lack of transparency weakens the reliability and effectiveness of encrypted connections, which can compromise critical TLS/SSL mechanisms. As a result, they can enable a wide range of security attacks, such as website spoofing, server impersonation, and man-in-the-middle attacks.
+      Web PKI depends on CAs acting as trustworthy gatekeepers by issuing certificates only to the right parties and by avoiding giving additional permissions accidentally to those parties. An important part of how CAs meet these obligations is to design their systems so they are resilient to failure.
+    references:
+      - name: Certificate Transparency step by step
+        url: https://certificate.transparency.dev/howctworks/
+    anotate_results:
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Detected
+        score: 60
+
+  - key: transparency_trustworthy
+    group: certificate
+    label_as: Trustworthy Certificate Transparency
+    issue: >
+      Certificate Transparency (CT) is a mechanism which helps domain owners and industry watch dogs detect misissuance.
+      Misissuance occurs when a Certificate Authority (CA) issues an SSL certificate improperly. This may mean that the CA included incorrect information in the certificate, issued the certificate to someone who did not represent the organization or domain, or was even compromised.
+      Some browsers require certificates to have proof of being logged with certificate transparency, Safari requires up to 3 SCTs and Chrome requires between 3 and 5. The policies are far more complex than this so the generalised best practice is using at least 3 distinct SCTs per certificate.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+      - name: Chrome Google Group - Certificate Transparency Policy
+        url: https://groups.google.com/a/chromium.org/g/ct-policy/c/fCt4Bm03GsI
+      - name: Apple - Certificate Transparency policy
+        url: https://support.apple.com/en-ca/HT205280
+    anotate_results:
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -200
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 120
+
+  - key: private_key_known_compromised
+    group: certificate
+    label_as: Known Compromised Private Key
+    issue: >
+      DSA keys, and RSA keys smaller than 1024 bits offer no security and should not be used at all, whether they are known to be compromised or not. The pwnedkeys database keeps records of compromised 1024 bit and larger RSA/DSA keys, as well as elliptic-curve keys on the P-256, P-384, and P-521 curves. If your private key is ever compromised, it should be considered an emergency, and your priority should be resolving the issue immediately. If an unauthorized person gains access to your private key, they can assume the identity that your certificate is intended to protect (e.g. you, your company, and/or your website)
+    cvss2: AV:L/AC:H/Au:N/C:P/I:N/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N
+    cve:
+      - CVE-2007-3108
+      - CVE-2008-0166
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: Security Advisory
+        url: https://www.debian.org/security/2008/dsa-1571
+      - name: OSINT
+        url: https://pwnedkeys.com/faq.html
+    anotate_results:
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Compromised
+        score: -500
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Not Known Compromised
+        score: 100
+      - value: None
+        evaluation_value: "[bold][cyan]SKIP![/cyan][/bold]"
+        display_as: Not an valid pwnedkeys.com response
+        score: 0
+
+  - key: deprecated_protocol_negotiated
+    group: tls_negotiation
+    label_as: Deprecated TLS protocol negotiated
+    issue: >
+      When information is sent between the client and the server, it must be encrypted and protected in order to prevent an attacker from being able to read or modify it
+      This is most commonly done using HTTPS, which uses the Transport Layer Security (TLS) protocol, a replacement for the deprecated Secure Socket Layer (SSL) protocol
+      By default, most servers still support outdated and known vulnerable protocols, typically for backwards compatibility with equally outdated web browser software
+      This is known as an insecure default and could lead to trivial attacks against default or misconfigured servers
+    cvss2: AV:N/AC:H/Au:N/C:C/I:C/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+    cve:
+      - CVE-2014-8730
+      - CVE-2014-0160
+      - CVE-2009-3555
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
+    references:
+      - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
+        url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 120
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: known_weak_cipher_negotiated
+    group: tls_negotiation
+    label_as: Known weak ciphers negotiated {negotiated_cipher} ({negotiated_cipher_bits} bits)
+    issue: >
+      A cipher suite is a combination of authentication, encryption, and message authentication code (MAC) algorithms
+      They are used during the negotiation of security settings for a TLS/SSL connection as well as for the transfer of data
+      By default, most servers still support outdated and known vulnerable ciphers
+      This is known as an insecure default and could lead to trivial attacks against default or misconfigured servers
+    cvss2: AV:N/AC:H/Au:N/C:C/I:C/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+    cve:
+      - CVE-2014-6321
+      - CVE-2008-0166
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
+    references:
+      - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
+        url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 120
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+    substitutions:
+      - negotiated_cipher
+      - negotiated_cipher_bits
+
+  - key: known_weak_cipher_offered
+    group: tls_negotiation
+    label_as: Known weak ciphers offered
+    issue: >
+      A cipher suite is a combination of authentication, encryption, and message authentication code (MAC) algorithms
+      They are used during the negotiation of security settings for a TLS/SSL connection as well as for the transfer of data
+      By default, most servers still support outdated and known vulnerable ciphers
+      This could lead to trivial attacks against default or misconfigured servers
+    cvss2: AV:N/AC:H/Au:N/C:C/I:C/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+    cve:
+      - CVE-2014-6321
+      - CVE-2008-0166
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
+    references:
+      - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
+        url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: True
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: rc4_cipher_offered
+    group: tls_negotiation
+    label_as: Known exploited and deprecated RC4 ciphers offered
+    issue: >
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: True
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: cbc_cipher_offered
+    group: tls_negotiation
+    label_as: Known exploited and deprecated CBC ciphers offered
+    issue: >
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: True
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: strong_cipher_negotiated
+    group: tls_negotiation
+    label_as: Strong ciphers negotiated
+    issue: >
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 120
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: strong_cipher_offered
+    group: tls_negotiation
+    label_as: Strong ciphers offered
+    issue: >
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -500
+
+  - key: only_strong_ciphers_offered
+    group: tls_negotiation
+    label_as: Only strong ciphers offered
+    issue: >
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 400
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: known_weak_signature_algorithm
+    group: certificate
+    label_as: Deprecated or known weak signature algorithm
+    issue: >
+      Using the SHA-1 chosen-prefix collision the X.509 Certificate can be forged, other attacks leverage predictable serial numbers and compromise Certificate Authorities issued Certificates
+    cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
+    cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+    cve:
+      - CVE-2005-4900
+      - CVE-2019-14855
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
+    references:
+      - name: Disclosure Paper
+        url: https://shattered.io/
+      - name: CA/Browser Forum
+        url: https://cabforum.org/2014/10/16/ballot-118-sha-1-sunset/
+      - name: Cambridge University Information Services
+        url: https://www.dns.cam.ac.uk/news/2020-01-09-sha-mbles.html
+      - name: Disclosure Paper
+        url: https://sha-mbles.github.io/
+    anotate_results:
+      - value: True
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+
+  - key: fallback_scsv
+    group: tls_negotiation
+    label_as: Downgrade attack prevention (SCSV)
+    issue: The TLS Signaling Cipher Suite Value (SCSV) protects against TLS/SSL downgrade attacks. If enabled, the server makes sure that the strongest protocol that both client and server understand is used. Attackers can make a client attempt weaker TLS connections and exploit all the vulnerabilities associated with a given protocol
+    cvss2: AV:N/AC:M/Au:N/C:P/I:N/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:N/A:N
+    cve:
+      - CVE-2014-3566
+      - CVE-2014-8730
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: RFC 7507 - TLS Fallback Signaling Cipher Suite Value (SCSV) for Preventing Protocol Downgrade Attacks
+        url: https://datatracker.ietf.org/doc/html/rfc7507
+    anotate_results:
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -180
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 120
+
+  - key: valid_certificate_chain
+    group: tls_negotiation
+    label_as: Valid Certificate Chain
+    issue: >
+      The chain terminates with a Root CA Certificate. The Root CA Certificate is always signed by the CA itself. The signatures of all certificates in the chain must be verified up to the Root CA Certificate.
+      Each certificate in the chain is checked to ensure it is not expired and the chain path is complete.
+      When the root certificates are available in trust-store, this script will use its public key to verify the root certificate, once it verifies it will verify trust the intermediate certificate and eventually the server (leaf) certificate to complete the chain.
+      Only one valid chain from trusted root to the leaf certificate is needed to be compatible with web browsers, however the entire certificate chain should be valid to be considered trustworthy as any compromised certificate in any chain would allow malicious attackers to sign a leaf certificate which would be considered valid in the parallel chain.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: tls_robot
+    group: tls_negotiation
+    label_as: ROBOT Vulnerability
+    issue: Timing attack causing padding errors using RSA with PKCS#1 v1.5 session keys allowing any attacker to passively record traffic and later decrypt it
+    cvss2: AV:N/AC:H/Au:N/C:C/I:N/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:H/E:P/RL:W/RC:C
+    cve:
+      - CVE-2012-5081
+      - CVE-2016-6883
+      - CVE-2017-6168
+      - CVE-2017-17382
+      - CVE-2017-17427
+      - CVE-2017-17428
+      - CVE-2017-12373
+      - CVE-2017-13098
+      - CVE-2017-1000385
+      - CVE-2017-13099
+      - CVE-2017-17841
+      - CVE-2018-1388
+      - CVE-2018-5762
+      - CVE-2017-18268
+      - CVE-2017-15533
+      - CVE-2018-9192
+      - CVE-2018-9194
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: CERT/CC
+        url: https://www.kb.cert.org/vuls/id/144389
+      - name: Proof of Concept
+        url: https://github.com/robotattackorg/robot-detect
+      - name: Disclosure Paper
+        url: https://www.robotattack.org/
+      - name: Disclosure Paper
+        url: http://archiv.infsec.ethz.ch/education/fs08/secsem/bleichenbacher98.pdf
+      - name: Disclosure Paper
+        url: https://eprint.iacr.org/2003/052
+      - name: Disclosure Paper
+        url: https://www.nds.rub.de/media/nds/veroeffentlichungen/2015/08/21/Tls13QuicAttacks.pdf
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 120
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -180
+      - value: None
+        evaluation_value: "[bold][cyan]INFO![/cyan][/bold]"
+        display_as: Incomplete evaluation (check log with -vvv)
+        score: 0
+
+  - key: revocation_crlite
+    group: certificate
+    label_as: Intermediate Certificate Revocation (crlite)
+    issue: Certificate Revocation only occurs if the Certificate is no longer intended to be used for it's designed purpose, and offers no security at best, or represents a known compormise
+    cvss2: AV:L/AC:H/Au:N/C:P/I:N/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N
+    cve:
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+      - name: Security Advisory
+        url: https://blog.mozilla.org/security/tag/crlite/
+    anotate_results:
+      - value: Revoked
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Revoked
+        score: -200
+      - value: Expired
+        evaluation_value: "[khaki1]WARN! Expired[/khaki1]"
+        display_as: Expired
+        score: 0
+      - value: Good
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Not Revoked
+        score: 80
+      - value: NotCovered
+        evaluation_value: "[khaki1]WARN! NotCovered[/khaki1]"
+        display_as: NotCovered
+        score: -100
+      - value: NotEnrolled
+        evaluation_value: "[khaki1]WARN! NotEnrolled[/khaki1]"
+        display_as: NotEnrolled
+        score: -100
+
+  - key: possible_phish_or_malicious
+    group: certificate
+    label_as: Malicious Certificate
+    issue: >
+      Malicious certificates are most commonly signed by trusted certificate authority roots, to evade detection
+      by blending in with legitimate traffic and making use of encryption to help hide their payloads.
+      Both commodity and targeted attack malware make heavy use of encrypted command-and-control (C&C) that is
+      indistinguishable from regular traffic, and ethical actors (with permission granted) will leverage tools
+      called intrusion frameworks like; Cobalt Strike, Metasploit, and Core Impact that should be identified
+      as though these were unauthorised because bad actors will attempt to emulate a penetration tester in
+      order to take advantage of a trust relationship and infect you regardless.
+      Phishing websites will use these malicious certificates that are identical to legitimate certificates which
+      gives a false sense of security to victims who observe the strong encryption being used in their browser
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 5.2
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 3.7.5
+            - 5.2.2
+            - 6.4.1
+            - 6.4.2
+            - A2.1
+    references:
+      - name: Analyzing SSL/TLS Certificates Used by Malware (Trend Micro)
+        url: https://webcache.googleusercontent.com/search?q=cache:lXyCnKFb3acJ:https://www.trendmicro.com/en_us/research/21/i/analyzing-ssl-tls-certificates-used-by-malware.html+&cd=1&hl=en&ct=clnk&gl=au
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Not Known Compromised
+        score: 40
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral] {reason}"
+        display_as: Compromised
+        score: -200
+    substitutions:
+      - sha1_fingerprint
+
+  - key: known_weak_keys
+    group: certificate
+    label_as: Known Weak key usage {public_key_type}-{public_key_size}
+    issue: >
+      Continued use of weak keys in certificates puts your sensitive data at risk. Exhaustive key searches or brute force attacks against certificates with weak keys are dangerous to network security.
+      As computational power increases, so does the need for stronger keys.
+      If this is not the leaf certificate it is a root or intermediate which signs other digital certificates with its private key, if the private key is weak it may be compromised and all the rest of the issued certificates become useless.
+      Diffie-Hellman key exchange depends for its security on the presumed difficulty of solving the discrete logarithm problem.
+      By design, many Diffie-Hellman implementations use the same pre-generated prime for their field, because of the reuse of primes generating precomputation for just one prime would expose millions of implementations. This vulnerability was known as early as 1992.
+      Claims on the practical implications of the attack at the time were however disputed by security researchers but over the years it is expected that many primes were and still are being calculated practically making all primes of 2048 bit or less considered weak or vulnerable.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
+    references:
+      - name: RFC 8270 - Increase the Secure Shell Minimum Recommended Diffie-Hellman Modulus Size to 2048 Bits
+        url: https://datatracker.ietf.org/doc/html/rfc8270
+      - name: Eyal Ronen and Adi Shamir - Critical Review of Imperfect Forward Secrecy
+        url: http://www.wisdom.weizmann.ac.il/~eyalro/RonenShamirDhReview.pdf
+      - name: Logjam Attack - Imperfect Forward Secrecy, How Diffie-Hellman Fails in Practice
+        url: https://weakdh.org/imperfect-forward-secrecy-ccs15.pdf
+      - name: TLS/SSL certificate weak key vulnerability - DigiCert
+        url: https://docs.digicert.com/certificate-tools/discovery-user-guide/tlsssl-certificate-vulnerabilities/weak-keys/
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 200
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Vulnerable
+        score: -500
+    substitutions:
+      - public_key_type
+      - public_key_size
+
+  - key: weak_rsa_public_exponent
+    group: certificate
+    label_as: Known Weak RSA public key exponent {public_key_exponent}
+    issue: >
+      Using anything other than 65537 as the public exponent would effect compatibility with most hardware and software.
+      Lower isn't vulnerable with proper padding however RSA implementations are widely flawed and did not consider this security characteristic therefore in practice any low exponent could indicate weakness known to be exploited by many heavily scrutinised researchers publications.
+      Using exatly 65537 is an industry standard prescribed by certification authorities and compliance such as PCI DSS, Annex B.3 of FIP186-4, NIST Special Publication on Computer Security (SP 800-78 Rev. 1 of August 2007) does not allow public exponents e smaller than 65537.
+    references:
+      - name: Twenty Years of Attacks on the RSA Cryptosystem - Dan Boneh, Stanford University
+        url: https://www.researchgate.net/publication/2538368_Twenty_Years_of_Attacks_on_the_RSA_Cryptosystem
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 2.2.7
+            - 3.3.2
+            - 3.3.3
+            - 3.5.1
+            - 3.6.1
+            - 4.2.1
+            - 4.2.2
+            - 6.2.4
+            - 8.3.2
+            - A2
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Vulnerable
+        score: -200
+    substitutions:
+      - public_key_exponent
+
+  - key: rsa_public_key_issue
+    group: certificate
+    label_as: RSA public key exponent {public_key_exponent} has known issues
+    issue: >
+      Using anything other than 65537 as the public exponent would effect compatibility with most hardware and software.
+      Any higher exponent would make the public RSA operation, used for encryption or signature verification, unusably slower.
+      Using a larger exponent will not decrease security, but will be more time / power consuming.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 4.1
+        - version: 4.0
+          requirements:
+            - 1.2.6
+            - 2.2.4
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
+    references:
+      - name: Twenty Years of Attacks on the RSA Cryptosystem - Dan Boneh, Stanford University
+        url: https://www.researchgate.net/publication/2538368_Twenty_Years_of_Attacks_on_the_RSA_Cryptosystem
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 20
+      - value: True
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Problematic
+        score: -500
+    substitutions:
+      - public_key_exponent
+
+  - key: valid_common_name
+    group: certificate
+    label_as: Valid Certificate Common Name
+    issue: >
+      This is frequently a misconfiguration, i.e. the website domain name was not included in your common name by mistake.
+      However it is a very uncommon issue and is most likely indication of compromise, where a malicious attacker is targeting website owners or visitors using phishing or impersonation and have made the error unintentionally or was unable to effectively impersonate the website correctly and are relying on visitors ignoring browser warnings.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+      - name: RFC 9110 - HTTP Semantics
+        url: https://datatracker.ietf.org/doc/html/rfc9110
+      - name: DNSimple - What is the Certificate Common Name
+        url: https://support.dnsimple.com/articles/what-is-common-name/
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 20
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: valid_host_name
+    group: certificate
+    label_as: Hostname matches Certificate
+    issue: >
+      This is frequently a misconfiguration, i.e. the website domain name was not included in your common name by mistake.
+      However it is a very uncommon issue and is most likely indication of compromise, where a malicious attacker is targeting website owners or visitors using phishing or impersonation and have made the error unintentionally or was unable to effectively impersonate the website correctly and are relying on visitors ignoring browser warnings.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+      - name: RFC 9110 - HTTP Semantics
+        url: https://datatracker.ietf.org/doc/html/rfc9110
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 50
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -150
+
+  - key: h2c
+    group: transport
+    label_as: HTTP/2 cleartext
+    issue: >
+      This will lead to a communication channel establised over an insecure network connection
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: RFC 7540 - Hypertext Transfer Protocol Version 2 (HTTP/2)
+        url: https://datatracker.ietf.org/doc/html/rfc7540
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 50
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: certification_version
+    group: certificate
+    label_as: X.509 Certificates are in version 3
+    issue: >
+      HIPAA, Security Rule (Ref. NIST SP 800-52: Guidelines for the Selection and Use of TLS Implementations)
+      Require all the X509 certificates provided by the server are in version 3.
+    references:
+      - name: NIST SP 800-52 - Guidelines for the Selection and Use of TLS Implementations
+        url: https://www.hhs.gov/hipaa/for-professionals/security/guidance/index.html
+      - name: HIPAA / HITECH
+        url: https://www.hhs.gov/hipaa/index.html
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Compliant
+        score: 20
+      - value: False
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Non-compliant
+        score: -50
+
+  - key: certification_expired
+    group: certificate
+    label_as: Certificate is not expired
+    issue: >
+      When visiting a website that uses an expired Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 50
+
+  - key: valid_issued_date
+    group: certificate
+    label_as: Valid NotBefore date
+    issue: >
+      When visiting a website that uses a Certificate with an invalid NotBefore date, it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 20
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: is_self_signed
+    group: certificate
+    label_as: Certificate self-signed
+    issue: >
+      Any self-signed Certificate should be untrusted as it offers no security characteristics of TLS that is based on a system that all Certificates have a Root Certificate Authority Trust Anchor.
+      When visiting a website that uses a self-signed Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Compromised
+        score: -200
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 50
+
+  - key: trust_javase
+    group: certificate
+    label_as: Trust Store - Java SE
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_ccadb
+    group: certificate
+    label_as: Trust Store - CCADB
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_rust
+    group: certificate
+    label_as: Trust Store - Rust
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_froyo
+    group: certificate
+    label_as: Trust Store - Android 2.2 Froyo
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_gingerbread
+    group: certificate
+    label_as: Trust Store - Android 2.3 Gingerbread
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_honeycomb
+    group: certificate
+    label_as: Trust Store - Android 3 Honeycomb
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_ice_cream_sandwich
+    group: certificate
+    label_as: Trust Store - Android 4 Ice Cream Sandwich
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_kitkat
+    group: certificate
+    label_as: Trust Store - Android 4.4 KitKat
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_nougat
+    group: certificate
+    label_as: Trust Store - Android 7 Nougat
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_oreo
+    group: certificate
+    label_as: Trust Store - Android 8 Oreo
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_pie
+    group: certificate
+    label_as: Trust Store - Android 9 Pie
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_quince_tart
+    group: certificate
+    label_as: Trust Store - Android 10 Quince Tart
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_red_velvet_cake
+    group: certificate
+    label_as: Trust Store - Android 11 Red Velvet Cake
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_snow_cone
+    group: certificate
+    label_as: Trust Store - Android 12 Snow Cone
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_tiramisu
+    group: certificate
+    label_as: Trust Store - Android 13 Tiramisu
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_android_upside_down_cake
+    group: certificate
+    label_as: Trust Store - Android 14 Upside Down Cake
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_certifi
+    group: certificate
+    label_as: Trust Store - certifi (Python module)
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_russian
+    group: certificate
+    label_as: Trust Store - MinTsifry Rossii (Russian)
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_libcurl
+    group: certificate
+    label_as: Trust Store - libcurl
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: trust_dart
+    group: certificate
+    label_as: Trust Store - Dart Native
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Trusted
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Not Trusted
+        score: -500
+
+  - key: basic_constraints_path_length
+    group: tls_negotiation
+    label_as: Basic Constraints Extension valid path length
+    issue: >
+      Path length gives the maximum number of intermediate certificates that may follow the root CA certificate typically (or certificate otherwise specifying the constraint) in a valid certification path.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+      - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+        url: https://datatracker.ietf.org/doc/html/rfc5280
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 50
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -120
+
+  - key: strong_issuer_validation
+    group: certificate
+    label_as: Strong Issuer Validation
+    issue: >
+      Domain Validated (DV) Certificates may be growing in popularity since the browsers ceased showing the organisation name along with a green padlock, but the visual change is not material to the security characteristic associated with Extended Validation (EV) Certificates. When the visual changes occurred the mainstream non-technical or the uneducated in cybersecurity masses all declared that EV Certificates are dead, but the reality and truth of the matter is EV Certificates have never been more important.
+      Let's consider some facts:
+      1. DV Certificates are extensively (almost solely) used by malicious actors of all types; targeted, watering hole, spray-and-pray, any type leverage DV Certificates because they are free, trusted, and easily to obtain anonymously
+      2. A malicious EV Certificates is inherently forged for a target, displaying the forged organisation name to a layman in the browser was an attack on the user trust; Only "IF" the layman was savvy enough they might not trust the forged cert. Today we hide the forgery and as a result there is automatic blind trust and no mechanism for a layman to see the forgery and potentially avoid the threat. To be concise, we used to offer a possible chance to thwart an attacker, now we simply force trust upon users and offer them no means to easily verify anymore. So the changes to EV Certificates in practice made things worse, not better.
+      3. Extended Validation certificates offer warranties up to $2M from my personal experience in Australia, When we are talking about a data breach like the one that happened to Equifax due to an expired EV Certificate, it matters.
+      4. Legislative, Regulatory, International or Local Privacy Laws, Accreditation held for certain practices, Contractual Obligation (like PCI DSS) - all or any of these may obligate you to utilize at the least an EV Certificate, the DV Certificate has little (if any) security assurances.
+      5. The DV Certificate Issuers generally don't offer any additional features, therefore even if you attempt to use certain features like ssl_stapling it will simply be ignored. These Issuers, (pick on Let's Encrypt for this one) simply prefer low-barrier and ease-of-use over any and all security characteristics - so if they don't care, why would you put any trust in their DV Certificates to secure your TLS connections?
+      6. An EV Certificate inherently required an out-of-band validation, that is not automated like a DV Certificate. Therefore if an ATO (Account Take-over) or DNS hijacking attack were to be successful the attacker must be persistent and sometimes be physically attacking you. Which all takes significantly more time than the near-instant time it takes for the DV Certificates to be issued. When you operate public hosted (cloud) servers, they are typically ephemeral IP Addresses. The hazard with an IP Address that changes between distinct users is there is a possibility a patient malicious actor may get assigned an IP Address previously held by a valuable customer of the service provider. The way DNS works with TTL and caches means that some requests will still attempt to connect to IP Address you now have that were intended for the previous IP Address owner. If the IP Address the malicious attacker is assigned is rDNS checked and the malicious actor doesn't find anything of value, they can easily discard the IP Address and simply request a new one over and over until they get an IP that is of value to them. This is called IP Churn, and a paper describes how this technique that is an accepted "how things work" can be combined with DV Certificates that are also accepted as "how things work", combined allow for DNS hijacking. This is a proven attack, and the attack vectors with continue to work as long as service providers assign IP Addresses that are still fresh and DV certificates are automatically issued in nanoseconds.
+      Put simply, DV Certificates are favoured by attackers and seeing one should make you sceptical, they're issued for ease-of-use and not for security purposes, and there is a trivial DNS take-over attack that can be used for targeted attacks when attackers are sufficiently motivated. An EV Certificate is the distinct opposite, attackers avoid using them unless they are desperate and motivated to ignore the risks to them, they are issued with security focus in spite of the time do validation which is an effective mitigation to the trivial DNS take-over attack.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+      - name: Hiding in Plain Sight - A Longitudinal Study of Combosquatting Abuse
+        url: https://webcache.googleusercontent.com/search?q=cache:s_bQ24QvDcQJ:https://par.nsf.gov/servlets/purl/10047386+&cd=6&hl=en&ct=clnk&gl=au
+      - name: Cloud Strife - Mitigating the Security Risks ofDomain-Validated Certificates
+        url: https://webcache.googleusercontent.com/search?q=cache:dQ4atOcEvWEJ:https://kevin.borgolte.me/files/pdf/ndss2018-cloud-strife.pdf+&cd=13&hl=en&ct=clnk&gl=au
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -150
+
+  - key: weak_issuer_validation
+    group: certificate
+    label_as: Weak Issuer Validation
+    issue: >
+      You can get issued a DV Certificate without actually validating the domain, Until 2018 the ACME protocol of Let's Encrypt did just this, relying on only SNI for the so-called DV Certificate issuance - not their fault, ACME was designed that way.
+      June 2022 there are hundreds of ACME protocol Certificate Authorities issuing DV certificates and few would have learned from the 2018 disclosure and turned off the vulnerable design feature of SNI.
+      There are a total of 10 methods of verification defined by ACME, few actually offer any security characteristics that can be said to 'Verify' Domain Ownership, in fact some are designed on purpose to offer DV certificates to customers of website hosting providors that can only modify the HTTP header responses, or less control and can only add a HTML tag! Neitehr of these are verifying control of a domain, let alone Validate domain control! What is a DV certificate if domain validation never occurred?
+      Beyond validation itself; The ACME protocol DV Certificate Issuers generally don't offer any additional features, therefore even if you attempt to use certain features like ssl_stapling it will simply be ignored. These Issuers, (pick on Let's Encrypt for this one) simply prefer low-barrier and ease-of-use over any and all security characteristics - so if they don't care, why would you put any trust in their DV Certificates to secure your TLS connections?
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: RFC 8555 - Automatic Certificate Management Environment (ACME)
+        url: https://datatracker.ietf.org/doc/html/rfc8555
+      - name: Detectify - How I exploited ACME TLS-SNI-01 issuing Let's Encrypt SSL-certs for any domain using shared hosting
+        url: https://labs.detectify.com/2018/01/12/how-i-exploited-acme-tls-sni-01-issuing-lets-encrypt-ssl-certs-for-any-domain-using-shared-hosting/
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 40
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: leaf_ca
+    group: certificate
+    label_as: Leaf Certificate allows impersonation
+    issue: >
+      Server (leaf) certificates should not be a CA, it could enable impersonation attacks
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: revocation_ocsp_deprecated_algo
+    group: certificate
+    label_as: Deprecated OCSP Hash Algorithm
+    issue: >
+      Using the SHA-1 chosen-prefix collision the OCSP Assertion can be forged
+    cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
+    cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+      - name: CA/Browser Forum
+        url: https://cabforum.org/2014/10/16/ballot-118-sha-1-sunset/
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: revocation_ocsp_deprecated_sig
+    group: certificate
+    label_as: Deprecated OCSP Signature Algorithm
+    issue: >
+      Using the SHA-1 chosen-prefix collision the OCSP Assertion can be forged
+    cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
+    cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+      - name: CA/Browser Forum
+        url: https://cabforum.org/2014/10/16/ballot-118-sha-1-sunset/
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: revocation_ocsp_must_staple
+    group: certificate
+    label_as: OCSP Must Staple Extension
+    issue: >
+      The security benefit characteristics of OCSP can only be enforced when the 'Must Staple' flag is present.
+      Failing to include the must staple extension in a Domain Validated (DV) or Organisation Validated (OV) Certificate will allow most web browsers and HTTP clients to 'soft-fail' the OCSP check and continue with TLS without an OCSP assertion or knowledge of revocation status.
+      In some web browsers and HTTP clients an Extended Validation (EV) certificate will hard-fail when an OCSP assertion is not obtained, but this functionality should not be relied upon as there have been many changes made by web browsers that are divergent from standards and break assumed security guarantees suddenly become a vulnerability.
+      Everywhere the OCSP Must Staple Extension is accepted, it will be enforced for all certificates regardless of validation semantics.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -120
+
+  - key: revocation_ocsp_staple
+    group: certificate
+    label_as: OCSP Stapling Extension
+    issue: >
+      When an OCSP assertion is not included 'stapled' with the certificate, an weakness in the clients ability to obtain a remote assertion, when the client attempts to establish a connection with the OCSP responder an additional MITM attack vector is available and forged OCSP assertions may be provided allowing an attacker to sppof the revocation status of a certificate to cause a denial of service or establish trust where otherwise a compromise would have been detected.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 40
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -60
+
+  - key: revocation_ocsp
+    group: certificate
+    label_as: OCSP Revocation
+    issue: >
+      A revoked certificate that remains in use is an indication of misconfiuguration, misuse, or abuse.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Not Revoked
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Revoked
+        score: -200
+
+  - key: valid_key_usage_leaf
+    group: certificate
+    label_as: Leaf Certificate valid for TLS usage
+    issue: >
+      If the server (leaf) certificate was issued to serve the purpose of providing a TLS connection from the server-side.
+      Any failure to include the correct signed (by the issuer) values would indicate a forged certificate and compromised connection.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -120
+
+  - key: client_auth_expected
+    group: tls_negotiation
+    label_as: Client Certificate (MTLS) expected
+    issue: >
+      The server indivated client certificate subject's it will accept, or the client presented a Certificate to initiate an MTLS connection with this server.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[bold][cyan]INFO![/cyan][/bold]"
+        display_as: Client Certificate Expected
+        score: 0
+
+  - key: client_auth_permitted
+    group: tls_negotiation
+    label_as: Certificate was issued for the prupose of client Authentication
+    issue: >
+      If the Certificate being used for client Authentication (MTLS) was not issued for that purpose then most properly configured servers will drop the connection.
+      If either the client Certificate or TLS server is misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+      - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+        url: https://datatracker.ietf.org/doc/html/rfc5280
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -150
+
+  - key: client_auth_trusted
+    group: tls_negotiation
+    label_as: Client Certificate (MTLS) Trusted
+    issue: >
+      Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+      When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+      - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+        url: https://datatracker.ietf.org/doc/html/rfc5280
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 120
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: client_auth_valid_subject
+    group: tls_negotiation
+    label_as: Server accepted Client Certificate
+    issue: >
+      If the Certificate being used for client Authentication (MTLS) was not matched to a subject sent by the server to indicate accepted client Certificates then most properly configured servers will drop the connection.
+      If a connection is established and the TLS server was misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+      - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+        url: https://datatracker.ietf.org/doc/html/rfc5280
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 100
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -150
+
+  - key: client_authentication
+    group: tls_negotiation
+    label_as: Client Authentication Established
+    issue: >
+      A client Certificate was presented and Mutual Authentication (MTLS) expected, if the presented client Certificate did not match the server sent subjects or the Certificate was not issued by a trusted Root Certificate Authority this connection attempt should not be considered secure.
+      If a connection is established and the TLS server was misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 3.5
+            - 6.5.3
+        - version: 4.0
+          requirements:
+            - 4.2.1
+            - 6.2.4
+    references:
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 200
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -500
+
+  - key: compression_support
+    group: transport
+    label_as: HTTPS transport compression
+    issue: >
+      Multiple compression vulnerabilities exist across all SS/TLS versions when HTTPS transport naively utilises compression without taking proper care to mitigate all known attacks.
+      Due to the nature and trivial complexity of most compression related attacks, and mitigated both known and inknown threats may be a futile effort, it is best practice to avoid compression and instead rely on minimising the data being transmitted to only what is needed.
+    cve:
+      - CVE-2022-32206
+      - CVE-2022-1271
+      - CVE-2020-5933
+      - CVE-2018-25032
+      - CVE-2013-3587
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 180
+      - value: True
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: session_resumption_caching
+    group: tls_negotiation
+    label_as: Session resumption caching
+    issue: >
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: True
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: session_resumption_ticket_hint
+    group: tls_negotiation
+    label_as: Session resumption ticket hints
+    issue: >
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: True
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: session_resumption_tickets
+    group: tls_negotiation
+    label_as: Session resumption tickets
+    issue: >
+      TODO
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 60
+      - value: True
+        evaluation_value: "[khaki1]WARN![/khaki1]"
+        display_as: Misconfigured
+        score: -100
+
+  - key: fips
+    group: compliance
+    label_as: FIPS
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: nist
+    group: compliance
+    label_as: NIST
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: pci_dss_3_2
+    group: compliance
+    label_as: PCI DSS 3.2.1
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: pci_dss_4_0
+    group: compliance
+    label_as: PCI DSS 4.0
+    issue: >
+      TODO
+    references:
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_block_clipboard
+    group: transport
+    label_as: Block reading clipboard contents
+    issue: >
+      Websites are not expected to read contents of the users' clipboard, which commonly contains private or sensitive information.
+      A webserver can instruct web browsers to block this feature so that any malicious scripts cannot leverage the API.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_block_deprecated
+    group: transport
+    label_as: Block the use of deprecated APIs
+    issue: >
+      Websites that are maintained should not be utilising deprecated features, that commonly exhibit insecure functionality or vulnerable to abuse.
+      A webserver can instruct web browsers to block these features so that any malicious scripts cannot leverage the API.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_permissions_policy
+    group: transport
+    label_as: Policy-controlled browser features
+    issue: >
+      A webserver can instruct web browsers to allowlist on the features the site owner intends to utilise, blocking all unused features so that any malicious scripts cannot leverage the unused features or API.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_coep
+    group: transport
+    label_as: Require Cross-Origin-Embedder-Policy
+    issue: >
+      The server sent a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using CORP or CORS).
+      The default configuration when this is not sent allows the document to fetch cross-origin resources which leaves users' vulnerable to cross-site scripting (XSS) attacks.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_coop
+    group: transport
+    label_as: Same-Origin Cross-Origin-Opener-Policy
+    issue: >
+      The server sent a response header allows you to ensure a top-level document does not share a browsing context group with cross-origin documents.
+      COOP will process-isolate your document and potential attackers can't access your global object if they were to open it in a popup, preventing a set of cross-origin attacks dubbed XS-Leaks.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_corp
+    group: transport
+    label_as: Same-Origin Cross-Origin-Resource-Policy
+    issue: >
+      The server sent a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (CORS).
+      The default configuration when this is not sent allows the document to fetch cross-origin resources which leaves users' vulnerable to cross-site scripting (XSS) attacks.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Resource-Policy
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_csp
+    group: transport
+    label_as: Content-Security-Policy
+    issue: >
+      The server sent a response header allows web site administrators to control resources the user agent is allowed to load for a given page. With a few exceptions, policies mostly involve specifying server origins and script endpoints. This helps guard against cross-site scripting attacks cross-site scripting (XSS)
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_upgrade_insecure
+    group: transport
+    label_as: Upgrade Insecure Requests
+    issue: >
+      The server sent a response header to inform supporting browsers to ensure TLS is used even when misconfigured scripts attempt insecure connections.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/upgrade-insecure-requests
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_expectct
+    group: transport
+    label_as: Certificate Transparency Report URI
+    issue: >
+      The server sent a response header to inform supporting browsers to ensure opt in to reporting and/or enforcement of Certificate Transparency requirements, to prevent the use of misissued certificates for that site from going unnoticed.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expect-CT
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_hsts
+    group: transport
+    label_as: HTTP Strict-Transport-Security
+    issue: >
+      The server sent a response header to inform supporting browsers that the site should only be accessed using HTTPS, and that any future attempts to access it using HTTP should automatically be converted to HTTPS.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_nosniff
+    group: transport
+    label_as: nosniff X-Content-Type-Options
+    issue: >
+      The server sent a response header to inform supporting browsers that the MIME types advertised in the Content-Type headers should be followed and not be changed. The header allows you to avoid MIME type sniffing by saying that the MIME types are deliberately configured.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_referrer_policy
+    group: transport
+    label_as: unsafe URL Referrer-Policy
+    issue: >
+      The Referrer-Policy HTTP header controls how much referrer information (sent with the Referer header) should be included with requests.
+      This policy will leak potentially-private information from HTTPS resource URLs to insecure origins. Carefully consider the impact of this setting.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
+    anotate_results:
+      - value: False
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: True
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_xfo
+    group: transport
+    label_as: Safe HTML iframe options
+    issue: >
+      The server sent a response header to inform supporting browsers whether or not a browser should be allowed to render a page in a <frame>, <iframe>, <embed> or <object>. Sites can use this to avoid click-jacking attacks, by ensuring that their content is not embedded into other sites.
+      The added security is provided only if the user accessing the document is using a browser that supports X-Frame-Options.
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200
+
+  - key: header_xss
+    group: transport
+    label_as: Block mode XSS-Protection
+    issue: >
+      The server sent a response header to inform supporting browsers to stop pages from loading when they detect reflected cross-site scripting (XSS) attacks. These protections are largely unnecessary in modern browsers when sites implement a strong Content-Security-Policy that disables the use of inline JavaScript ('unsafe-inline').
+    compliance:
+      "PCI DSS":
+        - version: 3.2.1
+          requirements:
+            - 6.5.4
+            - 6.6
+        - version: 4.0
+          requirements:
+            - 6.4.1
+            - 6.4.2
+    references:
+      - name: MDN Web Docs
+        url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
+    anotate_results:
+      - value: True
+        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+        display_as: Good Configuration
+        score: 80
+      - value: False
+        evaluation_value: "[light_coral]FAIL![/light_coral]"
+        display_as: Misconfigured
+        score: -200

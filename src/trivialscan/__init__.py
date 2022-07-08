@@ -1,5 +1,6 @@
 import sys
 import logging
+from os import path
 from importlib import import_module
 from copy import deepcopy
 from rich.console import Console
@@ -257,7 +258,102 @@ class Trivialscan:
             "description": task.metadata["issue"],
             "metadata": metadata,
             "compliance": self._compliance_detail(task.metadata.get("compliance", {})),
+            "threats": self._threats_detail(task.metadata.get("threats", {})),
         }, log_output
+
+    def _threats_detail(self, threats: dict) -> list:
+        result = []
+        for ctype, _cval in threats.items():
+            for _standard in _cval:
+                cname = f"{ctype} {_standard['version']}"
+                if cname not in self.config:
+                    result.append({**{"standard": ctype}, **_standard})
+                    continue
+                if ctype == "MITRE ATT&CK":
+                    for conf_tactic in self.config[cname]["tactics"]:
+                        if conf_tactic["id"] in _standard["tactics"]:
+                            result.append(
+                                {
+                                    "standard": ctype,
+                                    "version": str(_standard["version"]),
+                                    "tactic_id": str(conf_tactic["id"]),
+                                    "tactic_url": path.join(
+                                        self.config[cname]["tactics_base_url"],
+                                        conf_tactic["id"],
+                                    ),
+                                    "tactic": conf_tactic["name"],
+                                    "description": conf_tactic["description"],
+                                }
+                            )
+                    for conf_data_sources in self.config[cname]["data_sources"]:
+                        if conf_data_sources["id"] in _standard["data_sources"]:
+                            result.append(
+                                {
+                                    "standard": ctype,
+                                    "version": str(_standard["version"]),
+                                    "data_source_id": str(conf_data_sources["id"]),
+                                    "data_source_url": path.join(
+                                        self.config[cname]["data_sources_base_url"],
+                                        conf_data_sources["id"],
+                                    ),
+                                    "data_source": conf_data_sources["name"],
+                                    "description": conf_data_sources["description"],
+                                }
+                            )
+                    for conf_techniques in self.config[cname]["techniques"]:
+                        if conf_techniques["id"] in _standard["techniques"]:
+                            result.append(
+                                {
+                                    "standard": ctype,
+                                    "version": str(_standard["version"]),
+                                    "technique_id": str(conf_techniques["id"]),
+                                    "technique_url": path.join(
+                                        self.config[cname]["techniques_base_url"],
+                                        conf_techniques["id"],
+                                    ),
+                                    "technique": conf_techniques["name"],
+                                    "description": conf_techniques["description"],
+                                }
+                            )
+                        for sub_technique in _standard.get("sub_techniques", []) or []:
+                            if conf_techniques["id"] != sub_technique["parent"]:
+                                continue
+                            for conf_sub_technique in (
+                                conf_techniques.get("sub_techniques", []) or []
+                            ):
+                                if conf_sub_technique["id"] == sub_technique["id"]:
+                                    result.append(
+                                        {
+                                            "standard": ctype,
+                                            "version": str(_standard["version"]),
+                                            "technique_id": str(conf_techniques["id"]),
+                                            "technique_url": path.join(
+                                                self.config[cname][
+                                                    "techniques_base_url"
+                                                ],
+                                                conf_techniques["id"],
+                                            ),
+                                            "technique": conf_techniques["name"],
+                                            "technique_description": conf_techniques[
+                                                "description"
+                                            ],
+                                            "sub_technique_id": str(
+                                                sub_technique["id"]
+                                            ),
+                                            "sub_technique_url": path.join(
+                                                self.config[cname][
+                                                    "techniques_base_url"
+                                                ],
+                                                conf_techniques["id"],
+                                                sub_technique["id"],
+                                            ),
+                                            "sub_technique": conf_sub_technique["name"],
+                                            "sub_technique_description": conf_sub_technique[
+                                                "description"
+                                            ],
+                                        }
+                                    )
+        return result
 
     def _compliance_detail(self, compliance: dict) -> list:
         result = []

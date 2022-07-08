@@ -202,6 +202,11 @@ def combine_configs(user_conf: dict, custom_conf: dict) -> dict:
             **user_conf.get("PCI DSS 3.2.1", {}),
             **custom_conf.get("PCI DSS 3.2.1", {}),
         },
+        "MITRE ATT&CK 11.2": {
+            **default_values.get("MITRE ATT&CK 11.2", {}),
+            **user_conf.get("MITRE ATT&CK 11.2", {}),
+            **custom_conf.get("MITRE ATT&CK 11.2", {}),
+        },
     }
     outputs = user_conf.get("outputs", [])
     outputs.extend(
@@ -235,11 +240,30 @@ def get_config(custom_values: dict | None = None) -> dict:
 
 
 def default_config() -> dict:
-    config_internal = Path(
-        path.join(str(Path(__file__).parent), "config_internal.yaml")
+    conf = yaml.safe_load(
+        Path(path.join(str(Path(__file__).parent), "config", "base.yaml")).read_bytes()
     )
-    default_values = config_internal.read_bytes()
-    return yaml.safe_load(default_values)
+    conf["evaluations"] = yaml.safe_load(
+        Path(
+            path.join(str(Path(__file__).parent), "config", "evaluations.yaml")
+        ).read_bytes()
+    ).get("evaluations")
+    conf["MITRE ATT&CK 11.2"] = yaml.safe_load(
+        Path(
+            path.join(str(Path(__file__).parent), "config", "mitre_attack.yaml")
+        ).read_bytes()
+    )
+    conf["PCI DSS 3.2.1"] = yaml.safe_load(
+        Path(
+            path.join(str(Path(__file__).parent), "config", "pci_dss_3.2.1.yaml")
+        ).read_bytes()
+    )
+    conf["PCI DSS 4.0"] = yaml.safe_load(
+        Path(
+            path.join(str(Path(__file__).parent), "config", "pci_dss_4.0.yaml")
+        ).read_bytes()
+    )
+    return conf
 
 
 def load_config(filename: str = DEFAULT_CONFIG) -> dict:
