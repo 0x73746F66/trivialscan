@@ -80,6 +80,40 @@ evaluations:
       - CVE-2011-1473
       - CVE-2011-5094
       - CVE-2021-3449
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1008
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -112,6 +146,42 @@ evaluations:
     cvss3: AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N
     cve:
       - CVE-2012-4929
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0007
+            - TA0009
+          data_sources:
+            - DS0035
+            - DS0028
+            - DS0006
+          techniques:
+            - T1119
+            - T1185
+            - T1189
+            - T1190
+          sub_techniques:
+            - parent: T1134
+              id: "001"
+            - parent: T1087
+              id: "002"
+            - parent: T1595
+              id: "002"
+            - parent: T1071
+              id: "001"
+            - parent: T1584
+              id: "006"
+            - parent: T1556
+              id: "005"
+            - parent: T1550
+              id: "001"
+          mitigations:
+            - M0942
+            - M0937
+            - M0913
+            - M0916
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -141,6 +211,35 @@ evaluations:
     issue: >
       The lack of any CAA records authorizes normal unrestricted issuance.
       It is recommended that you create CAA records for your approved CAs to minimize business impact. With CAA, you can minimize the risk of certificate issuance by unauthorized CAs and help create a more secure and transparent online ecosystem.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0004
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0038
+          techniques:
+            - T1557
+            - T1556
+          sub_techniques:
+            - parent: T1087
+              id: "002"
+            - parent: T1583
+              id: "002"
+            - parent: T1071
+              id: "004"
+            - parent: T1584
+              id: "002"
+            - parent: T1484
+              id: "002"
+          mitigations:
+            - M0913
+            - M0947
+            - M0800
+            - M0926
+            - M0954
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -173,6 +272,35 @@ evaluations:
       Third parties monitoring certificate authority behavior might check newly issued certificates against the domain's CAA records. RFC 8659 states; CAA records MAY be used by Certificate Evaluators as a possible indicator of a security policy violation. Such use SHOULD take into account the possibility that published CAA records changed between the time a certificate was issued and the time at which the certificate was observed by the Certificate Evaluator.
       The CAA records can help with the enforcement of your corporate policies on approved CAs. By aligning the CAA records with the list of corporate approved CAs, the risk of non-compliance to the policy is minimized.
       If CAA records exist but do not include an approved or preferred CA for a specific domain, the issuance of certificates by that CA to the domain cannot proceed until the creation of the appropriate CAA record is completed.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0004
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0038
+          techniques:
+            - T1557
+            - T1556
+          sub_techniques:
+            - parent: T1087
+              id: "002"
+            - parent: T1583
+              id: "002"
+            - parent: T1071
+              id: "004"
+            - parent: T1584
+              id: "002"
+            - parent: T1484
+              id: "002"
+          mitigations:
+            - M0913
+            - M0947
+            - M0800
+            - M0926
+            - M0954
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -206,6 +334,35 @@ evaluations:
     label_as: TLS/A
     issue: >
       DNS by itself is not secure, without TLS/a or DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0004
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0038
+          techniques:
+            - T1557
+            - T1556
+          sub_techniques:
+            - parent: T1087
+              id: "002"
+            - parent: T1583
+              id: "002"
+            - parent: T1071
+              id: "004"
+            - parent: T1584
+              id: "002"
+            - parent: T1484
+              id: "002"
+          mitigations:
+            - M0913
+            - M0947
+            - M0800
+            - M0926
+            - M0954
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -239,6 +396,35 @@ evaluations:
     label_as: DNSSEC Present
     issue: >
       DNS by itself is not secure, without DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0004
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0038
+          techniques:
+            - T1557
+            - T1556
+          sub_techniques:
+            - parent: T1087
+              id: "002"
+            - parent: T1583
+              id: "002"
+            - parent: T1071
+              id: "004"
+            - parent: T1584
+              id: "002"
+            - parent: T1484
+              id: "002"
+          mitigations:
+            - M0913
+            - M0947
+            - M0800
+            - M0926
+            - M0954
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -276,6 +462,35 @@ evaluations:
     label_as: DNSSEC Valid
     issue: >
       DNS by itself is not secure, without DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0004
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0038
+          techniques:
+            - T1557
+            - T1556
+          sub_techniques:
+            - parent: T1087
+              id: "002"
+            - parent: T1583
+              id: "002"
+            - parent: T1071
+              id: "004"
+            - parent: T1584
+              id: "002"
+            - parent: T1484
+              id: "002"
+          mitigations:
+            - M0913
+            - M0947
+            - M0800
+            - M0926
+            - M0954
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -317,6 +532,35 @@ evaluations:
     cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
     cve:
       - CVE-2019-14855
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0004
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0038
+          techniques:
+            - T1557
+            - T1556
+          sub_techniques:
+            - parent: T1087
+              id: "002"
+            - parent: T1583
+              id: "002"
+            - parent: T1071
+              id: "004"
+            - parent: T1584
+              id: "002"
+            - parent: T1484
+              id: "002"
+          mitigations:
+            - M0913
+            - M0947
+            - M0800
+            - M0926
+            - M0954
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -369,6 +613,28 @@ evaluations:
       Certificate Transparency (CT) is a mechanism which helps domain owners and industry watch dogs detect misissuance.
       Misissuance occurs when a Certificate Authority (CA) issues an SSL certificate improperly. This may mean that the CA included incorrect information in the certificate, issued the certificate to someone who did not represent the organization or domain, or was even compromised.
       Some browsers require certificates to have proof of being logged with certificate transparency, Safari requires up to 3 SCTs and Chrome requires between 3 and 5. The policies are far more complex than this so the generalised best practice is using at least 3 distinct SCTs per certificate.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -404,6 +670,34 @@ evaluations:
     cve:
       - CVE-2007-3108
       - CVE-2008-0166
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+          data_sources:
+            - DS0037
+          techniques:
+            - T1573
+            - T1534
+            - T1566
+            - T1598
+          sub_techniques:
+            - parent: T1552
+              id: "004"
+            - parent: T1587
+              id: "003"
+            - parent: T1588
+              id: "004"
+            - parent: T1596
+              id: "003"
+            - parent: T1608
+              id: "003"
+            - parent: T1608
+              id: "005"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -447,6 +741,37 @@ evaluations:
       - CVE-2014-8730
       - CVE-2014-0160
       - CVE-2009-3555
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1008
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+          mitigations:
+            - M1013
+            - M1054
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -486,6 +811,42 @@ evaluations:
     cve:
       - CVE-2014-6321
       - CVE-2008-0166
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0007
+            - TA0009
+          data_sources:
+            - DS0035
+            - DS0028
+            - DS0006
+          techniques:
+            - T1119
+            - T1185
+            - T1189
+            - T1190
+          sub_techniques:
+            - parent: T1134
+              id: "001"
+            - parent: T1087
+              id: "002"
+            - parent: T1595
+              id: "002"
+            - parent: T1071
+              id: "001"
+            - parent: T1584
+              id: "006"
+            - parent: T1556
+              id: "005"
+            - parent: T1550
+              id: "001"
+          mitigations:
+            - M0942
+            - M0937
+            - M0913
+            - M0916
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -528,6 +889,42 @@ evaluations:
     cve:
       - CVE-2014-6321
       - CVE-2008-0166
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0007
+            - TA0009
+          data_sources:
+            - DS0035
+            - DS0028
+            - DS0006
+          techniques:
+            - T1119
+            - T1185
+            - T1189
+            - T1190
+          sub_techniques:
+            - parent: T1134
+              id: "001"
+            - parent: T1087
+              id: "002"
+            - parent: T1595
+              id: "002"
+            - parent: T1071
+              id: "001"
+            - parent: T1584
+              id: "006"
+            - parent: T1556
+              id: "005"
+            - parent: T1550
+              id: "001"
+          mitigations:
+            - M0942
+            - M0937
+            - M0913
+            - M0916
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -559,6 +956,42 @@ evaluations:
     label_as: Known exploited and deprecated RC4 ciphers offered
     issue: >
       TODO
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0007
+            - TA0009
+          data_sources:
+            - DS0035
+            - DS0028
+            - DS0006
+          techniques:
+            - T1119
+            - T1185
+            - T1189
+            - T1190
+          sub_techniques:
+            - parent: T1134
+              id: "001"
+            - parent: T1087
+              id: "002"
+            - parent: T1595
+              id: "002"
+            - parent: T1071
+              id: "001"
+            - parent: T1584
+              id: "006"
+            - parent: T1556
+              id: "005"
+            - parent: T1550
+              id: "001"
+          mitigations:
+            - M0942
+            - M0937
+            - M0913
+            - M0916
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -588,6 +1021,42 @@ evaluations:
     label_as: Known exploited and deprecated CBC ciphers offered
     issue: >
       TODO
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0007
+            - TA0009
+          data_sources:
+            - DS0035
+            - DS0028
+            - DS0006
+          techniques:
+            - T1119
+            - T1185
+            - T1189
+            - T1190
+          sub_techniques:
+            - parent: T1134
+              id: "001"
+            - parent: T1087
+              id: "002"
+            - parent: T1595
+              id: "002"
+            - parent: T1071
+              id: "001"
+            - parent: T1584
+              id: "006"
+            - parent: T1556
+              id: "005"
+            - parent: T1550
+              id: "001"
+          mitigations:
+            - M0942
+            - M0937
+            - M0913
+            - M0916
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -617,6 +1086,42 @@ evaluations:
     label_as: Strong ciphers negotiated
     issue: >
       TODO
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0007
+            - TA0009
+          data_sources:
+            - DS0035
+            - DS0028
+            - DS0006
+          techniques:
+            - T1119
+            - T1185
+            - T1189
+            - T1190
+          sub_techniques:
+            - parent: T1134
+              id: "001"
+            - parent: T1087
+              id: "002"
+            - parent: T1595
+              id: "002"
+            - parent: T1071
+              id: "001"
+            - parent: T1584
+              id: "006"
+            - parent: T1556
+              id: "005"
+            - parent: T1550
+              id: "001"
+          mitigations:
+            - M0942
+            - M0937
+            - M0913
+            - M0916
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -646,6 +1151,42 @@ evaluations:
     label_as: Strong ciphers offered
     issue: >
       TODO
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0007
+            - TA0009
+          data_sources:
+            - DS0035
+            - DS0028
+            - DS0006
+          techniques:
+            - T1119
+            - T1185
+            - T1189
+            - T1190
+          sub_techniques:
+            - parent: T1134
+              id: "001"
+            - parent: T1087
+              id: "002"
+            - parent: T1595
+              id: "002"
+            - parent: T1071
+              id: "001"
+            - parent: T1584
+              id: "006"
+            - parent: T1556
+              id: "005"
+            - parent: T1550
+              id: "001"
+          mitigations:
+            - M0942
+            - M0937
+            - M0913
+            - M0916
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -675,6 +1216,42 @@ evaluations:
     label_as: Only strong ciphers offered
     issue: >
       TODO
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0007
+            - TA0009
+          data_sources:
+            - DS0035
+            - DS0028
+            - DS0006
+          techniques:
+            - T1119
+            - T1185
+            - T1189
+            - T1190
+          sub_techniques:
+            - parent: T1134
+              id: "001"
+            - parent: T1087
+              id: "002"
+            - parent: T1595
+              id: "002"
+            - parent: T1071
+              id: "001"
+            - parent: T1584
+              id: "006"
+            - parent: T1556
+              id: "005"
+            - parent: T1550
+              id: "001"
+          mitigations:
+            - M0942
+            - M0937
+            - M0913
+            - M0916
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -709,6 +1286,39 @@ evaluations:
     cve:
       - CVE-2005-4900
       - CVE-2019-14855
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -750,6 +1360,40 @@ evaluations:
     cve:
       - CVE-2014-3566
       - CVE-2014-8730
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1008
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -781,6 +1425,39 @@ evaluations:
       Each certificate in the chain is checked to ensure it is not expired and the chain path is complete.
       When the root certificates are available in trust-store, this script will use its public key to verify the root certificate, once it verifies it will verify trust the intermediate certificate and eventually the server (leaf) certificate to complete the chain.
       Only one valid chain from trusted root to the leaf certificate is needed to be compatible with web browsers, however the entire certificate chain should be valid to be considered trustworthy as any compromised certificate in any chain would allow malicious attackers to sign a leaf certificate which would be considered valid in the parallel chain.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -826,6 +1503,42 @@ evaluations:
       - CVE-2017-15533
       - CVE-2018-9192
       - CVE-2018-9194
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0007
+            - TA0009
+          data_sources:
+            - DS0035
+            - DS0028
+            - DS0006
+          techniques:
+            - T1119
+            - T1185
+            - T1189
+            - T1190
+          sub_techniques:
+            - parent: T1134
+              id: "001"
+            - parent: T1087
+              id: "002"
+            - parent: T1595
+              id: "002"
+            - parent: T1071
+              id: "001"
+            - parent: T1584
+              id: "006"
+            - parent: T1556
+              id: "005"
+            - parent: T1550
+              id: "001"
+          mitigations:
+            - M0942
+            - M0937
+            - M0913
+            - M0916
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -870,6 +1583,30 @@ evaluations:
     cvss2: AV:L/AC:H/Au:N/C:P/I:N/A:N
     cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N
     cve:
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -918,6 +1655,34 @@ evaluations:
       order to take advantage of a trust relationship and infect you regardless.
       Phishing websites will use these malicious certificates that are identical to legitimate certificates which
       gives a false sense of security to victims who observe the strong encryption being used in their browser
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+          data_sources:
+            - DS0037
+          techniques:
+            - T1573
+            - T1534
+            - T1566
+            - T1598
+          sub_techniques:
+            - parent: T1552
+              id: "004"
+            - parent: T1587
+              id: "003"
+            - parent: T1588
+              id: "004"
+            - parent: T1596
+              id: "003"
+            - parent: T1608
+              id: "003"
+            - parent: T1608
+              id: "005"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -957,6 +1722,39 @@ evaluations:
       Diffie-Hellman key exchange depends for its security on the presumed difficulty of solving the discrete logarithm problem.
       By design, many Diffie-Hellman implementations use the same pre-generated prime for their field, because of the reuse of primes generating precomputation for just one prime would expose millions of implementations. This vulnerability was known as early as 1992.
       Claims on the practical implications of the attack at the time were however disputed by security researchers but over the years it is expected that many primes were and still are being calculated practically making all primes of 2048 bit or less considered weak or vulnerable.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1002,6 +1800,39 @@ evaluations:
     references:
       - name: Twenty Years of Attacks on the RSA Cryptosystem - Dan Boneh, Stanford University
         url: https://www.researchgate.net/publication/2538368_Twenty_Years_of_Attacks_on_the_RSA_Cryptosystem
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1039,6 +1870,39 @@ evaluations:
       Using anything other than 65537 as the public exponent would effect compatibility with most hardware and software.
       Any higher exponent would make the public RSA operation, used for encryption or signature verification, unusably slower.
       Using a larger exponent will not decrease security, but will be more time / power consuming.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1073,6 +1937,39 @@ evaluations:
     issue: >
       This is frequently a misconfiguration, i.e. the website domain name was not included in your common name by mistake.
       However it is a very uncommon issue and is most likely indication of compromise, where a malicious attacker is targeting website owners or visitors using phishing or impersonation and have made the error unintentionally or was unable to effectively impersonate the website correctly and are relying on visitors ignoring browser warnings.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1104,6 +2001,39 @@ evaluations:
     issue: >
       This is frequently a misconfiguration, i.e. the website domain name was not included in your common name by mistake.
       However it is a very uncommon issue and is most likely indication of compromise, where a malicious attacker is targeting website owners or visitors using phishing or impersonation and have made the error unintentionally or was unable to effectively impersonate the website correctly and are relying on visitors ignoring browser warnings.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1132,6 +2062,23 @@ evaluations:
     label_as: HTTP/2 cleartext
     issue: >
       This will lead to a communication channel establised over an insecure network connection
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0009
+            - TA0010
+          data_sources:
+            - DS0025
+            - DS0010
+          techniques:
+            - T1119
+            - T1505
+          sub_techniques:
+          mitigations:
+            - M0913
+            - M0808
+            - M0954
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1181,6 +2128,39 @@ evaluations:
     label_as: Certificate is not expired
     issue: >
       When visiting a website that uses an expired Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1207,6 +2187,39 @@ evaluations:
     label_as: Valid NotBefore date
     issue: >
       When visiting a website that uses a Certificate with an invalid NotBefore date, it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1234,6 +2247,39 @@ evaluations:
     issue: >
       Any self-signed Certificate should be untrusted as it offers no security characteristics of TLS that is based on a system that all Certificates have a Root Certificate Authority Trust Anchor.
       When visiting a website that uses a self-signed Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1261,6 +2307,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1288,6 +2358,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1315,6 +2409,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1342,6 +2460,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1369,6 +2511,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1396,6 +2562,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1423,6 +2613,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1450,6 +2664,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1477,6 +2715,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1504,6 +2766,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1531,6 +2817,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1558,6 +2868,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1585,6 +2919,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1612,6 +2970,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1639,6 +3021,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1666,6 +3072,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1693,6 +3123,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1720,6 +3174,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1747,6 +3225,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1774,6 +3276,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1800,6 +3326,39 @@ evaluations:
     label_as: Basic Constraints Extension valid path length
     issue: >
       Path length gives the maximum number of intermediate certificates that may follow the root CA certificate typically (or certificate otherwise specifying the constraint) in a valid certification path.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1836,6 +3395,39 @@ evaluations:
       5. The DV Certificate Issuers generally don't offer any additional features, therefore even if you attempt to use certain features like ssl_stapling it will simply be ignored. These Issuers, (pick on Let's Encrypt for this one) simply prefer low-barrier and ease-of-use over any and all security characteristics - so if they don't care, why would you put any trust in their DV Certificates to secure your TLS connections?
       6. An EV Certificate inherently required an out-of-band validation, that is not automated like a DV Certificate. Therefore if an ATO (Account Take-over) or DNS hijacking attack were to be successful the attacker must be persistent and sometimes be physically attacking you. Which all takes significantly more time than the near-instant time it takes for the DV Certificates to be issued. When you operate public hosted (cloud) servers, they are typically ephemeral IP Addresses. The hazard with an IP Address that changes between distinct users is there is a possibility a patient malicious actor may get assigned an IP Address previously held by a valuable customer of the service provider. The way DNS works with TTL and caches means that some requests will still attempt to connect to IP Address you now have that were intended for the previous IP Address owner. If the IP Address the malicious attacker is assigned is rDNS checked and the malicious actor doesn't find anything of value, they can easily discard the IP Address and simply request a new one over and over until they get an IP that is of value to them. This is called IP Churn, and a paper describes how this technique that is an accepted "how things work" can be combined with DV Certificates that are also accepted as "how things work", combined allow for DNS hijacking. This is a proven attack, and the attack vectors with continue to work as long as service providers assign IP Addresses that are still fresh and DV certificates are automatically issued in nanoseconds.
       Put simply, DV Certificates are favoured by attackers and seeing one should make you sceptical, they're issued for ease-of-use and not for security purposes, and there is a trivial DNS take-over attack that can be used for targeted attacks when attackers are sufficiently motivated. An EV Certificate is the distinct opposite, attackers avoid using them unless they are desperate and motivated to ignore the risks to them, they are issued with security focus in spite of the time do validation which is an effective mitigation to the trivial DNS take-over attack.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1869,6 +3461,39 @@ evaluations:
       June 2022 there are hundreds of ACME protocol Certificate Authorities issuing DV certificates and few would have learned from the 2018 disclosure and turned off the vulnerable design feature of SNI.
       There are a total of 10 methods of verification defined by ACME, few actually offer any security characteristics that can be said to 'Verify' Domain Ownership, in fact some are designed on purpose to offer DV certificates to customers of website hosting providors that can only modify the HTTP header responses, or less control and can only add a HTML tag! Neitehr of these are verifying control of a domain, let alone Validate domain control! What is a DV certificate if domain validation never occurred?
       Beyond validation itself; The ACME protocol DV Certificate Issuers generally don't offer any additional features, therefore even if you attempt to use certain features like ssl_stapling it will simply be ignored. These Issuers, (pick on Let's Encrypt for this one) simply prefer low-barrier and ease-of-use over any and all security characteristics - so if they don't care, why would you put any trust in their DV Certificates to secure your TLS connections?
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1899,6 +3524,39 @@ evaluations:
     label_as: Leaf Certificate allows impersonation
     issue: >
       Server (leaf) certificates should not be a CA, it could enable impersonation attacks
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1927,6 +3585,37 @@ evaluations:
       Using the SHA-1 chosen-prefix collision the OCSP Assertion can be forged
     cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
     cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1008
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+          mitigations:
+            - M1013
+            - M1054
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1957,6 +3646,37 @@ evaluations:
       Using the SHA-1 chosen-prefix collision the OCSP Assertion can be forged
     cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
     cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1008
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+          mitigations:
+            - M1013
+            - M1054
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -1988,6 +3708,27 @@ evaluations:
       Failing to include the must staple extension in a Domain Validated (DV) or Organisation Validated (OV) Certificate will allow most web browsers and HTTP clients to 'soft-fail' the OCSP check and continue with TLS without an OCSP assertion or knowledge of revocation status.
       In some web browsers and HTTP clients an Extended Validation (EV) certificate will hard-fail when an OCSP assertion is not obtained, but this functionality should not be relied upon as there have been many changes made by web browsers that are divergent from standards and break assumed security guarantees suddenly become a vulnerability.
       Everywhere the OCSP Must Staple Extension is accepted, it will be enforced for all certificates regardless of validation semantics.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+          techniques:
+            - T1189
+            - T1190
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1565
+              id: "002"
+          mitigations:
+            - M1013
+            - M1054
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2014,6 +3755,27 @@ evaluations:
     label_as: OCSP Stapling Extension
     issue: >
       When an OCSP assertion is not included 'stapled' with the certificate, an weakness in the clients ability to obtain a remote assertion, when the client attempts to establish a connection with the OCSP responder an additional MITM attack vector is available and forged OCSP assertions may be provided allowing an attacker to sppof the revocation status of a certificate to cause a denial of service or establish trust where otherwise a compromise would have been detected.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+          techniques:
+            - T1189
+            - T1190
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1565
+              id: "002"
+          mitigations:
+            - M1013
+            - M1054
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2040,6 +3802,27 @@ evaluations:
     label_as: OCSP Revocation
     issue: >
       A revoked certificate that remains in use is an indication of misconfiuguration, misuse, or abuse.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+          techniques:
+            - T1189
+            - T1190
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1565
+              id: "002"
+          mitigations:
+            - M1013
+            - M1054
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2067,6 +3850,39 @@ evaluations:
     issue: >
       If the server (leaf) certificate was issued to serve the purpose of providing a TLS connection from the server-side.
       Any failure to include the correct signed (by the issuer) values would indicate a forged certificate and compromised connection.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2093,6 +3909,27 @@ evaluations:
     label_as: Client Certificate (MTLS) expected
     issue: >
       The server indivated client certificate subject's it will accept, or the client presented a Certificate to initiate an MTLS connection with this server.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+          techniques:
+            - T1189
+            - T1190
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1565
+              id: "002"
+          mitigations:
+            - M1013
+            - M1054
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2145,6 +3982,30 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0042
+            - TA0001
+          data_sources:
+            - DS0037
+          techniques:
+            - T1534
+          sub_techniques:
+            - parent: T1587
+              id: "003"
+            - parent: T1484
+              id: "002"
+            - parent: T1588
+              id: "004"
+            - parent: T1608
+              id: "003"
+            - parent: T1553
+              id: "004"
+          mitigations:
+            - M0913
+            - M0813
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2174,6 +4035,27 @@ evaluations:
     issue: >
       If the Certificate being used for client Authentication (MTLS) was not matched to a subject sent by the server to indicate accepted client Certificates then most properly configured servers will drop the connection.
       If a connection is established and the TLS server was misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+          techniques:
+            - T1189
+            - T1190
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1565
+              id: "002"
+          mitigations:
+            - M1013
+            - M1054
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2236,6 +4118,42 @@ evaluations:
       - CVE-2020-5933
       - CVE-2018-25032
       - CVE-2013-3587
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0007
+            - TA0009
+          data_sources:
+            - DS0035
+            - DS0028
+            - DS0006
+          techniques:
+            - T1119
+            - T1185
+            - T1189
+            - T1190
+          sub_techniques:
+            - parent: T1134
+              id: "001"
+            - parent: T1087
+              id: "002"
+            - parent: T1595
+              id: "002"
+            - parent: T1071
+              id: "001"
+            - parent: T1584
+              id: "006"
+            - parent: T1556
+              id: "005"
+            - parent: T1550
+              id: "001"
+          mitigations:
+            - M0942
+            - M0937
+            - M0913
+            - M0916
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2262,6 +4180,40 @@ evaluations:
     label_as: Session resumption caching
     issue: >
       TODO
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1008
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2288,6 +4240,40 @@ evaluations:
     label_as: Session resumption ticket hints
     issue: >
       TODO
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1008
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2314,6 +4300,40 @@ evaluations:
     label_as: Session resumption tickets
     issue: >
       TODO
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0043
+            - TA0009
+            - TA0006
+          data_sources:
+            - DS0037
+            - DS0035
+            - DS0028
+            - DS0029
+          techniques:
+            - T1189
+            - T1190
+            - T1212
+            - T1008
+            - T1556
+            - T1528
+            - T1539
+            - T1600
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1565
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2405,6 +4425,25 @@ evaluations:
     issue: >
       Websites are not expected to read contents of the users' clipboard, which commonly contains private or sensitive information.
       A webserver can instruct web browsers to block this feature so that any malicious scripts cannot leverage the API.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1115
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2434,6 +4473,24 @@ evaluations:
     issue: >
       Websites that are maintained should not be utilising deprecated features, that commonly exhibit insecure functionality or vulnerable to abuse.
       A webserver can instruct web browsers to block these features so that any malicious scripts cannot leverage the API.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2462,6 +4519,24 @@ evaluations:
     label_as: Policy-controlled browser features
     issue: >
       A webserver can instruct web browsers to allowlist on the features the site owner intends to utilise, blocking all unused features so that any malicious scripts cannot leverage the unused features or API.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2491,6 +4566,24 @@ evaluations:
     issue: >
       The server sent a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using CORP or CORS).
       The default configuration when this is not sent allows the document to fetch cross-origin resources which leaves users' vulnerable to cross-site scripting (XSS) attacks.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2520,6 +4613,24 @@ evaluations:
     issue: >
       The server sent a response header allows you to ensure a top-level document does not share a browsing context group with cross-origin documents.
       COOP will process-isolate your document and potential attackers can't access your global object if they were to open it in a popup, preventing a set of cross-origin attacks dubbed XS-Leaks.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2549,6 +4660,24 @@ evaluations:
     issue: >
       The server sent a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (CORS).
       The default configuration when this is not sent allows the document to fetch cross-origin resources which leaves users' vulnerable to cross-site scripting (XSS) attacks.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2577,6 +4706,24 @@ evaluations:
     label_as: Content-Security-Policy
     issue: >
       The server sent a response header allows web site administrators to control resources the user agent is allowed to load for a given page. With a few exceptions, policies mostly involve specifying server origins and script endpoints. This helps guard against cross-site scripting attacks cross-site scripting (XSS)
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2605,6 +4752,24 @@ evaluations:
     label_as: Upgrade Insecure Requests
     issue: >
       The server sent a response header to inform supporting browsers to ensure TLS is used even when misconfigured scripts attempt insecure connections.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2633,6 +4798,24 @@ evaluations:
     label_as: Certificate Transparency Report URI
     issue: >
       The server sent a response header to inform supporting browsers to ensure opt in to reporting and/or enforcement of Certificate Transparency requirements, to prevent the use of misissued certificates for that site from going unnoticed.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2661,6 +4844,24 @@ evaluations:
     label_as: HTTP Strict-Transport-Security
     issue: >
       The server sent a response header to inform supporting browsers that the site should only be accessed using HTTPS, and that any future attempts to access it using HTTP should automatically be converted to HTTPS.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2689,6 +4890,24 @@ evaluations:
     label_as: nosniff X-Content-Type-Options
     issue: >
       The server sent a response header to inform supporting browsers that the MIME types advertised in the Content-Type headers should be followed and not be changed. The header allows you to avoid MIME type sniffing by saying that the MIME types are deliberately configured.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2718,6 +4937,24 @@ evaluations:
     issue: >
       The Referrer-Policy HTTP header controls how much referrer information (sent with the Referer header) should be included with requests.
       This policy will leak potentially-private information from HTTPS resource URLs to insecure origins. Carefully consider the impact of this setting.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2747,6 +4984,24 @@ evaluations:
     issue: >
       The server sent a response header to inform supporting browsers whether or not a browser should be allowed to render a page in a <frame>, <iframe>, <embed> or <object>. Sites can use this to avoid click-jacking attacks, by ensuring that their content is not embedded into other sites.
       The added security is provided only if the user accessing the document is using a browser that supports X-Frame-Options.
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
@@ -2775,6 +5030,24 @@ evaluations:
     label_as: Block mode XSS-Protection
     issue: >
       The server sent a response header to inform supporting browsers to stop pages from loading when they detect reflected cross-site scripting (XSS) attacks. These protections are largely unnecessary in modern browsers when sites implement a strong Content-Security-Policy that disables the use of inline JavaScript ('unsafe-inline').
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0002
+            - TA0006
+          data_sources:
+            - DS0012
+          techniques:
+            - T1203
+          sub_techniques:
+            - parent: T1592
+              id: "004"
+            - parent: T1071
+              id: "001"
+          mitigations:
+            - M1013
+            - M1021
     compliance:
       "PCI DSS":
         - version: 3.2.1
