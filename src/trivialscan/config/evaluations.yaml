@@ -956,6 +956,10 @@ evaluations:
     label_as: Known exploited and deprecated RC4 ciphers offered
     issue: >
       TODO
+    cvss2: AV:N/AC:H/Au:N/C:P/I:N/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N
+    cve:
+      - CVE-2012-4929
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -1021,6 +1025,10 @@ evaluations:
     label_as: Known exploited and deprecated CBC ciphers offered
     issue: >
       TODO
+    cvss2: AV:N/AC:H/Au:N/C:P/I:N/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N
+    cve:
+      - CVE-2012-4929
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -1086,6 +1094,11 @@ evaluations:
     label_as: Strong ciphers negotiated
     issue: >
       TODO
+    cvss2: AV:N/AC:H/Au:N/C:C/I:C/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+    cve:
+      - CVE-2014-6321
+      - CVE-2008-0166
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -1151,6 +1164,11 @@ evaluations:
     label_as: Strong ciphers offered
     issue: >
       TODO
+    cvss2: AV:N/AC:H/Au:N/C:C/I:C/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+    cve:
+      - CVE-2014-6321
+      - CVE-2008-0166
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -1216,6 +1234,11 @@ evaluations:
     label_as: Only strong ciphers offered
     issue: >
       TODO
+    cvss2: AV:N/AC:H/Au:N/C:C/I:C/A:N
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+    cve:
+      - CVE-2014-6321
+      - CVE-2008-0166
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -1286,6 +1309,7 @@ evaluations:
     cve:
       - CVE-2005-4900
       - CVE-2019-14855
+      - CVE-2004-2761
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -1425,6 +1449,22 @@ evaluations:
       Each certificate in the chain is checked to ensure it is not expired and the chain path is complete.
       When the root certificates are available in trust-store, this script will use its public key to verify the root certificate, once it verifies it will verify trust the intermediate certificate and eventually the server (leaf) certificate to complete the chain.
       Only one valid chain from trusted root to the leaf certificate is needed to be compatible with web browsers, however the entire certificate chain should be valid to be considered trustworthy as any compromised certificate in any chain would allow malicious attackers to sign a leaf certificate which would be considered valid in the parallel chain.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -1580,9 +1620,22 @@ evaluations:
     group: certificate
     label_as: Intermediate Certificate Revocation (crlite)
     issue: Certificate Revocation only occurs if the Certificate is no longer intended to be used for it's designed purpose, and offers no security at best, or represents a known compormise
-    cvss2: AV:L/AC:H/Au:N/C:P/I:N/A:N
-    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
     cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -1655,6 +1708,15 @@ evaluations:
       order to take advantage of a trust relationship and infect you regardless.
       Phishing websites will use these malicious certificates that are identical to legitimate certificates which
       gives a false sense of security to victims who observe the strong encryption being used in their browser
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2022-21836
+      - CVE-2022-22946
+      - CVE-2020-0601
+      - CVE-2013-1493
+      - CVE-2009-3455
+      - CVE-2004-2761
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -1722,6 +1784,36 @@ evaluations:
       Diffie-Hellman key exchange depends for its security on the presumed difficulty of solving the discrete logarithm problem.
       By design, many Diffie-Hellman implementations use the same pre-generated prime for their field, because of the reuse of primes generating precomputation for just one prime would expose millions of implementations. This vulnerability was known as early as 1992.
       Claims on the practical implications of the attack at the time were however disputed by security researchers but over the years it is expected that many primes were and still are being calculated practically making all primes of 2048 bit or less considered weak or vulnerable.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2013-7287
+      - CVE-2014-9975
+      - CVE-2015-0575
+      - CVE-2018-15124
+      - CVE-2019-9863
+      - CVE-2020-6966
+      - CVE-2013-0764
+      - CVE-2017-14262
+      - CVE-2020-5763
+      - CVE-2021-26726
+      - CVE-2017-14797
+      - CVE-2017-8076
+      - CVE-2011-4121
+      - CVE-2013-2166
+      - CVE-2017-11317
+      - CVE-2017-1000486
+      - CVE-2018-0448
+      - CVE-2018-20810
+      - CVE-2019-15805
+      - CVE-2019-15806
+      - CVE-2020-9761
+      - CVE-2020-10275
+      - CVE-2020-27998
+      - CVE-2020-29658
+      - CVE-2021-24020
+      - CVE-2021-27200
+      - CVE-2021-45512
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -1797,9 +1889,17 @@ evaluations:
       Using anything other than 65537 as the public exponent would effect compatibility with most hardware and software.
       Lower isn't vulnerable with proper padding however RSA implementations are widely flawed and did not consider this security characteristic therefore in practice any low exponent could indicate weakness known to be exploited by many heavily scrutinised researchers publications.
       Using exatly 65537 is an industry standard prescribed by certification authorities and compliance such as PCI DSS, Annex B.3 of FIP186-4, NIST Special Publication on Computer Security (SP 800-78 Rev. 1 of August 2007) does not allow public exponents e smaller than 65537.
-    references:
-      - name: Twenty Years of Attacks on the RSA Cryptosystem - Dan Boneh, Stanford University
-        url: https://www.researchgate.net/publication/2538368_Twenty_Years_of_Attacks_on_the_RSA_Cryptosystem
+    cvss2: AV:N/AC:L/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2021-33560
+      - CVE-2018-16150
+      - CVE-2018-16253
+      - CVE-2018-16149
+      - CVE-2011-4121
+      - CVE-2006-7140
+      - CVE-2006-4339
+      - CVE-2006-2940
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -1851,6 +1951,9 @@ evaluations:
             - 6.2.4
             - 8.3.2
             - A2
+    references:
+      - name: Twenty Years of Attacks on the RSA Cryptosystem - Dan Boneh, Stanford University
+        url: https://www.researchgate.net/publication/2538368_Twenty_Years_of_Attacks_on_the_RSA_Cryptosystem
     anotate_results:
       - value: False
         evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
@@ -1870,6 +1973,36 @@ evaluations:
       Using anything other than 65537 as the public exponent would effect compatibility with most hardware and software.
       Any higher exponent would make the public RSA operation, used for encryption or signature verification, unusably slower.
       Using a larger exponent will not decrease security, but will be more time / power consuming.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2013-7287
+      - CVE-2014-9975
+      - CVE-2015-0575
+      - CVE-2018-15124
+      - CVE-2019-9863
+      - CVE-2020-6966
+      - CVE-2013-0764
+      - CVE-2017-14262
+      - CVE-2020-5763
+      - CVE-2021-26726
+      - CVE-2017-14797
+      - CVE-2017-8076
+      - CVE-2011-4121
+      - CVE-2013-2166
+      - CVE-2017-11317
+      - CVE-2017-1000486
+      - CVE-2018-0448
+      - CVE-2018-20810
+      - CVE-2019-15805
+      - CVE-2019-15806
+      - CVE-2020-9761
+      - CVE-2020-10275
+      - CVE-2020-27998
+      - CVE-2020-29658
+      - CVE-2021-24020
+      - CVE-2021-27200
+      - CVE-2021-45512
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -1937,6 +2070,17 @@ evaluations:
     issue: >
       This is frequently a misconfiguration, i.e. the website domain name was not included in your common name by mistake.
       However it is a very uncommon issue and is most likely indication of compromise, where a malicious attacker is targeting website owners or visitors using phishing or impersonation and have made the error unintentionally or was unable to effectively impersonate the website correctly and are relying on visitors ignoring browser warnings.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2014-3522
+      - CVE-2014-3603
+      - CVE-2016-1280
+      - CVE-2017-2911
+      - CVE-2017-2912
+      - CVE-2018-10936
+      - CVE-2020-14387
+      - CVE-2020-15260
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2001,6 +2145,17 @@ evaluations:
     issue: >
       This is frequently a misconfiguration, i.e. the website domain name was not included in your common name by mistake.
       However it is a very uncommon issue and is most likely indication of compromise, where a malicious attacker is targeting website owners or visitors using phishing or impersonation and have made the error unintentionally or was unable to effectively impersonate the website correctly and are relying on visitors ignoring browser warnings.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2014-3522
+      - CVE-2014-3603
+      - CVE-2016-1280
+      - CVE-2017-2911
+      - CVE-2017-2912
+      - CVE-2018-10936
+      - CVE-2020-14387
+      - CVE-2020-15260
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2247,6 +2402,17 @@ evaluations:
     issue: >
       Any self-signed Certificate should be untrusted as it offers no security characteristics of TLS that is based on a system that all Certificates have a Root Certificate Authority Trust Anchor.
       When visiting a website that uses a self-signed Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2014-3522
+      - CVE-2014-3603
+      - CVE-2016-1280
+      - CVE-2017-2911
+      - CVE-2017-2912
+      - CVE-2018-10936
+      - CVE-2020-14387
+      - CVE-2020-15260
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2307,6 +2473,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2358,6 +2540,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2409,6 +2607,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2460,6 +2674,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2511,6 +2741,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2562,6 +2808,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2613,6 +2875,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2664,6 +2942,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2715,6 +3009,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2766,6 +3076,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2817,6 +3143,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2868,6 +3210,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2919,6 +3277,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -2970,6 +3344,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -3021,6 +3411,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -3072,6 +3478,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -3123,6 +3545,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -3174,6 +3612,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -3225,6 +3679,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -3276,6 +3746,22 @@ evaluations:
     issue: >
       Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
       When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -3524,6 +4010,22 @@ evaluations:
     label_as: Leaf Certificate allows impersonation
     issue: >
       Server (leaf) certificates should not be a CA, it could enable impersonation attacks
+    cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+    cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+    cve:
+      - CVE-2020-8987
+      - CVE-2020-0601
+      - CVE-2020-14154
+      - CVE-2016-7075
+      - CVE-2021-23028
+      - CVE-2015-4680
+      - CVE-2015-1793
+      - CVE-2002-0828
+      - CVE-2002-0970
+      - CVE-2002-1183
+      - CVE-2002-0862
+      - CVE-2002-1407
+      - CVE-2009-0653
     threats:
       "MITRE ATT&CK":
         - version: 11.2
@@ -4179,7 +4681,7 @@ evaluations:
     group: tls_negotiation
     label_as: Session resumption caching
     issue: >
-      TODO
+      TODO CVE-2017-9148
     threats:
       "MITRE ATT&CK":
         - version: 11.2
