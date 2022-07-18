@@ -6,7 +6,7 @@ from rich.console import Console
 from rich.table import Column
 from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColumn
 from art import text2art
-from . import log
+from . import outputln
 from .. import trivialscan
 from ..util import camel_to_snake
 from ..outputs.json import save_to, save_partial
@@ -30,11 +30,13 @@ def wrap_trivialscan(
                 config=config,
                 **target,
             )
-            log(
-                f"[bold][cyan]DONE![/cyan][/bold] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
+            outputln(
+                f"Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
+                result_text="DONE!",
                 con=progress_console,
+                use_icons=config["defaults"].get("use_icons", False),
             )
             data = transport.store.to_dict()
             log_files = save_partial(
@@ -49,10 +51,12 @@ def wrap_trivialscan(
                 negotiated_cipher=transport.store.tls_state.negotiated_cipher,
             )
             for log_file in log_files:
-                log(
-                    f"[bold][cyan]SAVED[/cyan][/bold] {log_file}",
+                outputln(
+                    log_file,
                     aside="core",
+                    result_level="save",
                     con=progress_console,
+                    use_icons=config["defaults"].get("use_icons", False),
                 )
             for cert in transport.store.tls_state.certificates:
                 log_files = save_partial(
@@ -88,10 +92,12 @@ def wrap_trivialscan(
                     not_after=cert.not_after,
                 )
                 for log_file in log_files:
-                    log(
-                        f"[bold][cyan]SAVED[/cyan][/bold] {log_file}",
+                    outputln(
+                        log_file,
                         aside="core",
+                        result_level="save",
                         con=progress_console,
+                        use_icons=config["defaults"].get("use_icons", False),
                     )
             queue_out.put(data)
 
@@ -147,11 +153,13 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     **target,
                 )
                 progress.advance(task_id)
-                log(
-                    f"[bold][cyan]DONE![/cyan][/bold] {transport.store.tls_state.peer_address}",
+                outputln(
+                    transport.store.tls_state.peer_address,
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
+                    result_text="DONE!",
                     con=progress.console if use_console else None,
+                    use_icons=config["defaults"].get("use_icons", False),
                 )
                 data = transport.store.to_dict()
 
@@ -161,11 +169,12 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     config=config,
                     **target,
                 )
-                log(
-                    f"[bold][cyan]DONE![/cyan][/bold] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
+                outputln(
+                    f"Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
                     con=console if use_console else None,
+                    use_icons=config["defaults"].get("use_icons", False),
                 )
                 data = transport.store.to_dict()
 
@@ -189,10 +198,12 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
             negotiated_cipher=transport.store.tls_state.negotiated_cipher,
         )
         for log_file in log_files:
-            log(
-                f"[bold][cyan]SAVED[/cyan][/bold] {log_file}",
+            outputln(
+                log_file,
                 aside="core",
+                result_level="save",
                 con=console if use_console else None,
+                use_icons=config["defaults"].get("use_icons", False),
             )
         for cert in transport.store.tls_state.certificates:
             log_files = save_partial(
@@ -228,10 +239,12 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 not_after=cert.not_after,
             )
             for log_file in log_files:
-                log(
-                    f"[bold][cyan]SAVED[/cyan][/bold] {log_file}",
+                outputln(
+                    log_file,
                     aside="core",
+                    result_level="save",
                     con=console if use_console else None,
+                    use_icons=config["defaults"].get("use_icons", False),
                 )
 
     return queries
@@ -309,10 +322,11 @@ def scan(config: dict, **flags):
                 f"""[bold][dark_cyan]{APP_BANNER}[/dark_cyan]
         [dark_sea_green2]SUCCESS[/dark_sea_green2] [khaki1]ISSUE[/khaki1] [light_coral]VULNERABLE[/light_coral][/bold]"""
             )
-    log(
-        f"[bold][cyan]INFO![/cyan][/bold] Evaluating {num_targets} domain{'s' if num_targets >1 else ''}",
+    outputln(
+        f"Evaluating {num_targets} domain{'s' if num_targets >1 else ''}",
         aside="core",
         con=console if use_console else None,
+        use_icons=config["defaults"].get("use_icons", False),
     )
     if synchronous_only or num_targets == 1:
         queries = run_seq(config, not hide_progress_bars, use_console)
@@ -322,19 +336,22 @@ def scan(config: dict, **flags):
     execution_duration_seconds = (datetime.utcnow() - run_start).total_seconds()
     save_final(config, flags, queries, execution_duration_seconds, use_console)
 
-    log(
-        "[bold][cyan]TOTAL[/cyan][/bold] Execution duration %.1f seconds"
-        % execution_duration_seconds,
+    outputln(
+        "Execution duration %.1f seconds" % execution_duration_seconds,
         aside="core",
+        result_text="TOTAL",
         con=console if use_console else None,
+        use_icons=config["defaults"].get("use_icons", False),
     )
     for result in queries:
         if result.get("error"):
             err, msg = result["error"]
-            log(
-                f"[light_coral]ERROR[/light_coral] {msg}",
+            outputln(
+                msg,
                 aside=err,
+                result_level="fail",
                 con=console if use_console else None,
+                use_icons=config["defaults"].get("use_icons", False),
             )
             if not use_console and log_level >= logging.ERROR:
                 print(err)
@@ -363,8 +380,10 @@ def save_final(config, flags, queries, execution_duration_seconds, use_console):
                 track_changes=flags.get("track_changes", False),
                 tracking_template_filename=flags.get("previous_report"),
             )
-            log(
-                f"[bold][cyan]SAVED[/cyan][/bold] {json_path}",
+            outputln(
+                json_path,
                 aside="core",
+                result_level="save",
                 con=console if use_console else None,
+                use_icons=config["defaults"].get("use_icons", False),
             )

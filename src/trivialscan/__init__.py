@@ -5,13 +5,11 @@ from importlib import import_module
 from copy import deepcopy
 from rich.console import Console
 from .config import load_config, get_config
-from .util import TimeoutError
-from .cli import log
+from . import cli
 from .transport import TLSTransport, HTTPTransport
 from .transport.insecure import InsecureTransport
 from .certificate import LeafCertificate
 from .exceptions import (
-    EvaluationNotImplemented,
     EvaluationNotRelevant,
     NoLogEvaluation,
     TransportError,
@@ -47,11 +45,12 @@ class Trivialscan:
         checkpoint2 = f"resumedata{hostname}{port}".encode("utf-8")
         try:
             if resume_cp and checkpoint.unfinished(checkpoint1):
-                log(
-                    "[bold][cyan]INFO![/cyan][/bold] Attempting to resume last scan from saved checkpoint",
+                cli.outputln(
+                    "Attempting to resume last scan from saved TLS probe checkpoint",
                     hostname=hostname,
                     port=port,
                     con=self._console,
+                    use_icons=self.config["defaults"].get("use_icons", False),
                 )
                 transport: TLSTransport = checkpoint.resume(checkpoint1)
                 transport.store.tls_state.from_dict(checkpoint.resume(checkpoint2))
@@ -59,11 +58,14 @@ class Trivialscan:
                 self._checkpoints.add(checkpoint2)
             else:
                 if show_probe:
-                    log(
-                        "[bold][cyan]PROBE[/cyan][/bold] Protocol SSL/TLS",
+                    cli.outputln(
+                        "Protocol SSL/TLS",
                         hostname=hostname,
                         port=port,
+                        result_text="PROBE",
+                        result_icon=":globe_with_meridians:",
                         con=self._console,
+                        use_icons=self.config["defaults"].get("use_icons", False),
                     )
                 transport = InsecureTransport(hostname, port)
                 if isinstance(client_certificate, str):
@@ -89,18 +91,22 @@ class Trivialscan:
                     self._checkpoints.add(checkpoint1)
                     self._checkpoints.add(checkpoint2)
         except TransportError as err:
-            log(
-                f"[light_coral]{type(err).__name__}[/light_coral] {err}",
+            cli.outputln(
+                err,
+                result_level="fail",
+                result_icon=type(err).__name__,
                 hostname=hostname,
                 port=port,
                 con=self._console,
+                use_icons=self.config["defaults"].get("use_icons", False),
             )
         if transport.store.tls_state.negotiated_protocol:
-            log(
-                f"[bold][cyan]INFO![/cyan][/bold] Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
+            cli.outputln(
+                f"Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
                 con=self._console,
+                use_icons=self.config["defaults"].get("use_icons", False),
             )
 
         return transport
@@ -120,22 +126,26 @@ class Trivialscan:
             tmp_path_prefix=tmp_path_prefix,
         )
         if show_probe:
-            log(
-                "[bold][cyan]PROBE[/cyan][/bold] Protocol: HTTP/1 HTTP/1.1",
+            cli.outputln(
+                "Protocol: HTTP/1 HTTP/1.1",
                 hostname=hostname,
                 port=port,
+                result_text="PROBE",
+                result_icon=":globe_with_meridians:",
                 con=self._console,
+                use_icons=self.config["defaults"].get("use_icons", False),
             )
         if transport.do_request(
             http_request_path=request_path,
             cafiles=self.config["defaults"].get("cafiles"),
             client_certificate=client_certificate,
         ):
-            log(
-                f"[bold][cyan]INFO![/cyan][/bold] GET {request_path} {transport.state.response_status}",
+            cli.outputln(
+                f"GET {request_path} {transport.state.response_status}",
                 hostname=hostname,
                 port=port,
                 con=self._console,
+                use_icons=self.config["defaults"].get("use_icons", False),
             )
 
         return transport
@@ -195,71 +205,84 @@ class Trivialscan:
                 "EvaluationTask",
             )
         except ModuleNotFoundError:
-            log(
-                f'[magenta]ModuleNotFoundError[/magenta] {evaluation["group"]}.{evaluation["key"]}',
+            cli.outputln(
+                f'{evaluation["group"]}.{evaluation["key"]}',
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
+                result_color="magenta",
+                result_icon="ModuleNotFoundError",
                 con=self._console,
+                use_icons=self.config["defaults"].get("use_icons", False),
             )
             return None
 
         return _cls(transport, evaluation, self._shared_config_for_tasks(), **kwargs)
 
     def _result_data(
-        self, result: bool | str | None, task: BaseEvaluationTask, **kwargs
-    ) -> tuple[dict, str]:
-        label_as = task.metadata["label_as"]
-        evaluation_value = "[bold][cyan]INFO![/cyan][/bold]"
-        result_label = "Unknown"
-        score = 0
-        for anotatation in task.metadata.get("anotate_results", []):
-            if isinstance(anotatation["value"], str) and anotatation["value"] == "None":
-                anotatation["value"] = None
-            if anotatation["value"] is result or anotatation["value"] == result:
-                evaluation_value = anotatation["evaluation_value"]
-                result_label = anotatation["display_as"]
-                score = anotatation["score"]
-                break
-
-        substitutions = deepcopy(task.substitution_metadata)
-        for substitution in task.metadata.get("substitutions", []):
-            value = None
-            if hasattr(task.transport.store.tls_state, substitution):
-                value = getattr(task.transport.store.tls_state, substitution)
-            elif hasattr(task.transport.store, substitution):
-                value = getattr(task.transport.store, substitution)
-            elif hasattr(task.transport, substitution):
-                value = getattr(task.transport, substitution)
-            if value:
-                substitutions[substitution] = value
-
-        metadata = {**kwargs, **substitutions}
-        try:
-            label_as = label_as.format(**metadata)
-        except KeyError:
-            pass
-        try:
-            evaluation_value = evaluation_value.format(**metadata)
-        except KeyError:
-            pass
-        log_output = " ".join([evaluation_value, label_as])
-
-        return {
-            "name": label_as,
+        self, result_value: bool | str | None, task: BaseEvaluationTask, **kwargs
+    ) -> dict:
+        data = {
+            "name": task.metadata["label_as"],
             "key": task.metadata["key"],
             "group": task.metadata["group"],
             "cve": task.metadata.get("cve", []),
             "cvss2": task.metadata.get("cvss2", []),
             "cvss3": task.metadata.get("cvss3", []),
-            "result": result,
-            "result_label": result_label,
-            "score": score,
+            "result_value": result_value,
+            "result_text": cli.CLI_INFO_DEFAULT,
+            "result_level": cli.CLI_INFO,
+            "result_label": "Unknown",
+            "score": 0,
             "references": task.metadata.get("references", []),
             "description": task.metadata["issue"],
-            "metadata": metadata,
+            "metadata": {},
             "compliance": self._compliance_detail(task.metadata.get("compliance", {})),
             "threats": self._threats_detail(task.metadata.get("threats", {})),
-        }, log_output
+        }
+        for anotatation in task.metadata.get("anotate_results", []):
+            if (
+                isinstance(anotatation["result_value"], str)
+                and anotatation["result_value"] == "None"
+            ):
+                anotatation["result_value"] = None
+            if (
+                anotatation["result_value"] is result_value
+                or anotatation["result_value"] == result_value
+            ):
+                data["result_level"] = anotatation.get("result_level", cli.CLI_INFO)
+                data["result_text"] = anotatation.get(
+                    "result_text",
+                    cli.DEFAULT_MAP.get(data["result_level"], cli.CLI_INFO_DEFAULT),
+                )
+                data["result_label"] = anotatation["display_as"]
+                data["score"] = anotatation["score"]
+                break
+
+        substitutions = deepcopy(task.substitution_metadata)
+        for substitution in task.metadata.get("substitutions", []):
+            substitution_value = None
+            if hasattr(task.transport.store.tls_state, substitution):
+                substitution_value = getattr(
+                    task.transport.store.tls_state, substitution
+                )
+            elif hasattr(task.transport.store, substitution):
+                substitution_value = getattr(task.transport.store, substitution)
+            elif hasattr(task.transport, substitution):
+                substitution_value = getattr(task.transport, substitution)
+            if substitution_value:
+                substitutions[substitution] = substitution_value
+
+        data["metadata"] = {**kwargs, **substitutions}
+        try:
+            data["name"] = data["name"].format(**data["metadata"])
+        except KeyError:
+            pass
+        try:
+            data["result_label"] = data["result_label"].format(**data["metadata"])
+        except KeyError:
+            pass
+
+        return data
 
     def _threats_detail(self, threats: dict) -> list:
         result = []
@@ -387,11 +410,12 @@ class Trivialscan:
             "utf-8"
         )
         if resume_cp and checkpoint.unfinished(checkpoint_name):
-            log(
-                "[bold][cyan]INFO![/cyan][/bold] Attempting to resume last scan from saved checkpoint",
+            cli.outputln(
+                "Attempting to resume last scan from saved certificates checkpoint",
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
                 con=self._console,
+                use_icons=self.config["defaults"].get("use_icons", False),
             )
             transport.store.evaluations = checkpoint.resume(checkpoint_name)
             self._checkpoints.add(checkpoint_name)
@@ -403,10 +427,11 @@ class Trivialscan:
                     "subject_key_identifier": cert.subject_key_identifier,
                     "authority_key_identifier": cert.authority_key_identifier,
                 }
-                log(
-                    f"[bold][cyan]INFO![/cyan][/bold] {cert_data['certificate_subject']}",
+                cli.outputln(
+                    cert_data["certificate_subject"],
                     aside=f"SHA1:{cert.sha1_fingerprint} {transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
                     con=self._console,
+                    use_icons=self.config["defaults"].get("use_icons", False),
                 )
                 for evaluation in self.config.get("evaluations", []):
                     if evaluation["group"] != "certificate":
@@ -418,33 +443,43 @@ class Trivialscan:
                     if not task:
                         continue
                     if show_probe and task.probe_info:
-                        log(
-                            f"[bold][cyan]PROBE[/cyan][/bold] {task.probe_info}",
+                        cli.outputln(
+                            task.probe_info,
                             hostname=transport.store.tls_state.hostname,
                             port=transport.store.tls_state.port,
+                            result_text="PROBE",
+                            result_icon=":globe_with_meridians:",
                             con=self._console,
+                            use_icons=self.config["defaults"].get("use_icons", False),
                         )
                     result = None
                     try:
                         result = task.evaluate(cert)
-                        data, log_output = self._result_data(result, task, **cert_data)
+                        data = self._result_data(result, task, **cert_data)
                     except EvaluationNotRelevant:
                         continue
-                    except EvaluationNotImplemented:
-                        data, _ = self._result_data(None, task, **cert_data)
-                        log_output = f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
+                    except NotImplementedError:
+                        data = self._result_data(None, task, **cert_data)
+                        data["result_color"] = "magenta"
+                        data["name"] = f"Not Implemented {evaluation['label_as']}"
                     except TimeoutError:
-                        data, _ = self._result_data(None, task, **cert_data)
-                        log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
+                        data = self._result_data(None, task, **cert_data)
+                        data["result_text"] = "SKIP!"
+                        data[
+                            "name"
+                        ] = f"Slow evaluation detected for {evaluation['label_as']}"
                     except NoLogEvaluation:
-                        data, _ = self._result_data(result, task, **cert_data)
+                        data = self._result_data(result, task, **cert_data)
                         transport.store.evaluations.append(data)
                         continue
                     transport.store.evaluations.append(data)
-                    log(
-                        log_output,
+                    cli.outputln(
+                        data["name"],
+                        bold_result=True,
                         aside=f"SHA1:{cert.sha1_fingerprint} {transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
                         con=self._console,
+                        use_icons=self.config["defaults"].get("use_icons", False),
+                        **data,
                     )
             if use_cp:
                 checkpoint.set(checkpoint_name, transport.store.evaluations)
@@ -464,11 +499,12 @@ class Trivialscan:
             "utf-8"
         )
         if resume_cp and checkpoint.unfinished(checkpoint_name):
-            log(
-                "[bold][cyan]INFO![/cyan][/bold] Attempting to resume last scan from saved checkpoint",
+            cli.outputln(
+                f"Attempting to resume last scan from saved '{group}' checkpoint",
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
                 con=self._console,
+                use_icons=self.config["defaults"].get("use_icons", False),
             )
             transport.store.evaluations = checkpoint.resume(checkpoint_name)
             self._checkpoints.add(checkpoint_name)
@@ -483,35 +519,43 @@ class Trivialscan:
                 if not task:
                     continue
                 if show_probe and task.probe_info:
-                    log(
-                        f"[bold][cyan]PROBE[/cyan][/bold] {task.probe_info}",
+                    cli.outputln(
+                        task.probe_info,
                         hostname=transport.store.tls_state.hostname,
                         port=transport.store.tls_state.port,
+                        result_text="PROBE",
+                        result_icon=":globe_with_meridians:",
                         con=self._console,
+                        use_icons=self.config["defaults"].get("use_icons", False),
                     )
                 try:
                     result = task.evaluate()
-                    data, log_output = self._result_data(result, task)
+                    data = self._result_data(result, task)
                 except EvaluationNotRelevant:
                     continue
-                except EvaluationNotImplemented:
-                    data, _ = self._result_data(None, task)
-                    log_output = (
-                        f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
-                    )
+                except NotImplementedError:
+                    data = self._result_data(None, task)
+                    data["result_color"] = "magenta"
+                    data["name"] = f"Not Implemented {evaluation['label_as']}"
                 except TimeoutError:
-                    data, _ = self._result_data(None, task)
-                    log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
+                    data = self._result_data(None, task)
+                    data["result_text"] = "SKIP!"
+                    data[
+                        "name"
+                    ] = f"Slow evaluation detected for {evaluation['label_as']}"
                 except NoLogEvaluation:
-                    data, _ = self._result_data(result, task)
+                    data = self._result_data(result, task)
                     transport.store.evaluations.append(data)
                     continue
                 transport.store.evaluations.append(data)
-                log(
-                    log_output,
+                cli.outputln(
+                    data["name"],
+                    bold_result=True,
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
                     con=self._console,
+                    use_icons=self.config["defaults"].get("use_icons", False),
+                    **data,
                 )
             if use_cp:
                 checkpoint.set(checkpoint_name, transport.store.evaluations)
@@ -530,11 +574,12 @@ class Trivialscan:
             "utf-8"
         )
         if resume_cp and checkpoint.unfinished(checkpoint_name):
-            log(
-                "[bold][cyan]INFO![/cyan][/bold] Attempting to resume last scan from saved checkpoint",
+            cli.outputln(
+                "Attempting to resume last scan from saved transport protoccol checkpoint",
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
                 con=self._console,
+                use_icons=self.config["defaults"].get("use_icons", False),
             )
             transport.store.evaluations = checkpoint.resume(checkpoint_name)
             self._checkpoints.add(checkpoint_name)
@@ -549,35 +594,43 @@ class Trivialscan:
                 if not task:
                     continue
                 if show_probe and task.probe_info:
-                    log(
-                        f"[bold][cyan]PROBE[/cyan][/bold] {task.probe_info}",
+                    cli.outputln(
+                        task.probe_info,
                         hostname=transport.store.tls_state.hostname,
                         port=transport.store.tls_state.port,
+                        result_text="PROBE",
+                        result_icon=":globe_with_meridians:",
                         con=self._console,
+                        use_icons=self.config["defaults"].get("use_icons", False),
                     )
                 try:
                     result = task.evaluate()
-                    data, log_output = self._result_data(result, task)
+                    data = self._result_data(result, task)
                 except EvaluationNotRelevant:
                     continue
-                except EvaluationNotImplemented:
-                    data, _ = self._result_data(None, task)
-                    log_output = (
-                        f"[magenta]Not Implemented[/magenta] {evaluation['label_as']}"
-                    )
+                except NotImplementedError:
+                    data = self._result_data(None, task)
+                    data["result_color"] = "magenta"
+                    data["name"] = f"Not Implemented {evaluation['label_as']}"
                 except TimeoutError:
-                    data, _ = self._result_data(None, task)
-                    log_output = f"[cyan]SKIP![/cyan] Slow evaluation detected for {evaluation['label_as']}"
+                    data = self._result_data(None, task)
+                    data["result_text"] = "SKIP!"
+                    data[
+                        "name"
+                    ] = f"Slow evaluation detected for {evaluation['label_as']}"
                 except NoLogEvaluation:
-                    data, _ = self._result_data(result, task)
+                    data = self._result_data(result, task)
                     transport.store.evaluations.append(data)
                     continue
                 transport.store.evaluations.append(data)
-                log(
-                    log_output,
+                cli.outputln(
+                    data["name"],
+                    bold_result=True,
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
                     con=self._console,
+                    use_icons=self.config["defaults"].get("use_icons", False),
+                    **data,
                 )
             if use_cp:
                 checkpoint.set(checkpoint_name, transport.store.evaluations)

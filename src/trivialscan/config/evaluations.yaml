@@ -60,12 +60,12 @@ evaluations:
       - name: RFC 5746 - Transport Layer Security Renegotiation Indication Extension
         url: https://datatracker.ietf.org/doc/html/rfc5746
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Not Detected
         score: 60
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -120
 
@@ -128,12 +128,12 @@ evaluations:
       - name: RFC 5746 - Transport Layer Security Renegotiation Indication Extension
         url: https://datatracker.ietf.org/doc/html/rfc5746
     anotate_results:
-      - value: False
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: False
+        result_level: warn
         display_as: Misconfigured
         score: -120
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 100
 
@@ -196,12 +196,12 @@ evaluations:
       - name: RFC 3749 - Transport Layer Security Protocol Compression Methods
         url: https://datatracker.ietf.org/doc/html/rfc3749
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Not Detected
         score: 80
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Vulnerable
         score: -180
 
@@ -255,12 +255,12 @@ evaluations:
       - name: RFC 8659 - DNS Certification Authority Authorization (CAA) Resource Record
         url: https://datatracker.ietf.org/doc/html/rfc8659
     anotate_results:
-      - value: False
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: False
+        result_level: warn
         display_as: Misconfigured
         score: -100
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Detected
         score: 40
 
@@ -320,12 +320,12 @@ evaluations:
       - name: Let's Encrypt? Let's revoke 3 million HTTPS certificates
         url: https://www.theregister.com/2020/03/03/lets_encrypt_cert_revocation/
     anotate_results:
-      - value: False
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: False
+        result_level: warn
         display_as: Misconfigured
         score: -200
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 120
 
@@ -382,12 +382,12 @@ evaluations:
       - name: RFC 4033 - DNS Security Introduction and Requirements
         url: https://datatracker.ietf.org/doc/html/rfc4033
     anotate_results:
-      - value: False
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: False
+        result_level: warn
         display_as: Misconfigured
         score: -200
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Detected
         score: 120
 
@@ -448,12 +448,12 @@ evaluations:
       - name: RFC 4033 - DNS Security Introduction and Requirements
         url: https://datatracker.ietf.org/doc/html/rfc4033
     anotate_results:
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -100
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Detected
         score: 60
 
@@ -514,12 +514,12 @@ evaluations:
       - name: RFC 4033 - DNS Security Introduction and Requirements
         url: https://datatracker.ietf.org/doc/html/rfc4033
     anotate_results:
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 120
 
@@ -578,12 +578,12 @@ evaluations:
       - name: Disclosure Paper
         url: https://sha-mbles.github.io/
     anotate_results:
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -100
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 80
 
@@ -597,12 +597,12 @@ evaluations:
       - name: Certificate Transparency step by step
         url: https://certificate.transparency.dev/howctworks/
     anotate_results:
-      - value: False
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: False
+        result_level: warn
         display_as: Misconfigured
         score: -100
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Detected
         score: 60
 
@@ -651,12 +651,12 @@ evaluations:
       - name: Apple - Certificate Transparency policy
         url: https://support.apple.com/en-ca/HT205280
     anotate_results:
-      - value: False
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: False
+        result_level: warn
         display_as: Misconfigured
         score: -200
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 120
 
@@ -714,16 +714,17 @@ evaluations:
       - name: OSINT
         url: https://pwnedkeys.com/faq.html
     anotate_results:
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Compromised
         score: -500
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Not Known Compromised
         score: 100
-      - value: None
-        evaluation_value: "[bold][cyan]SKIP![/cyan][/bold]"
+      - result_value: None
+        result_level: info
+        result_text: SKIP!
         display_as: Not an valid pwnedkeys.com response
         score: 0
 
@@ -789,12 +790,12 @@ evaluations:
       - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
         url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 120
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -864,12 +865,12 @@ evaluations:
       - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
         url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 120
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -200
     substitutions:
@@ -942,12 +943,12 @@ evaluations:
       - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
         url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 60
-      - value: True
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: True
+        result_level: warn
         display_as: Misconfigured
         score: -100
 
@@ -1011,12 +1012,12 @@ evaluations:
             - 12.3.3
     references:
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 60
-      - value: True
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: True
+        result_level: warn
         display_as: Misconfigured
         score: -100
 
@@ -1080,12 +1081,12 @@ evaluations:
             - 12.3.3
     references:
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 60
-      - value: True
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: True
+        result_level: warn
         display_as: Misconfigured
         score: -100
 
@@ -1150,12 +1151,12 @@ evaluations:
             - 12.3.3
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 120
-      - value: False
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: False
+        result_level: warn
         display_as: Misconfigured
         score: -200
 
@@ -1220,12 +1221,12 @@ evaluations:
             - 12.3.3
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 60
-      - value: False
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: False
+        result_level: warn
         display_as: Misconfigured
         score: -500
 
@@ -1290,12 +1291,12 @@ evaluations:
             - 12.3.3
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 400
-      - value: False
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: False
+        result_level: warn
         display_as: Misconfigured
         score: -200
 
@@ -1366,12 +1367,12 @@ evaluations:
       - name: Disclosure Paper
         url: https://sha-mbles.github.io/
     anotate_results:
-      - value: True
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: True
+        result_level: warn
         display_as: Misconfigured
         score: -100
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 80
 
@@ -1432,12 +1433,12 @@ evaluations:
       - name: RFC 7507 - TLS Fallback Signaling Cipher Suite Value (SCSV) for Preventing Protocol Downgrade Attacks
         url: https://datatracker.ietf.org/doc/html/rfc7507
     anotate_results:
-      - value: False
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: False
+        result_level: warn
         display_as: Misconfigured
         score: -180
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 120
 
@@ -1510,12 +1511,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -1603,16 +1604,16 @@ evaluations:
       - name: Disclosure Paper
         url: https://www.nds.rub.de/media/nds/veroeffentlichungen/2015/08/21/Tls13QuicAttacks.pdf
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 120
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -180
-      - value: None
-        evaluation_value: "[bold][cyan]INFO![/cyan][/bold]"
+      - result_value: None
+        result_level: info
         display_as: Incomplete evaluation (check log with -vvv)
         score: 0
 
@@ -1674,24 +1675,24 @@ evaluations:
       - name: Security Advisory
         url: https://blog.mozilla.org/security/tag/crlite/
     anotate_results:
-      - value: Revoked
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: Revoked
+        result_level: fail
         display_as: Revoked
         score: -200
-      - value: Expired
-        evaluation_value: "[khaki1]WARN! Expired[/khaki1]"
+      - result_value: Expired
+        result_level: warn
         display_as: Expired
         score: 0
-      - value: Good
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: Good
+        result_level: pass
         display_as: Not Revoked
         score: 80
-      - value: NotCovered
-        evaluation_value: "[khaki1]WARN! NotCovered[/khaki1]"
+      - result_value: NotCovered
+        result_level: warn
         display_as: NotCovered
         score: -100
-      - value: NotEnrolled
-        evaluation_value: "[khaki1]WARN! NotEnrolled[/khaki1]"
+      - result_value: NotEnrolled
+        result_level: warn
         display_as: NotEnrolled
         score: -100
 
@@ -1763,13 +1764,13 @@ evaluations:
       - name: Analyzing SSL/TLS Certificates Used by Malware (Trend Micro)
         url: https://webcache.googleusercontent.com/search?q=cache:lXyCnKFb3acJ:https://www.trendmicro.com/en_us/research/21/i/analyzing-ssl-tls-certificates-used-by-malware.html+&cd=1&hl=en&ct=clnk&gl=au
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Not Known Compromised
         score: 40
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral] {reason}"
-        display_as: Compromised
+      - result_value: True
+        result_level: fail
+        display_as: Compromised {reason}
         score: -200
     substitutions:
       - sha1_fingerprint
@@ -1870,12 +1871,12 @@ evaluations:
       - name: TLS/SSL certificate weak key vulnerability - DigiCert
         url: https://docs.digicert.com/certificate-tools/discovery-user-guide/tlsssl-certificate-vulnerabilities/weak-keys/
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 200
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Vulnerable
         score: -500
     substitutions:
@@ -1955,12 +1956,12 @@ evaluations:
       - name: Twenty Years of Attacks on the RSA Cryptosystem - Dan Boneh, Stanford University
         url: https://www.researchgate.net/publication/2538368_Twenty_Years_of_Attacks_on_the_RSA_Cryptosystem
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 60
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Vulnerable
         score: -200
     substitutions:
@@ -2053,12 +2054,12 @@ evaluations:
       - name: Twenty Years of Attacks on the RSA Cryptosystem - Dan Boneh, Stanford University
         url: https://www.researchgate.net/publication/2538368_Twenty_Years_of_Attacks_on_the_RSA_Cryptosystem
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 20
-      - value: True
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: True
+        result_level: warn
         display_as: Problematic
         score: -500
     substitutions:
@@ -2130,12 +2131,12 @@ evaluations:
       - name: DNSimple - What is the Certificate Common Name
         url: https://support.dnsimple.com/articles/what-is-common-name/
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 20
-      - value: False
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: False
+        result_level: warn
         display_as: Misconfigured
         score: -100
 
@@ -2203,12 +2204,12 @@ evaluations:
       - name: RFC 9110 - HTTP Semantics
         url: https://datatracker.ietf.org/doc/html/rfc9110
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 50
-      - value: False
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: False
+        result_level: warn
         display_as: Misconfigured
         score: -150
 
@@ -2248,12 +2249,12 @@ evaluations:
       - name: RFC 7540 - Hypertext Transfer Protocol Version 2 (HTTP/2)
         url: https://datatracker.ietf.org/doc/html/rfc7540
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 50
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -2269,12 +2270,12 @@ evaluations:
       - name: HIPAA / HITECH
         url: https://www.hhs.gov/hipaa/index.html
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Compliant
         score: 20
-      - value: False
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: False
+        result_level: warn
         display_as: Non-compliant
         score: -50
 
@@ -2328,12 +2329,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -200
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 50
 
@@ -2387,12 +2388,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 20
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -100
 
@@ -2458,12 +2459,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Compromised
         score: -200
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 50
 
@@ -2525,12 +2526,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -2592,12 +2593,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -2659,12 +2660,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -2726,12 +2727,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -2793,12 +2794,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -2860,12 +2861,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -2927,12 +2928,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -2994,12 +2995,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -3061,12 +3062,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -3128,12 +3129,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -3195,12 +3196,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -3262,12 +3263,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -3329,12 +3330,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -3396,12 +3397,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -3463,12 +3464,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -3530,12 +3531,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -3597,12 +3598,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -3664,12 +3665,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -3731,12 +3732,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -3798,12 +3799,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Trusted
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Not Trusted
         score: -500
 
@@ -3859,12 +3860,12 @@ evaluations:
       - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
         url: https://datatracker.ietf.org/doc/html/rfc5280
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 50
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -120
 
@@ -3930,12 +3931,12 @@ evaluations:
       - name: Cloud Strife - Mitigating the Security Risks ofDomain-Validated Certificates
         url: https://webcache.googleusercontent.com/search?q=cache:dQ4atOcEvWEJ:https://kevin.borgolte.me/files/pdf/ndss2018-cloud-strife.pdf+&cd=13&hl=en&ct=clnk&gl=au
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -150
 
@@ -3996,12 +3997,12 @@ evaluations:
       - name: Detectify - How I exploited ACME TLS-SNI-01 issuing Let's Encrypt SSL-certs for any domain using shared hosting
         url: https://labs.detectify.com/2018/01/12/how-i-exploited-acme-tls-sni-01-issuing-lets-encrypt-ssl-certs-for-any-domain-using-shared-hosting/
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 40
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -100
 
@@ -4071,12 +4072,12 @@ evaluations:
             - 6.4.2
     references:
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -4132,12 +4133,12 @@ evaluations:
       - name: CA/Browser Forum
         url: https://cabforum.org/2014/10/16/ballot-118-sha-1-sunset/
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -4193,12 +4194,12 @@ evaluations:
       - name: CA/Browser Forum
         url: https://cabforum.org/2014/10/16/ballot-118-sha-1-sunset/
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -4243,12 +4244,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -120
 
@@ -4290,12 +4291,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 40
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -60
 
@@ -4337,12 +4338,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Not Revoked
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Revoked
         score: -200
 
@@ -4397,12 +4398,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -120
 
@@ -4444,8 +4445,8 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[bold][cyan]INFO![/cyan][/bold]"
+      - result_value: True
+        result_level: info
         display_as: Client Certificate Expected
         score: 0
 
@@ -4469,12 +4470,12 @@ evaluations:
       - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
         url: https://datatracker.ietf.org/doc/html/rfc5280
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -150
 
@@ -4522,12 +4523,12 @@ evaluations:
       - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
         url: https://datatracker.ietf.org/doc/html/rfc5280
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 120
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -4572,12 +4573,12 @@ evaluations:
       - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
         url: https://datatracker.ietf.org/doc/html/rfc5280
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 100
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -150
 
@@ -4599,12 +4600,12 @@ evaluations:
             - 6.2.4
     references:
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 200
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -500
 
@@ -4668,12 +4669,12 @@ evaluations:
             - 6.4.2
     references:
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 180
-      - value: True
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: True
+        result_level: warn
         display_as: Misconfigured
         score: -100
 
@@ -4728,12 +4729,12 @@ evaluations:
             - 6.4.2
     references:
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 60
-      - value: True
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: True
+        result_level: warn
         display_as: Misconfigured
         score: -100
 
@@ -4788,12 +4789,12 @@ evaluations:
             - 6.4.2
     references:
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 60
-      - value: True
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: True
+        result_level: warn
         display_as: Misconfigured
         score: -100
 
@@ -4848,12 +4849,12 @@ evaluations:
             - 6.4.2
     references:
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 60
-      - value: True
-        evaluation_value: "[khaki1]WARN![/khaki1]"
+      - result_value: True
+        result_level: warn
         display_as: Misconfigured
         score: -100
 
@@ -4864,12 +4865,12 @@ evaluations:
       TODO
     references:
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -4880,12 +4881,12 @@ evaluations:
       TODO
     references:
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -4896,12 +4897,12 @@ evaluations:
       TODO
     references:
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -4912,12 +4913,12 @@ evaluations:
       TODO
     references:
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -4960,12 +4961,12 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -5007,12 +5008,12 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -5053,12 +5054,12 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -5100,12 +5101,12 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Embedder-Policy
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -5147,12 +5148,12 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -5194,12 +5195,12 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Resource-Policy
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -5240,12 +5241,12 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -5286,12 +5287,12 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/upgrade-insecure-requests
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -5332,12 +5333,12 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expect-CT
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -5378,12 +5379,12 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -5424,12 +5425,12 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -5471,12 +5472,12 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
     anotate_results:
-      - value: False
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: False
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: True
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: True
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -5518,12 +5519,12 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200
 
@@ -5564,11 +5565,11 @@ evaluations:
       - name: MDN Web Docs
         url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
     anotate_results:
-      - value: True
-        evaluation_value: "[dark_sea_green2]PASS![/dark_sea_green2]"
+      - result_value: True
+        result_level: pass
         display_as: Good Configuration
         score: 80
-      - value: False
-        evaluation_value: "[light_coral]FAIL![/light_coral]"
+      - result_value: False
+        result_level: fail
         display_as: Misconfigured
         score: -200

@@ -99,10 +99,6 @@ class NoLogEvaluation(Exception):
     pass
 
 
-class EvaluationNotImplemented(Exception):
-    pass
-
-
 class ValidationError(ValueError):
     def __init__(self, message: str = None, openssl_errno: int = None):
         if openssl_errno in X509_MESSAGES.keys():

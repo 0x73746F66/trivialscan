@@ -40,7 +40,8 @@ def save_to(
         ),
         encoding="utf8",
     )
-    return json_path.absolute().as_posix()
+    # return json_path.absolute().as_posix()
+    return json_path.as_posix()
 
 
 def save_partial(config, when: str, data_type: str, data, **kwargs) -> list[str]:

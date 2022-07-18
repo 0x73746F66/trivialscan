@@ -4,6 +4,7 @@ defaults:
   cafiles:
   tmp_path_prefix: /tmp
   http_path: /
+  use_icons: False
 
 outputs:
   - type: console

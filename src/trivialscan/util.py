@@ -43,10 +43,6 @@ logger = logging.getLogger(__name__)
 MAX_DEPTH = 8
 
 
-class TimeoutError(Exception):
-    pass
-
-
 def timeout(seconds, error_message="Function call timed out"):
     def decorated(func):
         def _handle_timeout(signum, frame):

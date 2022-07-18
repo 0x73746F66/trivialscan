@@ -1,4 +1,3 @@
-from ...exceptions import EvaluationNotImplemented
 from ...transport import TLSTransport
 from .. import BaseEvaluationTask
 
@@ -12,4 +11,4 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self):
-        raise EvaluationNotImplemented
+        raise NotImplementedError
