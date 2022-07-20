@@ -6,8 +6,7 @@ from rich.console import Console
 from rich.table import Column
 from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColumn
 from art import text2art
-from . import outputln
-from .. import trivialscan
+from .. import cli, trivialscan
 from ..util import camel_to_snake
 from ..outputs.json import save_to, save_partial
 
@@ -30,7 +29,7 @@ def wrap_trivialscan(
                 config=config,
                 **target,
             )
-            outputln(
+            cli.outputln(
                 f"Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
@@ -51,10 +50,10 @@ def wrap_trivialscan(
                 negotiated_cipher=transport.store.tls_state.negotiated_cipher,
             )
             for log_file in log_files:
-                outputln(
+                cli.outputln(
                     log_file,
                     aside="core",
-                    result_level="save",
+                    result_level=cli.CLI_LEVEL_SAVE,
                     con=progress_console,
                     use_icons=config["defaults"].get("use_icons", False),
                 )
@@ -69,8 +68,8 @@ def wrap_trivialscan(
                             "evaluations": [
                                 e
                                 for e in transport.store.evaluations
-                                if e["group"] == "certificate"
-                                and e["metadata"].get("sha1_fingerprint")
+                                if e.group == "certificate"
+                                and e.metadata.get("sha1_fingerprint")
                                 == cert.sha1_fingerprint
                             ]
                         },
@@ -92,10 +91,10 @@ def wrap_trivialscan(
                     not_after=cert.not_after,
                 )
                 for log_file in log_files:
-                    outputln(
+                    cli.outputln(
                         log_file,
                         aside="core",
-                        result_level="save",
+                        result_level=cli.CLI_LEVEL_SAVE,
                         con=progress_console,
                         use_icons=config["defaults"].get("use_icons", False),
                     )
@@ -153,7 +152,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     **target,
                 )
                 progress.advance(task_id)
-                outputln(
+                cli.outputln(
                     transport.store.tls_state.peer_address,
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
@@ -169,7 +168,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     config=config,
                     **target,
                 )
-                outputln(
+                cli.outputln(
                     f"Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
@@ -198,10 +197,10 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
             negotiated_cipher=transport.store.tls_state.negotiated_cipher,
         )
         for log_file in log_files:
-            outputln(
+            cli.outputln(
                 log_file,
                 aside="core",
-                result_level="save",
+                result_level=cli.CLI_LEVEL_SAVE,
                 con=console if use_console else None,
                 use_icons=config["defaults"].get("use_icons", False),
             )
@@ -216,8 +215,8 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                         "evaluations": [
                             e
                             for e in transport.store.evaluations
-                            if e["group"] == "certificate"
-                            and e["metadata"].get("sha1_fingerprint")
+                            if e.group == "certificate"
+                            and e.metadata.get("sha1_fingerprint")
                             == cert.sha1_fingerprint
                         ]
                     },
@@ -239,10 +238,10 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 not_after=cert.not_after,
             )
             for log_file in log_files:
-                outputln(
+                cli.outputln(
                     log_file,
                     aside="core",
-                    result_level="save",
+                    result_level=cli.CLI_LEVEL_SAVE,
                     con=console if use_console else None,
                     use_icons=config["defaults"].get("use_icons", False),
                 )
@@ -319,10 +318,10 @@ def scan(config: dict, **flags):
     if use_console:
         if not hide_banner:
             console.print(
-                f"""[bold][dark_cyan]{APP_BANNER}[/dark_cyan]
-        [dark_sea_green2]SUCCESS[/dark_sea_green2] [khaki1]ISSUE[/khaki1] [light_coral]VULNERABLE[/light_coral][/bold]"""
+                f"""[bold][{cli.CLI_COLOR_PRIMARY}]{APP_BANNER}[/{cli.CLI_COLOR_PRIMARY}]
+        [{cli.CLI_COLOR_PASS}]SUCCESS[/{cli.CLI_COLOR_PASS}] [{cli.CLI_COLOR_WARN}]ISSUE[/{cli.CLI_COLOR_WARN}] [{cli.CLI_COLOR_FAIL}]VULNERABLE[/{cli.CLI_COLOR_FAIL}][/bold]"""
             )
-    outputln(
+    cli.outputln(
         f"Evaluating {num_targets} domain{'s' if num_targets >1 else ''}",
         aside="core",
         con=console if use_console else None,
@@ -336,7 +335,7 @@ def scan(config: dict, **flags):
     execution_duration_seconds = (datetime.utcnow() - run_start).total_seconds()
     save_final(config, flags, queries, execution_duration_seconds, use_console)
 
-    outputln(
+    cli.outputln(
         "Execution duration %.1f seconds" % execution_duration_seconds,
         aside="core",
         result_text="TOTAL",
@@ -346,10 +345,9 @@ def scan(config: dict, **flags):
     for result in queries:
         if result.get("error"):
             err, msg = result["error"]
-            outputln(
+            cli.failln(
                 msg,
                 aside=err,
-                result_level="fail",
                 con=console if use_console else None,
                 use_icons=config["defaults"].get("use_icons", False),
             )
@@ -380,10 +378,10 @@ def save_final(config, flags, queries, execution_duration_seconds, use_console):
                 track_changes=flags.get("track_changes", False),
                 tracking_template_filename=flags.get("previous_report"),
             )
-            outputln(
+            cli.outputln(
                 json_path,
                 aside="core",
-                result_level="save",
+                result_level=cli.CLI_LEVEL_SAVE,
                 con=console if use_console else None,
                 use_icons=config["defaults"].get("use_icons", False),
             )

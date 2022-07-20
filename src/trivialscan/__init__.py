@@ -3,6 +3,7 @@ import logging
 from os import path
 from importlib import import_module
 from copy import deepcopy
+from dataclasses import asdict
 from rich.console import Console
 from .config import load_config, get_config
 from . import cli
@@ -14,7 +15,7 @@ from .exceptions import (
     NoLogEvaluation,
     TransportError,
 )
-from .evaluations import BaseEvaluationTask
+from .evaluations import BaseEvaluationTask, EvaluationResult
 from .outputs import checkpoint
 
 __module__ = "trivialscan"
@@ -91,10 +92,9 @@ class Trivialscan:
                     self._checkpoints.add(checkpoint1)
                     self._checkpoints.add(checkpoint2)
         except TransportError as err:
-            cli.outputln(
+            cli.failln(
                 err,
-                result_level="fail",
-                result_icon=type(err).__name__,
+                result_text=type(err).__name__,
                 hostname=hostname,
                 port=port,
                 con=self._console,
@@ -210,7 +210,7 @@ class Trivialscan:
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
                 result_color="magenta",
-                result_icon="ModuleNotFoundError",
+                result_text="ModuleNotFoundError",
                 con=self._console,
                 use_icons=self.config["defaults"].get("use_icons", False),
             )
@@ -220,7 +220,7 @@ class Trivialscan:
 
     def _result_data(
         self, result_value: bool | str | None, task: BaseEvaluationTask, **kwargs
-    ) -> dict:
+    ) -> EvaluationResult:
         data = {
             "name": task.metadata["label_as"],
             "key": task.metadata["key"],
@@ -229,9 +229,9 @@ class Trivialscan:
             "cvss2": task.metadata.get("cvss2", []),
             "cvss3": task.metadata.get("cvss3", []),
             "result_value": result_value,
-            "result_text": cli.CLI_INFO_DEFAULT,
-            "result_level": cli.CLI_INFO,
-            "result_label": "Unknown",
+            "result_text": cli.CLI_LEVEL_INFO_DEFAULT,
+            "result_level": cli.CLI_LEVEL_INFO,
+            "result_label": "Not Implemented",
             "score": 0,
             "references": task.metadata.get("references", []),
             "description": task.metadata["issue"],
@@ -249,10 +249,14 @@ class Trivialscan:
                 anotatation["result_value"] is result_value
                 or anotatation["result_value"] == result_value
             ):
-                data["result_level"] = anotatation.get("result_level", cli.CLI_INFO)
+                data["result_level"] = anotatation.get(
+                    "result_level", cli.CLI_LEVEL_INFO
+                )
                 data["result_text"] = anotatation.get(
                     "result_text",
-                    cli.DEFAULT_MAP.get(data["result_level"], cli.CLI_INFO_DEFAULT),
+                    cli.DEFAULT_MAP.get(
+                        data["result_level"], cli.CLI_LEVEL_INFO_DEFAULT
+                    ),
                 )
                 data["result_label"] = anotatation["display_as"]
                 data["score"] = anotatation["score"]
@@ -282,7 +286,7 @@ class Trivialscan:
         except KeyError:
             pass
 
-        return data
+        return EvaluationResult(**data)
 
     def _threats_detail(self, threats: dict) -> list:
         result = []
@@ -455,31 +459,30 @@ class Trivialscan:
                     result = None
                     try:
                         result = task.evaluate(cert)
-                        data = self._result_data(result, task, **cert_data)
+                        evaluation_result = self._result_data(result, task, **cert_data)
                     except EvaluationNotRelevant:
                         continue
                     except NotImplementedError:
-                        data = self._result_data(None, task, **cert_data)
-                        data["result_color"] = "magenta"
-                        data["name"] = f"Not Implemented {evaluation['label_as']}"
+                        evaluation_result = self._result_data(None, task, **cert_data)
+                        evaluation_result.result_color = "magenta"
+                        evaluation_result.result_text = "SKIP!"
                     except TimeoutError:
-                        data = self._result_data(None, task, **cert_data)
-                        data["result_text"] = "SKIP!"
-                        data[
-                            "name"
-                        ] = f"Slow evaluation detected for {evaluation['label_as']}"
+                        evaluation_result = self._result_data(None, task, **cert_data)
+                        evaluation_result.result_color = "magenta"
+                        evaluation_result.result_text = "SKIP!"
+                        evaluation_result.result_label = "Timeout"
                     except NoLogEvaluation:
-                        data = self._result_data(result, task, **cert_data)
-                        transport.store.evaluations.append(data)
+                        evaluation_result = self._result_data(result, task, **cert_data)
+                        transport.store.evaluations.append(evaluation_result)
                         continue
-                    transport.store.evaluations.append(data)
+                    transport.store.evaluations.append(evaluation_result)
                     cli.outputln(
-                        data["name"],
+                        f"[{cli.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{cli.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
                         bold_result=True,
                         aside=f"SHA1:{cert.sha1_fingerprint} {transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
                         con=self._console,
                         use_icons=self.config["defaults"].get("use_icons", False),
-                        **data,
+                        **asdict(evaluation_result),
                     )
             if use_cp:
                 checkpoint.set(checkpoint_name, transport.store.evaluations)
@@ -530,32 +533,31 @@ class Trivialscan:
                     )
                 try:
                     result = task.evaluate()
-                    data = self._result_data(result, task)
+                    evaluation_result = self._result_data(result, task)
                 except EvaluationNotRelevant:
                     continue
                 except NotImplementedError:
-                    data = self._result_data(None, task)
-                    data["result_color"] = "magenta"
-                    data["name"] = f"Not Implemented {evaluation['label_as']}"
+                    evaluation_result = self._result_data(None, task)
+                    evaluation_result.result_color = "magenta"
+                    evaluation_result.result_text = "SKIP!"
                 except TimeoutError:
-                    data = self._result_data(None, task)
-                    data["result_text"] = "SKIP!"
-                    data[
-                        "name"
-                    ] = f"Slow evaluation detected for {evaluation['label_as']}"
+                    evaluation_result = self._result_data(None, task)
+                    evaluation_result.result_color = "magenta"
+                    evaluation_result.result_text = "SKIP!"
+                    evaluation_result.result_label = "Timeout"
                 except NoLogEvaluation:
-                    data = self._result_data(result, task)
-                    transport.store.evaluations.append(data)
+                    evaluation_result = self._result_data(result, task)
+                    transport.store.evaluations.append(evaluation_result)
                     continue
-                transport.store.evaluations.append(data)
+                transport.store.evaluations.append(evaluation_result)
                 cli.outputln(
-                    data["name"],
+                    f"[{cli.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{cli.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
                     bold_result=True,
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
                     con=self._console,
                     use_icons=self.config["defaults"].get("use_icons", False),
-                    **data,
+                    **asdict(evaluation_result),
                 )
             if use_cp:
                 checkpoint.set(checkpoint_name, transport.store.evaluations)
@@ -605,32 +607,31 @@ class Trivialscan:
                     )
                 try:
                     result = task.evaluate()
-                    data = self._result_data(result, task)
+                    evaluation_result = self._result_data(result, task)
                 except EvaluationNotRelevant:
                     continue
                 except NotImplementedError:
-                    data = self._result_data(None, task)
-                    data["result_color"] = "magenta"
-                    data["name"] = f"Not Implemented {evaluation['label_as']}"
+                    evaluation_result = self._result_data(None, task)
+                    evaluation_result.result_color = "magenta"
+                    evaluation_result.result_text = "SKIP!"
                 except TimeoutError:
-                    data = self._result_data(None, task)
-                    data["result_text"] = "SKIP!"
-                    data[
-                        "name"
-                    ] = f"Slow evaluation detected for {evaluation['label_as']}"
+                    evaluation_result = self._result_data(None, task)
+                    evaluation_result.result_color = "magenta"
+                    evaluation_result.result_text = "SKIP!"
+                    evaluation_result.result_label = "Timeout"
                 except NoLogEvaluation:
-                    data = self._result_data(result, task)
-                    transport.store.evaluations.append(data)
+                    evaluation_result = self._result_data(result, task)
+                    transport.store.evaluations.append(evaluation_result)
                     continue
-                transport.store.evaluations.append(data)
+                transport.store.evaluations.append(evaluation_result)
                 cli.outputln(
-                    data["name"],
+                    f"[{cli.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{cli.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
                     bold_result=True,
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
                     con=self._console,
                     use_icons=self.config["defaults"].get("use_icons", False),
-                    **data,
+                    **asdict(evaluation_result),
                 )
             if use_cp:
                 checkpoint.set(checkpoint_name, transport.store.evaluations)

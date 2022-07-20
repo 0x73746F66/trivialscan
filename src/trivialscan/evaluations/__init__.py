@@ -1,5 +1,7 @@
 import logging
+from dataclasses import dataclass
 from requests_cache import CachedSession
+from .. import cli
 from ..certificate import BaseCertificate
 from ..transport import TLSTransport
 
@@ -26,3 +28,24 @@ class BaseEvaluationTask:
 
     def evaluate(self, certificate: BaseCertificate) -> bool | None:
         raise NotImplementedError
+
+
+@dataclass
+class EvaluationResult:
+    name: str
+    key: str
+    group: str
+    result_value: str | None | bool
+    result_label: str
+    description: str
+    metadata: dict[str, str]
+    cve: list[str] | None = None
+    cvss2: str | None = None
+    cvss3: str | None = None
+    references: list[dict[str, str]] | None = None
+    compliance: dict | None = None
+    threats: dict | None = None
+    result_color: str | None = None
+    result_text: str = cli.CLI_LEVEL_INFO_DEFAULT
+    result_level: str = cli.CLI_LEVEL_INFO
+    score: int = 0

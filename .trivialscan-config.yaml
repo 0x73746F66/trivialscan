@@ -5,6 +5,7 @@ defaults:
   cafiles:
   tmp_path_prefix: /tmp
   http_request_path: /
+  use_icons: False
   # skip_evaluations:
   #   - revocation_crlite
   #   - tls_robot

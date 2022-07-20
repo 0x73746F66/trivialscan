@@ -1,6 +1,7 @@
 import logging
 from hashlib import sha1
 from datetime import datetime
+from dataclasses import asdict
 from urllib.parse import urlparse
 from requests import Response
 from OpenSSL.crypto import (
@@ -82,7 +83,6 @@ class HTTPState:
             data["_transport"] = {
                 "hostname": self.hostname,
                 "port": self.port,
-                "peer_address": self.peer_address,
             }
 
         return data
@@ -256,6 +256,6 @@ class TransportStore:
             },
             "tls": self.tls_state.to_dict(),
             "http": [http.to_dict() for http in self.http_states],
-            "evaluations": self.evaluations,
+            "evaluations": [asdict(e) for e in self.evaluations],
         }
         return data
