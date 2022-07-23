@@ -5,9 +5,13 @@ import keyring
 from .credentials import CREDENTIALS_FILE, load_local, save_local
 
 __module__ = "trivialscan.cli.register"
-KEYRING_SUPPORT = isinstance(
-    keyring.get_keyring(), keyring.backends.SecretService.Keyring
-)
+KEYRING_SUPPORT = False
+try:
+    KEYRING_SUPPORT = isinstance(
+        keyring.get_keyring(), keyring.backends.SecretService.Keyring
+    )
+except AttributeError:
+    pass
 logger = logging.getLogger(__name__)
 console = Console()
 

@@ -7,9 +7,13 @@ from ..config import CONFIG_PATH
 
 __module__ = "trivialscan.cli.credentials"
 KEYRING_KEY = "trivialscan-registration-token-{account_name}"
-KEYRING_SUPPORT = isinstance(
-    keyring.get_keyring(), keyring.backends.SecretService.Keyring
-)
+KEYRING_SUPPORT = False
+try:
+    KEYRING_SUPPORT = isinstance(
+        keyring.get_keyring(), keyring.backends.SecretService.Keyring
+    )
+except AttributeError:
+    pass
 CREDENTIALS_FILE = path.join(CONFIG_PATH, "credentials")
 logger = logging.getLogger(__name__)
 

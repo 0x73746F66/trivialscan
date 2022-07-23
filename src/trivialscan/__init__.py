@@ -61,8 +61,7 @@ class Trivialscan:
                 if show_probe:
                     cli.outputln(
                         "Protocol SSL/TLS",
-                        hostname=hostname,
-                        port=port,
+                        aside="core",
                         result_text="PROBE",
                         result_icon=":globe_with_meridians:",
                         con=self._console,
@@ -128,8 +127,7 @@ class Trivialscan:
         if show_probe:
             cli.outputln(
                 "Protocol: HTTP/1 HTTP/1.1",
-                hostname=hostname,
-                port=port,
+                aside="core",
                 result_text="PROBE",
                 result_icon=":globe_with_meridians:",
                 con=self._console,
@@ -449,8 +447,7 @@ class Trivialscan:
                     if show_probe and task.probe_info:
                         cli.outputln(
                             task.probe_info,
-                            hostname=transport.store.tls_state.hostname,
-                            port=transport.store.tls_state.port,
+                            aside="core",
                             result_text="PROBE",
                             result_icon=":globe_with_meridians:",
                             con=self._console,
@@ -524,8 +521,7 @@ class Trivialscan:
                 if show_probe and task.probe_info:
                     cli.outputln(
                         task.probe_info,
-                        hostname=transport.store.tls_state.hostname,
-                        port=transport.store.tls_state.port,
+                        aside="core",
                         result_text="PROBE",
                         result_icon=":globe_with_meridians:",
                         con=self._console,
@@ -598,8 +594,7 @@ class Trivialscan:
                 if show_probe and task.probe_info:
                     cli.outputln(
                         task.probe_info,
-                        hostname=transport.store.tls_state.hostname,
-                        port=transport.store.tls_state.port,
+                        aside="core",
                         result_text="PROBE",
                         result_icon=":globe_with_meridians:",
                         con=self._console,

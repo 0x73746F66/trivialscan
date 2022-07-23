@@ -23,8 +23,11 @@ setup: deps ## setup for development of this project
 	@ [ -f .secrets.baseline ] || ( detect-secrets scan > .secrets.baseline )
 	yes | detect-secrets audit .secrets.baseline
 
-install: build ## Install the package
+install: ## Install the package
 	python -m pip install -U dist/trivialscan-$(shell cat ./setup.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)-py2.py3-none-any.whl
+
+reinstall: ## Force install the package
+	python -m pip install --force-reinstall -U dist/trivialscan-$(shell cat ./setup.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)-py2.py3-none-any.whl
 
 install-dev: ## Install the package
 	python -m pip install --disable-pip-version-check -U pip
@@ -43,7 +46,7 @@ test: ## all tests
 	pre-commit run --all-files
 	coverage report -m
 
-build: check ## build wheel file
+build: ## build wheel file
 	rm -f dist/*
 	python -m build -nxsw
 
@@ -53,9 +56,11 @@ publish: ## upload to pypi.org
 	python -m twine upload dist/*
 
 crlite:
-	(cd vendor/rust-query-crlite && cargo build)
-	./vendor/rust-query-crlite/target/debug/rust-query-crlite -vvv --db /tmp/.crlite_db/ --update prod x509
-	./vendor/rust-query-crlite/target/debug/rust-query-crlite -vvv --db /tmp/.crlite_db/ https ssllabs.com
+	(cd rust-query-crlite && cargo build)
+	cp rust-query-crlite/target/debug/rust-query-crlite src/trivialscan/vendor/rust-query-crlite
+	chmod a+x src/trivialscan/vendor/rust-query-crlite
+	./src/trivialscan/vendor/rust-query-crlite -vvv --db /tmp/.crlite_db/ --update prod x509
+	./src/trivialscan/vendor/rust-query-crlite -vvv --db /tmp/.crlite_db/ https ssllabs.com
 
 run-stdin: ## pipe targets from stdin
 	cat .development/targets.txt | xargs python -m trivialscan.cli

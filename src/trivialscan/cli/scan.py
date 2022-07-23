@@ -53,7 +53,8 @@ def wrap_trivialscan(
                 cli.outputln(
                     log_file,
                     aside="core",
-                    result_level=cli.CLI_LEVEL_SAVE,
+                    result_text="SAVED",
+                    result_icon=":floppy_disk:",
                     con=progress_console,
                     use_icons=config["defaults"].get("use_icons", False),
                 )
@@ -94,7 +95,8 @@ def wrap_trivialscan(
                     cli.outputln(
                         log_file,
                         aside="core",
-                        result_level=cli.CLI_LEVEL_SAVE,
+                        result_text="SAVED",
+                        result_icon=":floppy_disk:",
                         con=progress_console,
                         use_icons=config["defaults"].get("use_icons", False),
                     )
@@ -200,7 +202,8 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
             cli.outputln(
                 log_file,
                 aside="core",
-                result_level=cli.CLI_LEVEL_SAVE,
+                result_text="SAVED",
+                result_icon=":floppy_disk:",
                 con=console if use_console else None,
                 use_icons=config["defaults"].get("use_icons", False),
             )
@@ -241,7 +244,8 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 cli.outputln(
                     log_file,
                     aside="core",
-                    result_level=cli.CLI_LEVEL_SAVE,
+                    result_text="SAVED",
+                    result_icon=":floppy_disk:",
                     con=console if use_console else None,
                     use_icons=config["defaults"].get("use_icons", False),
                 )
@@ -381,7 +385,8 @@ def save_final(config, flags, queries, execution_duration_seconds, use_console):
             cli.outputln(
                 json_path,
                 aside="core",
-                result_level=cli.CLI_LEVEL_SAVE,
+                result_text="SAVED",
+                result_icon=":floppy_disk:",
                 con=console if use_console else None,
                 use_icons=config["defaults"].get("use_icons", False),
             )

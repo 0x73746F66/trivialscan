@@ -7,7 +7,6 @@ CLI_LEVEL_FAIL = "fail"
 CLI_LEVEL_WARN = "warn"
 CLI_LEVEL_PASS = "pass"  # nosec
 CLI_LEVEL_INFO = "info"
-CLI_LEVEL_SAVE = "save"
 CLI_LEVEL_FAIL_DEFAULT = "FAIL!"
 CLI_LEVEL_WARN_DEFAULT = "WARN!"
 CLI_LEVEL_PASS_DEFAULT = "PASS!"  # nosec
@@ -28,14 +27,12 @@ ICON_MAP = {
     CLI_LEVEL_WARN: ":bell:",
     CLI_LEVEL_PASS: ":white_heavy_check_mark:",
     CLI_LEVEL_INFO: ":speech_balloon:",
-    CLI_LEVEL_SAVE: ":floppy_disk:",
 }
 DEFAULT_MAP = {
     CLI_LEVEL_FAIL: CLI_LEVEL_FAIL_DEFAULT,
     CLI_LEVEL_WARN: CLI_LEVEL_WARN_DEFAULT,
     CLI_LEVEL_PASS: CLI_LEVEL_PASS_DEFAULT,
     CLI_LEVEL_INFO: CLI_LEVEL_INFO_DEFAULT,
-    CLI_LEVEL_SAVE: "",
 }
 
 

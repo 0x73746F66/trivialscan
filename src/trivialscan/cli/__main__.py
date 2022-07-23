@@ -13,7 +13,7 @@ from ..config import load_config, get_config
 
 
 __module__ = "trivialscan.cli"
-__version__ = "3.0.0-devel"
+__version__ = "3.0.0"
 
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
 APP_BANNER = text2art("trivialscan", font="tarty4")
