@@ -241,27 +241,19 @@ def get_config(custom_values: dict | None = None) -> dict:
 
 def default_config() -> dict:
     conf = yaml.safe_load(
-        Path(path.join(str(Path(__file__).parent), "config", "base.yaml")).read_bytes()
+        Path(path.join(str(Path(__file__).parent), "base.yaml")).read_bytes()
     )
     conf["evaluations"] = yaml.safe_load(
-        Path(
-            path.join(str(Path(__file__).parent), "config", "evaluations.yaml")
-        ).read_bytes()
+        Path(path.join(str(Path(__file__).parent), "evaluations.yaml")).read_bytes()
     ).get("evaluations")
     conf["MITRE ATT&CK 11.2"] = yaml.safe_load(
-        Path(
-            path.join(str(Path(__file__).parent), "config", "mitre_attack.yaml")
-        ).read_bytes()
+        Path(path.join(str(Path(__file__).parent), "mitre_attack.yaml")).read_bytes()
     )
     conf["PCI DSS 3.2.1"] = yaml.safe_load(
-        Path(
-            path.join(str(Path(__file__).parent), "config", "pci_dss_3.2.1.yaml")
-        ).read_bytes()
+        Path(path.join(str(Path(__file__).parent), "pci_dss_3.2.1.yaml")).read_bytes()
     )
     conf["PCI DSS 4.0"] = yaml.safe_load(
-        Path(
-            path.join(str(Path(__file__).parent), "config", "pci_dss_4.0.yaml")
-        ).read_bytes()
+        Path(path.join(str(Path(__file__).parent), "pci_dss_4.0.yaml")).read_bytes()
     )
     return conf
 

@@ -6,7 +6,7 @@ from rich.console import Console
 from rich.table import Column
 from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColumn
 from art import text2art
-from .. import cli, trivialscan
+from .. import constants, cli, trivialscan
 from ..util import camel_to_snake
 from ..outputs.json import save_to, save_partial
 
@@ -322,8 +322,8 @@ def scan(config: dict, **flags):
     if use_console:
         if not hide_banner:
             console.print(
-                f"""[bold][{cli.CLI_COLOR_PRIMARY}]{APP_BANNER}[/{cli.CLI_COLOR_PRIMARY}]
-        [{cli.CLI_COLOR_PASS}]SUCCESS[/{cli.CLI_COLOR_PASS}] [{cli.CLI_COLOR_WARN}]ISSUE[/{cli.CLI_COLOR_WARN}] [{cli.CLI_COLOR_FAIL}]VULNERABLE[/{cli.CLI_COLOR_FAIL}][/bold]"""
+                f"""[bold][{constants.CLI_COLOR_PRIMARY}]{APP_BANNER}[/{constants.CLI_COLOR_PRIMARY}]
+        [{constants.CLI_COLOR_PASS}]SUCCESS[/{constants.CLI_COLOR_PASS}] [{constants.CLI_COLOR_WARN}]ISSUE[/{constants.CLI_COLOR_WARN}] [{constants.CLI_COLOR_FAIL}]VULNERABLE[/{constants.CLI_COLOR_FAIL}][/bold]"""
             )
     cli.outputln(
         f"Evaluating {num_targets} domain{'s' if num_targets >1 else ''}",

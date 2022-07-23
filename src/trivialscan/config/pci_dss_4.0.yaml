@@ -1,5 +1,5 @@
 ---
-version: 4.0
+version: "4.0"
 requirements:
   "1": Install and Maintain Network Security Controls
   "1.1": Processes and mechanisms for installing and maintaining network security controls are defined and understood

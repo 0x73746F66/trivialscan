@@ -1,5 +1,6 @@
 from ...transport import TLSTransport
-from .. import BaseEvaluationTask
+from ... import constants
+from .. import BaseEvaluationTask, EvaluationResult
 
 __version__ = "3.2.1"
 
@@ -19,14 +20,6 @@ PCIDSS_NON_COMPLIANCE_CIPHER = f"PCI DSS version {__version__} compliance requir
 PCIDSS_NON_COMPLIANCE_KNOWN_VULNERABILITIES = f"PCI DSS version {__version__} compliance requires that no known vulnerabilities are present"
 PCIDSS_NON_COMPLIANCE_CA_TRUST = f"PCI DSS version {__version__} compliance requires a complete Certificate chain with verified trust anchor"
 PCIDSS_NON_COMPLIANCE_WEAK_ALGORITHMS = f"PCI DSS version {__version__} compliance requires deprecated and known weak algorithms are not supported"
-VALIDATION_CA_TRUST = "pci_ca_trust"
-VALIDATION_WEAK_KEY = "pci_weak_key"
-VALIDATION_WEAK_CIPHER = "pci_weak_cipher"
-VALIDATION_WEAK_PROTOCOL = "pci_weak_protocol"
-VALIDATION_DEPRECATED_ALGO = "pci_deprecated_algo"
-VALIDATION_KNOWN_VULN_COMPRESSION = "pci_vuln_compression"
-VALIDATION_KNOWN_VULN_RENEGOTIATION = "pci_vuln_renegotiation"
-VALIDATION_KNOWN_VULN_SESSION_RESUMPTION = "pci_vuln_session_resumption"
 
 
 class EvaluationTask(BaseEvaluationTask):
@@ -36,4 +29,20 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self):
-        raise NotImplementedError
+        violations = set()
+        for evaluation_result in self.transport.store.evaluations:
+            evaluation_result: EvaluationResult
+            if evaluation_result.result_level != constants.RESULT_LEVEL_FAIL:
+                continue
+            for compliance in evaluation_result.compliance:
+                if (
+                    __version__ != compliance["version"]
+                    or "PCI DSS" != compliance["compliance"]
+                ):
+                    continue
+                violations.add(compliance["requirement"])
+
+        self.substitution_metadata[f"PCI DSS {__version__} violations"] = list(
+            violations
+        )
+        return len(violations) == 0

@@ -8,7 +8,7 @@ from rich.logging import RichHandler
 from art import text2art
 from .register import register
 from .scan import scan
-from .. import cli as _cli
+from .. import constants
 from ..config import load_config, get_config
 
 
@@ -188,7 +188,7 @@ def main():
             console.print(f"trivialscan=={__version__}\n{REMOTE_URL}")
         else:
             console.print(
-                f"[bold][{_cli.CLI_COLOR_PRIMARY}]{APP_BANNER}[/{_cli.CLI_COLOR_PRIMARY}][/bold]\ntrivialscan=={__version__}\n{REMOTE_URL}"
+                f"[bold][{constants.CLI_COLOR_PRIMARY}]{APP_BANNER}[/{constants.CLI_COLOR_PRIMARY}][/bold]\ntrivialscan=={__version__}\n{REMOTE_URL}"
             )
         sys.exit(0)
 

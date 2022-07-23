@@ -5,17 +5,17 @@ from importlib import import_module
 from copy import deepcopy
 from dataclasses import asdict
 from rich.console import Console
+from . import cli, constants
 from .config import load_config, get_config
-from . import cli
-from .transport import TLSTransport, HTTPTransport
-from .transport.insecure import InsecureTransport
-from .certificate import LeafCertificate
 from .exceptions import (
     EvaluationNotRelevant,
     NoLogEvaluation,
     TransportError,
 )
+from .transport import TLSTransport, HTTPTransport
+from .transport.insecure import InsecureTransport
 from .evaluations import BaseEvaluationTask, EvaluationResult
+from .certificate import LeafCertificate
 from .outputs import checkpoint
 
 __module__ = "trivialscan"
@@ -227,8 +227,8 @@ class Trivialscan:
             "cvss2": task.metadata.get("cvss2", []),
             "cvss3": task.metadata.get("cvss3", []),
             "result_value": result_value,
-            "result_text": cli.CLI_LEVEL_INFO_DEFAULT,
-            "result_level": cli.CLI_LEVEL_INFO,
+            "result_text": constants.RESULT_LEVEL_INFO_DEFAULT,
+            "result_level": constants.RESULT_LEVEL_INFO,
             "result_label": "Not Implemented",
             "score": 0,
             "references": task.metadata.get("references", []),
@@ -248,12 +248,12 @@ class Trivialscan:
                 or anotatation["result_value"] == result_value
             ):
                 data["result_level"] = anotatation.get(
-                    "result_level", cli.CLI_LEVEL_INFO
+                    "result_level", constants.RESULT_LEVEL_INFO
                 )
                 data["result_text"] = anotatation.get(
                     "result_text",
-                    cli.DEFAULT_MAP.get(
-                        data["result_level"], cli.CLI_LEVEL_INFO_DEFAULT
+                    constants.DEFAULT_MAP.get(
+                        data["result_level"], constants.RESULT_LEVEL_INFO_DEFAULT
                     ),
                 )
                 data["result_label"] = anotatation["display_as"]
@@ -390,15 +390,20 @@ class Trivialscan:
                     continue
                 if ctype == "PCI DSS":
                     for requirement in _compliance.get("requirements", []) or []:
-                        if str(requirement) in self.config[cname]:
+                        if str(requirement) in self.config[cname]["requirements"]:
                             result.append(
                                 {
                                     "compliance": ctype,
                                     "version": str(_compliance["version"]),
                                     "requirement": str(requirement),
-                                    "description": self.config[cname][str(requirement)],
+                                    "description": self.config[cname]["requirements"][
+                                        str(requirement)
+                                    ],
                                 }
                             )
+                        else:
+                            result.append({**{"compliance": ctype}, **_compliance})
+
         return result
 
     def evaluate_certificates(
@@ -474,7 +479,7 @@ class Trivialscan:
                         continue
                     transport.store.evaluations.append(evaluation_result)
                     cli.outputln(
-                        f"[{cli.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{cli.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
+                        f"[{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
                         bold_result=True,
                         aside=f"SHA1:{cert.sha1_fingerprint} {transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
                         con=self._console,
@@ -547,7 +552,7 @@ class Trivialscan:
                     continue
                 transport.store.evaluations.append(evaluation_result)
                 cli.outputln(
-                    f"[{cli.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{cli.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
+                    f"[{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
                     bold_result=True,
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
@@ -620,7 +625,7 @@ class Trivialscan:
                     continue
                 transport.store.evaluations.append(evaluation_result)
                 cli.outputln(
-                    f"[{cli.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{cli.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
+                    f"[{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
                     bold_result=True,
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,

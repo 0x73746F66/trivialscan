@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 from requests_cache import CachedSession
-from .. import cli
+from .. import constants
 from ..certificate import BaseCertificate
 from ..transport import TLSTransport
 
@@ -46,6 +46,6 @@ class EvaluationResult:
     compliance: dict | None = None
     threats: dict | None = None
     result_color: str | None = None
-    result_text: str = cli.CLI_LEVEL_INFO_DEFAULT
-    result_level: str = cli.CLI_LEVEL_INFO
+    result_text: str = constants.RESULT_LEVEL_INFO_DEFAULT
+    result_level: str = constants.RESULT_LEVEL_INFO
     score: int = 0

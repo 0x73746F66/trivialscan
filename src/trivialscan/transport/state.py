@@ -236,7 +236,7 @@ class TLSState:
 class TransportStore:
     tls_state: TLSState = TLSState()
     http_states: list[HTTPState] = []
-    evaluations: list = []
+    evaluations: list["EvaluationResult"] = []
 
     def __init__(self, **kwargs) -> None:
         if kwargs.get("evaluations"):

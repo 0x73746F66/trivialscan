@@ -48,11 +48,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -116,11 +116,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -184,11 +184,11 @@ evaluations:
             - M0916
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -242,15 +242,16 @@ evaluations:
             - M0954
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.8
             - 6.5.10
             - 8.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.2.1
             - 6.2.4
+            - 11.6.1
     references:
       - name: RFC 8659 - DNS Certification Authority Authorization (CAA) Resource Record
         url: https://datatracker.ietf.org/doc/html/rfc8659
@@ -303,15 +304,16 @@ evaluations:
             - M0954
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.8
             - 6.5.10
             - 8.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.2.1
             - 6.2.4
+            - 11.6.1
     references:
       - name: RFC 8659 - DNS Certification Authority Authorization (CAA) Resource Record
         url: https://datatracker.ietf.org/doc/html/rfc8659
@@ -365,15 +367,16 @@ evaluations:
             - M0954
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.8
             - 6.5.10
             - 8.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.2.1
             - 6.2.4
+            - 11.6.1
     references:
       - name: ICANN
         url: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
@@ -427,15 +430,16 @@ evaluations:
             - M0954
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.8
             - 6.5.10
             - 8.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.2.1
             - 6.2.4
+            - 11.6.1
     references:
       - name: ICANN
         url: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
@@ -493,15 +497,16 @@ evaluations:
             - M0954
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.8
             - 6.5.10
             - 8.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.2.1
             - 6.2.4
+            - 11.6.1
     references:
       - name: ICANN
         url: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
@@ -563,15 +568,16 @@ evaluations:
             - M0954
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.8
             - 6.5.10
             - 8.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.2.1
             - 6.2.4
+            - 11.6.1
     references:
       - name: Cambridge University Information Services
         url: https://www.dns.cam.ac.uk/news/2020-01-09-sha-mbles.html
@@ -637,11 +643,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -700,11 +706,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -775,10 +781,10 @@ evaluations:
             - M1054
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 4.1
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 1.2.6
             - 2.2.4
@@ -850,10 +856,10 @@ evaluations:
             - M0916
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 4.1
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 1.2.6
             - 2.2.4
@@ -928,10 +934,10 @@ evaluations:
             - M0916
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 4.1
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 1.2.6
             - 2.2.4
@@ -999,10 +1005,10 @@ evaluations:
             - M0916
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 4.1
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 1.2.6
             - 2.2.4
@@ -1068,10 +1074,10 @@ evaluations:
             - M0916
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 4.1
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 1.2.6
             - 2.2.4
@@ -1138,10 +1144,10 @@ evaluations:
             - M0916
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 4.1
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 1.2.6
             - 2.2.4
@@ -1208,10 +1214,10 @@ evaluations:
             - M0916
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 4.1
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 1.2.6
             - 2.2.4
@@ -1278,10 +1284,10 @@ evaluations:
             - M0916
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 4.1
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 1.2.6
             - 2.2.4
@@ -1346,10 +1352,10 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 4.1
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 1.2.6
             - 2.2.4
@@ -1421,11 +1427,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -1501,11 +1507,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -1582,11 +1588,11 @@ evaluations:
             - M0916
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -1663,11 +1669,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -1748,12 +1754,12 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 5.2
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 3.7.5
             - 5.2.2
@@ -1850,10 +1856,10 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 4.1
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 1.2.6
             - 2.2.4
@@ -1936,11 +1942,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 2.2.7
             - 3.3.2
@@ -2039,10 +2045,10 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 4.1
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 1.2.6
             - 2.2.4
@@ -2117,11 +2123,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -2192,11 +2198,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -2237,11 +2243,11 @@ evaluations:
             - M0954
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -2319,11 +2325,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -2378,11 +2384,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -2449,11 +2455,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -2516,11 +2522,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -2583,11 +2589,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -2650,11 +2656,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -2717,11 +2723,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -2784,11 +2790,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -2851,11 +2857,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -2918,11 +2924,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -2985,11 +2991,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3052,11 +3058,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3119,11 +3125,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3186,11 +3192,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3253,11 +3259,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3320,11 +3326,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3387,11 +3393,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3454,11 +3460,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3521,11 +3527,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3588,11 +3594,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3655,11 +3661,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3722,11 +3728,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3789,11 +3795,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3848,11 +3854,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3917,11 +3923,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -3983,11 +3989,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -4062,11 +4068,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -4121,11 +4127,11 @@ evaluations:
             - M1054
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -4182,11 +4188,11 @@ evaluations:
             - M1054
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -4234,11 +4240,11 @@ evaluations:
             - M1054
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -4281,11 +4287,11 @@ evaluations:
             - M1054
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -4328,11 +4334,11 @@ evaluations:
             - M1054
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -4388,11 +4394,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -4435,11 +4441,11 @@ evaluations:
             - M1054
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -4458,11 +4464,11 @@ evaluations:
       If either the client Certificate or TLS server is misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -4511,11 +4517,11 @@ evaluations:
             - M0813
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -4561,11 +4567,11 @@ evaluations:
             - M1054
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -4590,11 +4596,11 @@ evaluations:
       If a connection is established and the TLS server was misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 3.5
             - 6.5.3
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 4.2.1
             - 6.2.4
@@ -4659,11 +4665,11 @@ evaluations:
             - M0916
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -4719,11 +4725,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -4779,11 +4785,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -4839,11 +4845,11 @@ evaluations:
             - M1020
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -4865,14 +4871,14 @@ evaluations:
       TODO
     references:
     anotate_results:
-      - result_value: False
+      - result_value: True
         result_level: pass
         display_as: Good Configuration
-        score: 80
-      - result_value: True
+        score: 0
+      - result_value: False
         result_level: fail
         display_as: Misconfigured
-        score: -200
+        score: 0
 
   - key: nist
     group: compliance
@@ -4881,14 +4887,14 @@ evaluations:
       TODO
     references:
     anotate_results:
-      - result_value: False
+      - result_value: True
         result_level: pass
         display_as: Good Configuration
-        score: 80
-      - result_value: True
+        score: 0
+      - result_value: False
         result_level: fail
         display_as: Misconfigured
-        score: -200
+        score: 0
 
   - key: pci_dss_3_2
     group: compliance
@@ -4897,14 +4903,14 @@ evaluations:
       TODO
     references:
     anotate_results:
-      - result_value: False
+      - result_value: True
         result_level: pass
         display_as: Good Configuration
-        score: 80
-      - result_value: True
+        score: 0
+      - result_value: False
         result_level: fail
         display_as: Misconfigured
-        score: -200
+        score: 0
 
   - key: pci_dss_4_0
     group: compliance
@@ -4913,14 +4919,14 @@ evaluations:
       TODO
     references:
     anotate_results:
-      - result_value: False
+      - result_value: True
         result_level: pass
         display_as: Good Configuration
-        score: 80
-      - result_value: True
+        score: 0
+      - result_value: False
         result_level: fail
         display_as: Misconfigured
-        score: -200
+        score: 0
 
   - key: header_block_clipboard
     group: transport
@@ -4949,11 +4955,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -4996,11 +5002,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -5042,11 +5048,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -5089,11 +5095,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -5136,11 +5142,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -5183,11 +5189,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -5229,11 +5235,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -5275,11 +5281,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -5321,11 +5327,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -5367,11 +5373,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -5413,11 +5419,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -5460,11 +5466,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -5507,11 +5513,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2
@@ -5553,11 +5559,11 @@ evaluations:
             - M1021
     compliance:
       "PCI DSS":
-        - version: 3.2.1
+        - version: "3.2.1"
           requirements:
             - 6.5.4
             - 6.6
-        - version: 4.0
+        - version: "4.0"
           requirements:
             - 6.4.1
             - 6.4.2

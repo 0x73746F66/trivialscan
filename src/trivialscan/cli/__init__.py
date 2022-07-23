@@ -1,62 +1,32 @@
 from rich.console import Console
 from rich.table import Table
-from pprint import pprint
-
-
-CLI_LEVEL_FAIL = "fail"
-CLI_LEVEL_WARN = "warn"
-CLI_LEVEL_PASS = "pass"  # nosec
-CLI_LEVEL_INFO = "info"
-CLI_LEVEL_FAIL_DEFAULT = "FAIL!"
-CLI_LEVEL_WARN_DEFAULT = "WARN!"
-CLI_LEVEL_PASS_DEFAULT = "PASS!"  # nosec
-CLI_LEVEL_INFO_DEFAULT = "INFO!"
-CLI_COLOR_PRIMARY = "cyan"
-CLI_COLOR_FAIL = "light_coral"
-CLI_COLOR_WARN = "khaki1"
-CLI_COLOR_PASS = "dark_sea_green2"  # nosec
-CLI_COLOR_INFO = "deep_sky_blue2"
-COLOR_MAP = {
-    CLI_LEVEL_FAIL: CLI_COLOR_FAIL,
-    CLI_LEVEL_WARN: CLI_COLOR_WARN,
-    CLI_LEVEL_PASS: CLI_COLOR_PASS,
-    CLI_LEVEL_INFO: CLI_COLOR_INFO,
-}
-ICON_MAP = {
-    CLI_LEVEL_FAIL: ":cross_mark:",
-    CLI_LEVEL_WARN: ":bell:",
-    CLI_LEVEL_PASS: ":white_heavy_check_mark:",
-    CLI_LEVEL_INFO: ":speech_balloon:",
-}
-DEFAULT_MAP = {
-    CLI_LEVEL_FAIL: CLI_LEVEL_FAIL_DEFAULT,
-    CLI_LEVEL_WARN: CLI_LEVEL_WARN_DEFAULT,
-    CLI_LEVEL_PASS: CLI_LEVEL_PASS_DEFAULT,
-    CLI_LEVEL_INFO: CLI_LEVEL_INFO_DEFAULT,
-}
+from .. import constants
 
 
 def outputln(message: str, con: None | Console = None, **kwargs):
     if not isinstance(con, Console):
         return
-    result_level = kwargs.get("result_level", CLI_LEVEL_INFO)
+    result_level = kwargs.get("result_level", constants.RESULT_LEVEL_INFO)
     if not result_level or result_level not in [
-        CLI_LEVEL_FAIL,
-        CLI_LEVEL_WARN,
-        CLI_LEVEL_PASS,
-        CLI_LEVEL_INFO,
+        constants.RESULT_LEVEL_FAIL,
+        constants.RESULT_LEVEL_WARN,
+        constants.RESULT_LEVEL_PASS,
+        constants.RESULT_LEVEL_INFO,
     ]:
         return
-    result_color = COLOR_MAP.get(
-        result_level, kwargs.get("result_color", CLI_COLOR_INFO)
+    result_color = constants.CLI_COLOR_MAP.get(
+        result_level, kwargs.get("result_color", constants.CLI_COLOR_INFO)
     )
     result_text = kwargs.get(
-        "result_text", DEFAULT_MAP.get(result_level, CLI_LEVEL_INFO_DEFAULT)
+        "result_text",
+        constants.DEFAULT_MAP.get(result_level, constants.RESULT_LEVEL_INFO_DEFAULT),
     )
     use_icons = kwargs.get("use_icons", False)
     result_icon = ""
     if use_icons:
-        result_icon = kwargs.get("result_icon", ICON_MAP.get(result_level, ""))
+        result_icon = kwargs.get(
+            "result_icon", constants.CLI_ICON_MAP.get(result_level, "")
+        )
     aside = kwargs.get("aside", "")
     if kwargs.get("hostname"):
         if kwargs.get("port"):
@@ -86,16 +56,16 @@ def _outputln(message: str, level: str, con: None | Console = None, **kwargs):
 
 
 def infoln(message: str, con: None | Console = None, **kwargs):
-    _outputln(message=message, level=CLI_LEVEL_INFO, con=con, **kwargs)
+    _outputln(message=message, level=constants.RESULT_LEVEL_INFO, con=con, **kwargs)
 
 
 def failln(message: str, con: None | Console = None, **kwargs):
-    _outputln(message=message, level=CLI_LEVEL_FAIL, con=con, **kwargs)
+    _outputln(message=message, level=constants.RESULT_LEVEL_FAIL, con=con, **kwargs)
 
 
 def passln(message: str, con: None | Console = None, **kwargs):
-    _outputln(message=message, level=CLI_LEVEL_PASS, con=con, **kwargs)
+    _outputln(message=message, level=constants.RESULT_LEVEL_PASS, con=con, **kwargs)
 
 
 def warnln(message: str, con: None | Console = None, **kwargs):
-    _outputln(message=message, level=CLI_LEVEL_WARN, con=con, **kwargs)
+    _outputln(message=message, level=constants.RESULT_LEVEL_WARN, con=con, **kwargs)
