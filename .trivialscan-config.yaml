@@ -16,18 +16,18 @@ outputs:
   - type: console
     use_icons: False
   - type: json
-    path: .development/results/{date_iso8601}.json
-  - type: json
-    path: .development/results/{date_year}-{date_month}-{date_day}.json
-  - type: json
-    path: .development/results/all.json
-    when: final
-  - type: json
     path: .development/results/{hostname}_{port}.json
     when: per_host
   - type: json
     path: .development/results/{hostname}_{port}_{sha1_fingerprint}.json
     when: per_certificate
+  # - type: json
+  #   path: .development/results/{date_iso8601}.json
+  # - type: json
+  #   path: .development/results/{date_year}-{date_month}-{date_day}.json
+  # - type: json
+  #   path: .development/results/all.json
+  #   when: final
 
 "PCI DSS 3.2.1":
   "6.5.4": Insecure communications

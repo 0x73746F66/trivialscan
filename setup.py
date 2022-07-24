@@ -56,6 +56,7 @@ setup(
     },
     classifiers=[
         "Operating System :: OS Independent",
+        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
@@ -68,7 +69,7 @@ setup(
     },
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-    python_requires=">=3.10",
+    python_requires=">=3.9",
     options={"bdist_wheel": {"universal": "1"}},
     long_description="""
 # Trivial Scanner

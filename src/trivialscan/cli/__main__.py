@@ -18,7 +18,7 @@ __version__ = "3.0.0"
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
 APP_BANNER = text2art("trivialscan", font="tarty4")
 
-assert sys.version_info >= (3, 10), "Requires Python 3.10 or newer"
+assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 console = Console()
 logger = logging.getLogger(__name__)
 cli = argparse.ArgumentParser(

@@ -20,7 +20,7 @@ from .outputs import checkpoint
 
 __module__ = "trivialscan"
 
-assert sys.version_info >= (3, 10), "Requires Python 3.9 or newer"
+assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 logger = logging.getLogger(__name__)
 
 
@@ -68,7 +68,8 @@ class Trivialscan:
                 if self._show_probe:
                     cli.outputln(
                         "Protocol SSL/TLS",
-                        aside="core",
+                        hostname=hostname,
+                        port=port,
                         result_text="PROBE",
                         result_icon=":globe_with_meridians:",
                         con=self._console,
@@ -133,7 +134,8 @@ class Trivialscan:
         if self._show_probe:
             cli.outputln(
                 "Protocol: HTTP/1 HTTP/1.1",
-                aside="core",
+                hostname=self._transport.store.tls_state.hostname,
+                port=self._transport.store.tls_state.port,
                 result_text="PROBE",
                 result_icon=":globe_with_meridians:",
                 con=self._console,
@@ -448,7 +450,8 @@ class Trivialscan:
                 if self._show_probe and task.probe_info:
                     cli.outputln(
                         task.probe_info,
-                        aside="core",
+                        hostname=self._transport.store.tls_state.hostname,
+                        port=self._transport.store.tls_state.port,
                         result_text="PROBE",
                         result_icon=":globe_with_meridians:",
                         con=self._console,
@@ -475,7 +478,7 @@ class Trivialscan:
                     continue
                 self._transport.store.evaluations.append(evaluation_result)
                 cli.outputln(
-                    f"[{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
+                    f"[bold][{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}][/bold] {evaluation_result.name}",
                     bold_result=True,
                     aside=f"SHA1:{cert.sha1_fingerprint} {self._transport.store.tls_state.hostname}:{self._transport.store.tls_state.port}",
                     con=self._console,
@@ -514,7 +517,8 @@ class Trivialscan:
                 if self._show_probe and task.probe_info:
                     cli.outputln(
                         task.probe_info,
-                        aside="core",
+                        hostname=self._transport.store.tls_state.hostname,
+                        port=self._transport.store.tls_state.port,
                         result_text="PROBE",
                         result_icon=":globe_with_meridians:",
                         con=self._console,
@@ -540,7 +544,7 @@ class Trivialscan:
                     continue
                 self._transport.store.evaluations.append(evaluation_result)
                 cli.outputln(
-                    f"[{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
+                    f"[bold][{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}][/bold] {evaluation_result.name}",
                     bold_result=True,
                     hostname=self._transport.store.tls_state.hostname,
                     port=self._transport.store.tls_state.port,
@@ -580,7 +584,8 @@ class Trivialscan:
             if self._show_probe and task.probe_info:
                 cli.outputln(
                     task.probe_info,
-                    aside="core",
+                    hostname=self._transport.store.tls_state.hostname,
+                    port=self._transport.store.tls_state.port,
                     result_text="PROBE",
                     result_icon=":globe_with_meridians:",
                     con=self._console,
@@ -606,7 +611,7 @@ class Trivialscan:
                 continue
             self._transport.store.evaluations.append(evaluation_result)
             cli.outputln(
-                f"[{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
+                f"[bold][{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}][/bold] {evaluation_result.name}",
                 bold_result=True,
                 hostname=self._transport.store.tls_state.hostname,
                 port=self._transport.store.tls_state.port,

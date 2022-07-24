@@ -10,11 +10,10 @@ from .. import constants, cli, trivialscan
 from ..util import camel_to_snake
 from ..outputs.json import save_to, save_partial
 
-
 __module__ = "trivialscan.cli.scan"
 APP_BANNER = text2art("trivialscan", font="tarty4")
 
-assert sys.version_info >= (3, 10), "Requires Python 3.10 or newer"
+assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 console = Console()
 logger = logging.getLogger(__name__)
 
@@ -333,9 +332,13 @@ def scan(config: dict, **flags):
     )
     if use_console:
         if not hide_banner:
+            from .__main__ import __version__
+
             console.print(
-                f"""[bold][{constants.CLI_COLOR_PRIMARY}]{APP_BANNER}[/{constants.CLI_COLOR_PRIMARY}]
-        [{constants.CLI_COLOR_PASS}]SUCCESS[/{constants.CLI_COLOR_PASS}] [{constants.CLI_COLOR_WARN}]ISSUE[/{constants.CLI_COLOR_WARN}] [{constants.CLI_COLOR_FAIL}]VULNERABLE[/{constants.CLI_COLOR_FAIL}][/bold]"""
+                f"[bold][{constants.CLI_COLOR_PRIMARY}]{APP_BANNER}[/{constants.CLI_COLOR_PRIMARY}][/bold]"
+            )
+            console.print(
+                f"{__version__}\t\t[bold][{constants.CLI_COLOR_PASS}]SUCCESS[/{constants.CLI_COLOR_PASS}] [{constants.CLI_COLOR_WARN}]ISSUE[/{constants.CLI_COLOR_WARN}] [{constants.CLI_COLOR_FAIL}]VULNERABLE[/{constants.CLI_COLOR_FAIL}] [{constants.CLI_COLOR_INFO}]INFO[/{constants.CLI_COLOR_INFO}] [{constants.CLI_COLOR_PRIMARY}]RESULT[/{constants.CLI_COLOR_PRIMARY}][/bold]"
             )
     cli.outputln(
         f"Evaluating {num_targets} domain{'s' if num_targets >1 else ''}",
