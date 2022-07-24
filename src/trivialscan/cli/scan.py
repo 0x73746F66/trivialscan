@@ -22,6 +22,10 @@ logger = logging.getLogger(__name__)
 def wrap_trivialscan(
     queue_in, queue_out, progress_console: Console = None, config: dict = None
 ) -> None:
+    use_icons = any(
+        n.get("type") == "console" and n.get("use_icons")
+        for n in config.get("outputs", [])
+    )
     for target in iter(queue_in.get, None):
         try:
             transport = trivialscan(
@@ -35,7 +39,7 @@ def wrap_trivialscan(
                 port=transport.store.tls_state.port,
                 result_text="DONE!",
                 con=progress_console,
-                use_icons=config["defaults"].get("use_icons", False),
+                use_icons=use_icons,
             )
             data = transport.store.to_dict()
             log_files = save_partial(
@@ -56,7 +60,7 @@ def wrap_trivialscan(
                     result_text="SAVED",
                     result_icon=":floppy_disk:",
                     con=progress_console,
-                    use_icons=config["defaults"].get("use_icons", False),
+                    use_icons=use_icons,
                 )
             for cert in transport.store.tls_state.certificates:
                 log_files = save_partial(
@@ -98,7 +102,7 @@ def wrap_trivialscan(
                         result_text="SAVED",
                         result_icon=":floppy_disk:",
                         con=progress_console,
-                        use_icons=config["defaults"].get("use_icons", False),
+                        use_icons=use_icons,
                     )
             queue_out.put(data)
 
@@ -118,6 +122,10 @@ def wrap_trivialscan(
 
 
 def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> list:
+    use_icons = any(
+        n.get("type") == "console" and n.get("use_icons")
+        for n in config.get("outputs", [])
+    )
     queries = []
     progress = Progress(
         TextColumn(
@@ -160,7 +168,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     port=transport.store.tls_state.port,
                     result_text="DONE!",
                     con=progress.console if use_console else None,
-                    use_icons=config["defaults"].get("use_icons", False),
+                    use_icons=use_icons,
                 )
                 data = transport.store.to_dict()
 
@@ -175,7 +183,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
                     con=console if use_console else None,
-                    use_icons=config["defaults"].get("use_icons", False),
+                    use_icons=use_icons,
                 )
                 data = transport.store.to_dict()
 
@@ -205,7 +213,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 result_text="SAVED",
                 result_icon=":floppy_disk:",
                 con=console if use_console else None,
-                use_icons=config["defaults"].get("use_icons", False),
+                use_icons=use_icons,
             )
         for cert in transport.store.tls_state.certificates:
             log_files = save_partial(
@@ -247,7 +255,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     result_text="SAVED",
                     result_icon=":floppy_disk:",
                     con=console if use_console else None,
-                    use_icons=config["defaults"].get("use_icons", False),
+                    use_icons=use_icons,
                 )
 
     return queries
@@ -319,6 +327,10 @@ def scan(config: dict, **flags):
         any(n.get("type") == "console" for n in config.get("outputs", []))
         and not no_stdout
     )
+    use_icons = any(
+        n.get("type") == "console" and n.get("use_icons")
+        for n in config.get("outputs", [])
+    )
     if use_console:
         if not hide_banner:
             console.print(
@@ -329,7 +341,7 @@ def scan(config: dict, **flags):
         f"Evaluating {num_targets} domain{'s' if num_targets >1 else ''}",
         aside="core",
         con=console if use_console else None,
-        use_icons=config["defaults"].get("use_icons", False),
+        use_icons=use_icons,
     )
     if synchronous_only or num_targets == 1:
         queries = run_seq(config, not hide_progress_bars, use_console)
@@ -344,7 +356,7 @@ def scan(config: dict, **flags):
         aside="core",
         result_text="TOTAL",
         con=console if use_console else None,
-        use_icons=config["defaults"].get("use_icons", False),
+        use_icons=use_icons,
     )
     for result in queries:
         if result.get("error"):
@@ -353,7 +365,7 @@ def scan(config: dict, **flags):
                 msg,
                 aside=err,
                 con=console if use_console else None,
-                use_icons=config["defaults"].get("use_icons", False),
+                use_icons=use_icons,
             )
             if not use_console and log_level >= logging.ERROR:
                 print(err)
@@ -365,6 +377,10 @@ def save_final(config, flags, queries, execution_duration_seconds, use_console):
         for n in config.get("outputs", [])
         if n.get("type") == "json" and n.get("when", "final") == "final"
     ]
+    use_icons = any(
+        n.get("type") == "console" and n.get("use_icons")
+        for n in config.get("outputs", [])
+    )
     if json_output:
         for json_file in json_output:
             json_path = save_to(
@@ -388,5 +404,5 @@ def save_final(config, flags, queries, execution_duration_seconds, use_console):
                 result_text="SAVED",
                 result_icon=":floppy_disk:",
                 con=console if use_console else None,
-                use_icons=config["defaults"].get("use_icons", False),
+                use_icons=use_icons,
             )

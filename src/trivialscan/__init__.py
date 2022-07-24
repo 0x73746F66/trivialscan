@@ -20,18 +20,26 @@ from .outputs import checkpoint
 
 __module__ = "trivialscan"
 
-assert sys.version_info >= (3, 10), "Requires Python 3.10 or newer"
+assert sys.version_info >= (3, 10), "Requires Python 3.9 or newer"
 logger = logging.getLogger(__name__)
 
 
 class Trivialscan:
     _checkpoints: set = set()
     _console: Console = None
+    _transport: TLSTransport = None
     config: dict = get_config(custom_values=load_config())
 
     def __init__(self, console: Console = None, **kwargs) -> None:
         self.config = kwargs.get("config", self.config)
         self._console = console
+        self._use_icons = any(
+            n.get("type") == "console" and n.get("use_icons")
+            for n in self.config.get("outputs", [])
+        )
+        self._show_probe = not self.config["defaults"].get("hide_probe_info", False)
+        self._use_cp = self.config["defaults"].get("checkpoint")
+        self._resume_cp = self.config["defaults"].get("resume_checkpoint")
 
     def tls_probe(
         self,
@@ -39,55 +47,54 @@ class Trivialscan:
         port: int = 443,
         client_certificate: str = None,
     ) -> TLSTransport:
-        show_probe = not self.config["defaults"].get("hide_probe_info", False)
-        use_cp = self.config["defaults"].get("checkpoint")
-        resume_cp = self.config["defaults"].get("resume_checkpoint")
         checkpoint1 = f"resume{hostname}{port}".encode("utf-8")
         checkpoint2 = f"resumedata{hostname}{port}".encode("utf-8")
         try:
-            if resume_cp and checkpoint.unfinished(checkpoint1):
+            if self._resume_cp and checkpoint.unfinished(checkpoint1):
                 cli.outputln(
                     "Attempting to resume last scan from saved TLS probe checkpoint",
                     hostname=hostname,
                     port=port,
                     con=self._console,
-                    use_icons=self.config["defaults"].get("use_icons", False),
+                    use_icons=self._use_icons,
                 )
-                transport: TLSTransport = checkpoint.resume(checkpoint1)
-                transport.store.tls_state.from_dict(checkpoint.resume(checkpoint2))
+                self._transport = checkpoint.resume(checkpoint1)
+                self._transport.store.tls_state.from_dict(
+                    checkpoint.resume(checkpoint2)
+                )
                 self._checkpoints.add(checkpoint1)
                 self._checkpoints.add(checkpoint2)
             else:
-                if show_probe:
+                if self._show_probe:
                     cli.outputln(
                         "Protocol SSL/TLS",
                         aside="core",
                         result_text="PROBE",
                         result_icon=":globe_with_meridians:",
                         con=self._console,
-                        use_icons=self.config["defaults"].get("use_icons", False),
+                        use_icons=self._use_icons,
                     )
-                transport = InsecureTransport(hostname, port)
+                self._transport = InsecureTransport(hostname, port)
                 if isinstance(client_certificate, str):
-                    transport.pre_client_authentication_check(
+                    self._transport.pre_client_authentication_check(
                         client_pem_path=client_certificate,
                         tmp_path_prefix=self.config["defaults"].get(
                             "tmp_path_prefix", "/tmp"
                         ),
                     )
-                transport.connect_insecure(
+                self._transport.connect_insecure(
                     cafiles=self.config["defaults"].get("cafiles"),
                     use_sni=self.config["defaults"].get("use_sni"),
                 )
-                if use_cp:
-                    checkpoint.set(checkpoint1, transport)
+                if self._use_cp:
+                    checkpoint.set(checkpoint1, self._transport)
                     certs = []
-                    for cert in transport.store.tls_state.certificates:
+                    for cert in self._transport.store.tls_state.certificates:
                         if isinstance(cert, LeafCertificate):
-                            cert.set_transport(transport)
+                            cert.set_transport(self._transport)
                         certs.append(cert)
-                    transport.store.tls_state.certificates = certs
-                    checkpoint.set(checkpoint2, transport.store.to_dict())
+                    self._transport.store.tls_state.certificates = certs
+                    checkpoint.set(checkpoint2, self._transport.store.to_dict())
                     self._checkpoints.add(checkpoint1)
                     self._checkpoints.add(checkpoint2)
         except TransportError as err:
@@ -97,18 +104,16 @@ class Trivialscan:
                 hostname=hostname,
                 port=port,
                 con=self._console,
-                use_icons=self.config["defaults"].get("use_icons", False),
+                use_icons=self._use_icons,
             )
-        if transport.store.tls_state.negotiated_protocol:
+        if self._transport.store.tls_state.negotiated_protocol:
             cli.outputln(
-                f"Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
-                hostname=transport.store.tls_state.hostname,
-                port=transport.store.tls_state.port,
+                f"Negotiated {self._transport.store.tls_state.negotiated_protocol} {self._transport.store.tls_state.peer_address}",
+                hostname=self._transport.store.tls_state.hostname,
+                port=self._transport.store.tls_state.port,
                 con=self._console,
-                use_icons=self.config["defaults"].get("use_icons", False),
+                use_icons=self._use_icons,
             )
-
-        return transport
 
     def http_probe(
         self,
@@ -118,20 +123,21 @@ class Trivialscan:
         client_certificate: str = None,
         tmp_path_prefix: str = config["defaults"].get("tmp_path_prefix", "/tmp"),
     ) -> HTTPTransport:
-        show_probe = not self.config["defaults"].get("hide_probe_info", False)
+        if not isinstance(self._transport, TLSTransport):
+            raise RuntimeError
         transport = HTTPTransport(
             hostname=hostname,
             port=port,
             tmp_path_prefix=tmp_path_prefix,
         )
-        if show_probe:
+        if self._show_probe:
             cli.outputln(
                 "Protocol: HTTP/1 HTTP/1.1",
                 aside="core",
                 result_text="PROBE",
                 result_icon=":globe_with_meridians:",
                 con=self._console,
-                use_icons=self.config["defaults"].get("use_icons", False),
+                use_icons=self._use_icons,
             )
         if transport.do_request(
             http_request_path=request_path,
@@ -143,8 +149,10 @@ class Trivialscan:
                 hostname=hostname,
                 port=port,
                 con=self._console,
-                use_icons=self.config["defaults"].get("use_icons", False),
+                use_icons=self._use_icons,
             )
+        if transport.state:
+            self._transport.store.http_states.append(transport.state)
 
         return transport
 
@@ -155,33 +163,24 @@ class Trivialscan:
             "tmp_path_prefix": self.config["defaults"].get("tmp_path_prefix"),
         }
 
-    def execute_evaluations(self, transport: TLSTransport):
+    def execute_evaluations(self):
+        if not isinstance(self._transport, TLSTransport):
+            raise RuntimeError
         # certs are passed to the evaluation method. Having them grouped is more readable
-        transport = self.evaluate_certificates(
-            transport=transport,
-        )
-        transport = self.evaluate_transports(
-            transport=transport,
-        )
+        self.evaluate_certificates()
+        self.evaluate_transports()
         # specifics are done, compliance checks are last to be evaluated, do the rest now
-        transport = self.evaluate_generic(
-            "tls_negotiation",
-            transport=transport,
-        )
+        self.evaluate_generic("tls_negotiation")
         # compliance checks are last to be evaluated
-        transport = self.evaluate_generic(
-            "compliance",
-            transport=transport,
-        )
+        self.evaluate_generic("compliance")
         for cp in self._checkpoints:
             checkpoint.clear(cp)
 
-        return transport
+        return self._transport
 
     def _evaluatation_module(
         self,
         evaluation: dict,
-        transport: TLSTransport,
         **kwargs,
     ) -> BaseEvaluationTask | None:
         if any(
@@ -205,16 +204,18 @@ class Trivialscan:
         except ModuleNotFoundError:
             cli.outputln(
                 f'{evaluation["group"]}.{evaluation["key"]}',
-                hostname=transport.store.tls_state.hostname,
-                port=transport.store.tls_state.port,
+                hostname=self._transport.store.tls_state.hostname,
+                port=self._transport.store.tls_state.port,
                 result_color="magenta",
                 result_text="ModuleNotFoundError",
                 con=self._console,
-                use_icons=self.config["defaults"].get("use_icons", False),
+                use_icons=self._use_icons,
             )
             return None
 
-        return _cls(transport, evaluation, self._shared_config_for_tasks(), **kwargs)
+        return _cls(
+            self._transport, evaluation, self._shared_config_for_tasks(), **kwargs
+        )
 
     def _result_data(
         self, result_value: bool | str | None, task: BaseEvaluationTask, **kwargs
@@ -406,112 +407,100 @@ class Trivialscan:
 
         return result
 
-    def evaluate_certificates(
-        self,
-        transport: TLSTransport,
-    ):
-        show_probe = not self.config["defaults"].get("hide_probe_info", False)
-        use_cp = self.config["defaults"].get("checkpoint")
-        resume_cp = self.config["defaults"].get("resume_checkpoint")
-        checkpoint_name = f"certificates{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
+    def evaluate_certificates(self):
+        if not isinstance(self._transport, TLSTransport):
+            raise RuntimeError
+        checkpoint_name = f"certificates{self._transport.store.tls_state.hostname}{self._transport.store.tls_state.port}".encode(
             "utf-8"
         )
-        if resume_cp and checkpoint.unfinished(checkpoint_name):
+        if self._resume_cp and checkpoint.unfinished(checkpoint_name):
             cli.outputln(
                 "Attempting to resume last scan from saved certificates checkpoint",
-                hostname=transport.store.tls_state.hostname,
-                port=transport.store.tls_state.port,
+                hostname=self._transport.store.tls_state.hostname,
+                port=self._transport.store.tls_state.port,
                 con=self._console,
-                use_icons=self.config["defaults"].get("use_icons", False),
+                use_icons=self._use_icons,
             )
-            transport.store.evaluations = checkpoint.resume(checkpoint_name)
+            self._transport.store.evaluations = checkpoint.resume(checkpoint_name)
             self._checkpoints.add(checkpoint_name)
-        else:
-            for cert in transport.store.tls_state.certificates:
-                cert_data = {
-                    "certificate_subject": cert.subject or "",
-                    "sha1_fingerprint": cert.sha1_fingerprint,
-                    "subject_key_identifier": cert.subject_key_identifier,
-                    "authority_key_identifier": cert.authority_key_identifier,
-                }
-                cli.outputln(
-                    cert_data["certificate_subject"],
-                    aside=f"SHA1:{cert.sha1_fingerprint} {transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
-                    con=self._console,
-                    use_icons=self.config["defaults"].get("use_icons", False),
+            return
+        for cert in self._transport.store.tls_state.certificates:
+            cert_data = {
+                "certificate_subject": cert.subject or "",
+                "sha1_fingerprint": cert.sha1_fingerprint,
+                "subject_key_identifier": cert.subject_key_identifier,
+                "authority_key_identifier": cert.authority_key_identifier,
+            }
+            cli.outputln(
+                cert_data["certificate_subject"],
+                aside=f"SHA1:{cert.sha1_fingerprint} {self._transport.store.tls_state.hostname}:{self._transport.store.tls_state.port}",
+                con=self._console,
+                use_icons=self._use_icons,
+            )
+            for evaluation in self.config.get("evaluations", []):
+                if evaluation["group"] != "certificate":
+                    continue
+                task: BaseEvaluationTask = self._evaluatation_module(
+                    evaluation,
                 )
-                for evaluation in self.config.get("evaluations", []):
-                    if evaluation["group"] != "certificate":
-                        continue
-                    task: BaseEvaluationTask = self._evaluatation_module(
-                        evaluation,
-                        transport,
-                    )
-                    if not task:
-                        continue
-                    if show_probe and task.probe_info:
-                        cli.outputln(
-                            task.probe_info,
-                            aside="core",
-                            result_text="PROBE",
-                            result_icon=":globe_with_meridians:",
-                            con=self._console,
-                            use_icons=self.config["defaults"].get("use_icons", False),
-                        )
-                    result = None
-                    try:
-                        result = task.evaluate(cert)
-                        evaluation_result = self._result_data(result, task, **cert_data)
-                    except EvaluationNotRelevant:
-                        continue
-                    except NotImplementedError:
-                        evaluation_result = self._result_data(None, task, **cert_data)
-                        evaluation_result.result_color = "magenta"
-                        evaluation_result.result_text = "SKIP!"
-                    except TimeoutError:
-                        evaluation_result = self._result_data(None, task, **cert_data)
-                        evaluation_result.result_color = "magenta"
-                        evaluation_result.result_text = "SKIP!"
-                        evaluation_result.result_label = "Timeout"
-                    except NoLogEvaluation:
-                        evaluation_result = self._result_data(result, task, **cert_data)
-                        transport.store.evaluations.append(evaluation_result)
-                        continue
-                    transport.store.evaluations.append(evaluation_result)
+                if not task:
+                    continue
+                if self._show_probe and task.probe_info:
                     cli.outputln(
-                        f"[{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
-                        bold_result=True,
-                        aside=f"SHA1:{cert.sha1_fingerprint} {transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
+                        task.probe_info,
+                        aside="core",
+                        result_text="PROBE",
+                        result_icon=":globe_with_meridians:",
                         con=self._console,
-                        use_icons=self.config["defaults"].get("use_icons", False),
-                        **asdict(evaluation_result),
+                        use_icons=self._use_icons,
                     )
-            if use_cp:
-                checkpoint.set(checkpoint_name, transport.store.evaluations)
-                self._checkpoints.add(checkpoint_name)
+                result = None
+                try:
+                    result = task.evaluate(cert)
+                    evaluation_result = self._result_data(result, task, **cert_data)
+                except EvaluationNotRelevant:
+                    continue
+                except NotImplementedError:
+                    evaluation_result = self._result_data(None, task, **cert_data)
+                    evaluation_result.result_color = "magenta"
+                    evaluation_result.result_text = "SKIP!"
+                except TimeoutError:
+                    evaluation_result = self._result_data(None, task, **cert_data)
+                    evaluation_result.result_color = "magenta"
+                    evaluation_result.result_text = "SKIP!"
+                    evaluation_result.result_label = "Timeout"
+                except NoLogEvaluation:
+                    evaluation_result = self._result_data(result, task, **cert_data)
+                    self._transport.store.evaluations.append(evaluation_result)
+                    continue
+                self._transport.store.evaluations.append(evaluation_result)
+                cli.outputln(
+                    f"[{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
+                    bold_result=True,
+                    aside=f"SHA1:{cert.sha1_fingerprint} {self._transport.store.tls_state.hostname}:{self._transport.store.tls_state.port}",
+                    con=self._console,
+                    use_icons=self._use_icons,
+                    **asdict(evaluation_result),
+                )
+        if self._use_cp:
+            checkpoint.set(checkpoint_name, self._transport.store.evaluations)
+            self._checkpoints.add(checkpoint_name)
 
-        return transport
-
-    def evaluate_generic(
-        self,
-        group: str,
-        transport: TLSTransport,
-    ):
-        show_probe = not self.config["defaults"].get("hide_probe_info", False)
-        use_cp = self.config["defaults"].get("checkpoint")
-        resume_cp = self.config["defaults"].get("resume_checkpoint")
-        checkpoint_name = f"{group}{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
+    def evaluate_generic(self, group: str):
+        if not isinstance(self._transport, TLSTransport):
+            raise RuntimeError
+        checkpoint_name = f"{group}{self._transport.store.tls_state.hostname}{self._transport.store.tls_state.port}".encode(
             "utf-8"
         )
-        if resume_cp and checkpoint.unfinished(checkpoint_name):
+        if self._resume_cp and checkpoint.unfinished(checkpoint_name):
             cli.outputln(
                 f"Attempting to resume last scan from saved '{group}' checkpoint",
-                hostname=transport.store.tls_state.hostname,
-                port=transport.store.tls_state.port,
+                hostname=self._transport.store.tls_state.hostname,
+                port=self._transport.store.tls_state.port,
                 con=self._console,
-                use_icons=self.config["defaults"].get("use_icons", False),
+                use_icons=self._use_icons,
             )
-            transport.store.evaluations = checkpoint.resume(checkpoint_name)
+            self._transport.store.evaluations = checkpoint.resume(checkpoint_name)
             self._checkpoints.add(checkpoint_name)
         else:
             for evaluation in self.config.get("evaluations", []):
@@ -519,18 +508,17 @@ class Trivialscan:
                     continue
                 task = self._evaluatation_module(
                     evaluation,
-                    transport,
                 )
                 if not task:
                     continue
-                if show_probe and task.probe_info:
+                if self._show_probe and task.probe_info:
                     cli.outputln(
                         task.probe_info,
                         aside="core",
                         result_text="PROBE",
                         result_icon=":globe_with_meridians:",
                         con=self._console,
-                        use_icons=self.config["defaults"].get("use_icons", False),
+                        use_icons=self._use_icons,
                     )
                 try:
                     result = task.evaluate()
@@ -548,96 +536,87 @@ class Trivialscan:
                     evaluation_result.result_label = "Timeout"
                 except NoLogEvaluation:
                     evaluation_result = self._result_data(result, task)
-                    transport.store.evaluations.append(evaluation_result)
+                    self._transport.store.evaluations.append(evaluation_result)
                     continue
-                transport.store.evaluations.append(evaluation_result)
+                self._transport.store.evaluations.append(evaluation_result)
                 cli.outputln(
                     f"[{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
                     bold_result=True,
-                    hostname=transport.store.tls_state.hostname,
-                    port=transport.store.tls_state.port,
+                    hostname=self._transport.store.tls_state.hostname,
+                    port=self._transport.store.tls_state.port,
                     con=self._console,
-                    use_icons=self.config["defaults"].get("use_icons", False),
+                    use_icons=self._use_icons,
                     **asdict(evaluation_result),
                 )
-            if use_cp:
-                checkpoint.set(checkpoint_name, transport.store.evaluations)
+            if self._use_cp:
+                checkpoint.set(checkpoint_name, self._transport.store.evaluations)
                 self._checkpoints.add(checkpoint_name)
 
-        return transport
-
-    def evaluate_transports(
-        self,
-        transport: TLSTransport,
-    ):
-        show_probe = not self.config["defaults"].get("hide_probe_info", False)
-        use_cp = self.config["defaults"].get("checkpoint")
-        resume_cp = self.config["defaults"].get("resume_checkpoint")
-        checkpoint_name = f"transport{transport.store.tls_state.hostname}{transport.store.tls_state.port}".encode(
+    def evaluate_transports(self):
+        if not isinstance(self._transport, TLSTransport):
+            raise RuntimeError
+        checkpoint_name = f"transport{self._transport.store.tls_state.hostname}{self._transport.store.tls_state.port}".encode(
             "utf-8"
         )
-        if resume_cp and checkpoint.unfinished(checkpoint_name):
+        if self._resume_cp and checkpoint.unfinished(checkpoint_name):
             cli.outputln(
                 "Attempting to resume last scan from saved transport protoccol checkpoint",
-                hostname=transport.store.tls_state.hostname,
-                port=transport.store.tls_state.port,
+                hostname=self._transport.store.tls_state.hostname,
+                port=self._transport.store.tls_state.port,
                 con=self._console,
-                use_icons=self.config["defaults"].get("use_icons", False),
+                use_icons=self._use_icons,
             )
-            transport.store.evaluations = checkpoint.resume(checkpoint_name)
+            self._transport.store.evaluations = checkpoint.resume(checkpoint_name)
             self._checkpoints.add(checkpoint_name)
-        else:
-            for evaluation in self.config.get("evaluations", []):
-                if evaluation["group"] != "transport":
-                    continue
-                task = self._evaluatation_module(
-                    evaluation,
-                    transport,
-                )
-                if not task:
-                    continue
-                if show_probe and task.probe_info:
-                    cli.outputln(
-                        task.probe_info,
-                        aside="core",
-                        result_text="PROBE",
-                        result_icon=":globe_with_meridians:",
-                        con=self._console,
-                        use_icons=self.config["defaults"].get("use_icons", False),
-                    )
-                try:
-                    result = task.evaluate()
-                    evaluation_result = self._result_data(result, task)
-                except EvaluationNotRelevant:
-                    continue
-                except NotImplementedError:
-                    evaluation_result = self._result_data(None, task)
-                    evaluation_result.result_color = "magenta"
-                    evaluation_result.result_text = "SKIP!"
-                except TimeoutError:
-                    evaluation_result = self._result_data(None, task)
-                    evaluation_result.result_color = "magenta"
-                    evaluation_result.result_text = "SKIP!"
-                    evaluation_result.result_label = "Timeout"
-                except NoLogEvaluation:
-                    evaluation_result = self._result_data(result, task)
-                    transport.store.evaluations.append(evaluation_result)
-                    continue
-                transport.store.evaluations.append(evaluation_result)
+            return
+        for evaluation in self.config.get("evaluations", []):
+            if evaluation["group"] != "transport":
+                continue
+            task = self._evaluatation_module(
+                evaluation,
+            )
+            if not task:
+                continue
+            if self._show_probe and task.probe_info:
                 cli.outputln(
-                    f"[{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
-                    bold_result=True,
-                    hostname=transport.store.tls_state.hostname,
-                    port=transport.store.tls_state.port,
+                    task.probe_info,
+                    aside="core",
+                    result_text="PROBE",
+                    result_icon=":globe_with_meridians:",
                     con=self._console,
-                    use_icons=self.config["defaults"].get("use_icons", False),
-                    **asdict(evaluation_result),
+                    use_icons=self._use_icons,
                 )
-            if use_cp:
-                checkpoint.set(checkpoint_name, transport.store.evaluations)
-                self._checkpoints.add(checkpoint_name)
-
-        return transport
+            try:
+                result = task.evaluate()
+                evaluation_result = self._result_data(result, task)
+            except EvaluationNotRelevant:
+                continue
+            except NotImplementedError:
+                evaluation_result = self._result_data(None, task)
+                evaluation_result.result_color = "magenta"
+                evaluation_result.result_text = "SKIP!"
+            except TimeoutError:
+                evaluation_result = self._result_data(None, task)
+                evaluation_result.result_color = "magenta"
+                evaluation_result.result_text = "SKIP!"
+                evaluation_result.result_label = "Timeout"
+            except NoLogEvaluation:
+                evaluation_result = self._result_data(result, task)
+                self._transport.store.evaluations.append(evaluation_result)
+                continue
+            self._transport.store.evaluations.append(evaluation_result)
+            cli.outputln(
+                f"[{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}] {evaluation_result.name}",
+                bold_result=True,
+                hostname=self._transport.store.tls_state.hostname,
+                port=self._transport.store.tls_state.port,
+                con=self._console,
+                use_icons=self._use_icons,
+                **asdict(evaluation_result),
+            )
+        if self._use_cp:
+            checkpoint.set(checkpoint_name, self._transport.store.evaluations)
+            self._checkpoints.add(checkpoint_name)
 
 
 def trivialscan(
@@ -653,17 +632,15 @@ def trivialscan(
         scanner = Trivialscan(console=console, config=config, **kwargs)
     else:
         scanner = Trivialscan(console=console, **kwargs)
-    transport = scanner.tls_probe(
+    scanner.tls_probe(
         hostname=hostname,
         port=port,
     )
     for request_path in http_request_paths:
-        response: HTTPTransport = scanner.http_probe(
+        scanner.http_probe(
             hostname=hostname,
             port=port,
             request_path=request_path,
             client_certificate=client_certificate,
         )
-        if response.state:
-            transport.store.http_states.append(response.state)
-    return scanner.execute_evaluations(transport)
+    return scanner.execute_evaluations()
