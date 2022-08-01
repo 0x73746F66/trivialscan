@@ -489,6 +489,7 @@ class TLSTransport:
 
 class HTTPTransport:
     _session: CachedSession
+    _response: Response
     state: HTTPState = None
     hostname: str = None
     port: int = 443
@@ -522,16 +523,16 @@ class HTTPTransport:
         if respect_robots and self._deny_robots(http_request_path):
             return False
 
-        response = self._do_request(
+        self._response = self._do_request(
             http_request_path,
             "GET",
             headers={"user-agent": "pypi.org/project/trivialscan"},
         )
-        if response:
+        if self._response:
             url = f"https://{self.hostname}:{self.port}{http_request_path}"
-            logger.info(f"{url} from cache {response.from_cache}")
-            logger.debug(response.text)
-            self.state = HTTPState(response)
+            logger.info(f"{url} from cache {self._response.from_cache}")
+            logger.debug(self._response.text)
+            self.state = HTTPState(self._response)
             return True
         return False
 
@@ -544,14 +545,14 @@ class HTTPTransport:
         response = self._do_request(
             "/robots.txt", "GET", headers={"user-agent": "pypi.org/project/trivialscan"}
         )
-        if response.status_code != 200:
+        if not response or response.status_code != 200:
             return False
-        return self._parse_robots_path(response.text, http_request_path)
+        return self._parse_robots_path(response, http_request_path)
 
-    def _parse_robots_path(self, contents: str, http_request_path: str) -> bool:
+    def _parse_robots_path(self, response: Response, http_request_path: str) -> bool:
         track = False
         trail_slash = http_request_path[len(http_request_path) - 1 :] == "/"
-        for line in contents.splitlines():
+        for line in response.text.splitlines():
             trim_path = http_request_path[: len(http_request_path) - 1].strip()
             if track:
                 if not line.startswith("Disallow:"):
