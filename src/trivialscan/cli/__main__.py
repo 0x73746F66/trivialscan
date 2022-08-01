@@ -111,6 +111,12 @@ def main():
         help="All unnamed arguments are hosts (and ports) targets to test. ~$ trivial scan google.com:443 github.io owasp.org:80",
     )
     scan_parser.add_argument(
+        "-P",
+        "--project-name",
+        help="",
+        dest="project_name",
+    )
+    scan_parser.add_argument(
         "-c",
         "--cafiles",
         help="path to PEM encoded CA bundle file, url or file path accepted",
@@ -248,6 +254,8 @@ def _scan_config(cli_args: dict, filename: str | None) -> dict:
         custom = load_config()
 
     config = get_config(custom_values=custom)
+    if cli_args.get("project_name"):
+        config["project_name"] = cli_args.get("project_name")
     config.setdefault("outputs", [])
     config["defaults"]["cafiles"] = cli_args.get(
         "cafiles", config["defaults"]["cafiles"]

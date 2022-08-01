@@ -51,6 +51,7 @@ def wrap_trivialscan(
                 peer_address=transport.store.tls_state.peer_address,
                 negotiated_protocol=transport.store.tls_state.negotiated_protocol,
                 negotiated_cipher=transport.store.tls_state.negotiated_cipher,
+                project_name=config.get("project_name"),
             )
             for log_file in log_files:
                 cli.outputln(
@@ -93,6 +94,7 @@ def wrap_trivialscan(
                     validation_level=cert.validation_level,
                     not_before=cert.not_before,
                     not_after=cert.not_after,
+                    project_name=config.get("project_name"),
                 )
                 for log_file in log_files:
                     cli.outputln(
@@ -204,6 +206,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
             peer_address=transport.store.tls_state.peer_address,
             negotiated_protocol=transport.store.tls_state.negotiated_protocol,
             negotiated_cipher=transport.store.tls_state.negotiated_cipher,
+            project_name=config.get("project_name"),
         )
         for log_file in log_files:
             cli.outputln(
@@ -246,6 +249,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 validation_level=cert.validation_level,
                 not_before=cert.not_before,
                 not_after=cert.not_after,
+                project_name=config.get("project_name"),
             )
             for log_file in log_files:
                 cli.outputln(
@@ -400,6 +404,7 @@ def save_final(config, flags, queries, execution_duration_seconds, use_console):
                 },
                 track_changes=flags.get("track_changes", False),
                 tracking_template_filename=flags.get("previous_report"),
+                project_name=config.get("project_name"),
             )
             cli.outputln(
                 json_path,

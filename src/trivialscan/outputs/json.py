@@ -40,7 +40,7 @@ def save_to(
         ),
         encoding="utf8",
     )
-    # return json_path.absolute().as_posix()
+
     return json_path.as_posix()
 
 

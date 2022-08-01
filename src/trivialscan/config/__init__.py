@@ -187,6 +187,10 @@ def _validate_config(combined_config: dict) -> dict:
 def combine_configs(user_conf: dict, custom_conf: dict) -> dict:
     default_values = default_config()
     ret_config = {
+        "project_name": custom_conf.get(
+            "project_name",
+            user_conf.get("project_name", default_values.get("project_name", None)),
+        ),
         "defaults": {
             **default_values.get("defaults", {}),
             **user_conf.get("defaults", {}),
