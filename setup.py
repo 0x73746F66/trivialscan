@@ -39,7 +39,8 @@ art
 keyring==23.6.0
 deepdiff
 pycryptodome==3.15.0
-beautifulsoup4==4.11.1""")).readlines()
+beautifulsoup4==4.11.1
+pynput==1.7.6""")).readlines()
 
 
 setup(

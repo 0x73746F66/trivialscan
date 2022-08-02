@@ -1,3 +1,4 @@
+import signal
 import sys
 import logging
 from multiprocessing import Pool, cpu_count, Queue
@@ -6,6 +7,7 @@ from rich.console import Console
 from rich.table import Column
 from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColumn
 from art import text2art
+from pynput.keyboard import Key, Listener
 from .. import constants, cli, trivialscan
 from ..util import camel_to_snake
 from ..outputs.json import save_to, save_partial
@@ -21,79 +23,39 @@ logger = logging.getLogger(__name__)
 def wrap_trivialscan(
     queue_in, queue_out, progress_console: Console = None, config: dict = None
 ) -> None:
+    handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGINT, handler)
     use_icons = any(
         n.get("type") == "console" and n.get("use_icons")
         for n in config.get("outputs", [])
     )
-    for target in iter(queue_in.get, None):
-        try:
-            transport = trivialscan(
-                console=progress_console,
-                config=config,
-                **target,
-            )
-            cli.outputln(
-                f"Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
-                hostname=transport.store.tls_state.hostname,
-                port=transport.store.tls_state.port,
-                result_text="DONE!",
-                con=progress_console,
-                use_icons=use_icons,
-            )
-            data = transport.store.to_dict()
-            log_files = save_partial(
-                config=config,
-                when="per_host",
-                data_type="host",
-                data=data,
-                hostname=transport.store.tls_state.hostname,
-                port=transport.store.tls_state.port,
-                peer_address=transport.store.tls_state.peer_address,
-                negotiated_protocol=transport.store.tls_state.negotiated_protocol,
-                negotiated_cipher=transport.store.tls_state.negotiated_cipher,
-                project_name=config.get("project_name"),
-            )
-            for log_file in log_files:
+    try:
+        for target in iter(queue_in.get, None):
+            try:
+                transport = trivialscan(
+                    console=progress_console,
+                    config=config,
+                    **target,
+                )
                 cli.outputln(
-                    log_file,
-                    aside="core",
-                    result_text="SAVED",
-                    result_icon=":floppy_disk:",
+                    f"Negotiated {transport.store.tls_state.negotiated_protocol} {transport.store.tls_state.peer_address}",
+                    hostname=transport.store.tls_state.hostname,
+                    port=transport.store.tls_state.port,
+                    result_text="DONE!",
                     con=progress_console,
                     use_icons=use_icons,
                 )
-            for cert in transport.store.tls_state.certificates:
+                data = transport.store.to_dict()
                 log_files = save_partial(
                     config=config,
-                    when="per_certificate",
-                    data_type="certificate",
-                    data={
-                        **cert.to_dict(),
-                        **{
-                            "evaluations": [
-                                e
-                                for e in transport.store.evaluations
-                                if e.group == "certificate"
-                                and e.metadata.get("sha1_fingerprint")
-                                == cert.sha1_fingerprint
-                            ]
-                        },
-                    },
+                    when="per_host",
+                    data_type=f"{transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
+                    data=data,
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
-                    certificate_type=camel_to_snake(type(cert).__name__),
-                    sha1_fingerprint=cert.sha1_fingerprint,
-                    md5_fingerprint=cert.md5_fingerprint,
-                    sha256_fingerprint=cert.sha256_fingerprint,
-                    serial_number_hex=cert.serial_number_hex,
-                    public_key_type=cert.public_key_type,
-                    public_key_size=cert.public_key_size,
-                    subject_key_identifier=cert.subject_key_identifier,
-                    spki_fingerprint=cert.spki_fingerprint,
-                    version=cert.version,
-                    validation_level=cert.validation_level,
-                    not_before=cert.not_before,
-                    not_after=cert.not_after,
+                    peer_address=transport.store.tls_state.peer_address,
+                    negotiated_protocol=transport.store.tls_state.negotiated_protocol,
+                    negotiated_cipher=transport.store.tls_state.negotiated_cipher,
                     project_name=config.get("project_name"),
                 )
                 for log_file in log_files:
@@ -105,21 +67,66 @@ def wrap_trivialscan(
                         con=progress_console,
                         use_icons=use_icons,
                     )
-            queue_out.put(data)
+                for cert in transport.store.tls_state.certificates:
+                    log_files = save_partial(
+                        config=config,
+                        when="per_certificate",
+                        data_type=cert.subject,
+                        data={
+                            **cert.to_dict(),
+                            **{
+                                "evaluations": [
+                                    e
+                                    for e in transport.store.evaluations
+                                    if e.group == "certificate"
+                                    and e.metadata.get("sha1_fingerprint")
+                                    == cert.sha1_fingerprint
+                                ]
+                            },
+                        },
+                        hostname=transport.store.tls_state.hostname,
+                        port=transport.store.tls_state.port,
+                        certificate_type=camel_to_snake(type(cert).__name__),
+                        sha1_fingerprint=cert.sha1_fingerprint,
+                        md5_fingerprint=cert.md5_fingerprint,
+                        sha256_fingerprint=cert.sha256_fingerprint,
+                        serial_number_hex=cert.serial_number_hex,
+                        public_key_type=cert.public_key_type,
+                        public_key_size=cert.public_key_size,
+                        subject_key_identifier=cert.subject_key_identifier,
+                        spki_fingerprint=cert.spki_fingerprint,
+                        version=cert.version,
+                        validation_level=cert.validation_level,
+                        not_before=cert.not_before,
+                        not_after=cert.not_after,
+                        project_name=config.get("project_name"),
+                    )
+                    for log_file in log_files:
+                        cli.outputln(
+                            log_file,
+                            aside="core",
+                            result_text="SAVED",
+                            result_icon=":floppy_disk:",
+                            con=progress_console,
+                            use_icons=use_icons,
+                        )
+                queue_out.put(data)
 
-        except Exception as ex:  # pylint: disable=broad-except
-            logger.error(ex, exc_info=True)
-            queue_out.put(
-                {
-                    "_metadata": {
-                        "transport": {
-                            "hostname": target.get("hostname"),
-                            "port": target.get("port"),
-                        }
-                    },
-                    "error": (type(ex).__name__, ex),
-                }
-            )
+            except Exception as ex:  # pylint: disable=broad-except
+                logger.error(ex, exc_info=True)
+                queue_out.put(
+                    {
+                        "_metadata": {
+                            "transport": {
+                                "hostname": target.get("hostname"),
+                                "port": target.get("port"),
+                            }
+                        },
+                        "error": (type(ex).__name__, ex),
+                    }
+                )
+    except KeyboardInterrupt:
+        pass
 
 
 def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> list:
@@ -138,6 +145,21 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
         transient=True,
         disable=not show_progress,
     )
+
+    def released(key):
+        if key == Key.shift_l:
+            p1 = len(queries)
+            t1 = len(config.get("targets"))
+            cli.outputln(
+                f"[bold][magenta]processed {p1} of {t1} (remaining {t1-p1})[/magenta][/bold]",
+                aside="core",
+                result_text="STAT!",
+                con=progress.console if use_console else None,
+                use_icons=use_icons,
+            )
+
+    key_listener = Listener(on_release=released)
+    key_listener.start()
     task_id = progress.add_task("domains", total=len(config.get("targets")))
     for target in config.get("targets"):
         data = {
@@ -188,6 +210,12 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 )
                 data = transport.store.to_dict()
 
+        except KeyboardInterrupt:
+            if use_console:
+                progress.console.print(
+                    "[cyan]Operation cancelled ([bold]Ctrl+C[/bold])[/cyan]"
+                )
+            return queries
         except Exception as ex:  # pylint: disable=broad-except
             logger.error(ex, exc_info=True)
             data["error"] = (type(ex).__name__, ex)
@@ -199,7 +227,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
         log_files = save_partial(
             config=config,
             when="per_host",
-            data_type="host",
+            data_type=f"{transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
             data=data,
             hostname=transport.store.tls_state.hostname,
             port=transport.store.tls_state.port,
@@ -221,7 +249,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
             log_files = save_partial(
                 config=config,
                 when="per_certificate",
-                data_type="certificate",
+                data_type=cert.subject,
                 data={
                     **cert.to_dict(),
                     **{
@@ -267,52 +295,97 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
 def run_parra(config: dict, show_progress: bool, use_console: bool = False) -> list:
     queries = []
     num_targets = len(config.get("targets"))
+    use_icons = any(
+        n.get("type") == "console" and n.get("use_icons")
+        for n in config.get("outputs", [])
+    )
     queue_in = Queue()
     queue_out = Queue()
-    if show_progress:
-        with Progress(
-            TextColumn(
-                "[bold cyan]{task.description}[/bold cyan]"
-                + f" ({cpu_count()} threads)",
-                table_column=Column(ratio=2),
-            ),
-            MofNCompleteColumn(table_column=Column(ratio=1)),
-            SpinnerColumn(table_column=Column(ratio=2)),
-            transient=True,
-        ) as progress:
+    progress = None
+    try:
+        if show_progress:
+            with Progress(
+                TextColumn(
+                    "[bold cyan]{task.description}[/bold cyan]"
+                    + f" ({cpu_count()} threads)",
+                    table_column=Column(ratio=2),
+                ),
+                MofNCompleteColumn(table_column=Column(ratio=1)),
+                SpinnerColumn(table_column=Column(ratio=2)),
+                transient=True,
+            ) as progress:
+
+                def released(key):
+                    if key == Key.shift_l:
+                        p1 = len(queries)
+                        cli.outputln(
+                            f"[bold][magenta]processed {p1} of {num_targets} (remaining {num_targets-p1})[/magenta][/bold]",
+                            aside="core",
+                            result_text="STAT!",
+                            con=progress.console if use_console else None,
+                            use_icons=use_icons,
+                        )
+
+                key_listener = Listener(on_release=released)
+                key_listener.start()
+                the_pool = Pool(
+                    cpu_count(),
+                    wrap_trivialscan,
+                    (
+                        queue_in,
+                        queue_out,
+                        progress.console if use_console else None,
+                        config,
+                    ),
+                )
+                task_id = progress.add_task("Evaluating domains", total=num_targets)
+                for target in config.get("targets"):
+                    queue_in.put(target)
+                for _ in range(num_targets):
+                    result = queue_out.get()
+                    queries.append(result)
+                    progress.advance(task_id)
+                progress.stop()
+        else:
             the_pool = Pool(
                 cpu_count(),
                 wrap_trivialscan,
-                (
-                    queue_in,
-                    queue_out,
-                    progress.console if use_console else None,
-                    config,
-                ),
+                (queue_in, queue_out, console if use_console else None, config),
             )
-            task_id = progress.add_task("Evaluating domains", total=num_targets)
+
+            def released(key):
+                if key == Key.shift_l:
+                    p1 = len(queries)
+                    cli.outputln(
+                        f"[bold][magenta]processed {p1} of {num_targets} (remaining {num_targets-p1})[/magenta][/bold]",
+                        aside="core",
+                        result_text="STAT!",
+                        con=console if use_console else None,
+                        use_icons=use_icons,
+                    )
+
+            key_listener = Listener(on_release=released)
+            key_listener.start()
             for target in config.get("targets"):
                 queue_in.put(target)
             for _ in range(num_targets):
                 result = queue_out.get()
                 queries.append(result)
-                progress.advance(task_id)
-            progress.stop()
-    else:
-        the_pool = Pool(
-            cpu_count(),
-            wrap_trivialscan,
-            (queue_in, queue_out, console if use_console else None, config),
-        )
-        for target in config.get("targets"):
-            queue_in.put(target)
-        for _ in range(num_targets):
-            result = queue_out.get()
-            queries.append(result)
 
-    queue_in.close()
-    queue_in.join_thread()
-    the_pool.close()
+        queue_in.close()
+        queue_in.join_thread()
+        the_pool.close()
+    except KeyboardInterrupt:
+        if use_console:
+            if isinstance(progress, Progress):
+                progress.console.print(
+                    "[cyan]Operation cancelled ([bold]Ctrl+C[/bold]), terminating workers[/cyan]"
+                )
+            else:
+                console.print(
+                    "[cyan]Operation cancelled ([bold]Ctrl+C[/bold]), terminating workers[/cyan]"
+                )
+        the_pool.terminate()
 
     return queries
 

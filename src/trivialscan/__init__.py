@@ -46,7 +46,7 @@ class Trivialscan:
         hostname: str,
         port: int = 443,
         client_certificate: str = None,
-    ) -> TLSTransport:
+    ) -> bool:
         checkpoint1 = f"resume{hostname}{port}".encode("utf-8")
         checkpoint2 = f"resumedata{hostname}{port}".encode("utf-8")
         try:
@@ -115,6 +115,9 @@ class Trivialscan:
                 con=self._console,
                 use_icons=self._use_icons,
             )
+            return True
+
+        return False
 
     def http_probe(
         self,
@@ -637,10 +640,11 @@ def trivialscan(
         scanner = Trivialscan(console=console, config=config, **kwargs)
     else:
         scanner = Trivialscan(console=console, **kwargs)
-    scanner.tls_probe(
+    if not scanner.tls_probe(
         hostname=hostname,
         port=port,
-    )
+    ):
+        return scanner._transport  # pylint: disable=protected-access
     for request_path in http_request_paths:
         scanner.http_probe(
             hostname=hostname,

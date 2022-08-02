@@ -159,8 +159,8 @@ def main():
         default=None,
     )
     scan_parser.add_argument(
-        "--hide-progress-bars",
-        help="Hide task progress bars",
+        "--no-progress",
+        help="Hide task progress bars, you can still press <left shift> to output progress stats",
         dest="hide_progress_bars",
         action="store_true",
     )

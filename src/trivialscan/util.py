@@ -849,6 +849,8 @@ def caa_valid(domain_name: str, cert: X509, certificate_chain: list[X509]) -> bo
 def do_handshake(conn):
     try:
         conn.do_handshake()
+    except KeyboardInterrupt:
+        return
     except SSL.SysCallError:
         pass
 

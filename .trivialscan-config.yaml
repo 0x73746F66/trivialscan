@@ -1,5 +1,5 @@
 ---
-project_name: tafensw
+# project_name: appsec_program_2022
 
 defaults:
   checkpoint: True
