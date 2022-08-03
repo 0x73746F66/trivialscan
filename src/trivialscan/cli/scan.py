@@ -126,7 +126,17 @@ def wrap_trivialscan(
                     }
                 )
     except KeyboardInterrupt:
-        pass
+        queue_out.put(
+            {
+                "_metadata": {
+                    "transport": {
+                        "hostname": target.get("hostname"),
+                        "port": target.get("port"),
+                    }
+                },
+                "error": ("KeyboardInterrupt", "Operation cancelled (Ctrl+C)"),
+            }
+        )
 
 
 def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> list:
@@ -215,6 +225,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 progress.console.print(
                     "[cyan]Operation cancelled ([bold]Ctrl+C[/bold])[/cyan]"
                 )
+            progress.stop()
             return queries
         except Exception as ex:  # pylint: disable=broad-except
             logger.error(ex, exc_info=True)
@@ -345,7 +356,7 @@ def run_parra(config: dict, show_progress: bool, use_console: bool = False) -> l
                     result = queue_out.get()
                     queries.append(result)
                     progress.advance(task_id)
-                progress.stop()
+                progress.stop_task(task_id)
         else:
             the_pool = Pool(
                 cpu_count(),
@@ -443,7 +454,9 @@ def scan(config: dict, **flags):
             err, msg = result["error"]
             cli.failln(
                 msg,
-                aside=err,
+                result_text=err,
+                hostname=result["_metadata"]["transport"]["hostname"],
+                port=result["_metadata"]["transport"]["port"],
                 con=console if use_console else None,
                 use_icons=use_icons,
             )

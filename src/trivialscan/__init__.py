@@ -88,14 +88,14 @@ class Trivialscan:
                     use_sni=self.config["defaults"].get("use_sni"),
                 )
                 if self._use_cp:
-                    checkpoint.set(checkpoint1, self._transport)
+                    checkpoint.mark(checkpoint1, self._transport)
                     certs = []
                     for cert in self._transport.store.tls_state.certificates:
                         if isinstance(cert, LeafCertificate):
                             cert.set_transport(self._transport)
                         certs.append(cert)
                     self._transport.store.tls_state.certificates = certs
-                    checkpoint.set(checkpoint2, self._transport.store.to_dict())
+                    checkpoint.mark(checkpoint2, self._transport.store.to_dict())
                     self._checkpoints.add(checkpoint1)
                     self._checkpoints.add(checkpoint2)
         except TransportError as err:
@@ -489,7 +489,7 @@ class Trivialscan:
                     **asdict(evaluation_result),
                 )
         if self._use_cp:
-            checkpoint.set(checkpoint_name, self._transport.store.evaluations)
+            checkpoint.mark(checkpoint_name, self._transport.store.evaluations)
             self._checkpoints.add(checkpoint_name)
 
     def evaluate_generic(self, group: str):
@@ -556,7 +556,7 @@ class Trivialscan:
                     **asdict(evaluation_result),
                 )
             if self._use_cp:
-                checkpoint.set(checkpoint_name, self._transport.store.evaluations)
+                checkpoint.mark(checkpoint_name, self._transport.store.evaluations)
                 self._checkpoints.add(checkpoint_name)
 
     def evaluate_transports(self):
@@ -623,7 +623,7 @@ class Trivialscan:
                 **asdict(evaluation_result),
             )
         if self._use_cp:
-            checkpoint.set(checkpoint_name, self._transport.store.evaluations)
+            checkpoint.mark(checkpoint_name, self._transport.store.evaluations)
             self._checkpoints.add(checkpoint_name)
 
 

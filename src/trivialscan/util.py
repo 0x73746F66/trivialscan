@@ -537,15 +537,18 @@ def validate_certificate_chain(
 
 def issuer_from_chain(certificate: X509, chain: list[X509]) -> X509:
     issuer = None
-    issuer_name = certificate.get_issuer().CN
-    if issuer_name:
-        for peer in chain:
-            peer_name = peer.get_subject().CN
-            if not peer_name:
-                continue
-            if peer_name.strip() == issuer_name.strip():
-                issuer = peer
-                break
+    try:
+        issuer_name = certificate.get_issuer().CN
+        if issuer_name:
+            for peer in chain:
+                peer_name = peer.get_subject().CN
+                if not peer_name:
+                    continue
+                if peer_name.strip() == issuer_name.strip():
+                    issuer = peer
+                    break
+    except AttributeError:
+        pass
     return issuer
 
 
