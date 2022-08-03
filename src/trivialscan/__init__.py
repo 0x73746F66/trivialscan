@@ -99,6 +99,7 @@ class Trivialscan:
                     self._checkpoints.add(checkpoint1)
                     self._checkpoints.add(checkpoint2)
         except TransportError as err:
+            self._transport.store.error = (type(err).__name__, str(err))
             cli.failln(
                 err,
                 result_text=type(err).__name__,

@@ -43,23 +43,23 @@ def track_delta(last: list[dict], current: list[dict]) -> list[dict]:
     for last_query in last:
         for current_query in current:
             if (
-                last_query["_metadata"]["transport"]["hostname"]
-                != current_query["_metadata"]["transport"]["hostname"]
+                last_query["transport"]["hostname"]
+                != current_query["transport"]["hostname"]
             ):
                 continue
             result = deepcopy(current_query)
             ddiff = DeepDiff(
-                last_query.get("_metadata", {}),
-                current_query.get("_metadata", {}),
+                last_query.get("transport", {}),
+                current_query.get("transport", {}),
                 ignore_order=True,
                 exclude_paths=exclude_paths,
             )
-            metadata = json.loads(
+            transport = json.loads(
                 ddiff.to_json(default_mapping={datetime: str}).replace(
-                    '"root[', '"metadata['
+                    '"root[', '"transport['
                 )
             )
-            result["_metadata"] = {**current_query.get("_metadata", {}), **metadata}
+            result["transport"] = {**current_query.get("transport", {}), **transport}
             result["evaluations"] = []
             for last_evaluation in last_query.get("evaluations", []):
                 for current_evaluation in current_query.get("evaluations", []):

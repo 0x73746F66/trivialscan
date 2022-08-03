@@ -116,11 +116,9 @@ def wrap_trivialscan(
                 logger.error(ex, exc_info=True)
                 queue_out.put(
                     {
-                        "_metadata": {
-                            "transport": {
-                                "hostname": target.get("hostname"),
-                                "port": target.get("port"),
-                            }
+                        "transport": {
+                            "hostname": target.get("hostname"),
+                            "port": target.get("port"),
                         },
                         "error": (type(ex).__name__, ex),
                     }
@@ -128,11 +126,9 @@ def wrap_trivialscan(
     except KeyboardInterrupt:
         queue_out.put(
             {
-                "_metadata": {
-                    "transport": {
-                        "hostname": target.get("hostname"),
-                        "port": target.get("port"),
-                    }
+                "transport": {
+                    "hostname": target.get("hostname"),
+                    "port": target.get("port"),
                 },
                 "error": ("KeyboardInterrupt", "Operation cancelled (Ctrl+C)"),
             }
@@ -173,11 +169,9 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
     task_id = progress.add_task("domains", total=len(config.get("targets")))
     for target in config.get("targets"):
         data = {
-            "_metadata": {
-                "transport": {
-                    "hostname": target.get("hostname"),
-                    "port": target.get("port"),
-                }
+            "transport": {
+                "hostname": target.get("hostname"),
+                "port": target.get("port"),
             }
         }
         transport = None
@@ -196,7 +190,7 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 )
                 progress.advance(task_id)
                 cli.outputln(
-                    transport.store.tls_state.peer_address,
+                    transport.store.tls_state.peer_address or "PROBE Protocol SSL/TLS",
                     hostname=transport.store.tls_state.hostname,
                     port=transport.store.tls_state.port,
                     result_text="DONE!",
@@ -441,7 +435,6 @@ def scan(config: dict, **flags):
 
     execution_duration_seconds = (datetime.utcnow() - run_start).total_seconds()
     save_final(config, flags, queries, execution_duration_seconds, use_console)
-
     cli.outputln(
         "Execution duration %.1f seconds" % execution_duration_seconds,
         aside="core",
@@ -449,19 +442,6 @@ def scan(config: dict, **flags):
         con=console if use_console else None,
         use_icons=use_icons,
     )
-    for result in queries:
-        if result.get("error"):
-            err, msg = result["error"]
-            cli.failln(
-                msg,
-                result_text=err,
-                hostname=result["_metadata"]["transport"]["hostname"],
-                port=result["_metadata"]["transport"]["port"],
-                con=console if use_console else None,
-                use_icons=use_icons,
-            )
-            if not use_console and log_level >= logging.ERROR:
-                print(err)
 
 
 def save_final(config, flags, queries, execution_duration_seconds, use_console):

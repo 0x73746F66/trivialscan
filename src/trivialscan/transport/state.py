@@ -237,6 +237,7 @@ class TransportStore:
     tls_state: TLSState = TLSState()
     http_states: list[HTTPState] = []
     evaluations: list["EvaluationResult"] = []
+    error: tuple[str, str] = None
 
     def __init__(self, **kwargs) -> None:
         if kwargs.get("evaluations"):
@@ -254,8 +255,12 @@ class TransportStore:
                 "peer_address": self.tls_state.peer_address,
                 "certificate_mtls_expected": self.tls_state.certificate_mtls_expected,
             },
-            "tls": self.tls_state.to_dict(),
-            "http": [http.to_dict() for http in self.http_states],
-            "evaluations": [asdict(e) for e in self.evaluations],
         }
+        if self.error:
+            data["error"] = self.error
+            return data
+        data["tls"] = self.tls_state.to_dict()
+        data["http"] = [http.to_dict() for http in self.http_states]
+        data["evaluations"] = [asdict(e) for e in self.evaluations]
+
         return data
