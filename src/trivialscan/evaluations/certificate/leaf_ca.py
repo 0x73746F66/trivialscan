@@ -1,3 +1,4 @@
+from typing import Union
 from ...exceptions import EvaluationNotRelevant
 from ...transport import TLSTransport
 from ...certificate import BaseCertificate, LeafCertificate
@@ -11,7 +12,7 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self, certificate: BaseCertificate) -> bool | None:
+    def evaluate(self, certificate: BaseCertificate) -> Union[bool, None]:
         if not isinstance(certificate, LeafCertificate):
             raise EvaluationNotRelevant
         ca, _ = get_basic_constraints(certificate.x509.to_cryptography())

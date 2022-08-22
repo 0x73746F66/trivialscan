@@ -1,4 +1,6 @@
 import logging
+from typing import Union
+
 from OpenSSL.crypto import dump_certificate, FILETYPE_PEM
 from certvalidator.errors import (
     PathValidationError,
@@ -6,6 +8,7 @@ from certvalidator.errors import (
     InvalidCertificateError,
     PathBuildingError,
 )
+
 from ...util import validate_certificate_chain, gather_key_usages
 from ...certificate import LeafCertificate
 from ...transport import TLSTransport
@@ -23,7 +26,7 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self) -> bool | None:
+    def evaluate(self) -> Union[bool, None]:
         leaf = None
         for cert in self.transport.store.tls_state.certificates:
             if isinstance(cert, LeafCertificate):

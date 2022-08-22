@@ -8,6 +8,8 @@ from binascii import hexlify
 from pathlib import Path
 from decimal import Decimal
 from functools import wraps
+from typing import Union
+
 import validators
 from cryptography import x509
 from cryptography.x509 import (
@@ -29,6 +31,7 @@ from dns.resolver import NoAnswer
 from tldextract import TLDExtract
 from tlstrust import util as tlstrust_util
 from tlstrust.context import STORES
+
 from . import constants
 from .certificate import (
     BaseCertificate,
@@ -440,7 +443,9 @@ def get_ski_aki(cert: Certificate) -> tuple[str, str]:
     return ski, aki
 
 
-def extract_from_subject(cert: Certificate, name: str = "commonName") -> str | None:
+def extract_from_subject(
+    cert: Certificate, name: str = "commonName"
+) -> Union[str, None]:
     for fields in cert.subject:
         current = str(fields.oid)
         if name in current:
@@ -471,7 +476,7 @@ def validate_common_name(common_name: str, host: str) -> bool:
     return validators.domain(common_name) is True
 
 
-def from_subject(subject: Name, field: str = "commonName") -> str | None:
+def from_subject(subject: Name, field: str = "commonName") -> Union[str, None]:
     for fields in subject:
         current = str(fields.oid)
         if field in current:
@@ -515,7 +520,7 @@ def match_hostname(host: str, cert: Certificate) -> bool:
 
 
 def validate_certificate_chain(
-    cert: bytes | asn1Certificate,
+    cert: Union[bytes, asn1Certificate],
     pem_certificate_chain: list,
     validator_key_usage: list,
     validator_extended_key_usage: list,
@@ -934,7 +939,7 @@ def get_certificates(leaf: X509, certificates: list[X509]) -> list[BaseCertifica
     return list({v.sha1_fingerprint: v for v in ret_certs}.values())
 
 
-def html_find_match(content: str, query: str) -> str | None:
+def html_find_match(content: str, query: str) -> Union[str, None]:
     results = None
     soup = bs(content, "html.parser")
     something = soup.find(query)

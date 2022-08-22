@@ -3,11 +3,14 @@ from hashlib import sha1
 from datetime import datetime
 from dataclasses import asdict
 from urllib.parse import urlparse
+from typing import Union
+
 from requests import Response
 from OpenSSL.crypto import (
     load_certificate,
     FILETYPE_PEM,
 )
+
 from ..certificate import (
     BaseCertificate,
     ClientCertificate,
@@ -69,7 +72,7 @@ class HTTPState:
         return sha1(self.response_text.encode()).hexdigest()
 
     @property
-    def response_json(self) -> dict | list:
+    def response_json(self) -> Union[dict, list]:
         return self._response.json()
 
     def to_dict(self, include_transport: bool = False):

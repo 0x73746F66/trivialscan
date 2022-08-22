@@ -2,7 +2,10 @@ import logging
 import configparser
 from os import path
 from pathlib import Path
+from typing import Union
+
 import keyring
+
 from ..config import CONFIG_PATH
 
 __module__ = "trivialscan.cli.credentials"
@@ -18,7 +21,7 @@ CREDENTIALS_FILE = path.join(CONFIG_PATH, "credentials")
 logger = logging.getLogger(__name__)
 
 
-def load_local(account_name: str) -> dict | None:
+def load_local(account_name: str) -> Union[dict, None]:
     try:
         if KEYRING_SUPPORT:
             registration_token = keyring.get_password(
@@ -78,6 +81,6 @@ def save_local(account_name: str, client_name: str, token: str) -> bool:
     return False
 
 
-def get_token(account_name: str) -> str | None:
+def get_token(account_name: str) -> Union[str, None]:
     credentials = load_local(account_name)
     return credentials.get("token")

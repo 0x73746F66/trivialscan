@@ -1,3 +1,4 @@
+from typing import Union
 from ...exceptions import EvaluationNotRelevant
 from ...transport import TLSTransport
 from ...certificate import BaseCertificate, RootCertificate
@@ -11,7 +12,7 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self, certificate: BaseCertificate) -> bool | None:
+    def evaluate(self, certificate: BaseCertificate) -> Union[bool, None]:
         if isinstance(certificate, RootCertificate) and certificate.trust_stores:
             raise EvaluationNotRelevant
         return is_self_signed(certificate.x509.to_cryptography())

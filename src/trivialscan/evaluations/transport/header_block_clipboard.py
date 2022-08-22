@@ -1,3 +1,5 @@
+from typing import Union
+
 from ...transport import TLSTransport, HTTPState
 from .. import BaseEvaluationTask
 
@@ -8,7 +10,7 @@ class EvaluationTask(BaseEvaluationTask):
         self._missing = []
         self._results = []
 
-    def evaluate(self) -> bool | None:
+    def evaluate(self) -> Union[bool, None]:
         for state in self.transport.store.http_states:
             self._clipboard_read(state)
 

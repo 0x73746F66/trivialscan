@@ -3,6 +3,8 @@ from os import path
 from pathlib import Path
 from copy import deepcopy
 from urllib.parse import urlparse
+from typing import Union
+
 import validators
 import yaml
 
@@ -238,7 +240,7 @@ def combine_configs(user_conf: dict, custom_conf: dict) -> dict:
     return _validate_config(ret_config)
 
 
-def get_config(custom_values: dict | None = None) -> dict:
+def get_config(custom_values: Union[dict, None] = None) -> dict:
     user_config = load_config(path.join(CONFIG_PATH, DEFAULT_CONFIG))
     return combine_configs(user_config, custom_values or {})
 

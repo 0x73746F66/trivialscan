@@ -4,7 +4,10 @@ from os import path
 from importlib import import_module
 from copy import deepcopy
 from dataclasses import asdict
+from typing import Union
+
 from rich.console import Console
+
 from . import cli, constants
 from .config import load_config, get_config
 from .exceptions import (
@@ -188,7 +191,7 @@ class Trivialscan:
         self,
         evaluation: dict,
         **kwargs,
-    ) -> BaseEvaluationTask | None:
+    ) -> Union[BaseEvaluationTask, None]:
         if any(
             [
                 evaluation["group"]
@@ -224,7 +227,7 @@ class Trivialscan:
         )
 
     def _result_data(
-        self, result_value: bool | str | None, task: BaseEvaluationTask, **kwargs
+        self, result_value: Union[bool, str, None], task: BaseEvaluationTask, **kwargs
     ) -> EvaluationResult:
         data = {
             "name": task.metadata["label_as"],
@@ -482,7 +485,7 @@ class Trivialscan:
                     continue
                 self._transport.store.evaluations.append(evaluation_result)
                 cli.outputln(
-                    f"[bold][{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}][/bold] {evaluation_result.name}",
+                    evaluation_result.name,
                     bold_result=True,
                     aside=f"SHA1:{cert.sha1_fingerprint} {self._transport.store.tls_state.hostname}:{self._transport.store.tls_state.port}",
                     con=self._console,
@@ -548,7 +551,7 @@ class Trivialscan:
                     continue
                 self._transport.store.evaluations.append(evaluation_result)
                 cli.outputln(
-                    f"[bold][{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}][/bold] {evaluation_result.name}",
+                    evaluation_result.name,
                     bold_result=True,
                     hostname=self._transport.store.tls_state.hostname,
                     port=self._transport.store.tls_state.port,
@@ -615,7 +618,7 @@ class Trivialscan:
                 continue
             self._transport.store.evaluations.append(evaluation_result)
             cli.outputln(
-                f"[bold][{constants.CLI_COLOR_PRIMARY}]{evaluation_result.result_label}[/{constants.CLI_COLOR_PRIMARY}][/bold] {evaluation_result.name}",
+                evaluation_result.name,
                 bold_result=True,
                 hostname=self._transport.store.tls_state.hostname,
                 port=self._transport.store.tls_state.port,

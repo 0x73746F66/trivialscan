@@ -1,3 +1,5 @@
+from typing import Union
+
 from ...constants import OCSP_STATUS_REASON_MAP
 from ...exceptions import EvaluationNotRelevant
 from ...transport import TLSTransport
@@ -11,7 +13,7 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self, certificate: BaseCertificate) -> bool:
+    def evaluate(self, certificate: BaseCertificate) -> Union[bool, None]:
         if not isinstance(certificate, LeafCertificate):
             raise EvaluationNotRelevant
         self.substitution_metadata[

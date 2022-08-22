@@ -1,3 +1,5 @@
+from typing import Union
+
 from ...transport import TLSTransport
 from .. import BaseEvaluationTask
 
@@ -6,7 +8,7 @@ class EvaluationTask(BaseEvaluationTask):
     def __init__(self, transport: TLSTransport, metadata: dict, config: dict) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self) -> bool | None:
+    def evaluate(self) -> Union[bool, None]:
         results = []
         compression = ["gzip", "bz", "deflate", "compress"]
         for state in self.transport.store.http_states:

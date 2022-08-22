@@ -4,6 +4,8 @@ import logging
 import math
 import socket
 import os
+from typing import Union
+
 from ...util import timeout
 from ...transport import TLSTransport
 from ...certificate import LeafCertificate
@@ -50,7 +52,7 @@ class EvaluationTask(BaseEvaluationTask):
         self._cke_2and_prefix = None
 
     @timeout(10)
-    def evaluate(self) -> bool | None:
+    def evaluate(self) -> Union[bool, None]:
         for cert in self.transport.store.tls_state.certificates:
             if isinstance(cert, LeafCertificate):
                 self._leaf = cert

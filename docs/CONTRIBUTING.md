@@ -10,12 +10,12 @@ Follow SemVer:
 
 ## Merge Checklist
 
-- Version bump in `setup.py` and `cli.py`
+- Version bump in `cli/__main__.py`
 - Coverage `make test` remains same or better, never reduce coverage percentage
 - All tests pass
 - Check dependencies; ensure all are latest (with compatibility to other dependencies as the only exception)
 - Run SAST `make test-local` and address all findings, exceptions will be part of the code review so be descriptive
-- Update the README and `setup.py` features lists
+- Update the README and `pyproject.toml` features lists
 - Update the docs
 - Complete a change log entry
 
@@ -165,3 +165,51 @@ def hipaa_valid(self, trust_context: int = SOURCE_CCADB) -> bool:
 - No known weak ciphers, protocols, keys, signatures, elliptic curves
 - Support Extended Master Secret (EMS) extension for TLS versions ≤1.2
 - Supports the Uncompressed Point Format for NIST Curves, or; no EC_POINT_FORMAT TLS extension
+
+# Local Development Environment
+
+## Interpreter/s
+
+1. Obtain an openssl version still supporting SSL; For the sake of documentation just what the [drwetter/testssl.sh](https://testssl.sh/openssl-1.0.2k-chacha.pm.ipv6.Linux+FreeBSD.201705.tar.gz) project distributes, you should compile it directly which is also what I prefer.
+
+2. Install multiple versions of python from version 3.9 onwards; currently `3.9.13`, `3.10.6`, `3.11.0rc1`
+
+```sh
+wget https://www.python.org/ftp/python/3.9.13/Python-3.9.13.tgz
+tar xzvf Python-3.9.13.tgz
+cd Python-3.9.13
+./configure --with-openssl=/usr/src/openssl-1.0.2o --enable-optimizations --with-ensurepip=install
+make -j4
+make altinstall
+```
+
+**Note**: you may first need to install; `libssl-dev` `openssl` `g++` and possibly more (every distro and distro version is different)
+
+Check the openssl version:
+
+```py
+import ssl
+ssl.OPENSSL_VERSION
+```
+
+3. Ensure each version has Pip and [venv](https://virtualenv.pypa.io/en/latest/cli_interface.html) modules;
+
+- Use `python -m ensurepip --default-pip` (replace `python` with version specific binaries; i.e. `python3.9`) which will provide `pip` for each version
+- Make sure it is the latest; `python -m pip install --disable-pip-version-check -U pip wheel virtualenv` (for each version)
+
+4. Activating each version:
+
+Create the virtual environments:
+
+```sh
+python3.9 -m venv .venv3.9
+python3.10 -m venv .venv3.10
+python3.11 -m venv .venv3.11
+```
+
+Activate one at a time as needed for testing:
+
+```sh
+deactivate
+source .venv3.9/bin/activate
+```

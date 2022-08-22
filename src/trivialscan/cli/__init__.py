@@ -1,9 +1,12 @@
+from typing import Union
+
 from rich.console import Console
 from rich.table import Table
+
 from .. import constants
 
 
-def outputln(message: str, con: None | Console = None, **kwargs):
+def outputln(message: str, con: Union[Console, None] = None, **kwargs):
     if not isinstance(con, Console):
         return
     result_level = kwargs.get("result_level", constants.RESULT_LEVEL_INFO)
@@ -21,6 +24,9 @@ def outputln(message: str, con: None | Console = None, **kwargs):
         "result_text",
         constants.DEFAULT_MAP.get(result_level, constants.RESULT_LEVEL_INFO_DEFAULT),
     )
+    if kwargs.get("result_label"):
+        result_text = f"{result_text} {kwargs.get('result_label')}"
+
     use_icons = kwargs.get("use_icons", False)
     result_icon = ""
     if use_icons:
@@ -47,7 +53,7 @@ def outputln(message: str, con: None | Console = None, **kwargs):
     con.print(table)
 
 
-def _outputln(message: str, level: str, con: None | Console = None, **kwargs):
+def _outputln(message: str, level: str, con: Union[Console, None] = None, **kwargs):
     if "result_level" in kwargs:
         del kwargs["result_level"]
     if "result_color" in kwargs:
@@ -55,17 +61,17 @@ def _outputln(message: str, level: str, con: None | Console = None, **kwargs):
     outputln(message=message, result_level=level, con=con, **kwargs)
 
 
-def infoln(message: str, con: None | Console = None, **kwargs):
+def infoln(message: str, con: Union[Console, None] = None, **kwargs):
     _outputln(message=message, level=constants.RESULT_LEVEL_INFO, con=con, **kwargs)
 
 
-def failln(message: str, con: None | Console = None, **kwargs):
+def failln(message: str, con: Union[Console, None] = None, **kwargs):
     _outputln(message=message, level=constants.RESULT_LEVEL_FAIL, con=con, **kwargs)
 
 
-def passln(message: str, con: None | Console = None, **kwargs):
+def passln(message: str, con: Union[Console, None] = None, **kwargs):
     _outputln(message=message, level=constants.RESULT_LEVEL_PASS, con=con, **kwargs)
 
 
-def warnln(message: str, con: None | Console = None, **kwargs):
+def warnln(message: str, con: Union[Console, None] = None, **kwargs):
     _outputln(message=message, level=constants.RESULT_LEVEL_WARN, con=con, **kwargs)

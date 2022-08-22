@@ -1,3 +1,5 @@
+from typing import Union
+
 from ...exceptions import EvaluationNotRelevant
 from ...transport import TLSTransport
 from ...certificate import BaseCertificate, LeafCertificate
@@ -10,7 +12,7 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self, certificate: BaseCertificate) -> bool:
+    def evaluate(self, certificate: BaseCertificate) -> Union[bool, None]:
         if not isinstance(certificate, LeafCertificate):
             raise EvaluationNotRelevant
         return certificate.revocation_ocsp_must_staple

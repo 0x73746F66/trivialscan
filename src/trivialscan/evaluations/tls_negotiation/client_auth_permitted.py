@@ -1,3 +1,5 @@
+from typing import Union
+
 from ...exceptions import EvaluationNotRelevant
 from ...transport import TLSTransport
 from ...util import key_usage_exists, gather_key_usages
@@ -10,7 +12,7 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self) -> bool | None:
+    def evaluate(self) -> Union[bool, None]:
         if not self.transport.store.tls_state.certificate_mtls_expected:
             raise EvaluationNotRelevant
 

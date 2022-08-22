@@ -4,7 +4,10 @@ from os import path
 from datetime import timedelta
 from contextlib import closing
 from io import StringIO
+from typing import Union
+
 from requests_cache import CachedSession
+
 from ...constants import COMPROMISED_SHA1
 from ...transport import TLSTransport
 from ...certificate import BaseCertificate
@@ -29,7 +32,7 @@ class EvaluationTask(BaseEvaluationTask):
             expire_after=timedelta(minutes=5),
         )
 
-    def evaluate(self, certificate: BaseCertificate) -> bool | None:
+    def evaluate(self, certificate: BaseCertificate) -> Union[bool, None]:
         self.substitution_metadata["sha1_fingerprint"] = certificate.sha1_fingerprint
         if certificate.sha1_fingerprint.upper() in COMPROMISED_SHA1:
             self.substitution_metadata["reason"] = COMPROMISED_SHA1[
@@ -46,7 +49,7 @@ class EvaluationTask(BaseEvaluationTask):
             return True
         return False
 
-    def abuse(self, sha1_fingerprint) -> dict | bool:
+    def abuse(self, sha1_fingerprint) -> Union[dict, bool]:
         if not ABUSESH_LOOKUP:
             with closing(
                 self._session.get(REMOTE_CSV, stream=True, allow_redirects=True)

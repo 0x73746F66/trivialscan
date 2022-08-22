@@ -4,6 +4,8 @@ from urllib.parse import quote_plus
 from typing import cast
 from datetime import datetime
 from ssl import PEM_cert_to_DER_cert
+from typing import Union
+
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from cryptography.x509 import (
     extensions,
@@ -31,6 +33,7 @@ from OpenSSL.crypto import (
 )
 from tlstrust import TrustStore
 from dns.resolver import Answer
+
 from . import util, constants
 
 __module__ = "trivialscan.certificate"
@@ -57,32 +60,32 @@ class BaseCertificate:
         return self.x509.get_version()
 
     @property
-    def public_key_exponent(self) -> int | None:
+    def public_key_exponent(self) -> Union[int, None]:
         if self.x509.get_pubkey().type() in [TYPE_RSA, TYPE_DSA]:
             return self.x509.to_cryptography().public_key().public_numbers().e
 
         return None
 
     @property
-    def public_key_modulus(self) -> int | None:
+    def public_key_modulus(self) -> Union[int, None]:
         if self.x509.get_pubkey().type() in [TYPE_RSA, TYPE_DSA]:
             return self.x509.to_cryptography().public_key().public_numbers().n
 
         return None
 
     @property
-    def public_key_curve(self) -> str | None:
+    def public_key_curve(self) -> Union[str, None]:
         if self.x509.get_pubkey().type() in [TYPE_DH, TYPE_EC]:
             return self.x509.to_cryptography().public_key().curve.name
 
         return None
 
     @property
-    def public_key_size(self) -> int | None:
+    def public_key_size(self) -> Union[int, None]:
         return self.x509.get_pubkey().bits()
 
     @property
-    def public_key_type(self) -> str | None:
+    def public_key_type(self) -> Union[str, None]:
         key_type = self.x509.get_pubkey().type()
         if key_type == TYPE_RSA:
             return "RSA"
@@ -95,15 +98,15 @@ class BaseCertificate:
         return None
 
     @property
-    def serial_number(self) -> str | None:
+    def serial_number(self) -> Union[str, None]:
         return util.convert_decimal_to_serial_bytes(self.x509.get_serial_number())
 
     @property
-    def serial_number_decimal(self) -> int | None:
+    def serial_number_decimal(self) -> Union[int, None]:
         return self.x509.get_serial_number()
 
     @property
-    def serial_number_hex(self) -> str | None:
+    def serial_number_hex(self) -> Union[str, None]:
         return "{0:#0{1}x}".format(
             self.x509.get_serial_number(), 4
         )  # pylint: disable=consider-using-f-string
@@ -121,11 +124,11 @@ class BaseCertificate:
         return self.x509.to_cryptography().issuer.rfc4514_string()
 
     @property
-    def signature_algorithm(self) -> str | None:
+    def signature_algorithm(self) -> Union[str, None]:
         return self.x509.get_signature_algorithm().decode("ascii")
 
     @property
-    def sha256_fingerprint(self) -> str | None:
+    def sha256_fingerprint(self) -> Union[str, None]:
         return hashlib.sha256(self.der).hexdigest()
 
     @property
@@ -169,14 +172,14 @@ class BaseCertificate:
         return util.date_diff(self.x509.to_cryptography().not_valid_after)
 
     @property
-    def subject_key_identifier(self) -> str | None:
+    def subject_key_identifier(self) -> Union[str, None]:
         for ext in self.extensions:
             if ext["name"] == "subjectKeyIdentifier":
                 return ext[ext["name"]]
         return None
 
     @property
-    def authority_key_identifier(self) -> str | None:
+    def authority_key_identifier(self) -> Union[str, None]:
         for ext in self.extensions:
             if ext["name"] == "authorityKeyIdentifier":
                 return ext[ext["name"]]
@@ -187,7 +190,7 @@ class BaseCertificate:
         return util.is_self_signed(self.x509.to_cryptography())
 
     @property
-    def validation_oid(self) -> str | None:
+    def validation_oid(self) -> Union[str, None]:
         policies = []
         try:
             policies = (
@@ -373,7 +376,7 @@ class LeafCertificate(BaseCertificate):
         return self._dnssec
 
     @property
-    def dnssec_algorithm(self) -> str | None:
+    def dnssec_algorithm(self) -> Union[str, None]:
         if isinstance(self._dnssec_algorithm, str):
             return self._dnssec_algorithm
         if not isinstance(self._dnssec_answer, Answer):
@@ -410,7 +413,7 @@ class LeafCertificate(BaseCertificate):
         )
 
     @property
-    def revocation_ocsp_stapling(self) -> bool | None:
+    def revocation_ocsp_stapling(self) -> Union[bool, None]:
         assertion = self._transport._revocation_ocsp_assertion or b""
         response = None
         if assertion == b"":

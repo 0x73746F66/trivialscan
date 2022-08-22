@@ -15,8 +15,8 @@ clean: ## cleans python for wheel
 	rm -f **/*.zip **/*.tgz **/*.gz .coverage
 
 deps: ## install dependancies for development of this project
-	python -m pip install --disable-pip-version-check -U pip
-	python -m pip install -U -r requirements.txt
+	pip install --disable-pip-version-check -U pip
+	pip install .
 
 setup: deps ## setup for development of this project
 	pre-commit install --hook-type pre-push --hook-type pre-commit
@@ -24,19 +24,15 @@ setup: deps ## setup for development of this project
 	yes | detect-secrets audit .secrets.baseline
 
 install: ## Install the package
-	python -m pip install -U dist/trivialscan-$(shell cat ./setup.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)-py2.py3-none-any.whl
+	pip install -U dist/trivialscan-$(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)-py2.py3-none-any.whl
 
 reinstall: ## Force install the package
-	python -m pip install --force-reinstall -U dist/trivialscan-$(shell cat ./setup.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)-py2.py3-none-any.whl
+	pip install --force-reinstall -U dist/trivialscan-$(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)-py2.py3-none-any.whl
 
 install-dev: ## Install the package
-	python -m pip install --disable-pip-version-check -U pip
-	python -m pip install -U -r requirements-dev.txt
-	python -m pip install --force-reinstall --no-cache-dir -e .
-
-check: ## check build
-	python setup.py egg_info
-	python setup.py check
+	pip install --disable-pip-version-check -U pip
+	pip install -U -r requirements-dev.txt
+	pip install --force-reinstall --no-cache-dir -e .
 
 pytest: ## run unit tests with coverage
 	coverage run -m pytest --nf
@@ -51,7 +47,7 @@ build: ## build wheel file
 	python -m build -nxsw
 
 publish: ## upload to pypi.org
-	git tag -f $(shell cat ./setup.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)
+	git tag -f $(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)
 	git push -u origin --tags
 	python -m twine upload dist/*
 
@@ -63,10 +59,10 @@ crlite:
 	./src/trivialscan/vendor/rust-query-crlite -vvv --db /tmp/.crlite_db/ https ssllabs.com
 
 run-stdin: ## pipe targets from stdin
-	cat .development/targets.txt | xargs python -m trivialscan.cli
+	cat .development/targets.txt | xargs trivialscan.cli
 
 run-as-module: ## Using CLI as a python module directly (dev purposes)
-	python -m trivialscan.cli ssllabs.com
+	trivialscan.cli ssllabs.com
 
 run-cli-parallel: ## Leverage defaults using all CPU cores
 	trivial scan

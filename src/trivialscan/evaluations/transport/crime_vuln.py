@@ -2,8 +2,10 @@ import logging
 import random
 import string
 import zlib
+from typing import Union
 from Crypto.Cipher import AES, ARC4
 from Crypto import Random
+
 from ...util import timeout
 from ...exceptions import EvaluationNotRelevant
 from ...transport import TLSTransport
@@ -62,7 +64,7 @@ class EvaluationTask(BaseEvaluationTask):
         self._secret = f"{self._known}2ac8a4ea7909bccb4c81cefd3f7765d4"
 
     @timeout(10)
-    def evaluate(self) -> bool | None:
+    def evaluate(self) -> Union[bool, None]:
         cbc_results = []
         rc4_results = []
         for offered_cipher in self.transport.store.tls_state.offered_ciphers:

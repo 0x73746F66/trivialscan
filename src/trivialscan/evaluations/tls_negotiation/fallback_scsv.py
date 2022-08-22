@@ -1,6 +1,9 @@
 import ssl
-from OpenSSL import SSL, _util
+from typing import Union
+
 import idna
+from OpenSSL import SSL, _util
+
 from ...transport import TLSTransport
 from ...constants import OPENSSL_VERSION_LOOKUP, PROTOCOL_TEXT_MAP, TLS1_3_LABEL
 from .. import BaseEvaluationTask
@@ -13,7 +16,7 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
         self._supports_fallback_scsv = None
 
-    def evaluate(self) -> bool | None:
+    def evaluate(self) -> Union[bool, None]:
         # no downgrade possible using TLS 1.3
         if all(
             [

@@ -5,6 +5,8 @@ from pathlib import Path
 from time import sleep
 from datetime import timedelta
 from socket import socket, AF_INET, SOCK_STREAM, MSG_PEEK
+from typing import Union
+
 import validators
 import idna
 from certifi import where
@@ -28,6 +30,7 @@ from OpenSSL.crypto import (
     load_certificate,
     dump_certificate,
 )
+
 from .. import exceptions, util, constants
 from .state import TransportStore, HTTPState
 from ..certificate import ClientCertificate
@@ -92,7 +95,7 @@ class TLSTransport:
         )
 
     @property
-    def server_certificate(self) -> X509 | None:
+    def server_certificate(self) -> Union[X509, None]:
         if not self._server_certificate:
             return None
         return load_certificate(FILETYPE_PEM, self._server_certificate)
@@ -104,7 +107,7 @@ class TLSTransport:
         return [load_certificate(FILETYPE_PEM, pem) for pem in self._certificate_chain]
 
     @property
-    def client_certificate(self) -> X509 | None:
+    def client_certificate(self) -> Union[X509, None]:
         if not self._client_certificate:
             return None
         return load_certificate(FILETYPE_PEM, self._client_certificate)
@@ -573,7 +576,7 @@ class HTTPTransport:
 
     def _do_request(
         self, req_path: str, method: str = "HEAD", headers: dict = None
-    ) -> Response | None:
+    ) -> Union[Response, None]:
         url = f"https://{self.hostname}:{self.port}{req_path}"
         try:
             return self._session.request(method, url, headers=headers)

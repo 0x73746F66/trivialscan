@@ -1,3 +1,5 @@
+from typing import Union
+
 from ...transport import TLSTransport
 from ...certificate import IntermediateCertificate, RootCertificate
 from .. import BaseEvaluationTask
@@ -11,7 +13,7 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
         self._constraints = {}
 
-    def evaluate(self) -> bool | None:
+    def evaluate(self) -> Union[bool, None]:
         self._build_constraints()
         keep_checking = True
         while keep_checking:

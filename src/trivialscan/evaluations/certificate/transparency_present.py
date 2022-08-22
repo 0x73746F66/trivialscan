@@ -1,3 +1,5 @@
+from typing import Union
+
 from ...constants import SCT_GOOD, SCT_INSUFFICIENT, SCT_PRESENT
 from ...exceptions import EvaluationNotRelevant
 from ...transport import TLSTransport
@@ -11,7 +13,7 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self, certificate: BaseCertificate) -> bool | None:
+    def evaluate(self, certificate: BaseCertificate) -> Union[bool, None]:
         if not isinstance(certificate, LeafCertificate):
             raise EvaluationNotRelevant
         self.substitution_metadata[

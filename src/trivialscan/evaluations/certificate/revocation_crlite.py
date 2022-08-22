@@ -41,7 +41,7 @@ class EvaluationTask(BaseEvaluationTask):
         return status
 
 
-def query_crlite(pem_path: str, db_path: str) -> str | None:
+def query_crlite(pem_path: str, db_path: str) -> str:
     try:
         stdout_string = subprocess.check_output(
             [

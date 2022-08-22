@@ -1,3 +1,5 @@
+from typing import Union
+
 from ...constants import VALIDATION_OID
 from ...exceptions import NoLogEvaluation
 from ...transport import TLSTransport
@@ -11,7 +13,7 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self, certificate: BaseCertificate) -> bool | None:
+    def evaluate(self, certificate: BaseCertificate) -> Union[bool, None]:
         validation_level = VALIDATION_OID.get(certificate.validation_oid)
         if not validation_level:
             raise NoLogEvaluation

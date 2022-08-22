@@ -1,7 +1,10 @@
 import logging
 import socket
 import ssl
+from typing import Union
+
 from h2.connection import H2Connection
+
 from ...transport import TLSTransport
 from .. import BaseEvaluationTask
 
@@ -14,7 +17,7 @@ class EvaluationTask(BaseEvaluationTask):
     def __init__(self, transport: TLSTransport, metadata: dict, config: dict) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self) -> bool | None:
+    def evaluate(self) -> Union[bool, None]:
         results = []
         for state in self.transport.store.http_states:
             try:

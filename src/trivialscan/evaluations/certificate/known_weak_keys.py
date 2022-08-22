@@ -1,3 +1,4 @@
+from typing import Union
 from ...constants import KNOWN_WEAK_KEYS, WEAK_KEY_SIZE
 from ...transport import TLSTransport
 from ...certificate import BaseCertificate
@@ -10,7 +11,7 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self, certificate: BaseCertificate) -> bool | None:
+    def evaluate(self, certificate: BaseCertificate) -> Union[bool, None]:
         self.substitution_metadata["reason"] = KNOWN_WEAK_KEYS.get(
             certificate.public_key_type
         )

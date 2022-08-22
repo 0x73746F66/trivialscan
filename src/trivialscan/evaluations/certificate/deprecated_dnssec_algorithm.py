@@ -1,3 +1,4 @@
+from typing import Union
 from ...constants import WEAK_DNSSEC_ALGORITHMS
 from ...exceptions import EvaluationNotRelevant
 from ...transport import TLSTransport
@@ -11,7 +12,7 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self, certificate: BaseCertificate) -> bool | None:
+    def evaluate(self, certificate: BaseCertificate) -> Union[bool, None]:
         if not isinstance(certificate, LeafCertificate) or not certificate.dnssec:
             raise EvaluationNotRelevant
         return (  # pylint: disable=consider-iterating-dictionary

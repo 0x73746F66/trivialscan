@@ -1,11 +1,15 @@
 import sys
 import logging
 import argparse
+from os import getenv
 from urllib.parse import urlparse
+from typing import Union
+
 import validators
 from rich.console import Console
 from rich.logging import RichHandler
 from art import text2art
+
 from .register import register
 from .scan import scan
 from .. import constants
@@ -13,10 +17,16 @@ from ..config import load_config, get_config
 
 
 __module__ = "trivialscan.cli"
-__version__ = "3.0.0"
+__version__ = "3.0.0rc2"
 
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
 APP_BANNER = text2art("trivialscan", font="tarty4")
+APP_ENV = getenv("APP_ENV", "development")
+DASHBOARD_API_URL = (
+    f"http://localhost:8000/{__version__}"
+    if APP_ENV == "development"
+    else f"https://api-dashboard.trivialsec.com/{__version__}"
+)
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 console = Console()
@@ -220,6 +230,7 @@ def main():
                 "account_name": args.account_name,
                 "client_name": args.client_name,
                 "log_level": log_level,
+                "url": DASHBOARD_API_URL,
             }
         )
     if args.subcommand == "scan":
@@ -246,7 +257,7 @@ def main():
         )
 
 
-def _scan_config(cli_args: dict, filename: str | None) -> dict:
+def _scan_config(cli_args: dict, filename: Union[str, None]) -> dict:
     # only overwrite value in config file if OVERRIDE cli args were defined
     if filename:
         custom = load_config(filename)
