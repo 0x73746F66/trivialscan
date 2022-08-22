@@ -34,6 +34,9 @@ install-dev: ## Install the package
 	pip install -U -r requirements-dev.txt
 	pip install --force-reinstall --no-cache-dir -e .
 
+check: ## check build
+	python -m twine check dist/*
+
 pytest: ## run unit tests with coverage
 	coverage run -m pytest --nf
 	coverage report -m
@@ -46,7 +49,7 @@ build: ## build wheel file
 	rm -f dist/*
 	python -m build -nxsw
 
-publish: ## upload to pypi.org
+publish: check ## upload to pypi.org
 	git tag -f $(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)
 	git push -u origin --tags
 	python -m twine upload dist/*

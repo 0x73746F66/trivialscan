@@ -49,7 +49,7 @@ dynamic = ["version", "readme"]
 
 [tool.setuptools.dynamic]
 version = {attr = "trivialscan.cli.__main__.__version__"}
-readme = {file = ["README.md"]}
+readme = {file = ["README.rst"]}
 
 [project.optional-dependencies]
 dev = [
