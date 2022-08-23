@@ -1,3 +1,4 @@
+import sys
 import logging
 from os import path
 from pathlib import Path
@@ -24,6 +25,19 @@ def force_keys_as_str(self, node, deep=False):
 
 yaml.SafeLoader.old_construct_mapping = yaml.SafeLoader.construct_mapping
 yaml.SafeLoader.construct_mapping = force_keys_as_str
+
+
+def ask(question: str, allow_exit: bool = True, default: str = "Yes") -> bool:
+    append = " (Ctrl+C to exit)" if allow_exit else ""
+    try:
+        resp = input(f"{question} Yes/no{append}: ").strip() or default
+        return resp[0].lower() == "y"
+
+    except KeyboardInterrupt:
+        if allow_exit:
+            sys.exit(0)
+
+    return ask(question, allow_exit)
 
 
 def _deep_merge(*args) -> dict:
@@ -214,16 +228,16 @@ def combine_configs(user_conf: dict, custom_conf: dict) -> dict:
             **custom_conf.get("MITRE ATT&CK 11.2", {}),
         },
     }
-    outputs = user_conf.get("outputs", [])
+    outputs = custom_conf.get("outputs", [])
     outputs.extend(
         [
             item
-            for item in custom_conf.get("outputs", [])
+            for item in user_conf.get("outputs", [])
             if item["type"] not in [i["type"] for i in outputs]
         ]
     )
     if not outputs:
-        outputs = default_values["outputs"]
+        outputs = default_values.get("outputs", [])
     ret_config["outputs"] = outputs
     ret_config["evaluations"] = merge_lists_by_value(
         default_values["evaluations"],
@@ -245,10 +259,14 @@ def get_config(custom_values: Union[dict, None] = None) -> dict:
     return combine_configs(user_config, custom_values or {})
 
 
-def default_config() -> dict:
-    conf = yaml.safe_load(
+def base_config() -> dict:
+    return yaml.safe_load(
         Path(path.join(str(Path(__file__).parent), "base.yaml")).read_bytes()
     )
+
+
+def default_config() -> dict:
+    conf = base_config()
     conf["evaluations"] = yaml.safe_load(
         Path(path.join(str(Path(__file__).parent), "evaluations.yaml")).read_bytes()
     ).get("evaluations")

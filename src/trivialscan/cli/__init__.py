@@ -39,7 +39,7 @@ def outputln(message: str, con: Union[Console, None] = None, **kwargs):
             aside += f"{kwargs.get('hostname')}:{kwargs.get('port')}"
         else:
             aside += kwargs.get("hostname")
-    open_tag = f"{result_icon.strip()}[{result_color}]"
+    open_tag = f"{result_icon.strip()} [{result_color}]".strip()
     close_tag = f"[/{result_color}]"
     bold_result = kwargs.get("bold_result", False)
     if bold_result:

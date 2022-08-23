@@ -3,6 +3,7 @@ import logging
 import argparse
 from os import getenv
 from urllib.parse import urlparse
+from pathlib import Path
 from typing import Union
 
 import validators
@@ -10,14 +11,16 @@ from rich.console import Console
 from rich.logging import RichHandler
 from art import text2art
 
+from . import outputln
 from .register import register
+from .generate import generate
 from .scan import scan
 from .. import constants
-from ..config import load_config, get_config
+from ..config import load_config, get_config, DEFAULT_CONFIG
 
 
 __module__ = "trivialscan.cli"
-__version__ = "3.0.0rc2"
+__version__ = "3.0.0rc3"
 
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
 APP_BANNER = text2art("trivialscan", font="tarty4")
@@ -90,6 +93,15 @@ def main():
         action="store_true",
     )
     sub_parsers = cli.add_subparsers()
+    generate_parser = sub_parsers.add_parser(
+        "generate",
+        prog="trivial generate",
+        description=cli.description,
+        add_help=False,
+        help="Generate a basic configuration file",
+    )
+    generate_parser.set_defaults(subcommand="generate")
+    generate_parser.add_argument("-h", "--help", action=_HelpAction)
     register_parser = sub_parsers.add_parser(
         "register",
         prog="trivial register",
@@ -157,9 +169,9 @@ def main():
     scan_parser.add_argument(
         "-p",
         "--config-path",
-        help="Provide the path to a configuration file",
+        help=f"Provide the path to a configuration file (Default: {DEFAULT_CONFIG})",
         dest="config_file",
-        default=".trivialscan-config.yaml",
+        default=DEFAULT_CONFIG,
     )
     scan_parser.add_argument(
         "-O",
@@ -224,6 +236,8 @@ def main():
         log_format = "%(message)s"
         handlers.append(RichHandler(rich_tracebacks=True))
     logging.basicConfig(format=log_format, level=log_level, handlers=handlers)
+    if args.subcommand == "generate":
+        generate({**vars(args)})
     if args.subcommand == "register":
         register(
             {
@@ -243,6 +257,31 @@ def main():
             del config["defaults"]["skip_evaluations"]
         if config["defaults"].get("skip_evaluation_groups"):
             del config["defaults"]["skip_evaluation_groups"]
+        hide_banner = True if args.quiet else args.hide_banner
+        use_console = (
+            any(n.get("type") == "console" for n in config.get("outputs", []))
+            and not args.quiet
+        )
+        use_icons = any(
+            n.get("type") == "console" and n.get("use_icons")
+            for n in config.get("outputs", [])
+        )
+        if use_console and not hide_banner:
+            console.print(
+                f"[bold][{constants.CLI_COLOR_PRIMARY}]{APP_BANNER}[/{constants.CLI_COLOR_PRIMARY}][/bold]"
+            )
+            console.print(
+                f"{__version__}\t\t[bold][{constants.CLI_COLOR_PASS}]SUCCESS[/{constants.CLI_COLOR_PASS}] [{constants.CLI_COLOR_WARN}]ISSUE[/{constants.CLI_COLOR_WARN}] [{constants.CLI_COLOR_FAIL}]VULNERABLE[/{constants.CLI_COLOR_FAIL}] [{constants.CLI_COLOR_INFO}]INFO[/{constants.CLI_COLOR_INFO}] [{constants.CLI_COLOR_PRIMARY}]RESULT[/{constants.CLI_COLOR_PRIMARY}][/bold]"
+            )
+        if Path(args.config_file).is_file():
+            outputln(
+                args.config_file,
+                aside="core",
+                result_text="CONFIG",
+                result_icon=":file_folder:",
+                con=console if use_console else None,
+                use_icons=use_icons,
+            )
         scan(
             config,
             **{
@@ -252,18 +291,12 @@ def main():
                 "track_changes": args.track_changes,
                 "previous_report": args.previous_report or args.json_file,
                 "quiet": args.quiet,
-                "log_level": log_level,
             },
         )
 
 
 def _scan_config(cli_args: dict, filename: Union[str, None]) -> dict:
-    # only overwrite value in config file if OVERRIDE cli args were defined
-    if filename:
-        custom = load_config(filename)
-    else:
-        custom = load_config()
-
+    custom = load_config(filename)
     config = get_config(custom_values=custom)
     if cli_args.get("project_name"):
         config["project_name"] = cli_args.get("project_name")

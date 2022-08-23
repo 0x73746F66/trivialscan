@@ -7,4 +7,4 @@ defaults:
 
 outputs:
   - type: console
-    use_icons: False
+    use_icons: True

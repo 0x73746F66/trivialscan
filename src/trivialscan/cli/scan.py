@@ -398,9 +398,7 @@ def run_parra(config: dict, show_progress: bool, use_console: bool = False) -> l
 def scan(config: dict, **flags):
     no_stdout = flags.get("quiet", False)
     hide_progress_bars = True if no_stdout else flags.get("hide_progress_bars", False)
-    hide_banner = True if no_stdout else flags.get("hide_banner", False)
     synchronous_only = flags.get("synchronous_only", False)
-    log_level = flags.get("log_level", logging.ERROR)
     run_start = datetime.utcnow()
     queries = []
     num_targets = len(config.get("targets"))
@@ -412,16 +410,6 @@ def scan(config: dict, **flags):
         n.get("type") == "console" and n.get("use_icons")
         for n in config.get("outputs", [])
     )
-    if use_console:
-        if not hide_banner:
-            from .__main__ import __version__
-
-            console.print(
-                f"[bold][{constants.CLI_COLOR_PRIMARY}]{APP_BANNER}[/{constants.CLI_COLOR_PRIMARY}][/bold]"
-            )
-            console.print(
-                f"{__version__}\t\t[bold][{constants.CLI_COLOR_PASS}]SUCCESS[/{constants.CLI_COLOR_PASS}] [{constants.CLI_COLOR_WARN}]ISSUE[/{constants.CLI_COLOR_WARN}] [{constants.CLI_COLOR_FAIL}]VULNERABLE[/{constants.CLI_COLOR_FAIL}] [{constants.CLI_COLOR_INFO}]INFO[/{constants.CLI_COLOR_INFO}] [{constants.CLI_COLOR_PRIMARY}]RESULT[/{constants.CLI_COLOR_PRIMARY}][/bold]"
-            )
     cli.outputln(
         f"Evaluating {num_targets} domain{'s' if num_targets >1 else ''}",
         aside="core",

@@ -440,6 +440,8 @@ class Trivialscan:
                 "subject_key_identifier": cert.subject_key_identifier,
                 "authority_key_identifier": cert.authority_key_identifier,
             }
+            if isinstance(cert, LeafCertificate):
+                cert.set_transport(self._transport)
             cli.outputln(
                 cert_data["certificate_subject"],
                 aside=f"SHA1:{cert.sha1_fingerprint} {self._transport.store.tls_state.hostname}:{self._transport.store.tls_state.port}",

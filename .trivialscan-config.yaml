@@ -16,7 +16,7 @@ defaults:
 
 outputs:
   - type: console
-    use_icons: False
+    use_icons: True
   - type: json
     path: .development/results/{project_name}/{hostname}_{port}.json
     when: per_host
