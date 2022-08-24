@@ -21,6 +21,15 @@ CREDENTIALS_FILE = path.join(CONFIG_PATH, "credentials")
 logger = logging.getLogger(__name__)
 
 
+def load_credentials() -> Union[dict, None]:
+    credentials_path = Path(CREDENTIALS_FILE)
+    if not credentials_path.is_file():
+        return None
+    config = configparser.ConfigParser()
+    config.read(CREDENTIALS_FILE)
+    return {key: dict(conf) for key, conf in dict(config).items()}
+
+
 def load_local(account_name: str) -> Union[dict, None]:
     try:
         if KEYRING_SUPPORT:
@@ -36,11 +45,7 @@ def load_local(account_name: str) -> Union[dict, None]:
     except keyring.errors.KeyringError as ex:
         logger.debug(ex, exc_info=True)
 
-    credentials_path = Path(CREDENTIALS_FILE)
-    if not credentials_path.is_file():
-        return None
-    config = configparser.ConfigParser()
-    config.read(CREDENTIALS_FILE)
+    config = load_credentials()
     return None if account_name not in config else dict(config[account_name])
 
 

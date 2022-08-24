@@ -12,7 +12,7 @@ import idna
 from certifi import where
 from requests_cache import CachedSession
 from requests import Response
-from requests.exceptions import SSLError
+from requests.exceptions import SSLError, ConnectionError
 from urllib3.util.ssl_match_hostname import CertificateError
 from cryptography.x509.ocsp import (
     OCSPResponse,

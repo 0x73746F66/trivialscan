@@ -8,9 +8,10 @@ from urllib.parse import urlparse
 import validators
 import yaml
 from rich.console import Console
+from rich.prompt import Prompt, IntPrompt, Confirm
 
-from .. import cli
-from ..config import base_config, ask, DEFAULT_CONFIG
+from .. import cli, constants
+from ..config import base_config, DEFAULT_CONFIG
 
 __module__ = "trivialscan.cli.generate"
 
@@ -20,9 +21,13 @@ DEFAULT_PROJECT = f"trivialsec_{datetime.now().year}"
 
 
 def _gather_target() -> tuple[str, int]:
-    domain_name = input("Enter a domain name (Ctrl+C to exit): ").strip()
+    domain_name = Prompt.ask(
+        f"Enter a domain name [{constants.CLI_COLOR_INFO}](Ctrl+C to exit)[/{constants.CLI_COLOR_INFO}]"
+    ).strip()
     if not domain_name:
-        console.print("No domain name supplied, exiting")
+        console.print(
+            f"[{constants.CLI_COLOR_FAIL}]No domain name supplied, exiting[/{constants.CLI_COLOR_FAIL}]"
+        )
         sys.exit(0)
     if not domain_name.startswith("http"):
         domain_name = f"https://{domain_name}"
@@ -31,16 +36,29 @@ def _gather_target() -> tuple[str, int]:
         console.print(f"{domain_name} hostname {parsed.hostname} is invalid")
         sys.exit(0)
 
-    port = input("Enter a port (default: 443): ").strip()
-    return parsed.hostname, int(port) if port else None
+    port = IntPrompt.ask("Enter a port", default=443, show_default=True)
+    return parsed.hostname, port
 
 
 def generate(args: dict):
     try:
         conf = base_config()
+        if not args.get("account_name"):
+            conf["account_name"] = Prompt.ask(
+                f"""Enter your Trivial Security account name.
+[bold]Tip[/bold]: You set the account name when you run the command; "[{constants.CLI_COLOR_PRIMARY}]trivial register[/{constants.CLI_COLOR_PRIMARY}]"
+Enter anything here for local only use [{constants.CLI_COLOR_INFO}](Ctrl+C to exit)[/{constants.CLI_COLOR_INFO}]"""
+            ).strip()
+        if not conf.get("account_name"):
+            console.print(
+                f"[{constants.CLI_COLOR_FAIL}]No account name provided, aborting[/{constants.CLI_COLOR_FAIL}]"
+            )
+            sys.exit(1)
         if not args.get("project_name"):
-            conf["project_name"] = input(
-                "Enter a project name (Ctrl+C to exit): "
+            conf["project_name"] = Prompt.ask(
+                f"Enter a project name [{constants.CLI_COLOR_INFO}](Ctrl+C to exit)[/{constants.CLI_COLOR_INFO}]",
+                default=DEFAULT_PROJECT,
+                show_default=True,
             ).strip()
         if not conf.get("project_name"):
             console.print(f"Using default project name '{DEFAULT_PROJECT}'")
@@ -49,7 +67,9 @@ def generate(args: dict):
         targets = []
         adding_domains = True
         while adding_domains:
-            adding_domains = ask("Do you want add a target domain?")
+            adding_domains = Confirm.ask(
+                "Do you want add a target domain?", default=True
+            )
             if not adding_domains:
                 break
             domain, port = _gather_target()
@@ -63,10 +83,16 @@ def generate(args: dict):
         conf_path = DEFAULT_CONFIG
         conf["targets"] = targets
         config_file = Path(conf_path)
-        if config_file.is_file() and not ask(f"Do you want to over write {conf_path}?"):
-            custom_file = input("Enter a file name: ").strip()
+        if config_file.is_file() and not Confirm.ask(
+            f"Do you want to over write {conf_path}?", default=True
+        ):
+            custom_file = Prompt.ask(
+                "Enter a file name: ", default=DEFAULT_CONFIG
+            ).strip()
             if not custom_file:
-                console.print("No file name supplied, exiting")
+                console.print(
+                    f"[{constants.CLI_COLOR_FAIL}]No file name supplied, exiting[/{constants.CLI_COLOR_FAIL}]"
+                )
                 sys.exit(0)
             conf_path = custom_file
             config_file = Path(custom_file)

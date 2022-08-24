@@ -1,11 +1,12 @@
 import platform
 import logging
+import json
 
 import requests
 from rich.console import Console
+from rich.prompt import Prompt
 
-from trivialscan import constants
-
+from . import constants
 from .credentials import CREDENTIALS_FILE, KEYRING_SUPPORT, load_local, save_local
 
 __module__ = "trivialscan.cli.register"
@@ -17,8 +18,8 @@ console = Console()
 def register(args: dict):
     try:
         if not args.get("account_name"):
-            args["account_name"] = input(
-                "Enter an account name (Ctrl+C to exit): "
+            args["account_name"] = Prompt.ask(
+                f"Choose (or specify) your Trivial Security account name [{constants.CLI_COLOR_INFO}](Ctrl+C to exit)[/{constants.CLI_COLOR_INFO}]"
             ).strip()
         if not args.get("account_name"):
             logger.critical("You must provide an account name")
@@ -37,13 +38,17 @@ def register(args: dict):
         logger.info(url)
         resp = requests.post(
             url,
-            data={
-                "operating_system": platform.system(),
-                "operating_system_release": platform.release(),
-                "operating_system_version": platform.version(),
-                "architecture": platform.machine(),
-            },
+            json=json.dumps(
+                {
+                    "operating_system": platform.system(),
+                    "operating_system_release": platform.release(),
+                    "operating_system_version": platform.version(),
+                    "architecture": platform.machine(),
+                }
+            ),
             headers={
+                "Content-Type": "application/json",
+                "Accept": "text/plain",
                 "x-trivialscan-account": args["account_name"],
             },
         )
@@ -63,8 +68,7 @@ def register(args: dict):
         save_local(account_name=args["account_name"], **credentials)
         console.print(
             f"""Your client token is: [bold][{constants.CLI_COLOR_PRIMARY}]{credentials['token']}[/{constants.CLI_COLOR_PRIMARY}]
-[{constants.CLI_COLOR_FAIL}]DO NOT LOSE THIS TOKEN[/bold]
-A new client must be registered for a new token[/{constants.CLI_COLOR_FAIL}]"""
+[{constants.CLI_COLOR_FAIL}]DO NOT LOSE THIS TOKEN[/bold][/{constants.CLI_COLOR_FAIL}]"""
         )
     except KeyboardInterrupt:
         pass

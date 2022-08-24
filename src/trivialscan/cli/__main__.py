@@ -14,10 +14,12 @@ from art import text2art
 from . import outputln
 from .register import register
 from .generate import generate
+from .info import info
 from .scan import scan
 from .. import constants
 from ..config import load_config, get_config, DEFAULT_CONFIG
-
+from .credentials import load_local
+from trivialscan.cli import credentials
 
 __module__ = "trivialscan.cli"
 __version__ = "3.0.0rc3"
@@ -25,17 +27,15 @@ __version__ = "3.0.0rc3"
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
 APP_BANNER = text2art("trivialscan", font="tarty4")
 APP_ENV = getenv("APP_ENV", "development")
-DASHBOARD_API_URL = (
-    f"http://localhost:8000/{__version__}"
-    if APP_ENV == "development"
-    else f"https://api-dashboard.trivialsec.com/{__version__}"
-)
+DASHBOARD_API_URL = f"https://api-dashboard.trivialsec.com/{__version__}"
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 console = Console()
 logger = logging.getLogger(__name__)
 cli = argparse.ArgumentParser(
-    prog="trivial", description=f"Release {__version__} {REMOTE_URL}"
+    prog="trivial",
+    description=f"Release {__version__} {REMOTE_URL}",
+    add_help=False,
 )
 
 
@@ -49,10 +49,24 @@ class _HelpAction(argparse._HelpAction):
 def main():
     cli.add_argument("--version", dest="show_version", action="store_true")
     cli.add_argument(
+        "-D",
+        "--api-url",
+        help="URL for the Trivial Scanner dashboard API endpoint",
+        dest="dashboard_api_url",
+        default=DASHBOARD_API_URL,
+    )
+    cli.add_argument(
         "-a",
         "--account-name",
         help="Your unique Trivial Security account name, used for enhanced features.",
         dest="account_name",
+        default=None,
+    )
+    cli.add_argument(
+        "-N",
+        "--client-name",
+        help="Identifies this computer/server in scan reports and audit logs.",
+        dest="client_name",
         default=None,
     )
     cli.add_argument(
@@ -99,36 +113,50 @@ def main():
         description=cli.description,
         add_help=False,
         help="Generate a basic configuration file",
+        parents=[cli],
     )
     generate_parser.set_defaults(subcommand="generate")
     generate_parser.add_argument("-h", "--help", action=_HelpAction)
+    info_parser = sub_parsers.add_parser(
+        "info",
+        prog="trivial info",
+        description=cli.description,
+        add_help=False,
+        help="Show cli related information for this client",
+        parents=[cli],
+    )
+    info_parser.set_defaults(subcommand="info")
+    info_parser.add_argument("-h", "--help", action=_HelpAction)
     register_parser = sub_parsers.add_parser(
         "register",
         prog="trivial register",
         description=cli.description,
         add_help=False,
-        help="Retrieve a client token for advanced features",
+        help="Retrieve a client toke, parents=[parent_parser]n for advanced features",
+        parents=[cli],
     )
     register_parser.set_defaults(subcommand="register")
     register_parser.add_argument("-h", "--help", action=_HelpAction)
-    register_parser.add_argument(
-        "-c",
-        "--client-name",
-        help="Identifies this computer/server in scan reports and audit logs.",
-        dest="client_name",
-        default=None,
-    )
     scan_parser = sub_parsers.add_parser(
         "scan",
         prog="trivial scan",
         description=cli.description,
         add_help=False,
         help="Evaluate domains for TLS related vulnerabilities",
+        parents=[cli],
     )
     scan_parser.set_defaults(subcommand="scan")
     scan_parser.add_argument("-h", "--help", action=_HelpAction)
     scan_parser.add_argument(
-        "targets",
+        "--token",
+        dest="token",
+        default=None,
+        help="Registration Token for the Trivial Scanner dashboard API",
+    )
+    scan_parser.add_argument(
+        "-t",
+        "--targets",
+        dest="targets",
         nargs="*",
         help="All unnamed arguments are hosts (and ports) targets to test. ~$ trivial scan google.com:443 github.io owasp.org:80",
     )
@@ -160,7 +188,7 @@ def main():
         default="/",
     )
     scan_parser.add_argument(
-        "-t",
+        "-T",
         "--tmp-path-prefix",
         help="local file path to use as a prefix when saving temporary files such as those being fetched for client authorization",
         dest="tmp_path_prefix",
@@ -238,13 +266,15 @@ def main():
     logging.basicConfig(format=log_format, level=log_level, handlers=handlers)
     if args.subcommand == "generate":
         generate({**vars(args)})
+    if args.subcommand == "info":
+        info(args.dashboard_api_url.strip("/"))
     if args.subcommand == "register":
         register(
             {
                 "account_name": args.account_name,
                 "client_name": args.client_name,
                 "log_level": log_level,
-                "url": DASHBOARD_API_URL,
+                "url": args.dashboard_api_url.strip("/"),
             }
         )
     if args.subcommand == "scan":
@@ -298,8 +328,21 @@ def main():
 def _scan_config(cli_args: dict, filename: Union[str, None]) -> dict:
     custom = load_config(filename)
     config = get_config(custom_values=custom)
+    if config.get("account_name"):
+        creds = load_local(config.get("account_name"))
+        config["client_name"] = creds["client_name"]
+        config["token"] = creds["token"]
+    config.setdefault(
+        "dashboard_api_url", cli_args.get("dashboard_api_url", "").strip("/")
+    )
+    if cli_args.get("account_name"):
+        config["account_name"] = cli_args.get("account_name")
+    if cli_args.get("client_name"):
+        config["client_name"] = cli_args.get("client_name")
     if cli_args.get("project_name"):
         config["project_name"] = cli_args.get("project_name")
+    if cli_args.get("token"):
+        config["token"] = cli_args.get("token")
     config.setdefault("outputs", [])
     config["defaults"]["cafiles"] = cli_args.get(
         "cafiles", config["defaults"]["cafiles"]

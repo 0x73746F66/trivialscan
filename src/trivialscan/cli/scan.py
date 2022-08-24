@@ -1,14 +1,20 @@
 import signal
 import sys
 import logging
+import json
 from multiprocessing import Pool, cpu_count, Queue
 from datetime import datetime
+from copy import deepcopy
+from typing import Union
+
+import requests
 from rich.console import Console
 from rich.table import Column
 from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColumn
 from art import text2art
 from pynput.keyboard import Key, Listener
-from .. import constants, cli, trivialscan
+
+from .. import cli, constants, trivialscan
 from ..util import camel_to_snake
 from ..outputs.json import save_to, save_partial
 
@@ -56,6 +62,8 @@ def wrap_trivialscan(
                     peer_address=transport.store.tls_state.peer_address,
                     negotiated_protocol=transport.store.tls_state.negotiated_protocol,
                     negotiated_cipher=transport.store.tls_state.negotiated_cipher,
+                    account_name=config.get("account_name"),
+                    client_name=config.get("client_name"),
                     project_name=config.get("project_name"),
                 )
                 for log_file in log_files:
@@ -99,6 +107,8 @@ def wrap_trivialscan(
                         validation_level=cert.validation_level,
                         not_before=cert.not_before,
                         not_after=cert.not_after,
+                        account_name=config.get("account_name"),
+                        client_name=config.get("client_name"),
                         project_name=config.get("project_name"),
                     )
                     for log_file in log_files:
@@ -239,6 +249,8 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
             peer_address=transport.store.tls_state.peer_address,
             negotiated_protocol=transport.store.tls_state.negotiated_protocol,
             negotiated_cipher=transport.store.tls_state.negotiated_cipher,
+            account_name=config.get("account_name"),
+            client_name=config.get("client_name"),
             project_name=config.get("project_name"),
         )
         for log_file in log_files:
@@ -282,6 +294,8 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 validation_level=cert.validation_level,
                 not_before=cert.not_before,
                 not_after=cert.not_after,
+                account_name=config.get("account_name"),
+                client_name=config.get("client_name"),
                 project_name=config.get("project_name"),
             )
             for log_file in log_files:
@@ -422,7 +436,24 @@ def scan(config: dict, **flags):
         queries = run_parra(config, not hide_progress_bars, use_console)
 
     execution_duration_seconds = (datetime.utcnow() - run_start).total_seconds()
-    save_final(config, flags, queries, execution_duration_seconds, use_console)
+    data = save_final(config, flags, queries, execution_duration_seconds, use_console)
+    if config.get("account_name") and config.get("client_name") and config.get("token"):
+        cli.outputln(
+            "Storing results to the cloud",
+            aside="core",
+            con=console if use_console else None,
+            use_icons=use_icons,
+        )
+        results_url = update_cloud(config, flags, data)
+        cli.outputln(
+            f"View results online: {results_url}",
+            aside="core",
+            result_text="SAVED",
+            result_icon=":floppy_disk:",
+            con=console if use_console else None,
+            use_icons=use_icons,
+        )
+
     cli.outputln(
         "Execution duration %.1f seconds" % execution_duration_seconds,
         aside="core",
@@ -432,7 +463,60 @@ def scan(config: dict, **flags):
     )
 
 
-def save_final(config, flags, queries, execution_duration_seconds, use_console):
+def update_cloud(config: dict, flags: dict, results: dict) -> Union[str, None]:
+    url = f"{config['dashboard_api_url']}/store"
+    logger.info(url)
+    conf = deepcopy(config)
+    for item in ["evaluations", "PCI DSS 4.0", "PCI DSS 3.2.1", "MITRE ATT&CK 11.2"]:
+        if item in conf:
+            del conf[item]
+    try:
+        resp = requests.post(
+            url,
+            data=json.dumps(
+                {
+                    "config": conf,
+                    "flags": flags,
+                    "results": results,
+                },
+                default=str,
+            ),
+            headers={
+                "Content-Type": "application/json",
+            },
+        )
+        data = resp.json()
+        return data.get("results_url")
+
+    except requests.exceptions.ConnectionError:
+        console.print(
+            f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+        )
+
+    except KeyboardInterrupt:
+        pass
+
+
+def save_final(
+    config: dict,
+    flags: dict,
+    queries: list[dict],
+    execution_duration_seconds: int,
+    use_console: bool,
+) -> dict:
+    data = {
+        "generator": "trivialscan",
+        "account_name": config.get("account_name"),
+        "client_name": config.get("client_name"),
+        "project_name": config.get("project_name"),
+        "targets": [
+            f"{target.get('hostname')}:{target.get('port')}"
+            for target in config.get("targets")
+        ],
+        "execution_duration_seconds": execution_duration_seconds,
+        "date": datetime.utcnow().replace(microsecond=0).isoformat(),
+        "queries": queries,
+    }
     json_output = [
         n["path"]
         for n in config.get("outputs", [])
@@ -446,18 +530,11 @@ def save_final(config, flags, queries, execution_duration_seconds, use_console):
         for json_file in json_output:
             json_path = save_to(
                 template_filename=json_file,
-                data={
-                    "generator": "trivialscan",
-                    "targets": [
-                        f"{target.get('hostname')}:{target.get('port')}"
-                        for target in config.get("targets")
-                    ],
-                    "execution_duration_seconds": execution_duration_seconds,
-                    "date": datetime.utcnow().replace(microsecond=0).isoformat(),
-                    "queries": queries,
-                },
+                data=data,
                 track_changes=flags.get("track_changes", False),
                 tracking_template_filename=flags.get("previous_report"),
+                account_name=config.get("account_name"),
+                client_name=config.get("client_name"),
                 project_name=config.get("project_name"),
             )
             cli.outputln(
@@ -468,3 +545,4 @@ def save_final(config, flags, queries, execution_duration_seconds, use_console):
                 con=console if use_console else None,
                 use_icons=use_icons,
             )
+    return data

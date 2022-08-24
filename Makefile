@@ -65,10 +65,13 @@ run-stdin: ## pipe targets from stdin
 	cat .development/targets.txt | xargs trivialscan.cli
 
 run-as-module: ## Using CLI as a python module directly (dev purposes)
-	trivialscan.cli ssllabs.com
+	python -m trivialscan.cli scan -t ssllabs.com
 
 run-cli-parallel: ## Leverage defaults using all CPU cores
 	trivial scan
 
 run-cli-sequential: ## Just use normal python (for clean debugging outputs)
 	trivial scan --no-multiprocessing
+
+run-info: ## check client against local API
+	trivial info -D http://localhost:8000/3.0.0rc3/

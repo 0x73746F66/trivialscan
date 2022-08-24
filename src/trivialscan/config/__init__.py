@@ -1,4 +1,3 @@
-import sys
 import logging
 from os import path
 from pathlib import Path
@@ -25,19 +24,6 @@ def force_keys_as_str(self, node, deep=False):
 
 yaml.SafeLoader.old_construct_mapping = yaml.SafeLoader.construct_mapping
 yaml.SafeLoader.construct_mapping = force_keys_as_str
-
-
-def ask(question: str, allow_exit: bool = True, default: str = "Yes") -> bool:
-    append = " (Ctrl+C to exit)" if allow_exit else ""
-    try:
-        resp = input(f"{question} Yes/no{append}: ").strip() or default
-        return resp[0].lower() == "y"
-
-    except KeyboardInterrupt:
-        if allow_exit:
-            sys.exit(0)
-
-    return ask(question, allow_exit)
 
 
 def _deep_merge(*args) -> dict:
@@ -203,6 +189,14 @@ def _validate_config(combined_config: dict) -> dict:
 def combine_configs(user_conf: dict, custom_conf: dict) -> dict:
     default_values = default_config()
     ret_config = {
+        "account_name": custom_conf.get(
+            "account_name",
+            user_conf.get("account_name", default_values.get("account_name", None)),
+        ),
+        "client_name": custom_conf.get(
+            "client_name",
+            user_conf.get("client_name", default_values.get("client_name", None)),
+        ),
         "project_name": custom_conf.get(
             "project_name",
             user_conf.get("project_name", default_values.get("project_name", None)),

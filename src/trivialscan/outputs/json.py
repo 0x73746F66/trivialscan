@@ -58,6 +58,9 @@ def save_partial(config, when: str, data_type: str, data, **kwargs) -> list[str]
                     template_filename=json_file,
                     data={
                         "generator": "trivialscan",
+                        "account_name": kwargs.get("account_name"),
+                        "client_name": kwargs.get("client_name"),
+                        "project_name": kwargs.get("project_name"),
                         "date": datetime.utcnow().replace(microsecond=0).isoformat(),
                         data_type: data,
                     },
