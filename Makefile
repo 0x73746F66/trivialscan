@@ -51,7 +51,7 @@ build: ## build wheel file
 
 publish: check ## upload to pypi.org
 	git tag -f $(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)
-	git push -u origin --tags
+	git push -u origin --tags -f
 	python -m twine upload dist/*
 
 crlite:
