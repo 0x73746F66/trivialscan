@@ -2,6 +2,7 @@ import logging
 import string
 import random
 import signal
+import json
 from datetime import datetime, date, time
 from urllib.request import urlretrieve
 from binascii import hexlify
@@ -9,7 +10,18 @@ from pathlib import Path
 from decimal import Decimal
 from functools import wraps
 from typing import Union
+from copy import deepcopy
+from io import BytesIO
 
+import requests
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
+from rich.progress import (
+    Progress,
+    DownloadColumn,
+    BarColumn,
+    TimeRemainingColumn,
+    TransferSpeedColumn,
+)
 import validators
 from cryptography import x509
 from cryptography.x509 import (
@@ -951,3 +963,102 @@ def html_find_match(content: str, query: str) -> Union[str, None]:
 
 def camel_to_snake(s):
     return "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")
+
+
+def make_data(
+    config: dict,
+    queries: list[dict],
+) -> dict:
+    return {
+        "generator": "trivialscan",
+        "account_name": config.get("account_name"),
+        "client_name": config.get("client_name"),
+        "project_name": config.get("project_name"),
+        "targets": [
+            f"{target.get('hostname')}:{target.get('port')}"
+            for target in config.get("targets")
+        ],
+        "date": datetime.utcnow().replace(microsecond=0).isoformat(),
+        "queries": queries,
+    }
+
+
+def update_cloud(config: dict, flags: dict, results: dict) -> Union[str, None]:
+    data = None
+    try:
+        url = f"{config['dashboard_api_url']}/store"
+        logger.info(url)
+        hide_progress_bars = (
+            True
+            if flags.get("quiet", False)
+            else flags.get("hide_progress_bars", False)
+        )
+        conf = deepcopy(config)
+        for item in [
+            "evaluations",
+            "PCI DSS 4.0",
+            "PCI DSS 3.2.1",
+            "MITRE ATT&CK 11.2",
+        ]:
+            if item in conf:
+                del conf[item]
+        json_str = json.dumps(
+            {
+                "config": conf,
+                "flags": flags,
+                "results": results,
+            },
+            default=str,
+        )
+        encoder = MultipartEncoder(
+            [("files", ("trivialscan.json", BytesIO(json_str.encode())))]
+        )
+        with Progress(
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            BarColumn(),
+            DownloadColumn(),
+            "•",
+            TimeRemainingColumn(
+                compact=True,
+                elapsed_when_finished=True,
+            ),
+            "•",
+            TransferSpeedColumn(),
+            disable=hide_progress_bars,
+        ) as progress:
+            task_id = progress.add_task("", total=encoder.len)
+            monitor = MultipartEncoderMonitor(
+                encoder,
+                lambda monitor: progress.update(
+                    task_id,
+                    completed=monitor.bytes_read,
+                ),
+            )
+            try:
+                resp = requests.post(
+                    url,
+                    data=monitor,
+                    headers={
+                        "Content-Type": monitor.content_type,
+                    },
+                )
+                logger.debug(resp.text)
+                data = resp.json()
+
+            except requests.exceptions.ConnectionError as err:
+                logger.warning(err, exc_info=True)
+                progress.console.print(
+                    f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+                )
+
+            except requests.exceptions.JSONDecodeError:
+                logger.warning(
+                    f"Bad response from server ({resp.status_code}): {resp.text}"
+                )
+            finally:
+                progress.stop_task(task_id)
+
+    except KeyboardInterrupt:
+        pass
+
+    return data if not data else data.get("results_url")

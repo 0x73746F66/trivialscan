@@ -16,6 +16,7 @@ from .register import register
 from .generate import generate
 from .info import info
 from .scan import scan
+from .upload import upload
 from .. import constants
 from ..config import load_config, get_config, DEFAULT_CONFIG
 from .credentials import load_local
@@ -127,12 +128,29 @@ def main():
     )
     info_parser.set_defaults(subcommand="info")
     info_parser.add_argument("-h", "--help", action=_HelpAction)
+    upload_parser = sub_parsers.add_parser(
+        "scan-upload",
+        prog="trivial scan-upload",
+        description=cli.description,
+        add_help=False,
+        help="Retry an upload for a previous scan",
+        parents=[cli],
+    )
+    upload_parser.set_defaults(subcommand="scan-upload")
+    upload_parser.add_argument("-h", "--help", action=_HelpAction)
+    upload_parser.add_argument(
+        "-R",
+        "--results-file",
+        help="File of a previous scan to retry upload",
+        dest="results_file",
+        required=True,
+    )
     register_parser = sub_parsers.add_parser(
         "register",
         prog="trivial register",
         description=cli.description,
         add_help=False,
-        help="Retrieve a client toke, parents=[parent_parser]n for advanced features",
+        help="Retrieve a client token for advanced features",
         parents=[cli],
     )
     register_parser.set_defaults(subcommand="register")
@@ -264,6 +282,7 @@ def main():
         log_format = "%(message)s"
         handlers.append(RichHandler(rich_tracebacks=True))
     logging.basicConfig(format=log_format, level=log_level, handlers=handlers)
+    logger.info(f"subcommand {args.subcommand}")
     if args.subcommand == "generate":
         generate({**vars(args)})
     if args.subcommand == "info":
@@ -277,6 +296,9 @@ def main():
                 "url": args.dashboard_api_url.strip("/"),
             }
         )
+    if args.subcommand == "scan-upload":
+        config = _scan_config(vars(args), DEFAULT_CONFIG)
+        upload(config, args.results_file)
     if args.subcommand == "scan":
         config = _scan_config(vars(args), args.config_file)
         if not config.get("targets"):
@@ -358,7 +380,7 @@ def _scan_config(cli_args: dict, filename: Union[str, None]) -> dict:
         config["defaults"]["use_sni"] = False
     config.setdefault("targets", [])
     targets = []
-    for hostname in cli_args.get("targets", []):
+    for hostname in cli_args.get("targets", []) or []:
         if not hostname.startswith("http"):
             hostname = f"https://{hostname}"
         parsed = urlparse(hostname)

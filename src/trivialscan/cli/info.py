@@ -1,7 +1,6 @@
 import logging
 
 import requests
-from socket import gaierror
 from rich.console import Console
 from rich.table import Table
 
@@ -46,15 +45,26 @@ def info(dashboard_api_url: str):
         for account_name, conf in credentials.items():
             if not conf.get("client_name"):
                 continue
-            resp = requests.get(
-                dashboard_api_url,
-                headers={
-                    "x-trivialscan-account": account_name,
-                    "x-trivialscan-client": conf["client_name"],
-                    "x-trivialscan-token": conf.get("token"),
-                },
-            )
-            data = resp.json()
+            data = {}
+            try:
+                resp = requests.get(
+                    dashboard_api_url,
+                    headers={
+                        "x-trivialscan-account": account_name,
+                        "x-trivialscan-client": conf["client_name"],
+                        "x-trivialscan-token": conf.get("token"),
+                    },
+                )
+                data = resp.json()
+            except requests.exceptions.ConnectionError as err:
+                logger.exception(err)
+                console.print(
+                    f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+                )
+            except requests.exceptions.JSONDecodeError:
+                logger.warning(
+                    f"Bad response from server ({resp.status_code}): {resp.text}"
+                )
             table.add_row(
                 account_name,
                 conf["client_name"],
@@ -63,11 +73,6 @@ def info(dashboard_api_url: str):
             )
 
         console.print(table)
-
-    except requests.exceptions.ConnectionError:
-        console.print(
-            f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
-        )
 
     except KeyboardInterrupt:
         pass

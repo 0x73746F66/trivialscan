@@ -1,21 +1,26 @@
 import signal
 import sys
 import logging
-import json
 from multiprocessing import Pool, cpu_count, Queue
 from datetime import datetime
-from copy import deepcopy
-from typing import Union
 
-import requests
 from rich.console import Console
 from rich.table import Column
-from rich.progress import Progress, MofNCompleteColumn, TextColumn, SpinnerColumn
+from rich.progress import (
+    Progress,
+    MofNCompleteColumn,
+    TextColumn,
+    SpinnerColumn,
+    DownloadColumn,
+    BarColumn,
+    TimeRemainingColumn,
+    TransferSpeedColumn,
+)
 from art import text2art
 from pynput.keyboard import Key, Listener
 
 from .. import cli, constants, trivialscan
-from ..util import camel_to_snake
+from ..util import camel_to_snake, update_cloud, make_data
 from ..outputs.json import save_to, save_partial
 
 __module__ = "trivialscan.cli.scan"
@@ -446,10 +451,17 @@ def scan(config: dict, **flags):
         )
         results_url = update_cloud(config, flags, data)
         cli.outputln(
-            f"View results online: {results_url}",
+            f"View results online: {results_url}"
+            if results_url
+            else "Unable to reach the Trivial Security servers",
             aside="core",
-            result_text="SAVED",
-            result_icon=":floppy_disk:",
+            result_level=constants.RESULT_LEVEL_INFO
+            if results_url
+            else constants.RESULT_LEVEL_WARN,
+            result_text="SAVED" if results_url else constants.RESULT_LEVEL_WARN_DEFAULT,
+            result_icon=":floppy_disk:"
+            if results_url
+            else constants.CLI_ICON_MAP.get(constants.RESULT_LEVEL_WARN),
             con=console if use_console else None,
             use_icons=use_icons,
         )
@@ -463,40 +475,6 @@ def scan(config: dict, **flags):
     )
 
 
-def update_cloud(config: dict, flags: dict, results: dict) -> Union[str, None]:
-    url = f"{config['dashboard_api_url']}/store"
-    logger.info(url)
-    conf = deepcopy(config)
-    for item in ["evaluations", "PCI DSS 4.0", "PCI DSS 3.2.1", "MITRE ATT&CK 11.2"]:
-        if item in conf:
-            del conf[item]
-    try:
-        resp = requests.post(
-            url,
-            data=json.dumps(
-                {
-                    "config": conf,
-                    "flags": flags,
-                    "results": results,
-                },
-                default=str,
-            ),
-            headers={
-                "Content-Type": "application/json",
-            },
-        )
-        data = resp.json()
-        return data.get("results_url")
-
-    except requests.exceptions.ConnectionError:
-        console.print(
-            f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
-        )
-
-    except KeyboardInterrupt:
-        pass
-
-
 def save_final(
     config: dict,
     flags: dict,
@@ -504,19 +482,8 @@ def save_final(
     execution_duration_seconds: int,
     use_console: bool,
 ) -> dict:
-    data = {
-        "generator": "trivialscan",
-        "account_name": config.get("account_name"),
-        "client_name": config.get("client_name"),
-        "project_name": config.get("project_name"),
-        "targets": [
-            f"{target.get('hostname')}:{target.get('port')}"
-            for target in config.get("targets")
-        ],
-        "execution_duration_seconds": execution_duration_seconds,
-        "date": datetime.utcnow().replace(microsecond=0).isoformat(),
-        "queries": queries,
-    }
+    data = make_data(config, queries)
+    data["execution_duration_seconds"] = execution_duration_seconds
     json_output = [
         n["path"]
         for n in config.get("outputs", [])
