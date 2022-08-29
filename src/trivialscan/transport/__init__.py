@@ -48,20 +48,9 @@ logger = logging.getLogger(__name__)
 
 
 class TLSTransport:
-    _client_pem_path: str
-    _server_certificate: bytes
-    _client_certificate: bytes
-    client_certificate: ClientCertificate
-    _cafiles: list
-    _verifier_errors: list[tuple[X509], int]
-    _certificate_chain: list[bytes]
     _default_connect_method: str = "SSLv23_METHOD"
     _default_connect_verify_mode: str = "VERIFY_NONE"
     _data_recv_size: int = 8096
-    _depth: dict
-    store: TransportStore
-    _ocsp: dict
-    _revocation_ocsp_assertion: bytes
 
     def __init__(self, hostname: str, port: int = 443) -> None:
         if not isinstance(port, int):
@@ -70,6 +59,7 @@ class TLSTransport:
             )
         if validators.domain(hostname) is not True:
             raise ValueError(f"provided an invalid domain {hostname}")
+
         self.store = TransportStore()
         self.store.tls_state.hostname = hostname
         self.store.tls_state.port = port
@@ -80,13 +70,13 @@ class TLSTransport:
         self.store.tls_state.tls_version_intolerance_versions = []
         self._depth = {}
         self._ocsp = {}
-        self._client_pem_path = None
+        self._client_pem_path: str = None
         self._cafiles = []
         self._certificate_chain = []
-        self._server_certificate = None
-        self._client_certificate = None
+        self._server_certificate: bytes = None
+        self._client_certificate: bytes = None
         self._verifier_errors = []
-        self._revocation_ocsp_assertion = b""
+        self._revocation_ocsp_assertion: bytes = b""
         self._session = CachedSession(
             path.join("/tmp", "trivialscan", hostname),
             backend="filesystem",

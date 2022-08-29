@@ -1,6 +1,6 @@
 import hashlib
 import logging
-from urllib.parse import quote_plus
+from urllib.parse import quote
 from typing import cast
 from datetime import datetime
 from ssl import PEM_cert_to_DER_cert
@@ -240,8 +240,8 @@ class BaseCertificate:
         issuer_cn = util.from_subject(self.x509.to_cryptography().issuer)
         return {
             "crt.sh": f"https://crt.sh/?sha1={self.sha1_fingerprint}",
-            "censys.io": "https://search.censys.io/certificates?q=parsed.fingerprint_sha1%3A{self.sha1_fingerprint}",
-            "urlscan.io": f"https://urlscan.io/search/#page.tlsIssuer%3A%22{quote_plus(issuer_cn)}%22"
+            "censys.io": f"https://search.censys.io/certificates?q=parsed.fingerprint_sha1%3A{self.sha1_fingerprint}",
+            "urlscan.io": f"https://urlscan.io/search/#page.tlsIssuer%3A%22{quote(issuer_cn)}%22"
             if issuer_cn
             else None,
         }

@@ -71,7 +71,6 @@ class InsecureTransport(TLSTransport):
             self.store.tls_state.preferred_protocol = (
                 self.store.tls_state.negotiated_protocol
             )
-
         for version, label in tls_version_map.items():
             label = f"{label} ({hex(constants.PROTOCOL_VERSION[label])})"
             if label in self.store.tls_state.offered_tls_versions:

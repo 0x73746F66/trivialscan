@@ -465,6 +465,13 @@ def scan(config: dict, **flags):
             con=console if use_console else None,
             use_icons=use_icons,
         )
+    else:
+        cli.outputln(
+            "Not configured to save reports to the Cloud Dashboard",
+            aside="core",
+            con=console if use_console else None,
+            use_icons=use_icons,
+        )
 
     cli.outputln(
         "Execution duration %.1f seconds" % execution_duration_seconds,

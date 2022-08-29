@@ -26,14 +26,12 @@ logger = logging.getLogger(__name__)
 
 
 class HTTPState:
-    _response: Response
-
     def __init__(self, response: Response) -> None:
         if not isinstance(response, Response):
             raise RuntimeError(
                 "HTTPState.__init__ requires an instance of requests.Response"
             )
-        self._response = response
+        self._response: Response = response
 
     @property
     def hostname(self) -> str:
@@ -98,29 +96,30 @@ class HTTPState:
 
 
 class TLSState:
-    hostname: str = None
-    port: int = 443
-    sni_support: bool = None
-    peer_address: str = None
-    certificate_mtls_expected: bool = None
-    client_certificate_trusted: bool = None
-    client_certificate_match: bool = None
-    expected_client_subjects: list[str] = []
-    certificates: list[BaseCertificate] = []
-    negotiated_protocol: str = None
-    preferred_protocol: str = None
-    offered_tls_versions: list = []
-    tls_version_intolerance: bool = None
-    tls_version_intolerance_versions: list = []
-    tls_version_interference: bool = None
-    tls_version_interference_versions: list = []
-    session_resumption_cache_mode: str = None
-    session_resumption_tickets: bool = None
-    session_resumption_ticket_hint: bool = None
-    offered_ciphers: list = []
-    forward_anonymity: bool = None
-    negotiated_cipher: str = None
-    negotiated_cipher_bits: int = None
+    def __init__(self) -> None:
+        self.hostname: str = None
+        self.port: int = 443
+        self.sni_support: bool = None
+        self.peer_address: str = None
+        self.certificate_mtls_expected: bool = None
+        self.client_certificate_trusted: bool = None
+        self.client_certificate_match: bool = None
+        self.expected_client_subjects: list[str] = []
+        self.certificates: list[BaseCertificate] = []
+        self.negotiated_protocol: str = None
+        self.preferred_protocol: str = None
+        self.offered_tls_versions: list = []
+        self.tls_version_intolerance: bool = None
+        self.tls_version_intolerance_versions: list = []
+        self.tls_version_interference: bool = None
+        self.tls_version_interference_versions: list = []
+        self.session_resumption_cache_mode: str = None
+        self.session_resumption_tickets: bool = None
+        self.session_resumption_ticket_hint: bool = None
+        self.offered_ciphers: list = []
+        self.forward_anonymity: bool = None
+        self.negotiated_cipher: str = None
+        self.negotiated_cipher_bits: int = None
 
     def from_dict(self, data: dict) -> None:
         for certificate in data.get("certificates", []):
@@ -148,46 +147,52 @@ class TLSState:
                         load_certificate(FILETYPE_PEM, certificate["pem"].encode())
                     )
                 )
-        self.hostname = data.get("_transport", {}).get("hostname")
-        self.port = data.get("_transport", {}).get("port", 443)
-        self.peer_address = data.get("_transport", {}).get("peer_address")
-        self.sni_support = data.get("client", {}).get("sni_support")
-        self.certificate_mtls_expected = data.get("client", {}).get(
-            "certificate_mtls_expected"
+        self.hostname = data.get("transport", {}).get("hostname")
+        self.port = data.get("transport", {}).get("port", 443)
+        self.peer_address = data.get("transport", {}).get("peer_address")
+        self.sni_support = data["tls"].get("client", {}).get("sni_support")
+        self.certificate_mtls_expected = (
+            data["tls"].get("client", {}).get("certificate_mtls_expected")
         )
-        self.client_certificate_trusted = data.get("client", {}).get(
-            "certificate_trusted"
+        self.client_certificate_trusted = (
+            data["tls"].get("client", {}).get("certificate_trusted")
         )
-        self.client_certificate_match = data.get("client", {}).get("certificate_match")
-        self.expected_client_subjects = data.get("client", {}).get(
-            "expected_client_subjects", []
+        self.client_certificate_match = (
+            data["tls"].get("client", {}).get("certificate_match")
         )
-        self.negotiated_protocol = data.get("protocol", {}).get("negotiated")
-        self.preferred_protocol = data.get("protocol", {}).get("preferred")
-        self.offered_tls_versions = data.get("protocol", {}).get("offered", [])
-        self.tls_version_intolerance = data.get("version_intolerance", {}).get("result")
-        self.tls_version_intolerance_versions = data.get("version_intolerance", {}).get(
-            "versions", []
+        self.expected_client_subjects = (
+            data["tls"].get("client", {}).get("expected_client_subjects", [])
         )
-        self.tls_version_interference = data.get("version_interference", {}).get(
-            "result"
+        self.negotiated_protocol = data["tls"].get("protocol", {}).get("negotiated")
+        self.preferred_protocol = data["tls"].get("protocol", {}).get("preferred")
+        self.offered_tls_versions = data["tls"].get("protocol", {}).get("offered", [])
+        self.tls_version_intolerance = (
+            data["tls"].get("version_intolerance", {}).get("result")
+        )
+        self.tls_version_intolerance_versions = (
+            data["tls"].get("version_intolerance", {}).get("versions", [])
+        )
+        self.tls_version_interference = (
+            data["tls"].get("version_interference", {}).get("result")
         )
         self.tls_version_interference_versions = data.get(
             "version_interference", {}
         ).get("versions", [])
-        self.session_resumption_cache_mode = data.get("session_resumption", {}).get(
-            "cache_mode"
+        self.session_resumption_cache_mode = (
+            data["tls"].get("session_resumption", {}).get("cache_mode")
         )
-        self.session_resumption_tickets = data.get("session_resumption", {}).get(
-            "tickets"
+        self.session_resumption_tickets = (
+            data["tls"].get("session_resumption", {}).get("tickets")
         )
-        self.session_resumption_ticket_hint = data.get("session_resumption", {}).get(
-            "ticket_hint"
+        self.session_resumption_ticket_hint = (
+            data["tls"].get("session_resumption", {}).get("ticket_hint")
         )
-        self.offered_ciphers = data.get("cipher", {}).get("offered", [])
-        self.forward_anonymity = data.get("cipher", {}).get("forward_anonymity")
-        self.negotiated_cipher = data.get("cipher", {}).get("negotiated")
-        self.negotiated_cipher_bits = data.get("cipher", {}).get("negotiated_bits")
+        self.offered_ciphers = data["tls"].get("cipher", {}).get("offered", [])
+        self.forward_anonymity = data["tls"].get("cipher", {}).get("forward_anonymity")
+        self.negotiated_cipher = data["tls"].get("cipher", {}).get("negotiated")
+        self.negotiated_cipher_bits = (
+            data["tls"].get("cipher", {}).get("negotiated_bits")
+        )
 
     def to_dict(self, include_transport: bool = False) -> dict:
         data = {
@@ -237,12 +242,11 @@ class TLSState:
 
 
 class TransportStore:
-    tls_state: TLSState = TLSState()
-    http_states: list[HTTPState] = []
-    evaluations: list["EvaluationResult"] = []
-    error: tuple[str, str] = None
-
     def __init__(self, **kwargs) -> None:
+        self.tls_state: TLSState = TLSState()
+        self.http_states: list[HTTPState] = []
+        self.evaluations: list["EvaluationResult"] = []
+        self.error: tuple[str, str] = None
         if kwargs.get("evaluations"):
             self.evaluations = kwargs["evaluations"]
         if kwargs.get("tls"):
