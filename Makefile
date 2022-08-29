@@ -3,10 +3,22 @@ SHELL := /bin/bash
 export $(shell sed 's/=.*//' .env)
 .PHONY: help
 
+.DEFAULT_GOAL := help
+ifdef TRIVIALSCAN_VERSION
+else
+TRIVIALSCAN_VERSION=$(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | head -n1 | python3 -c "import sys; exec(sys.stdin.read()); print(__version__)")
+endif
+ifdef API_URL
+else
+API_URL="http://127.0.0.1:8000/$(TRIVIALSCAN_VERSION)"
+endif
+ifdef APP_ENV
+else
+APP_ENV=development
+endif
+
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-
-.DEFAULT_GOAL := help
 
 clean: ## cleans python for wheel
 	find src -type f -name '*.pyc' -delete 2>/dev/null
@@ -24,10 +36,10 @@ setup: deps ## setup for development of this project
 	yes | detect-secrets audit .secrets.baseline
 
 install: ## Install the package
-	pip install -U dist/trivialscan-$(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)-py2.py3-none-any.whl
+	pip install -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py2.py3-none-any.whl
 
 reinstall: ## Force install the package
-	pip install --force-reinstall -U dist/trivialscan-$(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)-py2.py3-none-any.whl
+	pip install --force-reinstall -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py2.py3-none-any.whl
 
 install-dev: ## Install the package
 	pip install --disable-pip-version-check -U pip
@@ -50,7 +62,7 @@ build: ## build wheel file
 	python -m build -nxsw
 
 publish: check ## upload to pypi.org
-	git tag -f $(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | sed 's/[_version=", ]//g' | head -n1)
+	git tag -f $(TRIVIALSCAN_VERSION)
 	git push -u origin --tags -f
 	python -m twine upload dist/*
 
@@ -61,17 +73,21 @@ crlite:
 	./src/trivialscan/vendor/rust-query-crlite -vvv --db /tmp/.crlite_db/ --update prod x509
 	./src/trivialscan/vendor/rust-query-crlite -vvv --db /tmp/.crlite_db/ https ssllabs.com
 
-run-stdin: ## pipe targets from stdin
-	cat .development/targets.txt | xargs trivialscan.cli
+prerun:
+	@echo "TRIVIALSCAN_VERSION $(TRIVIALSCAN_VERSION)"
+	@echo "API_URL $(API_URL)"
 
-run-as-module: ## Using CLI as a python module directly (dev purposes)
-	python -m trivialscan.cli scan -t ssllabs.com
+run-stdin: prerun ## pipe targets from stdin
+	cat .$(APP_ENV)/targets.txt | xargs trivial scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --no-banner --project-name badssl --targets
 
-run-cli-parallel: ## Leverage defaults using all CPU cores
-	trivial scan
+run-as-module: prerun ## Using CLI as a python module directly (dev purposes)
+	python -m trivialscan.cli scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml -t ssllabs.com --project-name qualys
 
-run-cli-sequential: ## Just use normal python (for clean debugging outputs)
-	trivial scan --no-multiprocessing
+run-cli-parallel: prerun ## Leverage defaults using all CPU cores
+	trivial scan -D $(API_URL)
+
+run-cli-sequential: prerun ## Just use normal python (for clean debugging outputs)
+	trivial scan -D $(API_URL) --no-multiprocessing --config-path .$(APP_ENV)/.trivialscan-config.yaml
 
 run-info: ## check client against local API
-	trivial info -D http://localhost:8000/3.0.0rc3/
+	trivial info -D $(API_URL)
