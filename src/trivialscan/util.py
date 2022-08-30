@@ -15,12 +15,16 @@ from io import BytesIO
 
 import requests
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
+from rich.table import Column
 from rich.progress import (
     Progress,
     DownloadColumn,
     BarColumn,
     TimeRemainingColumn,
     TransferSpeedColumn,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
 )
 import validators
 from cryptography import x509
@@ -1013,8 +1017,8 @@ def update_cloud(config: dict, flags: dict, results: dict) -> Union[str, None]:
         encoder = MultipartEncoder(
             [("files", ("trivialscan.json", BytesIO(json_str.encode())))]
         )
-        with Progress(
-            "[progress.percentage]{task.percentage:>3.0f}%",
+        upload_progress = Progress(
+            "{task.description} [progress.percentage]{task.percentage:>3.0f}%",
             BarColumn(),
             DownloadColumn(),
             "•",
@@ -1025,38 +1029,66 @@ def update_cloud(config: dict, flags: dict, results: dict) -> Union[str, None]:
             "•",
             TransferSpeedColumn(),
             disable=hide_progress_bars,
-        ) as progress:
-            task_id = progress.add_task("", total=encoder.len)
-            monitor = MultipartEncoderMonitor(
-                encoder,
-                lambda monitor: progress.update(
-                    task_id,
-                    completed=monitor.bytes_read,
-                ),
+        )
+        upload_task = upload_progress.add_task("Uploading ", total=encoder.len)
+        upload_progress.start()
+        proc_progress = Progress(
+            TextColumn(
+                f"[{constants.CLI_COLOR_INFO}]"
+                + "{task.description}"
+                + f"[/{constants.CLI_COLOR_INFO}]"
+            ),
+            TimeElapsedColumn(),
+            SpinnerColumn(table_column=Column(ratio=2)),
+            transient=True,
+            disable=hide_progress_bars,
+        )
+        proc_task = proc_progress.add_task("Processing", total=1)
+
+        def callback(monitor):
+            if encoder.finished:
+                upload_progress.stop_task(upload_task)
+                upload_progress.stop()
+                proc_progress.start()
+            upload_progress.update(
+                upload_task,
+                completed=monitor.bytes_read,
             )
-            try:
-                resp = requests.post(
-                    url,
-                    data=monitor,
-                    headers={
-                        "Content-Type": monitor.content_type,
-                    },
+
+        monitor = MultipartEncoderMonitor(encoder, callback)
+        try:
+            resp = requests.post(
+                url,
+                data=monitor,
+                headers={
+                    "Content-Type": monitor.content_type,
+                },
+                stream=True,
+            )
+            if resp.status_code == 200:
+                proc_progress.update(proc_task, completed=1)
+                proc_progress.console.print(
+                    f"[{constants.CLI_COLOR_PASS}]DONE![/{constants.CLI_COLOR_PASS}] Saving to cloud"
                 )
                 logger.debug(resp.text)
-                data = resp.json()
-
-            except requests.exceptions.ConnectionError as err:
-                logger.warning(err, exc_info=True)
-                progress.console.print(
-                    f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+                data = json.loads(resp.text)
+            if resp.status_code == 403:
+                proc_progress.console.print(
+                    f"[{constants.CLI_COLOR_FAIL}]Missing or bad client Registration Token provided; Hint: run 'trivial register'[/{constants.CLI_COLOR_FAIL}]"
                 )
 
-            except requests.exceptions.JSONDecodeError:
-                logger.warning(
-                    f"Bad response from server ({resp.status_code}): {resp.text}"
-                )
-            finally:
-                progress.stop_task(task_id)
+        except requests.exceptions.ConnectionError as err:
+            logger.warning(err, exc_info=True)
+            proc_progress.console.print(
+                f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+            )
+
+        except requests.exceptions.JSONDecodeError:
+            logger.warning(
+                f"Bad response from server ({resp.status_code}): {resp.text}"
+            )
+        finally:
+            proc_progress.stop()
 
     except KeyboardInterrupt:
         pass

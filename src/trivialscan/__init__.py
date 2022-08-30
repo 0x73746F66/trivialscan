@@ -298,6 +298,8 @@ class Trivialscan:
 
     def _threats_detail(self, threats: dict) -> list:
         result = []
+        if not threats:
+            return result
         for ctype, _cval in threats.items():
             for _standard in _cval:
                 cname = f"{ctype} {_standard['version']}"
@@ -392,6 +394,8 @@ class Trivialscan:
 
     def _compliance_detail(self, compliance: dict) -> list:
         result = []
+        if not compliance:
+            return result
         for ctype, _cval in compliance.items():
             for _compliance in _cval:
                 cname = f"{ctype} {_compliance['version']}"

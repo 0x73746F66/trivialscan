@@ -11,10 +11,6 @@ from rich.progress import (
     MofNCompleteColumn,
     TextColumn,
     SpinnerColumn,
-    DownloadColumn,
-    BarColumn,
-    TimeRemainingColumn,
-    TransferSpeedColumn,
 )
 from art import text2art
 from pynput.keyboard import Key, Listener

@@ -80,6 +80,9 @@ prerun:
 run-stdin: prerun ## pipe targets from stdin
 	cat .$(APP_ENV)/targets.txt | xargs trivial scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --no-banner --project-name badssl --targets
 
+run-stdin-upload: prerun ## re-upload the piped targets from stdin make target
+	trivial scan-upload -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --results-file .$(APP_ENV)/results/badssl/all.json
+
 run-as-module: prerun ## Using CLI as a python module directly (dev purposes)
 	python -m trivialscan.cli scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml -t ssllabs.com --project-name qualys
 

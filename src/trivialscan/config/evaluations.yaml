@@ -1781,6 +1781,63 @@ evaluations:
     substitutions:
       - sha1_fingerprint
 
+  - key: forward_anonymity
+    group: tls_negotiation
+    label_as: Negotiated cipher applies Forward Anonymity
+    issue: >
+      Forward Anonymity, frequently and mistakenly described as Perfect Forward Secrecy (PFS), is where the TLS connection applies technical mechanisms intentionally that will not expose any unique client identifier that might be used by a server (TLS termination endpoint) for the purposes of user profiling and tracking.
+      This is not the same as applying 'secrecy' or privacy to the contents of your TLS connection, the mechanism is designed only for identity protection a.k.a Anonymity - which is an entirely distinct concept from secrecy.
+      If the TLS connection does not use a cipher that offer the Forward Anonymity anonymity characteristic, the client identity can be tracked for any purpose the server (or Attacker in-the-middle) might choose, with no possibility of the client protecting themselves.
+    cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
+    cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+    cve:
+    threats:
+      "MITRE ATT&CK":
+        - version: 11.2
+          tactics:
+            - TA0009
+          data_sources:
+            - DS0037
+            - DS0035
+          techniques:
+            - T1189
+            - T1190
+          sub_techniques:
+            - parent: T1071
+              id: "001"
+            - parent: T1595
+              id: "002"
+            - parent: T1590
+              id: "001"
+          mitigations:
+            - M1013
+            - M1054
+            - M1020
+    compliance:
+      "PCI DSS":
+        - version: "3.2.1"
+          requirements:
+            - 4.1
+        - version: "4.0"
+          requirements:
+            - 1.2.6
+            - 2.2.5
+            - 4.2.1
+            - 6.2.4
+            - 12.3.3
+    references:
+      - name: Eyal Ronen and Adi Shamir - Critical Review of Imperfect Forward Secrecy
+        url: http://www.wisdom.weizmann.ac.il/~eyalro/RonenShamirDhReview.pdf
+    anotate_results:
+      - result_value: False
+        result_level: pass
+        display_as: Good Configuration
+        score: 100
+      - result_value: True
+        result_level: fail
+        display_as: Vulnerable
+        score: -150
+
   - key: known_weak_keys
     group: certificate
     label_as: Known Weak key usage {public_key_type}-{public_key_size}
@@ -2263,6 +2320,118 @@ evaluations:
         result_level: fail
         display_as: Misconfigured
         score: -200
+
+  - key: version_interference
+    group: tls_negotiation
+    label_as: TLS Version Interference
+    issue: >
+      When a web browser reports an error that describes Version Interference (e.g. Chrome ERR_SSL_VERSION_INTERFERENCE), this indicates that the we browser on the user's system has attempted to negotiate a TLS connection with the web server using a TLS version which is not known by the web server.
+      This is typically seen when new TLS versions are in draft status, recently released, or an attacker in-the-middle is present and altering the TLS negotiation.
+      This error is widely misunderstood to be an issue with the web browser, but it is merely a symptom that appears in the web browser when the root cause of this problem exists with the web server (or introduced by an attacker).
+      An outdated version (or misconfigured e.g. CORS header) of web server introduces TLS Version Interference errors for which it may be possible to change web browsers entirely (or upgrade/downgrade) to avoid the issues with the web server.
+    cvss2:
+    cvss3:
+    cve:
+    threats:
+    compliance:
+    references:
+      - name: RFC 5246 - The Transport Layer Security (TLS) Protocol Version 1.2
+        url: https://datatracker.ietf.org/doc/html/rfc5246
+      - name: RFC 8446 - The Transport Layer Security (TLS) Protocol Version 1.3
+        url: https://datatracker.ietf.org/doc/html/rfc8446
+    anotate_results:
+      - result_value: False
+        result_level: pass
+        display_as: Good Configuration
+        score: 100
+      - result_value: True
+        result_level: fail
+        display_as: Vulnerable
+        score: -150
+
+  - key: version_intolerance
+    group: tls_negotiation
+    label_as: TLS Version Intolerance
+    issue: >
+      Many web servers are not fully compliant with TLS and may not properly negotiate a TLS version that both the client (web browser) and server support.
+      E.g. when a client advertises support for "TLS 1.3" the web server may drop the connection (not respond correctly with the TLS version it supports).
+      This is a common web server coding error/bug; The symptom is presented to the user in a web browser by an error message related to "we can not reach this website" (or similar).
+    cvss2:
+    cvss3:
+    cve:
+    threats:
+    compliance:
+    references:
+      - name: RFC 5246 - The Transport Layer Security (TLS) Protocol Version 1.2
+        url: https://datatracker.ietf.org/doc/html/rfc5246
+      - name: RFC 8446 - The Transport Layer Security (TLS) Protocol Version 1.3
+        url: https://datatracker.ietf.org/doc/html/rfc8446
+    anotate_results:
+      - result_value: False
+        result_level: pass
+        display_as: Good Configuration
+        score: 100
+      - result_value: True
+        result_level: fail
+        display_as: Vulnerable
+        score: -150
+
+  - key: extension_intolerance
+    group: tls_negotiation
+    label_as: TLS Extension Intolerance
+    issue: >
+      Early versions of the protocol (SSL 3 and TLS 1.0) had no explicit mechanism for adding new functionality without introducing new protocol revisions. The only thing resembling forward compatibility is a provision that allows the ClientHello message to include extra data at the end.
+      Implementations were instructed to ignore this extra data if they could not understand it. This vague extension mechanism was later replaced with TLS Extensions, which added a generic extension mechanism to both ClientHello and ServerHello messages.
+      In TLS 1.2, extensions were merged with the main protocol specification.
+      Given the vagueness of the early specifications, it's not surprising that a substantial number of SSL 3 and TLS 1.0 servers refuse handshakes with clients that specify extra data.
+    cvss2:
+    cvss3:
+    cve:
+    threats:
+    compliance:
+    references:
+      - name: Bulletproof SSL and TLS - Understanding and Deploying SSL/TLS and PKI to Secure Servers and Web Applications - Ivan Ristic
+        url: https://isbnsearch.org/isbn/9781907117046
+      - name: RFC 5246 - The Transport Layer Security (TLS) Protocol Version 1.2
+        url: https://datatracker.ietf.org/doc/html/rfc5246
+      - name: RFC 8446 - The Transport Layer Security (TLS) Protocol Version 1.3
+        url: https://datatracker.ietf.org/doc/html/rfc8446
+    anotate_results:
+      - result_value: False
+        result_level: pass
+        display_as: Good Configuration
+        score: 100
+      - result_value: True
+        result_level: fail
+        display_as: Vulnerable
+        score: -150
+
+  - key: long_handshake_intolerance
+    group: tls_negotiation
+    label_as: TLS Long Handshake Intolerance
+    issue: >
+      If the Client Hello messages longer than 255 bytes and the connection fails, this is an indication of very old web servers or a webserver with coding errors/bugs.
+      Using all possible valid ciphers (sending approx 3458 bytes) the 'Client Hello' will be sufficiently long to trigger this web server bug (if it exists).
+      This may be experienced during server to server communications over TLS, but is uncommon scenario for web browsers (that affect end users).
+    cvss2:
+    cvss3:
+    cve:
+    threats:
+    compliance:
+    references:
+      - name: RFC 5246 - The Transport Layer Security (TLS) Protocol Version 1.2
+        url: https://datatracker.ietf.org/doc/html/rfc5246
+      - name: RFC 8446 - The Transport Layer Security (TLS) Protocol Version 1.3
+        url: https://datatracker.ietf.org/doc/html/rfc8446
+    anotate_results:
+      - result_value: False
+        result_level: pass
+        display_as: Good Configuration
+        score: 100
+      - result_value: True
+        result_level: fail
+        display_as: Vulnerable
+        score: -150
 
   - key: certification_version
     group: certificate

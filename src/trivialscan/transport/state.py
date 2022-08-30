@@ -109,6 +109,8 @@ class TLSState:
         self.negotiated_protocol: str = None
         self.preferred_protocol: str = None
         self.offered_tls_versions: list = []
+        self.tls_extension_intolerance: bool = None
+        self.tls_long_handshake_intolerance: bool = None
         self.tls_version_intolerance: bool = None
         self.tls_version_intolerance_versions: list = []
         self.tls_version_interference: bool = None
@@ -172,6 +174,10 @@ class TLSState:
         self.tls_version_intolerance_versions = (
             data["tls"].get("version_intolerance", {}).get("versions", [])
         )
+        self.tls_long_handshake_intolerance = data["tls"].get(
+            "long_handshake_intolerance"
+        )
+        self.tls_extension_intolerance = data["tls"].get("extension_intolerance")
         self.tls_version_interference = (
             data["tls"].get("version_interference", {}).get("result")
         )
@@ -217,6 +223,8 @@ class TLSState:
                 "preferred": self.preferred_protocol,
                 "offered": sorted(list(set(self.offered_tls_versions))),
             },
+            "extension_intolerance": self.tls_extension_intolerance,
+            "long_handshake_intolerance": self.tls_long_handshake_intolerance,
             "version_intolerance": {
                 "result": self.tls_version_intolerance,
                 "versions": sorted(list(set(self.tls_version_intolerance_versions))),

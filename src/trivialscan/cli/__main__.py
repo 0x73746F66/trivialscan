@@ -145,6 +145,13 @@ def main():
         dest="results_file",
         required=True,
     )
+    upload_parser.add_argument(
+        "-p",
+        "--config-path",
+        help=f"Provide the path to a configuration file (Default: {DEFAULT_CONFIG})",
+        dest="config_file",
+        default=DEFAULT_CONFIG,
+    )
     register_parser = sub_parsers.add_parser(
         "register",
         prog="trivial register",
@@ -284,11 +291,11 @@ def main():
     logging.basicConfig(format=log_format, level=log_level, handlers=handlers)
     logger.info(f"subcommand {args.subcommand}")
     if args.subcommand == "generate":
-        generate({**vars(args)})
+        return generate({**vars(args)})
     if args.subcommand == "info":
-        info(args.dashboard_api_url.strip("/"))
+        return info(args.dashboard_api_url.strip("/"))
     if args.subcommand == "register":
-        register(
+        return register(
             {
                 "account_name": args.account_name,
                 "client_name": args.client_name,
@@ -296,11 +303,10 @@ def main():
                 "url": args.dashboard_api_url.strip("/"),
             }
         )
+    config = _scan_config(vars(args), args.config_file)
     if args.subcommand == "scan-upload":
-        config = _scan_config(vars(args), DEFAULT_CONFIG)
-        upload(config, args.results_file)
+        return upload(config, args.results_file)
     if args.subcommand == "scan":
-        config = _scan_config(vars(args), args.config_file)
         if not config.get("targets"):
             raise RuntimeError("No targets defined")
         if config["defaults"].get("http_request_path"):
@@ -334,7 +340,7 @@ def main():
                 con=console if use_console else None,
                 use_icons=use_icons,
             )
-        scan(
+        return scan(
             config,
             **{
                 "hide_progress_bars": args.hide_progress_bars,
