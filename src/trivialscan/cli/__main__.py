@@ -22,7 +22,7 @@ from ..config import load_config, get_config, DEFAULT_CONFIG
 from .credentials import load_local
 
 __module__ = "trivialscan.cli"
-__version__ = "3.0.0rc5"
+__version__ = "3.0.0rc6"
 
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
 APP_BANNER = text2art("trivialscan", font="tarty4")
