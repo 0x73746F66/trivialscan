@@ -8,15 +8,17 @@ from urllib.request import urlretrieve
 from binascii import hexlify
 from pathlib import Path
 from decimal import Decimal
-from functools import wraps
+from functools import wraps, reduce
 from typing import Union
 from copy import deepcopy
 from io import BytesIO
+from os import path
 
 import requests
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
 from rich.table import Column
 from rich.progress import (
+    Task,
     Progress,
     DownloadColumn,
     BarColumn,
@@ -987,8 +989,178 @@ def make_data(
     }
 
 
+def make_summary(config: dict, flags: dict, results: dict) -> str:
+    data = deepcopy(results)
+    data["config"] = config
+    data["flags"] = flags
+    data["score"] = 0
+    data["results"] = {
+        "pass": 0,
+        "info": 0,
+        "warn": 0,
+        "fail": 0,
+    }
+    del data["queries"]
+    certificates = set()
+    for _query in results["queries"]:
+        for evaluation in _query.get("evaluations", []):
+            for res in ["pass", "info", "warn", "fail"]:
+                if evaluation["result_level"] == res:
+                    data["results"][res] += 1
+            if "score" in evaluation:
+                data["score"] += evaluation["score"]
+        if "error" in _query:
+            data["error"] = _query["error"]
+
+        for certdata in _query.get("tls", {}).get("certificates", []):
+            certificates.add(certdata["sha1_fingerprint"])
+
+    data["certificates"] = sorted(list(certificates))
+    return json.dumps(data, default=str)
+
+
+def split_report(results: dict, results_uri: str) -> list[tuple[str, bytes]]:
+    files = []
+    for _query in results["queries"]:
+        query_result = deepcopy(_query)
+        if "error" in query_result:
+            continue
+        certificates = set()
+        del query_result["evaluations"]
+        for certdata in _query.get("tls", {}).get("certificates", []):
+            certificates.add(certdata["sha1_fingerprint"])
+            files.append(
+                {
+                    "format": "pem",
+                    "type": "certificate",
+                    "filename": f"{certdata['sha1_fingerprint']}.pem",
+                    "value": BytesIO(certdata["pem"].encode("utf8")),
+                }
+            )
+            certcopy = deepcopy(certdata)
+            del certcopy["pem"]
+            files.append(
+                {
+                    "format": "json",
+                    "type": "certificate",
+                    "filename": f"{certdata['sha1_fingerprint']}.json",
+                    "value": BytesIO(json.dumps(certcopy, default=str).encode("utf8")),
+                }
+            )
+
+        files.append(
+            {
+                "format": "json",
+                "type": "evaluations",
+                "filename": f"{results_uri.split('/').pop()}.json",
+                "value": BytesIO(
+                    json.dumps(_query.get("evaluations"), default=str).encode("utf8")
+                ),
+            }
+        )
+        query_result["tls"]["certificates"] = sorted(list(certificates))
+        files.append(
+            {
+                "format": "json",
+                "type": "host",
+                "filename": f"{query_result['transport']['hostname']}.json",
+                "value": BytesIO(json.dumps(query_result, default=str).encode("utf8")),
+            }
+        )
+
+    return files
+
+
+def upload_cloud(
+    result_files: list[tuple[str, bytes]],
+    dashboard_api_url: str,
+    hide_progress_bars: bool = False,
+    **kwargs,
+) -> list:
+    responses = []
+    with Progress(
+        "{task.description} [progress.percentage]{task.percentage:>3.0f}%",
+        BarColumn(),
+        DownloadColumn(),
+        "•",
+        TimeRemainingColumn(
+            compact=True,
+            elapsed_when_finished=True,
+        ),
+        "•",
+        TransferSpeedColumn(),
+        disable=hide_progress_bars,
+    ) as upload_progress:
+        upload_tasks: dict[str:int] = {}
+
+        def callback(monitor: MultipartEncoderMonitor):
+            task_id: Task = upload_tasks[monitor.encoder.fields[0][1][0]]
+            if monitor.encoder.finished:
+                upload_progress.update(
+                    task_id,
+                    completed=monitor.encoder.len,
+                )
+                return
+            upload_progress.update(
+                task_id,
+                completed=monitor.bytes_read,
+            )
+
+        for result in result_files:
+            url = f"{dashboard_api_url}/store/{result['type']}"
+            encoder = MultipartEncoder(
+                [("files", (result["filename"], result["value"]))]
+            )
+            upload_task_id = upload_progress.add_task(
+                f"Uploading {result['filename']}", total=encoder.len
+            )
+            upload_tasks[result["filename"]] = upload_task_id
+            monitor = MultipartEncoderMonitor(encoder, callback)
+            try:
+                resp = requests.post(
+                    url,
+                    data=monitor,
+                    headers={
+                        "Content-Type": monitor.content_type,
+                        "X-Trivialscan-Token": kwargs.get("registration_token"),
+                        "X-Trivialscan-Account": kwargs.get("account_name"),
+                        "X-Trivialscan-Client": kwargs.get("client_name"),
+                    },
+                )
+                if resp.status_code == 403:
+                    upload_progress.console.print(
+                        f"[{constants.CLI_COLOR_FAIL}]Missing or bad client Registration Token provided; Hint: run 'trivial register'[/{constants.CLI_COLOR_FAIL}]"
+                    )
+                    continue
+                if resp.status_code == 200:
+                    logger.debug(resp.text)
+                    try:
+                        data = json.loads(resp.text)
+                    except json.JSONDecodeError:
+                        data = resp.text
+                    if not data:
+                        upload_progress.console.print(
+                            f"[{constants.CLI_COLOR_FAIL}]Bad response from Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+                        )
+                        continue
+                    responses.append(data)
+
+            except requests.exceptions.ConnectionError as err:
+                logger.warning(err, exc_info=True)
+                upload_progress.console.print(
+                    f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+                )
+
+            except requests.exceptions.JSONDecodeError:
+                logger.warning(
+                    f"Bad response from server ({resp.status_code}): {resp.text}"
+                )
+
+    return responses
+
+
 def update_cloud(config: dict, flags: dict, results: dict) -> Union[str, None]:
-    data = None
+    results_url = None
     try:
         url = f"{config['dashboard_api_url']}/store"
         logger.info(url)
@@ -1006,91 +1178,40 @@ def update_cloud(config: dict, flags: dict, results: dict) -> Union[str, None]:
         ]:
             if item in conf:
                 del conf[item]
-        json_str = json.dumps(
-            {
-                "config": conf,
-                "flags": flags,
-                "results": results,
-            },
-            default=str,
-        )
-        encoder = MultipartEncoder(
-            [("files", ("trivialscan.json", BytesIO(json_str.encode())))]
-        )
-        upload_progress = Progress(
-            "{task.description} [progress.percentage]{task.percentage:>3.0f}%",
-            BarColumn(),
-            DownloadColumn(),
-            "•",
-            TimeRemainingColumn(
-                compact=True,
-                elapsed_when_finished=True,
-            ),
-            "•",
-            TransferSpeedColumn(),
-            disable=hide_progress_bars,
-        )
-        upload_task = upload_progress.add_task("Uploading ", total=encoder.len)
-        upload_progress.start()
-        proc_progress = Progress(
-            TextColumn(
-                f"[{constants.CLI_COLOR_INFO}]"
-                + "{task.description}"
-                + f"[/{constants.CLI_COLOR_INFO}]"
-            ),
-            TimeElapsedColumn(),
-            SpinnerColumn(table_column=Column(ratio=2)),
-            transient=True,
-            disable=hide_progress_bars,
-        )
-        proc_task = proc_progress.add_task("Processing", total=1)
 
-        def callback(monitor):
-            if encoder.finished:
-                upload_progress.stop_task(upload_task)
-                upload_progress.stop()
-                proc_progress.start()
-            upload_progress.update(
-                upload_task,
-                completed=monitor.bytes_read,
-            )
+        ret = upload_cloud(
+            result_files=[
+                {
+                    "format": "json",
+                    "type": "report",
+                    "filename": "summary.json",
+                    "value": BytesIO(
+                        make_summary(config=conf, flags=flags, results=results).encode(
+                            "utf8"
+                        )
+                    ),
+                }
+            ],
+            dashboard_api_url=config["dashboard_api_url"],
+            hide_progress_bars=hide_progress_bars,
+            registration_token=config.get("token"),
+            account_name=config.get("account_name"),
+            client_name=config.get("client_name"),
+        )
+        if len(ret) == 1 and "results_uri" in ret[0]:
+            results_uri = ret[0]["results_uri"]
+            results_url = path.join(config["dashboard_api_url"], results_uri)
 
-        monitor = MultipartEncoderMonitor(encoder, callback)
-        try:
-            resp = requests.post(
-                url,
-                data=monitor,
-                headers={
-                    "Content-Type": monitor.content_type,
-                },
-                stream=True,
-            )
-            if resp.status_code == 200:
-                proc_progress.update(proc_task, completed=1)
-                proc_progress.console.print(
-                    f"[{constants.CLI_COLOR_PASS}]DONE![/{constants.CLI_COLOR_PASS}] Saving to cloud"
-                )
-                logger.debug(resp.text)
-                data = json.loads(resp.text)
-            if resp.status_code == 403:
-                proc_progress.console.print(
-                    f"[{constants.CLI_COLOR_FAIL}]Missing or bad client Registration Token provided; Hint: run 'trivial register'[/{constants.CLI_COLOR_FAIL}]"
-                )
-
-        except requests.exceptions.ConnectionError as err:
-            logger.warning(err, exc_info=True)
-            proc_progress.console.print(
-                f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
-            )
-
-        except requests.exceptions.JSONDecodeError:
-            logger.warning(
-                f"Bad response from server ({resp.status_code}): {resp.text}"
-            )
-        finally:
-            proc_progress.stop()
+        upload_cloud(
+            result_files=split_report(results=results, results_uri=results_uri),
+            dashboard_api_url=config["dashboard_api_url"],
+            hide_progress_bars=hide_progress_bars,
+            registration_token=config.get("token"),
+            account_name=config.get("account_name"),
+            client_name=config.get("client_name"),
+        )
 
     except KeyboardInterrupt:
         pass
 
-    return data if not data else data.get("results_url")
+    return results_url

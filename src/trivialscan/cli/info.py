@@ -1,4 +1,5 @@
 import logging
+from os import path
 
 import requests
 from rich.console import Console
@@ -48,7 +49,7 @@ def info(dashboard_api_url: str):
             data = {}
             try:
                 resp = requests.get(
-                    dashboard_api_url,
+                    path.join(dashboard_api_url, "check-token"),
                     headers={
                         "x-trivialscan-account": account_name,
                         "x-trivialscan-client": conf["client_name"],

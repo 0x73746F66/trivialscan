@@ -78,7 +78,7 @@ prerun:
 	@echo "API_URL $(API_URL)"
 
 run-stdin: prerun ## pipe targets from stdin
-	cat .$(APP_ENV)/targets.txt | xargs trivial scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --no-banner --project-name badssl --targets
+	cat .$(APP_ENV)/targets.txt | xargs trivial scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --project-name badssl --targets
 
 run-stdin-upload: prerun ## re-upload the piped targets from stdin make target
 	trivial scan-upload -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --results-file .$(APP_ENV)/results/badssl/all.json
@@ -87,7 +87,7 @@ run-as-module: prerun ## Using CLI as a python module directly (dev purposes)
 	python -m trivialscan.cli scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml -t ssllabs.com --project-name qualys
 
 run-cli-parallel: prerun ## Leverage defaults using all CPU cores
-	trivial scan -D $(API_URL)
+	trivial scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml
 
 run-cli-sequential: prerun ## Just use normal python (for clean debugging outputs)
 	trivial scan -D $(API_URL) --no-multiprocessing --config-path .$(APP_ENV)/.trivialscan-config.yaml
