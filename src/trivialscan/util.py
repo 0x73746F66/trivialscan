@@ -1201,15 +1201,14 @@ def update_cloud(config: dict, flags: dict, results: dict) -> Union[str, None]:
         if len(ret) == 1 and "results_uri" in ret[0]:
             results_uri = ret[0]["results_uri"]
             results_url = path.join(config["dashboard_api_url"], results_uri)
-
-        upload_cloud(
-            result_files=split_report(results=results, results_uri=results_uri),
-            dashboard_api_url=config["dashboard_api_url"],
-            hide_progress_bars=hide_progress_bars,
-            registration_token=config.get("token"),
-            account_name=config.get("account_name"),
-            client_name=config.get("client_name"),
-        )
+            upload_cloud(
+                result_files=split_report(results=results, results_uri=results_uri),
+                dashboard_api_url=config["dashboard_api_url"],
+                hide_progress_bars=hide_progress_bars,
+                registration_token=config.get("token"),
+                account_name=config.get("account_name"),
+                client_name=config.get("client_name"),
+            )
 
     except KeyboardInterrupt:
         pass

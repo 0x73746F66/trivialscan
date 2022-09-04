@@ -1,0 +1,18 @@
+---
+rule_id: 3.4
+key: nist
+group_id: 3.0
+group: compliance
+label_as: NIST
+issue: >
+  TODO
+references:
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 0
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: 0

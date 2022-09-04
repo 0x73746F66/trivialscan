@@ -1,0 +1,32 @@
+---
+rule_id: 1.10
+key: extension_intolerance
+group_id: 1.0
+group: tls_negotiation
+label_as: TLS Extension Intolerance
+issue: >
+  Early versions of the protocol (SSL 3 and TLS 1.0) had no explicit mechanism for adding new functionality without introducing new protocol revisions. The only thing resembling forward compatibility is a provision that allows the ClientHello message to include extra data at the end.
+  Implementations were instructed to ignore this extra data if they could not understand it. This vague extension mechanism was later replaced with TLS Extensions, which added a generic extension mechanism to both ClientHello and ServerHello messages.
+  In TLS 1.2, extensions were merged with the main protocol specification.
+  Given the vagueness of the early specifications, it's not surprising that a substantial number of SSL 3 and TLS 1.0 servers refuse handshakes with clients that specify extra data.
+cvss2:
+cvss3:
+cve:
+threats:
+compliance:
+references:
+  - name: Bulletproof SSL and TLS - Understanding and Deploying SSL/TLS and PKI to Secure Servers and Web Applications - Ivan Ristic
+    url: https://isbnsearch.org/isbn/9781907117046
+  - name: RFC 5246 - The Transport Layer Security (TLS) Protocol Version 1.2
+    url: https://datatracker.ietf.org/doc/html/rfc5246
+  - name: RFC 8446 - The Transport Layer Security (TLS) Protocol Version 1.3
+    url: https://datatracker.ietf.org/doc/html/rfc8446
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 100
+  - result_value: True
+    result_level: fail
+    display_as: Vulnerable
+    score: -150

@@ -13,7 +13,6 @@ from rich.progress import (
     SpinnerColumn,
 )
 from art import text2art
-from pynput.keyboard import Key, Listener
 
 from .. import cli, constants, trivialscan
 from ..util import camel_to_snake, update_cloud, make_data
@@ -162,21 +161,6 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
         transient=True,
         disable=not show_progress,
     )
-
-    def released(key):
-        if key == Key.shift_l:
-            p1 = len(queries)
-            t1 = len(config.get("targets"))
-            cli.outputln(
-                f"[bold][magenta]processed {p1} of {t1} (remaining {t1-p1})[/magenta][/bold]",
-                aside="core",
-                result_text="STAT!",
-                con=progress.console if use_console else None,
-                use_icons=use_icons,
-            )
-
-    key_listener = Listener(on_release=released)
-    key_listener.start()
     task_id = progress.add_task("domains", total=len(config.get("targets")))
     for target in config.get("targets"):
         data = {
@@ -315,10 +299,6 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
 def run_parra(config: dict, show_progress: bool, use_console: bool = False) -> list:
     queries = []
     num_targets = len(config.get("targets"))
-    use_icons = any(
-        n.get("type") == "console" and n.get("use_icons")
-        for n in config.get("outputs", [])
-    )
     queue_in = Queue()
     queue_out = Queue()
     progress = None
@@ -334,20 +314,6 @@ def run_parra(config: dict, show_progress: bool, use_console: bool = False) -> l
                 SpinnerColumn(table_column=Column(ratio=2)),
                 transient=True,
             ) as progress:
-
-                def released(key):
-                    if key == Key.shift_l:
-                        p1 = len(queries)
-                        cli.outputln(
-                            f"[bold][magenta]processed {p1} of {num_targets} (remaining {num_targets-p1})[/magenta][/bold]",
-                            aside="core",
-                            result_text="STAT!",
-                            con=progress.console if use_console else None,
-                            use_icons=use_icons,
-                        )
-
-                key_listener = Listener(on_release=released)
-                key_listener.start()
                 the_pool = Pool(
                     cpu_count(),
                     wrap_trivialscan,
@@ -372,20 +338,6 @@ def run_parra(config: dict, show_progress: bool, use_console: bool = False) -> l
                 wrap_trivialscan,
                 (queue_in, queue_out, console if use_console else None, config),
             )
-
-            def released(key):
-                if key == Key.shift_l:
-                    p1 = len(queries)
-                    cli.outputln(
-                        f"[bold][magenta]processed {p1} of {num_targets} (remaining {num_targets-p1})[/magenta][/bold]",
-                        aside="core",
-                        result_text="STAT!",
-                        con=console if use_console else None,
-                        use_icons=use_icons,
-                    )
-
-            key_listener = Listener(on_release=released)
-            key_listener.start()
             for target in config.get("targets"):
                 queue_in.put(target)
             for _ in range(num_targets):

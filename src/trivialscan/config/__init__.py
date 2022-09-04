@@ -1,5 +1,6 @@
 import logging
 from os import path
+from glob import glob
 from pathlib import Path
 from copy import deepcopy
 from urllib.parse import urlparse
@@ -261,9 +262,14 @@ def base_config() -> dict:
 
 def default_config() -> dict:
     conf = base_config()
-    conf["evaluations"] = yaml.safe_load(
-        Path(path.join(str(Path(__file__).parent), "evaluations.yaml")).read_bytes()
-    ).get("evaluations")
+    conf["evaluations"] = []
+    for file_name in glob(
+        f"{path.join(str(Path(__file__).parent.parent), 'evaluations')}/**/*.yaml"
+    ):
+        try:
+            conf["evaluations"].append(yaml.safe_load(Path(file_name).read_bytes()))
+        except yaml.YAMLError:
+            logger.warning(f"bad evaluations file {file_name}")
     conf["MITRE ATT&CK 11.2"] = yaml.safe_load(
         Path(path.join(str(Path(__file__).parent), "mitre_attack.yaml")).read_bytes()
     )

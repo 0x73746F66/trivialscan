@@ -10,7 +10,7 @@ TRIVIALSCAN_VERSION=$(shell cat ./src/trivialscan/cli/__main__.py | grep '__vers
 endif
 ifdef API_URL
 else
-API_URL="http://127.0.0.1:8000/$(TRIVIALSCAN_VERSION)"
+API_URL="http://127.0.0.1:8000"
 endif
 ifdef APP_ENV
 else
@@ -36,10 +36,10 @@ setup: deps ## setup for development of this project
 	yes | detect-secrets audit .secrets.baseline
 
 install: ## Install the package
-	pip install -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py2.py3-none-any.whl
+	pip install -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
 
 reinstall: ## Force install the package
-	pip install --force-reinstall -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py2.py3-none-any.whl
+	pip install --force-reinstall -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
 
 install-dev: ## Install the package
 	pip install --disable-pip-version-check -U pip

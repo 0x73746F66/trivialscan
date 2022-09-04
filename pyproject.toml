@@ -42,7 +42,6 @@ dependencies = [
     "deepdiff",
     "pycryptodome >= 3.15.0",
     "beautifulsoup4 >= 4.11.1",
-    "pynput >= 1.7.6",
     "requests-toolbelt >= 0.9.1",
 ]
 dynamic = ["version", "readme"]
