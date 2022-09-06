@@ -1,12 +1,9 @@
 variables:
   CI_PRE_CLONE_SCRIPT: .gitlab-ci.sh
 
-default:
-  image: python:3.9
-
 before_script:
+  - python --version
   - pip --version
-  - pre-commit --version
 
 stages:
   - tests
@@ -15,11 +12,13 @@ stages:
 
 test:sast:
   stage: tests
+  tags:
+    - gitlab-org
   before_script:
     - pre-commit --version
   allow_failure: true
   script:
-    - pre-commit run black --all-files
+    - pre-commit run black --local-branch $CI_COMMIT_BRANCH
   only:
     refs:
       - merge_request
@@ -27,11 +26,13 @@ test:sast:
 
 test:sca:
   stage: tests
+  tags:
+    - gitlab-org
   before_script:
     - pre-commit --version
   allow_failure: true
   script:
-    - pre-commit run pip-audit --all-files
+    - pre-commit run pip-audit --local-branch $CI_COMMIT_BRANCH
   only:
     refs:
       - merge_request
@@ -39,11 +40,17 @@ test:sca:
 
 test:secrets:
   stage: tests
+  tags:
+    - gitlab-org
   before_script:
     - pre-commit --version
   allow_failure: true
   script:
-    - pre-commit run detect-secrets --all-files
+    - >
+      TOOLS=(detect-private-key detect-secrets)
+      for i in $TOOLS[@]; do
+        pre-commit run $i --local-branch $CI_COMMIT_BRANCH
+      done
   only:
     refs:
       - merge_request
@@ -51,11 +58,22 @@ test:secrets:
 
 test:git:
   stage: tests
+  tags:
+    - gitlab-org
   before_script:
     - pre-commit --version
   script:
-    - pre-commit run check-git-config-email --all-files
-    - pre-commit run check-merge-conflict --all-files
+    - >
+      TOOLS=(
+        conventional-pre-commit
+        no-commit-to-branch
+        mixed-line-ending
+        check-git-config-email
+        check-merge-conflict
+      )
+      for i in $TOOLS[@]; do
+        pre-commit run $i --local-branch $CI_COMMIT_BRANCH
+      done
   only:
     refs:
       - merge_request
@@ -63,18 +81,27 @@ test:git:
 
 test:syntax:
   stage: tests
+  tags:
+    - gitlab-org
   before_script:
     - pre-commit --version
   allow_failure: true
   script:
-    - pre-commit run check-ast --all-files
-    - pre-commit run debug-statements --all-files
-    - pre-commit run check-builtin-literals --all-files
-    - pre-commit run typos --all-files
-    - pre-commit run check-json --all-files
-    - pre-commit run check-yaml --all-files
-    - pre-commit run remove-tabs --all-files
-    - pre-commit run trailing-whitespace --all-files
+    - >
+      TOOLS=(
+        check-ast
+        debug-statements
+        check-builtin-literals
+        typos
+        pretty-format-json
+        check-json
+        check-yaml
+        remove-tabs
+        trailing-whitespace
+      )
+      for i in $TOOLS[@]; do
+        pre-commit run $i --local-branch $CI_COMMIT_BRANCH
+      done
   only:
     refs:
       - merge_request
@@ -82,12 +109,18 @@ test:syntax:
 
 test:style:
   stage: tests
+  tags:
+    - gitlab-org
   before_script:
     - pre-commit --version
   allow_failure: true
-  script:
-    - pre-commit run remove-tabs --all-files
-    - pre-commit run trailing-whitespace --all-files
+  script: TOOLS=(
+    remove-tabs
+    trailing-whitespace
+    )
+    for i in $TOOLS[@]; do
+    pre-commit run $i --local-branch $CI_COMMIT_BRANCH
+    done
   only:
     refs:
       - merge_request
@@ -95,14 +128,20 @@ test:style:
 
 test:linting:
   stage: tests
+  tags:
+    - gitlab-org
   before_script:
     - pre-commit --version
   allow_failure: true
-  script:
-    - pre-commit run prettier --all-files
-    - pre-commit run typos --all-files
-    - pre-commit run check-json --all-files
-    - pre-commit run check-yaml --all-files
+  script: TOOLS=(
+    prettier
+    typos
+    check-json
+    check-yaml
+    )
+    for i in $TOOLS[@]; do
+    pre-commit run $i --local-branch $CI_COMMIT_BRANCH
+    done
   only:
     refs:
       - merge_request
@@ -110,6 +149,8 @@ test:linting:
 
 test:package:
   stage: tests
+  tags:
+    - gitlab-org
   script:
     - make check
   only:
@@ -119,6 +160,8 @@ test:package:
 
 build:wheel:
   stage: build
+  tags:
+    - gitlab-org
   script:
     - make build
   only:
@@ -128,6 +171,8 @@ build:wheel:
 
 publish:pypi:
   stage: deploy
+  tags:
+    - gitlab-org
   script:
     - make publish
   only:
