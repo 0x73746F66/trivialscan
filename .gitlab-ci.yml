@@ -13,7 +13,7 @@ stages:
 test:sast:
   stage: tests
   tags:
-    - gitlab-org
+    - trivialscan
   before_script:
     - pre-commit --version
   allow_failure: true
@@ -27,7 +27,7 @@ test:sast:
 test:sca:
   stage: tests
   tags:
-    - gitlab-org
+    - trivialscan
   before_script:
     - pre-commit --version
   allow_failure: true
@@ -41,7 +41,7 @@ test:sca:
 test:secrets:
   stage: tests
   tags:
-    - gitlab-org
+    - trivialscan
   before_script:
     - pre-commit --version
   allow_failure: true
@@ -59,7 +59,7 @@ test:secrets:
 test:git:
   stage: tests
   tags:
-    - gitlab-org
+    - trivialscan
   before_script:
     - pre-commit --version
   script:
@@ -82,7 +82,7 @@ test:git:
 test:syntax:
   stage: tests
   tags:
-    - gitlab-org
+    - trivialscan
   before_script:
     - pre-commit --version
   allow_failure: true
@@ -110,7 +110,7 @@ test:syntax:
 test:style:
   stage: tests
   tags:
-    - gitlab-org
+    - trivialscan
   before_script:
     - pre-commit --version
   allow_failure: true
@@ -129,7 +129,7 @@ test:style:
 test:linting:
   stage: tests
   tags:
-    - gitlab-org
+    - trivialscan
   before_script:
     - pre-commit --version
   allow_failure: true
@@ -150,7 +150,7 @@ test:linting:
 test:package:
   stage: tests
   tags:
-    - gitlab-org
+    - trivialscan
   script:
     - make check
   only:
@@ -161,7 +161,7 @@ test:package:
 build:wheel:
   stage: build
   tags:
-    - gitlab-org
+    - trivialscan
   script:
     - make build
   only:
@@ -172,7 +172,7 @@ build:wheel:
 publish:pypi:
   stage: deploy
   tags:
-    - gitlab-org
+    - trivialscan
   script:
     - make publish
   only:

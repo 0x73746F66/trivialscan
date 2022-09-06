@@ -73,6 +73,23 @@ crlite:
 	./src/trivialscan/vendor/rust-query-crlite -vvv --db /tmp/.crlite_db/ --update prod x509
 	./src/trivialscan/vendor/rust-query-crlite -vvv --db /tmp/.crlite_db/ https ssllabs.com
 
+local-runner: ## local setup for a gitlab runner
+	@docker volume create --name=gitlab-cache 2>/dev/null || true
+	@echo $(shell [ -z "${RUNNER_TOKEN}" ] && echo "RUNNER_TOKEN missing" )
+	@docker run -d --rm \
+		--name trivialscan-runner \
+		-v "gitlab-cache:/cache:rw" \
+		-e RUNNER_TOKEN=${RUNNER_TOKEN} \
+		docker.io/gitlab/gitlab-runner:latest
+	@docker exec -ti trivialscan-runner gitlab-runner register --non-interactive \
+		--tag-list 'trivialscan' \
+		--name trivialscan \
+		--request-concurrency 10 \
+		--url https://gitlab.com/ \
+		--registration-token '$(RUNNER_TOKEN)' \
+		--cache-dir '/cache' \
+		--executor shell
+
 prerun:
 	@echo "TRIVIALSCAN_VERSION $(TRIVIALSCAN_VERSION)"
 	@echo "API_URL $(API_URL)"
