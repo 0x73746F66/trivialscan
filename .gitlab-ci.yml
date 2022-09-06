@@ -1,11 +1,114 @@
+variables:
+  CI_PRE_CLONE_SCRIPT: .gitlab-ci.sh
+
+default:
+  image: python:3.9
+
+before_script:
+  - pip --version
+  - pre-commit --version
+
 stages:
   - tests
   - build
   - deploy
 
-test:wheel:
-  tags:
-    - linode
+test:sast:
+  stage: tests
+  before_script:
+    - pre-commit --version
+  allow_failure: true
+  script:
+    - pre-commit run black --all-files
+  only:
+    refs:
+      - merge_request
+      - main
+
+test:sca:
+  stage: tests
+  before_script:
+    - pre-commit --version
+  allow_failure: true
+  script:
+    - pre-commit run pip-audit --all-files
+  only:
+    refs:
+      - merge_request
+      - main
+
+test:secrets:
+  stage: tests
+  before_script:
+    - pre-commit --version
+  allow_failure: true
+  script:
+    - pre-commit run detect-secrets --all-files
+  only:
+    refs:
+      - merge_request
+      - main
+
+test:git:
+  stage: tests
+  before_script:
+    - pre-commit --version
+  script:
+    - pre-commit run check-git-config-email --all-files
+    - pre-commit run check-merge-conflict --all-files
+  only:
+    refs:
+      - merge_request
+      - main
+
+test:syntax:
+  stage: tests
+  before_script:
+    - pre-commit --version
+  allow_failure: true
+  script:
+    - pre-commit run check-ast --all-files
+    - pre-commit run debug-statements --all-files
+    - pre-commit run check-builtin-literals --all-files
+    - pre-commit run typos --all-files
+    - pre-commit run check-json --all-files
+    - pre-commit run check-yaml --all-files
+    - pre-commit run remove-tabs --all-files
+    - pre-commit run trailing-whitespace --all-files
+  only:
+    refs:
+      - merge_request
+      - main
+
+test:style:
+  stage: tests
+  before_script:
+    - pre-commit --version
+  allow_failure: true
+  script:
+    - pre-commit run remove-tabs --all-files
+    - pre-commit run trailing-whitespace --all-files
+  only:
+    refs:
+      - merge_request
+      - main
+
+test:linting:
+  stage: tests
+  before_script:
+    - pre-commit --version
+  allow_failure: true
+  script:
+    - pre-commit run prettier --all-files
+    - pre-commit run typos --all-files
+    - pre-commit run check-json --all-files
+    - pre-commit run check-yaml --all-files
+  only:
+    refs:
+      - merge_request
+      - main
+
+test:package:
   stage: tests
   script:
     - make check
@@ -15,8 +118,6 @@ test:wheel:
       - main
 
 build:wheel:
-  tags:
-    - linode
   stage: build
   script:
     - make build
@@ -26,8 +127,6 @@ build:wheel:
       - main
 
 publish:pypi:
-  tags:
-    - linode
   stage: deploy
   script:
     - make publish

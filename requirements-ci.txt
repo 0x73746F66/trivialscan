@@ -1,0 +1,11 @@
+setuptools
+wheel
+build
+twine
+pytest
+coverage
+typed-ast
+black
+pre-commit
+detect-secrets
+pip-audit
