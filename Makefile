@@ -31,7 +31,7 @@ deps: ## install dependancies for development of this project
 	python3 -m pip install .
 
 setup: deps ## setup for development of this project
-	pre-commit install --hook-type pre-push --hook-type pre-commit
+	pre-commit install --hook-type commit-msg --hook-type pre-push --hook-type pre-commit
 	@ [ -f .secrets.baseline ] || ( detect-secrets scan > .secrets.baseline )
 	yes | detect-secrets audit .secrets.baseline
 

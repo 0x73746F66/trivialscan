@@ -49,8 +49,9 @@ test:git:
   tags:
     - trivialscan
   script:
+    - pre-commit run conventional-pre-commit --hook-stage commit-msg --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
     - |+
-      TOOLS="conventional-pre-commit no-commit-to-branch mixed-line-ending check-git-config-email check-merge-conflict"
+      TOOLS="no-commit-to-branch mixed-line-ending check-git-config-email check-merge-conflict"
       for i in $TOOLS
       do
         pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
