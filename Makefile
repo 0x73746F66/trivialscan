@@ -47,7 +47,7 @@ install-dev: ## Install the package
 	python3 -m pip install --force-reinstall --no-cache-dir -e .
 
 check: ## check build
-	python -m twine check dist/*
+	python3 -m twine check dist/*
 
 pytest: ## run unit tests with coverage
 	coverage run -m pytest --nf
@@ -59,12 +59,12 @@ test: ## all tests
 
 build: ## build wheel file
 	rm -f dist/*
-	python -m build -nxsw
+	python3 -m build -nxsw
 
 publish: check ## upload to pypi.org
 	git tag -f $(TRIVIALSCAN_VERSION)
 	git push -u origin --tags -f
-	python -m twine upload dist/*
+	python3 -m twine upload dist/*
 
 crlite:
 	(cd rust-query-crlite && cargo build)
@@ -103,7 +103,7 @@ run-stdin-upload: prerun ## re-upload the piped targets from stdin make target
 	trivial scan-upload -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --results-file .$(APP_ENV)/results/badssl/all.json
 
 run-as-module: prerun ## Using CLI as a python module directly (dev purposes)
-	python -m trivialscan.cli scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml -t ssllabs.com --project-name qualys
+	python3 -m trivialscan.cli scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml -t ssllabs.com --project-name qualys
 
 run-cli-parallel: prerun ## Leverage defaults using all CPU cores
 	trivial scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml
