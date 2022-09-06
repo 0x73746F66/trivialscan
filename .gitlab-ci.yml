@@ -34,8 +34,8 @@ test:secrets:
   allow_failure: true
   script:
     - |+
-      TOOLS=(detect-private-key detect-secrets)
-      for i in $TOOLS[@]
+      TOOLS="detect-private-key detect-secrets"
+      for i in $TOOLS
       do
         pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
       done
@@ -50,8 +50,8 @@ test:git:
     - trivialscan
   script:
     - |+
-      TOOLS=(conventional-pre-commit no-commit-to-branch mixed-line-ending check-git-config-email check-merge-conflict)
-      for i in $TOOLS[@]
+      TOOLS="conventional-pre-commit no-commit-to-branch mixed-line-ending check-git-config-email check-merge-conflict"
+      for i in $TOOLS
       do
         pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
       done
@@ -67,8 +67,8 @@ test:syntax:
   allow_failure: true
   script:
     - |+
-      TOOLS=(check-ast debug-statements check-builtin-literals typos pretty-format-json check-json check-yaml remove-tabs trailing-whitespace)
-      for i in $TOOLS[@]
+      TOOLS="check-ast debug-statements check-builtin-literals typos pretty-format-json check-json check-yaml remove-tabs trailing-whitespace"
+      for i in $TOOLS
       do
         pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
       done
@@ -84,8 +84,8 @@ test:style:
   allow_failure: true
   script:
     - |+
-      TOOLS=(remove-tabs trailing-whitespace)
-      for i in $TOOLS[@]
+      TOOLS="remove-tabs trailing-whitespace"
+      for i in $TOOLS
       do
         pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
       done
@@ -101,8 +101,8 @@ test:linting:
   allow_failure: true
   script:
     - |+
-      TOOLS=(prettier typos check-json check-yaml)
-      for i in $TOOLS[@]
+      TOOLS="prettier typos check-json check-yaml"
+      for i in $TOOLS
       do
         pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
       done
