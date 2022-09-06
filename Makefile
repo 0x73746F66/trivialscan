@@ -4,17 +4,17 @@ export $(shell sed 's/=.*//' .env)
 .PHONY: help
 
 .DEFAULT_GOAL := help
-ifdef TRIVIALSCAN_VERSION
-else
+ifndef TRIVIALSCAN_VERSION
 TRIVIALSCAN_VERSION=$(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | head -n1 | python3 -c "import sys; exec(sys.stdin.read()); print(__version__)")
 endif
-ifdef API_URL
-else
+ifndef API_URL
 API_URL="http://127.0.0.1:8000"
 endif
-ifdef APP_ENV
-else
+ifndef APP_ENV
 APP_ENV=development
+endif
+ifndef CI_BUILD_REF
+CI_BUILD_REF=local
 endif
 
 help: ## This help.
@@ -75,12 +75,14 @@ crlite:
 
 local-runner: ## local setup for a gitlab runner
 	@docker volume create --name=gitlab-cache 2>/dev/null || true
+	docker pull -q docker.io/gitlab/gitlab-runner:latest
+	docker build -t trivialscan/runner:${CI_BUILD_REF} .
 	@echo $(shell [ -z "${RUNNER_TOKEN}" ] && echo "RUNNER_TOKEN missing" )
 	@docker run -d --rm \
 		--name trivialscan-runner \
 		-v "gitlab-cache:/cache:rw" \
 		-e RUNNER_TOKEN=${RUNNER_TOKEN} \
-		docker.io/gitlab/gitlab-runner:latest
+		trivialscan/runner:${CI_BUILD_REF}
 	@docker exec -ti trivialscan-runner gitlab-runner register --non-interactive \
 		--tag-list 'trivialscan' \
 		--name trivialscan \
