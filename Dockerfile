@@ -5,6 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV CFLAGS="-O0"
 ENV STATICBUILD=true
 
+COPY requirements-ci.txt .
 RUN apt-get update -q \
     && apt-get install -qy --no-install-recommends \
         acl \
@@ -31,5 +32,6 @@ RUN apt-get update -q \
     && apt-get clean \
     && rm -rf /tmp/* /var/lib/apt/lists/* \
     && python3 -m pip install --disable-pip-version-check --progress-bar off -U pip
+    && python3 -m pip install --disable-pip-version-check --progress-bar off -U -r requirements-ci.txt
 
 VOLUME [ "/etc/gitlab-runner" ]

@@ -1,28 +1,12 @@
 stages:
-  - prepare
   - tests
   - build
   - deploy
-
-deps:
-  stage: prepare
-  tags:
-    - trivialscan
-  script:
-    - python3 -m pip --version
-    - python3 -m pip install --disable-pip-version-check -U pip
-    - python3 -m pip install -r requirements-ci.txt
-  only:
-    refs:
-      - merge_request
-      - main
 
 test:sast:
   stage: tests
   tags:
     - trivialscan
-  before_script:
-    - pre-commit --version
   allow_failure: true
   script:
     - pre-commit run black --local-branch $CI_COMMIT_BRANCH
@@ -35,8 +19,6 @@ test:sca:
   stage: tests
   tags:
     - trivialscan
-  before_script:
-    - pre-commit --version
   allow_failure: true
   script:
     - pre-commit run pip-audit --local-branch $CI_COMMIT_BRANCH
@@ -49,8 +31,6 @@ test:secrets:
   stage: tests
   tags:
     - trivialscan
-  before_script:
-    - pre-commit --version
   allow_failure: true
   script:
     - >
@@ -67,8 +47,6 @@ test:git:
   stage: tests
   tags:
     - trivialscan
-  before_script:
-    - pre-commit --version
   script:
     - >
       TOOLS=(
@@ -90,8 +68,6 @@ test:syntax:
   stage: tests
   tags:
     - trivialscan
-  before_script:
-    - pre-commit --version
   allow_failure: true
   script:
     - >
@@ -118,8 +94,6 @@ test:style:
   stage: tests
   tags:
     - trivialscan
-  before_script:
-    - pre-commit --version
   allow_failure: true
   script: TOOLS=(
     remove-tabs
@@ -137,8 +111,6 @@ test:linting:
   stage: tests
   tags:
     - trivialscan
-  before_script:
-    - pre-commit --version
   allow_failure: true
   script: TOOLS=(
     prettier
