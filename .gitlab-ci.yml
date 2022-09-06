@@ -9,7 +9,7 @@ test:sast:
     - trivialscan
   allow_failure: true
   script:
-    - pre-commit run black --local-branch $CI_COMMIT_BRANCH
+    - pre-commit run black --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
   only:
     refs:
       - merge_request
@@ -21,7 +21,7 @@ test:sca:
     - trivialscan
   allow_failure: true
   script:
-    - pre-commit run pip-audit --local-branch $CI_COMMIT_BRANCH
+    - pre-commit run pip-audit --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
   only:
     refs:
       - merge_request
@@ -37,7 +37,7 @@ test:secrets:
       TOOLS=(detect-private-key detect-secrets)
       for i in $TOOLS[@]
       do
-        pre-commit run $i --local-branch $CI_COMMIT_BRANCH
+        pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
       done
   only:
     refs:
@@ -59,7 +59,7 @@ test:git:
       )
       for i in $TOOLS[@]
       do
-        pre-commit run $i --local-branch $CI_COMMIT_BRANCH
+        pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
       done
   only:
     refs:
@@ -86,7 +86,7 @@ test:syntax:
       )
       for i in $TOOLS[@]
       do
-        pre-commit run $i --local-branch $CI_COMMIT_BRANCH
+        pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
       done
   only:
     refs:
@@ -106,7 +106,7 @@ test:style:
       )
       for i in $TOOLS[@]
       do
-        pre-commit run $i --local-branch $CI_COMMIT_BRANCH
+        pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
       done
   only:
     refs:
@@ -128,7 +128,7 @@ test:linting:
       )
       for i in $TOOLS[@]
       do
-        pre-commit run $i --local-branch $CI_COMMIT_BRANCH
+        pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
       done
   only:
     refs:
