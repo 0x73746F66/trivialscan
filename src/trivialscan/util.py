@@ -957,10 +957,10 @@ def get_certificates(leaf: X509, certificates: list[X509]) -> list[BaseCertifica
     return list({v.sha1_fingerprint: v for v in ret_certs}.values())
 
 
-def html_find_match(content: str, query: str) -> Union[str, None]:
+def html_find_match(content: str, find: str) -> Union[str, None]:
     results = None
     soup = bs(content, "html.parser")
-    something = soup.find(query)
+    something = soup.find(find)
     if something and isinstance(something.string, str):
         results = something.string.strip()
 
@@ -1126,6 +1126,7 @@ def upload_cloud(
                         "X-Trivialscan-Account": kwargs.get("account_name"),
                         "X-Trivialscan-Client": kwargs.get("client_name"),
                     },
+                    timeout=30,
                 )
                 if resp.status_code == 403:
                     upload_progress.console.print(

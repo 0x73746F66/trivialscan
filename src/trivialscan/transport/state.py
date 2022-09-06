@@ -59,7 +59,7 @@ class HTTPState:
 
     @property
     def response_title(self) -> str:
-        return html_find_match(self.response_text, "title")
+        return html_find_match(self.response_text, find="title")
 
     @property
     def response_text(self) -> str:

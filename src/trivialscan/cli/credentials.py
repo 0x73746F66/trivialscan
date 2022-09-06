@@ -46,7 +46,7 @@ def load_local(account_name: str) -> Union[dict, None]:
         logger.debug(ex, exc_info=True)
 
     config = load_credentials()
-    return None if account_name not in config else dict(config[account_name])
+    return None if account_name not in config else config.get(account_name)
 
 
 def save_local(account_name: str, client_name: str, token: str) -> bool:

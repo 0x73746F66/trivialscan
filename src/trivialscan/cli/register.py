@@ -51,6 +51,7 @@ def register(args: dict):
                 "Accept": "text/plain",
                 "x-trivialscan-account": args["account_name"],
             },
+            timeout=10,
         )
         data = resp.json()
         credentials["token"] = data.get("token")

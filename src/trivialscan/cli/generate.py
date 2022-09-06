@@ -43,7 +43,9 @@ def _gather_target() -> tuple[str, int]:
 def generate(args: dict):
     try:
         conf = base_config()
-        if not args.get("account_name"):
+        if args.get("account_name"):
+            conf["account_name"] = args.get("account_name")
+        else:
             conf["account_name"] = Prompt.ask(
                 f"""Enter your Trivial Security account name.
 [bold]Tip[/bold]: You set the account name when you run the command; "[{constants.CLI_COLOR_PRIMARY}]trivial register[/{constants.CLI_COLOR_PRIMARY}]"
@@ -65,13 +67,9 @@ Enter anything here for local only use [{constants.CLI_COLOR_INFO}](Ctrl+C to ex
             conf["project_name"] = DEFAULT_PROJECT
 
         targets = []
-        adding_domains = True
-        while adding_domains:
-            adding_domains = Confirm.ask(
-                "Do you want add a target domain?", default=True
-            )
-            if not adding_domains:
-                break
+        while adding_domains := Confirm.ask(
+            "Do you want add a target domain?", default=True
+        ):
             domain, port = _gather_target()
             target = {}
             target["hostname"] = domain
