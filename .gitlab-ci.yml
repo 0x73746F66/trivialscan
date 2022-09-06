@@ -50,13 +50,7 @@ test:git:
     - trivialscan
   script:
     - |+
-      TOOLS=(
-        conventional-pre-commit
-        no-commit-to-branch
-        mixed-line-ending
-        check-git-config-email
-        check-merge-conflict
-      )
+      TOOLS=(conventional-pre-commit no-commit-to-branch mixed-line-ending check-git-config-email check-merge-conflict)
       for i in $TOOLS[@]
       do
         pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
@@ -73,17 +67,7 @@ test:syntax:
   allow_failure: true
   script:
     - |+
-      TOOLS=(
-        check-ast
-        debug-statements
-        check-builtin-literals
-        typos
-        pretty-format-json
-        check-json
-        check-yaml
-        remove-tabs
-        trailing-whitespace
-      )
+      TOOLS=(check-ast debug-statements check-builtin-literals typos pretty-format-json check-json check-yaml remove-tabs trailing-whitespace)
       for i in $TOOLS[@]
       do
         pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
@@ -100,10 +84,7 @@ test:style:
   allow_failure: true
   script:
     - |+
-      TOOLS=(
-        remove-tabs
-        trailing-whitespace
-      )
+      TOOLS=(remove-tabs trailing-whitespace)
       for i in $TOOLS[@]
       do
         pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
@@ -120,12 +101,7 @@ test:linting:
   allow_failure: true
   script:
     - |+
-      TOOLS=(
-        prettier
-        typos
-        check-json
-        check-yaml
-      )
+      TOOLS=(prettier typos check-json check-yaml)
       for i in $TOOLS[@]
       do
         pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
@@ -136,22 +112,11 @@ test:linting:
       - main
 
 test:package:
-  stage: tests
-  tags:
-    - trivialscan
-  script:
-    - make check
-  only:
-    refs:
-      - merge_request
-      - main
-
-build:wheel:
   stage: build
   tags:
     - trivialscan
   script:
-    - make build
+    - make build check
   only:
     refs:
       - merge_request
@@ -162,7 +127,7 @@ publish:pypi:
   tags:
     - trivialscan
   script:
-    - make publish
+    - make build check publish
   only:
     refs:
       - main
