@@ -9,10 +9,9 @@ deps:
   tags:
     - trivialscan
   script:
-    - pip install --user --disable-pip-version-check -U pip
-    - pip install --user -r requirements-ci.txt
-    - python --version
-    - pip --version
+    - python3 -m pip --version
+    - python3 -m pip install --disable-pip-version-check -U pip
+    - python3 -m pip install -r requirements-ci.txt
   only:
     refs:
       - merge_request

@@ -27,8 +27,8 @@ clean: ## cleans python for wheel
 	rm -f **/*.zip **/*.tgz **/*.gz .coverage
 
 deps: ## install dependancies for development of this project
-	pip install --disable-pip-version-check -U pip
-	pip install .
+	python3 -m pip install --disable-pip-version-check -U pip
+	python3 -m pip install .
 
 setup: deps ## setup for development of this project
 	pre-commit install --hook-type pre-push --hook-type pre-commit
@@ -36,15 +36,15 @@ setup: deps ## setup for development of this project
 	yes | detect-secrets audit .secrets.baseline
 
 install: ## Install the package
-	pip install -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
+	python3 -m pip install -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
 
 reinstall: ## Force install the package
-	pip install --force-reinstall -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
+	python3 -m pip install --force-reinstall -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
 
 install-dev: ## Install the package
-	pip install --disable-pip-version-check -U pip
-	pip install -U -r requirements-dev.txt
-	pip install --force-reinstall --no-cache-dir -e .
+	python3 -m pip install --disable-pip-version-check -U pip
+	python3 -m pip install -U -r requirements-dev.txt
+	python3 -m pip install --force-reinstall --no-cache-dir -e .
 
 check: ## check build
 	python -m twine check dist/*
