@@ -46,7 +46,9 @@ def load_local(account_name: str) -> Union[dict, None]:
         logger.debug(ex, exc_info=True)
 
     config = load_credentials()
-    return None if account_name not in config else config.get(account_name)
+    return (
+        None if not config or account_name not in config else config.get(account_name)
+    )
 
 
 def save_local(account_name: str, client_name: str, token: str) -> bool:
@@ -72,7 +74,7 @@ def save_local(account_name: str, client_name: str, token: str) -> bool:
     if credentials_path.is_file():
         config.read(CREDENTIALS_FILE)
     else:
-        Path(CONFIG_PATH).mkdir()
+        Path(CONFIG_PATH).mkdir(exist_ok=True)
 
     config.setdefault(account_name, {})
     config[account_name]["token"] = token

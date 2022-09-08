@@ -28,7 +28,9 @@ def register(args: dict):
             logger.warning(
                 f"keyring is not supported on this system, using: {CREDENTIALS_FILE}"
             )
-        credentials = load_local(args["account_name"]) or {}
+        credentials = {}
+        if args.get("account_name"):
+            credentials = load_local(args["account_name"]) or {}
         if args.get("client_name"):
             credentials["client_name"] = args["client_name"]
         if not credentials.get("client_name"):
