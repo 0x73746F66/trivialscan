@@ -1,9 +1,10 @@
 stages:
   - tests
-  - build
+  - pre-deploy
   - deploy
+  - post-deploy
 
-test:sast:
+sast black:
   stage: tests
   tags:
     - trivialscan
@@ -15,7 +16,7 @@ test:sast:
       - merge_request
       - main
 
-test:sca:
+sca pip-audit:
   stage: tests
   tags:
     - trivialscan
@@ -27,7 +28,7 @@ test:sca:
       - merge_request
       - main
 
-test:secrets:
+secrets scanning:
   stage: tests
   tags:
     - trivialscan
@@ -44,7 +45,7 @@ test:secrets:
       - merge_request
       - main
 
-test:git:
+repo checks:
   stage: tests
   tags:
     - trivialscan
@@ -62,14 +63,14 @@ test:git:
       - merge_request
       - main
 
-test:syntax:
+python syntax:
   stage: tests
   tags:
     - trivialscan
   allow_failure: true
   script:
     - |+
-      TOOLS="check-ast debug-statements check-builtin-literals typos pretty-format-json check-json check-yaml remove-tabs trailing-whitespace"
+      TOOLS="check-ast debug-statements check-builtin-literals"
       for i in $TOOLS
       do
         pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
@@ -79,7 +80,7 @@ test:syntax:
       - merge_request
       - main
 
-test:style:
+whitespace:
   stage: tests
   tags:
     - trivialscan
@@ -96,14 +97,14 @@ test:style:
       - merge_request
       - main
 
-test:linting:
+yaml json py linting:
   stage: tests
   tags:
     - trivialscan
   allow_failure: true
   script:
     - |+
-      TOOLS="prettier typos check-json check-yaml"
+      TOOLS="prettier typos pretty-format-json check-json check-yaml"
       for i in $TOOLS
       do
         pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
@@ -113,8 +114,8 @@ test:linting:
       - merge_request
       - main
 
-test:package:
-  stage: build
+twine check:
+  stage: pre-deploy
   tags:
     - trivialscan
   script:
@@ -124,12 +125,22 @@ test:package:
       - merge_request
       - main
 
-publish:pypi:
+publish pypi:
   stage: deploy
   tags:
     - trivialscan
   script:
-    - make build check publish
+    - make build check pypi
+  only:
+    refs:
+      - main
+
+git tag:
+  stage: post-deploy
+  tags:
+    - trivialscan
+  script:
+    - make tag
   only:
     refs:
       - main
