@@ -27,8 +27,7 @@ __version__ = "3.0.0rc1"
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
 APP_BANNER = text2art("trivialscan", font="tarty4")
 APP_ENV = getenv("APP_ENV", "development")
-# DASHBOARD_API_URL = f"https://api-dashboard.trivialsec.com/{__version__}"
-DASHBOARD_API_URL = f"https://oxjo24uabkbigat4hpmrqawaze0hmkwl.lambda-url.ap-southeast-2.on.aws/{__version__}"
+DASHBOARD_API_URL = getenv("API_URL", "https://api-dashboard.trivialsec.com")
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 console = Console()

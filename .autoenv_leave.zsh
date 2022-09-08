@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
-unset OPENSSL_VERSION
 unset APP_ENV
+unset APP_ENV
+unset RUNNER_TOKEN
 reset
