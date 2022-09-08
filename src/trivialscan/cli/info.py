@@ -15,6 +15,7 @@ console = Console()
 
 
 def info(dashboard_api_url: str):
+    logger.info(f"dashboard_api_url {dashboard_api_url}")
     try:
         if KEYRING_SUPPORT:
             console.print(
@@ -44,33 +45,37 @@ def info(dashboard_api_url: str):
         table.add_column("Registration Token", style="bold", no_wrap=True)
         table.add_column("Cloud Status", no_wrap=True)
         for account_name, conf in credentials.items():
-            if not conf.get("client_name"):
-                continue
+            registration_status = "Unregistered"
             data = {}
-            try:
-                resp = requests.get(
-                    path.join(dashboard_api_url, "check-token"),
-                    headers={
-                        "x-trivialscan-account": account_name,
-                        "x-trivialscan-client": conf["client_name"],
-                        "x-trivialscan-token": conf.get("token"),
-                    },
-                )
-                data = resp.json()
-            except requests.exceptions.ConnectionError as err:
-                logger.exception(err)
-                console.print(
-                    f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
-                )
-            except requests.exceptions.JSONDecodeError:
-                logger.warning(
-                    f"Bad response from server ({resp.status_code}): {resp.text}"
-                )
+            if account_name == "DEFAULT":
+                continue
+            if conf.get("client_name"):
+                try:
+                    resp = requests.get(
+                        path.join(dashboard_api_url, "check-token"),
+                        headers={
+                            "x-trivialscan-account": account_name,
+                            "x-trivialscan-client": conf["client_name"],
+                            "x-trivialscan-token": conf.get("token"),
+                        },
+                    )
+                    data = resp.json()
+                except requests.exceptions.ConnectionError as err:
+                    logger.exception(err)
+                    console.print(
+                        f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+                    )
+                    registration_status = "Offline"
+                except requests.exceptions.JSONDecodeError:
+                    logger.warning(
+                        f"Bad response from server ({resp.status_code}): {resp.text}"
+                    )
+                    registration_status = "Offline"
             table.add_row(
                 account_name,
-                conf["client_name"],
+                conf.get("client_name"),
                 conf.get("token"),
-                "Registered" if data.get("registered") else "Unregistered",
+                "Registered" if data.get("registered") else registration_status,
             )
 
         console.print(table)
