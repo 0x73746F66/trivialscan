@@ -9,7 +9,7 @@ import keyring
 from ..config import CONFIG_PATH
 
 __module__ = "trivialscan.cli.credentials"
-KEYRING_KEY = "trivialscan-registration-token-{account_name}"
+KEYRING_KEY = "trivialscan-registration-token-{account_name}-{client_name}"
 KEYRING_SUPPORT = False
 try:
     KEYRING_SUPPORT = isinstance(
@@ -30,11 +30,12 @@ def load_credentials() -> Union[dict, None]:
     return {key: dict(conf) for key, conf in dict(config).items()}
 
 
-def load_local(account_name: str) -> Union[dict, None]:
+def load_keyring(account_name: str, client_name: str) -> Union[dict, None]:
     try:
         if KEYRING_SUPPORT:
             registration_token = keyring.get_password(
-                "system", KEYRING_KEY.format(account_name=account_name)
+                "system",
+                KEYRING_KEY.format(account_name=account_name, client_name=client_name),
             )
             if registration_token:
                 return registration_token
@@ -44,23 +45,39 @@ def load_local(account_name: str) -> Union[dict, None]:
         )
     except keyring.errors.KeyringError as ex:
         logger.debug(ex, exc_info=True)
+    return
 
-    config = load_credentials()
-    return (
-        None if not config or account_name not in config else config.get(account_name)
-    )
+
+def load_local(account_name: str, client_name: str) -> dict:
+    registration_token = load_keyring(account_name, client_name)
+    creds = load_credentials()
+    config = creds.get(account_name)
+    if not config:
+        return {
+            "account_name": account_name,
+            "client_name": client_name,
+            "token": registration_token,
+        }
+    if registration_token:
+        config["token"] = registration_token
+    return config
 
 
 def save_local(account_name: str, client_name: str, token: str) -> bool:
     try:
+        logger.info("saving registration token to keyring")
         if KEYRING_SUPPORT:
             keyring.set_password(
-                "system", KEYRING_KEY.format(account_name=account_name), token
+                "system",
+                KEYRING_KEY.format(account_name=account_name, client_name=client_name),
+                token,
             )
             registration_token = keyring.get_password(
-                "system", KEYRING_KEY.format(account_name=account_name)
+                "system",
+                KEYRING_KEY.format(account_name=account_name, client_name=client_name),
             )
             if registration_token == token:
+                logger.info("registration token saved to keyring")
                 return True
     except keyring.errors.InitError:
         logger.warning(
@@ -69,6 +86,7 @@ def save_local(account_name: str, client_name: str, token: str) -> bool:
     except keyring.errors.KeyringError as ex:
         logger.debug(ex, exc_info=True)
 
+    logger.info("saving registration token to credentials file")
     config = configparser.ConfigParser()
     credentials_path = Path(CREDENTIALS_FILE)
     if credentials_path.is_file():
@@ -86,8 +104,3 @@ def save_local(account_name: str, client_name: str, token: str) -> bool:
     except (FileExistsError, FileNotFoundError, configparser.Error):
         pass
     return False
-
-
-def get_token(account_name: str) -> Union[str, None]:
-    credentials = load_local(account_name)
-    return credentials.get("token")

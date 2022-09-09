@@ -22,7 +22,7 @@ from ..config import load_config, get_config, DEFAULT_CONFIG
 from .credentials import load_local
 
 __module__ = "trivialscan.cli"
-__version__ = "3.0.0rc1"
+__version__ = "0.3.0rc1"
 
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
 APP_BANNER = text2art("trivialscan", font="tarty4")
@@ -355,10 +355,6 @@ def main():
 def _scan_config(cli_args: dict, filename: Union[str, None]) -> dict:
     custom = load_config(filename)
     config = get_config(custom_values=custom)
-    if config.get("account_name"):
-        creds = load_local(config.get("account_name"))
-        config["client_name"] = creds["client_name"]
-        config["token"] = creds["token"]
     config.setdefault(
         "dashboard_api_url", cli_args.get("dashboard_api_url", "").strip("/")
     )
@@ -370,6 +366,9 @@ def _scan_config(cli_args: dict, filename: Union[str, None]) -> dict:
         config["project_name"] = cli_args.get("project_name")
     if cli_args.get("token"):
         config["token"] = cli_args.get("token")
+    elif config.get("account_name") and config.get("client_name"):
+        creds = load_local(config["account_name"], config["client_name"])
+        config["token"] = creds.get("token")
     config.setdefault("outputs", [])
     config["defaults"]["cafiles"] = cli_args.get(
         "cafiles", config["defaults"]["cafiles"]
