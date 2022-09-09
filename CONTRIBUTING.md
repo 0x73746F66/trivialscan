@@ -45,6 +45,7 @@ Anything you want, or one of these:
 - More C2 (command and control) detections
 - Known RSA/DSA private keys: https://www.hdm.io/tools/debian-openssl/
 - Common DH primes and public server param (Ys) reuse - logjam
+- Logjam: similar to the FREAK attack but except that Logjam attacks the 512-bit DH export key exchange instead of the RSA key exchange. disable support for all DHE_EXPORT cipher suites
 - ECDH public server param (Ys) reuse - Racoon
 - TLS extension intolerance
 - TLS extensions
@@ -70,16 +71,12 @@ Anything you want, or one of these:
 - HEARTBLEED: Heartbeat extension RFC6520 is leveraged for HEARTBLEED vulnerability
 - Ticketbleed
 - CDN detection
-
-## Target state
-
 - tls_long_handshake_intolerance
-- http2_cleartext_support
 - Change-Cipher-Specs allowing the use of attacker preferred ciphers that are available and potentially offer an exploit path
 - EMS: Extended Master Secret extension provides additional security to SSL sessions and prevents certain MitM attacks
 - EC_POINT_FORMAT TLS extension, RFC 8422 5.1.2: uncompressed point format is obsolete so it is perfectly fine for a client to not include this extension, if included it must have exactly the value 0 (Uncompressed) Point Format for NIST Curves
 
-### Validations:
+### Cert validations:
 
 1. common validation
 
@@ -96,10 +93,10 @@ Most browsers (and software generally) check only:
 - leaf not expired
 - root CA exists in trust stores
 
-2. TLS is valid
+2. TLS as a whole is RFC ccompliant
 
 ```py
-def is_valid(self, trust_context: int = SOURCE_CCADB) -> bool:
+def rfc_ccompliant(self, trust_context: int = SOURCE_CCADB) -> bool:
 ```
 
 Proper RFC defined MUST validations:
@@ -109,13 +106,13 @@ Proper RFC defined MUST validations:
 - root common_validation
 - no revocations
 
-3. best practice
+3. best practices / hardening standards
 
 ```py
-def best_practice_valid(self, trust_context: int = SOURCE_CCADB) -> bool:
+def hardened_tls(self, trust_context: int = SOURCE_CCADB) -> bool:
 ```
 
-RFC defined SHOULD validations and best practices:
+RFC defined SHOULD validations and heavily scruitinised, yet still valid, best practices:
 
 - is_valid
 - no deprecated protocols, signatures, or ciphers
