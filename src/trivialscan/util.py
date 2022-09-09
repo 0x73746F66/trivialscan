@@ -1126,7 +1126,7 @@ def upload_cloud(
                         "X-Trivialscan-Account": kwargs.get("account_name"),
                         "X-Trivialscan-Client": kwargs.get("client_name"),
                     },
-                    timeout=30,
+                    timeout=300,
                 )
                 if resp.status_code == 403:
                     upload_progress.console.print(
@@ -1146,7 +1146,10 @@ def upload_cloud(
                         continue
                     responses.append(data)
 
-            except requests.exceptions.ConnectionError as err:
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.ReadTimeout,
+            ) as err:
                 logger.warning(err, exc_info=True)
                 upload_progress.console.print(
                     f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"

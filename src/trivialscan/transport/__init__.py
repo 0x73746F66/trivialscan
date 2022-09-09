@@ -66,8 +66,6 @@ class TLSTransport:
         self.store.tls_state.certificate_mtls_expected = None
         self.store.tls_state.offered_tls_versions = []
         self.store.tls_state.offered_ciphers = []
-        self.store.tls_state.tls_version_interference_versions = []
-        self.store.tls_state.tls_version_intolerance_versions = []
         self._depth = {}
         self._ocsp = {}
         self._client_pem_path: str = None
@@ -78,7 +76,7 @@ class TLSTransport:
         self._verifier_errors = []
         self._revocation_ocsp_assertion: bytes = b""
         self._session = CachedSession(
-            path.join("/tmp", "trivialscan", hostname),
+            path.join("/", "tmp", "trivialscan", hostname),
             backend="filesystem",
             use_temp=True,
             expire_after=timedelta(minutes=15),

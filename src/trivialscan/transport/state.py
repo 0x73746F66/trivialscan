@@ -109,12 +109,6 @@ class TLSState:
         self.negotiated_protocol: str = None
         self.preferred_protocol: str = None
         self.offered_tls_versions: list = []
-        self.tls_extension_intolerance: bool = None
-        self.tls_long_handshake_intolerance: bool = None
-        self.tls_version_intolerance: bool = None
-        self.tls_version_intolerance_versions: list = []
-        self.tls_version_interference: bool = None
-        self.tls_version_interference_versions: list = []
         self.session_resumption_cache_mode: str = None
         self.session_resumption_tickets: bool = None
         self.session_resumption_ticket_hint: bool = None
@@ -168,22 +162,6 @@ class TLSState:
         self.negotiated_protocol = data["tls"].get("protocol", {}).get("negotiated")
         self.preferred_protocol = data["tls"].get("protocol", {}).get("preferred")
         self.offered_tls_versions = data["tls"].get("protocol", {}).get("offered", [])
-        self.tls_version_intolerance = (
-            data["tls"].get("version_intolerance", {}).get("result")
-        )
-        self.tls_version_intolerance_versions = (
-            data["tls"].get("version_intolerance", {}).get("versions", [])
-        )
-        self.tls_long_handshake_intolerance = data["tls"].get(
-            "long_handshake_intolerance"
-        )
-        self.tls_extension_intolerance = data["tls"].get("extension_intolerance")
-        self.tls_version_interference = (
-            data["tls"].get("version_interference", {}).get("result")
-        )
-        self.tls_version_interference_versions = data.get(
-            "version_interference", {}
-        ).get("versions", [])
         self.session_resumption_cache_mode = (
             data["tls"].get("session_resumption", {}).get("cache_mode")
         )
@@ -222,16 +200,6 @@ class TLSState:
                 "negotiated": self.negotiated_protocol,
                 "preferred": self.preferred_protocol,
                 "offered": sorted(list(set(self.offered_tls_versions))),
-            },
-            "extension_intolerance": self.tls_extension_intolerance,
-            "long_handshake_intolerance": self.tls_long_handshake_intolerance,
-            "version_intolerance": {
-                "result": self.tls_version_intolerance,
-                "versions": sorted(list(set(self.tls_version_intolerance_versions))),
-            },
-            "version_interference": {
-                "result": self.tls_version_interference,
-                "versions": sorted(list(set(self.tls_version_interference_versions))),
             },
             "session_resumption": {
                 "cache_mode": self.session_resumption_cache_mode,

@@ -116,5 +116,5 @@ run-cli-sequential: ## Just use normal python (for clean debugging outputs)
 run-info: ## check client details and registration token status
 	trivial info -D $(API_URL)
 
-run-info: ## registers a new client to retrieve a registration token
+run-register: ## registers a new client to retrieve a registration token
 	trivial register -D $(API_URL)
