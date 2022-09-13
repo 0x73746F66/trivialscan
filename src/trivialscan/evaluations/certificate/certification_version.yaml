@@ -21,3 +21,6 @@ anotate_results:
     result_level: warn
     display_as: Non-compliant
     score: -50
+compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"

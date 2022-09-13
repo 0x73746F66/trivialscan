@@ -31,6 +31,8 @@ threats:
         - M1013
         - M1054
 compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"
   "PCI DSS":
     - version: "3.2.1"
       requirements:

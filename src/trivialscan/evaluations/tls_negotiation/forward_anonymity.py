@@ -1,6 +1,7 @@
-# from ...constants import NOT_KNOWN_WEAK_CIPHERS
 from ...transport import TLSTransport
 from .. import BaseEvaluationTask
+
+PFS_PROTOCOLS = ["ECDHE-RSA", "ECDHE-ECDSA", "DHE-RSA" "DHE-DSA"]
 
 
 class EvaluationTask(BaseEvaluationTask):
@@ -10,11 +11,7 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self):
-        raise NotImplementedError
-        # results = set()
-        # for offered_cipher in self.transport.store.tls_state.offered_ciphers:
-        #     if offered_cipher not in NOT_KNOWN_WEAK_CIPHERS:
-        #         results.add(offered_cipher)
-
-        # self.substitution_metadata["offered_weak_ciphers"] = " ".join(results)
-        # return len(results) > 0
+        results = []
+        for proto in PFS_PROTOCOLS:
+            results.append(proto in self.transport.store.tls_state.negotiated_cipher)
+        return any(results)

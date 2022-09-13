@@ -11,7 +11,7 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self):
         results = set()
         for offered_cipher in self.transport.store.tls_state.offered_ciphers:
-            if "-CBC-" in offered_cipher:
+            if "CBC" in offered_cipher:
                 results.add(offered_cipher)
 
         self.substitution_metadata["offered_cbc_ciphers"] = " ".join(results)

@@ -19,6 +19,7 @@ from ..certificate import (
     RootCertificate,
 )
 from ..util import html_find_match
+from ..constants import OPENSSL_MAP_TO_RFC
 
 __module__ = "trivialscan.transport.state"
 
@@ -198,8 +199,22 @@ class TLSState:
             },
             "protocol": {
                 "negotiated": self.negotiated_protocol,
+                "negotiated_rfc": OPENSSL_MAP_TO_RFC.get(
+                    self.negotiated_protocol, self.negotiated_protocol
+                ),
                 "preferred": self.preferred_protocol,
+                "preferred_rfc": OPENSSL_MAP_TO_RFC.get(
+                    self.preferred_protocol, self.preferred_protocol
+                ),
                 "offered": sorted(list(set(self.offered_tls_versions))),
+                "offered_rfc": sorted(
+                    list(
+                        set(
+                            OPENSSL_MAP_TO_RFC.get(cipher, cipher)
+                            for cipher in self.offered_tls_versions
+                        )
+                    )
+                ),
             },
             "session_resumption": {
                 "cache_mode": self.session_resumption_cache_mode,

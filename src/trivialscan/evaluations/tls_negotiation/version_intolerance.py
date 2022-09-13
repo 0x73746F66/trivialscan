@@ -1,9 +1,8 @@
 import logging
-from ...constants import PROTOCOL_VERSION
+from ...constants import PROTOCOL_VERSION, FAKE_PROTOCOLS
 from ...transport import TLSTransport
 from .. import BaseEvaluationTask
 
-FAKE_PROTOCOLS = ["TLSv1.4", "TLSv1.8", "TLSv2", "TLSv2.1", "TLSv2.3"]
 logger = logging.getLogger(__name__)
 
 

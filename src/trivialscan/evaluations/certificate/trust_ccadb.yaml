@@ -48,6 +48,8 @@ threats:
         - M0913
         - M0813
 compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"
   "PCI DSS":
     - version: "3.2.1"
       requirements:

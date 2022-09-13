@@ -16,6 +16,10 @@ endif
 ifndef CI_BUILD_REF
 CI_BUILD_REF=local
 endif
+ifndef RUNNER_NAME
+RUNNER_NAME=$(shell basename $(shell pwd))
+endif
+
 
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -82,16 +86,16 @@ crlite:
 local-runner: ## local setup for a gitlab runner
 	@docker volume create --name=gitlab-cache 2>/dev/null || true
 	docker pull -q docker.io/gitlab/gitlab-runner:latest
-	docker build -t trivialscan/runner:${CI_BUILD_REF} .
+	docker build -t $(RUNNER_NAME)/runner:${CI_BUILD_REF} .
 	@echo $(shell [ -z "${RUNNER_TOKEN}" ] && echo "RUNNER_TOKEN missing" )
 	@docker run -d --rm \
-		--name trivialscan-runner \
+		--name $(RUNNER_NAME) \
 		-v "gitlab-cache:/cache:rw" \
 		-e RUNNER_TOKEN=${RUNNER_TOKEN} \
-		trivialscan/runner:${CI_BUILD_REF}
-	@docker exec -ti trivialscan-runner gitlab-runner register --non-interactive \
+		$(RUNNER_NAME)/runner:${CI_BUILD_REF}
+	@docker exec -ti $(RUNNER_NAME) gitlab-runner register --non-interactive \
 		--tag-list 'trivialscan' \
-		--name trivialscan \
+		--name $(RUNNER_NAME) \
 		--request-concurrency 10 \
 		--url https://gitlab.com/ \
 		--registration-token '$(RUNNER_TOKEN)' \
