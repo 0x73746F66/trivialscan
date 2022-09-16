@@ -161,6 +161,12 @@ def main():
     )
     register_parser.set_defaults(subcommand="register")
     register_parser.add_argument("-h", "--help", action=_HelpAction)
+    register_parser.add_argument(
+        "--token",
+        dest="token",
+        default=None,
+        help="Store a provided Registration Token on this client if validity is confirmed with the server",
+    )
     scan_parser = sub_parsers.add_parser(
         "scan",
         prog="trivial scan",
@@ -298,6 +304,7 @@ def main():
             {
                 "account_name": args.account_name,
                 "client_name": args.client_name,
+                "token": args.token,
                 "log_level": log_level,
                 "url": args.dashboard_api_url.strip("/"),
             }

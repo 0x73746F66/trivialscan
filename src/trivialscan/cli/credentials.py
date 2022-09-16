@@ -64,6 +64,7 @@ def load_local(account_name: str, client_name: str) -> dict:
 
 
 def save_local(account_name: str, client_name: str, token: str) -> bool:
+    token_in_keyring = False
     try:
         logger.info("saving registration token to keyring")
         if KEYRING_SUPPORT:
@@ -78,7 +79,8 @@ def save_local(account_name: str, client_name: str, token: str) -> bool:
             )
             if registration_token == token:
                 logger.info("registration token saved to keyring")
-                return True
+                token_in_keyring = True
+
     except keyring.errors.InitError:
         logger.warning(
             "Skipping keyring credential store, it is not supported on this system"
@@ -86,7 +88,6 @@ def save_local(account_name: str, client_name: str, token: str) -> bool:
     except keyring.errors.KeyringError as ex:
         logger.debug(ex, exc_info=True)
 
-    logger.info("saving registration token to credentials file")
     config = configparser.ConfigParser()
     credentials_path = Path(CREDENTIALS_FILE)
     if credentials_path.is_file():
@@ -95,8 +96,11 @@ def save_local(account_name: str, client_name: str, token: str) -> bool:
         Path(CONFIG_PATH).mkdir(exist_ok=True)
 
     config.setdefault(account_name, {})
-    config[account_name]["token"] = token
     config[account_name]["client_name"] = client_name
+    del config[account_name]["token"]
+    if not token_in_keyring:
+        logger.info("Saving registration token to credentials file")
+        config[account_name]["token"] = token
     try:
         with open(CREDENTIALS_FILE, "w", encoding="utf8") as buff:
             config.write(buff)
