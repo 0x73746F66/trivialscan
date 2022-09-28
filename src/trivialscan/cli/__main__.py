@@ -298,7 +298,10 @@ def main():
     if args.subcommand == "generate":
         return generate({**vars(args)})
     if args.subcommand == "info":
-        return info(args.dashboard_api_url.strip("/"))
+        return info(
+            dashboard_api_url=args.dashboard_api_url.strip("/"),
+            cli_version=__version__,
+        )
     if args.subcommand == "register":
         return register(
             {
@@ -306,7 +309,8 @@ def main():
                 "client_name": args.client_name,
                 "token": args.token,
                 "log_level": log_level,
-                "url": args.dashboard_api_url.strip("/"),
+                "dashboard_api_url": args.dashboard_api_url.strip("/"),
+                "cli_version": __version__,
             }
         )
     config = _scan_config(vars(args), args.config_file)
@@ -362,6 +366,7 @@ def main():
 def _scan_config(cli_args: dict, filename: Union[str, None]) -> dict:
     custom = load_config(filename)
     config = get_config(custom_values=custom)
+    config.setdefault("cli_version", __version__)
     config.setdefault(
         "dashboard_api_url", cli_args.get("dashboard_api_url", "").strip("/")
     )

@@ -1,6 +1,6 @@
 ---
 account_name: trivialsec-test
-client_name: local-jager
+client_name: jager
 project_name: appsec_program_2022
 
 defaults:

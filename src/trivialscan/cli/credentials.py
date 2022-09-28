@@ -97,7 +97,8 @@ def save_local(account_name: str, client_name: str, token: str) -> bool:
 
     config.setdefault(account_name, {})
     config[account_name]["client_name"] = client_name
-    del config[account_name]["token"]
+    if config[account_name].get("token"):
+        del config[account_name]["token"]
     if not token_in_keyring:
         logger.info("Saving registration token to credentials file")
         config[account_name]["token"] = token

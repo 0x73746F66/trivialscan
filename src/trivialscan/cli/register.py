@@ -7,8 +7,8 @@ import requests
 from rich.console import Console
 from rich.prompt import Prompt
 
-from . import constants
-from .credentials import CREDENTIALS_FILE, KEYRING_SUPPORT, load_local, save_local
+from .. import constants, util
+from .credentials import CREDENTIALS_FILE, KEYRING_SUPPORT, save_local
 
 __module__ = "trivialscan.cli.register"
 
@@ -35,13 +35,18 @@ def register(args: dict):
 
         if args.get("token"):
             data = {}
+            request_url = path.join(args["dashboard_api_url"], "check-token")
+            authorization_header = util.sign_request(
+                cred_data["client_name"], args.get("token"), request_url
+            )
+            logger.debug(f"{request_url}\n{authorization_header}")
             try:
                 resp = requests.get(
-                    path.join(args["url"], "check-token"),
+                    request_url,
                     headers={
-                        "x-trivialscan-account": cred_data["account_name"],
-                        "x-trivialscan-client": cred_data["client_name"],
-                        "x-trivialscan-token": args.get("token"),
+                        "Authorization": authorization_header,
+                        "X-Trivialscan-Account": cred_data["account_name"],
+                        "X-Trivialscan-Version": args["cli_version"],
                     },
                 )
                 data = resp.json()
@@ -57,33 +62,29 @@ def register(args: dict):
                 console.print(
                     f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
                 )
-                registration_status = (
-                    f"[{constants.CLI_COLOR_FAIL}]Offline[/{constants.CLI_COLOR_FAIL}]"
-                )
+
             except requests.exceptions.JSONDecodeError:
                 logger.warning(
                     f"Bad response from server ({resp.status_code}): {resp.text}"
                 )
-                registration_status = (
-                    f"[{constants.CLI_COLOR_FAIL}]Offline[/{constants.CLI_COLOR_FAIL}]"
-                )
 
-        url = f"{args['url']}/register/{cred_data['client_name']}"
-        logger.info(url)
+        request_url = f"{args['dashboard_api_url']}/register/{cred_data['client_name']}"
+        raw_body = json.dumps(
+            {
+                "operating_system": platform.system(),
+                "operating_system_release": platform.release(),
+                "operating_system_version": platform.version(),
+                "architecture": platform.machine(),
+            }
+        )
+        logger.debug(f"{request_url}\n{raw_body}")
         resp = requests.post(
-            url,
-            json=json.dumps(
-                {
-                    "operating_system": platform.system(),
-                    "operating_system_release": platform.release(),
-                    "operating_system_version": platform.version(),
-                    "architecture": platform.machine(),
-                }
-            ),
+            request_url,
+            json=raw_body,
             headers={
                 "Content-Type": "application/json",
-                "Accept": "text/plain",
-                "x-trivialscan-account": cred_data["account_name"],
+                "X-Trivialscan-Account": cred_data["account_name"],
+                "X-Trivialscan-Version": args["cli_version"],
             },
             timeout=10,
         )

@@ -5,7 +5,7 @@ import requests
 from rich.console import Console
 from rich.table import Table
 
-from . import constants
+from .. import constants, util
 from .credentials import (
     load_credentials,
     load_keyring,
@@ -21,6 +21,7 @@ console = Console()
 
 def cloud_sync_status(
     dashboard_api_url: str,
+    cli_version: str,
     account_name: str,
     registration_token: str,
     client_name: str = None,
@@ -31,14 +32,20 @@ def cloud_sync_status(
     if not client_name:
         return registration_status
     data = {}
+    request_url = path.join(dashboard_api_url, "check-token")
+    authorization_header = util.sign_request(
+        client_name, registration_token, request_url
+    )
+    logger.debug(authorization_header)
     try:
         resp = requests.get(
-            path.join(dashboard_api_url, "check-token"),
+            request_url,
             headers={
-                "x-trivialscan-account": account_name,
-                "x-trivialscan-client": client_name,
-                "x-trivialscan-token": registration_token,
+                "Authorization": authorization_header,
+                "X-Trivialscan-Account": account_name,
+                "X-Trivialscan-Version": cli_version,
             },
+            timeout=300,
         )
         data = resp.json()
     except requests.exceptions.ConnectionError as err:
@@ -54,14 +61,15 @@ def cloud_sync_status(
         registration_status = (
             f"[{constants.CLI_COLOR_FAIL}]Offline[/{constants.CLI_COLOR_FAIL}]"
         )
-    return (
+    data["registration_result"] = (
         f"[{constants.CLI_COLOR_PASS}]Registered[/{constants.CLI_COLOR_PASS}]"
         if data.get("registered")
         else registration_status
     )
+    return data
 
 
-def info(dashboard_api_url: str):
+def info(dashboard_api_url: str, cli_version: str):
     logger.info(f"dashboard_api_url {dashboard_api_url}")
     try:
         if KEYRING_SUPPORT:
@@ -92,6 +100,7 @@ def info(dashboard_api_url: str):
         table.add_column("Registration Token", style="bold", no_wrap=True)
         table.add_column("Credential Storage", no_wrap=True)
         table.add_column("Cloud Status", no_wrap=True)
+        table.add_column("Authorization Result", no_wrap=True)
         for account_name, conf in credentials.items():
             if conf.get("token"):
                 console.print(
@@ -102,17 +111,23 @@ def info(dashboard_api_url: str):
                 console.print(
                     f"[{constants.CLI_COLOR_PASS}]PASS![/{constants.CLI_COLOR_PASS}] Retrieved registration token from keyring"
                 )
+                data = cloud_sync_status(
+                    dashboard_api_url,
+                    cli_version,
+                    account_name,
+                    registration_token,
+                    conf.get("client_name"),
+                )
+                logger.debug(data)
                 table.add_row(
                     account_name,
                     conf.get("client_name"),
                     registration_token,
                     f"[{constants.CLI_COLOR_PASS}]Encrypted Keyring[/{constants.CLI_COLOR_PASS}]",
-                    cloud_sync_status(
-                        dashboard_api_url,
-                        account_name,
-                        registration_token,
-                        conf.get("client_name"),
-                    ),
+                    data["registration_result"],
+                    "Validated"
+                    if data.get("authorisation_valid")
+                    else data.get("authorisation_valid", "Missing") or "Unauthorized",
                 )
             if (
                 account_name == "DEFAULT"
@@ -120,17 +135,23 @@ def info(dashboard_api_url: str):
                 or registration_token == conf.get("token")
             ):
                 continue
+            data = cloud_sync_status(
+                dashboard_api_url,
+                cli_version,
+                account_name,
+                conf.get("token"),
+                conf.get("client_name"),
+            )
+            logger.debug(data)
             table.add_row(
                 account_name,
                 conf.get("client_name"),
                 conf.get("token"),
                 f"[{constants.CLI_COLOR_FAIL}]Cleartext File[/{constants.CLI_COLOR_FAIL}]",
-                cloud_sync_status(
-                    dashboard_api_url,
-                    account_name,
-                    conf.get("token"),
-                    conf.get("client_name"),
-                ),
+                data["registration_result"],
+                "Validated"
+                if data.get("authorisation_valid")
+                else data.get("authorisation_valid", "Missing") or "Unauthorized",
             )
 
         console.print(table)

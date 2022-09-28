@@ -3,12 +3,16 @@ import string
 import random
 import signal
 import json
+import hmac
+import hashlib
+from base64 import b64encode
 from datetime import datetime, date, time
 from urllib.request import urlretrieve
+from urllib.parse import urlparse
 from binascii import hexlify
 from pathlib import Path
 from decimal import Decimal
-from functools import wraps, reduce
+from functools import wraps
 from typing import Union
 from copy import deepcopy
 from io import BytesIO
@@ -16,7 +20,6 @@ from os import path
 
 import requests
 from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
-from rich.table import Column
 from rich.progress import (
     Task,
     Progress,
@@ -24,9 +27,6 @@ from rich.progress import (
     BarColumn,
     TimeRemainingColumn,
     TransferSpeedColumn,
-    SpinnerColumn,
-    TextColumn,
-    TimeElapsedColumn,
 )
 import validators
 from cryptography import x509
@@ -971,6 +971,43 @@ def camel_to_snake(s):
     return "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")
 
 
+def sign_request(
+    client_id: str,
+    secret_key: str,
+    request_url: str,
+    request_method: str = "GET",
+    raw_body: str = None,
+) -> str:
+    """Generates and returns the Authorization HTTP header value for Trivial Scanner API
+    :param client_id: Registered client name as this machine ID for Trivial Scanner API
+    :type client_id: str
+    :param secret_key: Registration Token for the provided client
+    :type secret_key: str
+    :param request_url: The canonical URL of the request being signed
+    :type request_url: str
+    :param method: HTTP method being used (default GET)
+    :type method: str
+    :returns: a string representing the header value for Authorization
+    :rtype: str
+    """
+    epochtime = int(datetime.now().timestamp())
+    parsed_url = urlparse(request_url)
+    port = 443 if parsed_url.port is None else parsed_url.port
+    bits = []
+    bits.append(request_method.upper())
+    bits.append(parsed_url.hostname.lower())
+    bits.append(str(port))
+    bits.append(parsed_url.path)
+    bits.append(str(epochtime))
+    if raw_body:
+        bits.append(b64encode(raw_body.encode("utf8")).decode("utf8"))
+    canonical_string = "\n".join(bits)
+    digest = hmac.new(
+        secret_key.encode("utf8"), canonical_string.encode("utf8"), hashlib.sha512
+    ).hexdigest()
+    return f'HMAC id="{client_id}", mac="{digest}", ts="{epochtime}"'
+
+
 def make_data(
     config: dict,
     queries: list[dict],
@@ -1052,7 +1089,7 @@ def split_report(results: dict, results_uri: str) -> list[tuple[str, bytes]]:
             {
                 "format": "json",
                 "type": "evaluations",
-                "filename": f"{results_uri.split('/').pop()}.json",
+                "filename": f"{results_uri.split('/')[-2]}.json",
                 "value": BytesIO(
                     json.dumps(_query.get("evaluations"), default=str).encode("utf8")
                 ),
@@ -1107,7 +1144,14 @@ def upload_cloud(
             )
 
         for result in result_files:
-            url = f"{dashboard_api_url}/store/{result['type']}"
+            request_url = path.join(dashboard_api_url, "store", result["type"])
+            authorization_header = sign_request(
+                client_id=kwargs.get("client_name"),
+                secret_key=kwargs.get("registration_token"),
+                request_url=request_url,
+                raw_body=result["value"].read().decode("utf8"),
+            )
+            logger.debug(f"{request_url}\n{authorization_header}")
             encoder = MultipartEncoder(
                 [("files", (result["filename"], result["value"]))]
             )
@@ -1118,13 +1162,13 @@ def upload_cloud(
             monitor = MultipartEncoderMonitor(encoder, callback)
             try:
                 resp = requests.post(
-                    url,
+                    request_url,
                     data=monitor,
                     headers={
                         "Content-Type": monitor.content_type,
-                        "X-Trivialscan-Token": kwargs.get("registration_token"),
+                        "Authorization": authorization_header,
                         "X-Trivialscan-Account": kwargs.get("account_name"),
-                        "X-Trivialscan-Client": kwargs.get("client_name"),
+                        "X-Trivialscan-Version": kwargs.get("cli_version"),
                     },
                     timeout=300,
                 )
@@ -1197,6 +1241,7 @@ def update_cloud(config: dict, flags: dict, results: dict) -> Union[str, None]:
                 }
             ],
             dashboard_api_url=config["dashboard_api_url"],
+            cli_version=config["cli_version"],
             hide_progress_bars=hide_progress_bars,
             registration_token=config.get("token"),
             account_name=config.get("account_name"),
@@ -1208,6 +1253,7 @@ def update_cloud(config: dict, flags: dict, results: dict) -> Union[str, None]:
             upload_cloud(
                 result_files=split_report(results=results, results_uri=results_uri),
                 dashboard_api_url=config["dashboard_api_url"],
+                cli_version=config["cli_version"],
                 hide_progress_bars=hide_progress_bars,
                 registration_token=config.get("token"),
                 account_name=config.get("account_name"),
