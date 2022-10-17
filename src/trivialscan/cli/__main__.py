@@ -27,7 +27,7 @@ __version__ = "0.3.0rc1"
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
 APP_BANNER = text2art("trivialscan", font="tarty4")
 APP_ENV = getenv("APP_ENV", "development")
-DASHBOARD_API_URL = getenv("API_URL", "https://api-dashboard.trivialsec.com")
+DASHBOARD_API_URL = getenv("API_URL", "https://api.trivialsec.com")
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 console = Console()
@@ -162,10 +162,9 @@ def main():
     register_parser.set_defaults(subcommand="register")
     register_parser.add_argument("-h", "--help", action=_HelpAction)
     register_parser.add_argument(
-        "--token",
-        dest="token",
-        default=None,
-        help="Store a provided Registration Token on this client if validity is confirmed with the server",
+        "--api-key",
+        dest="api_key",
+        help="Requires registration at https://www.trivialsec.com",
     )
     scan_parser = sub_parsers.add_parser(
         "scan",
@@ -307,7 +306,7 @@ def main():
             {
                 "account_name": args.account_name,
                 "client_name": args.client_name,
-                "token": args.token,
+                "api_key": args.api_key,
                 "log_level": log_level,
                 "dashboard_api_url": args.dashboard_api_url.strip("/"),
                 "cli_version": __version__,

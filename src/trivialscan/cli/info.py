@@ -30,11 +30,11 @@ def cloud_sync_status(
         f"[{constants.CLI_COLOR_WARN}]Unregistered[/{constants.CLI_COLOR_WARN}]"
     )
     if not client_name:
-        return registration_status
+        return {"authorisation_status": registration_status, "debug": "not client_name"}
     data = {}
-    request_url = path.join(dashboard_api_url, "check-token")
+    request_url = path.join(dashboard_api_url, "validate")
     authorization_header = util.sign_request(
-        client_name, registration_token, request_url
+        client_id=client_name, secret_key=registration_token, request_url=request_url
     )
     logger.debug(authorization_header)
     try:
@@ -61,9 +61,9 @@ def cloud_sync_status(
         registration_status = (
             f"[{constants.CLI_COLOR_FAIL}]Offline[/{constants.CLI_COLOR_FAIL}]"
         )
-    data["registration_result"] = (
+    data["authorisation_status"] = (
         f"[{constants.CLI_COLOR_PASS}]Registered[/{constants.CLI_COLOR_PASS}]"
-        if data.get("registered")
+        if data.get("authorisation_valid")
         else registration_status
     )
     return data
@@ -90,6 +90,7 @@ def info(dashboard_api_url: str, cli_version: str):
         console.print(
             f"[{constants.CLI_COLOR_INFO}]FOUND[/{constants.CLI_COLOR_INFO}] {CREDENTIALS_FILE}"
         )
+        logger.debug(credentials)
         table = Table()
         table.add_column(
             "Account", justify="right", style=constants.CLI_COLOR_PRIMARY, no_wrap=True
@@ -112,19 +113,19 @@ def info(dashboard_api_url: str, cli_version: str):
                     f"[{constants.CLI_COLOR_PASS}]PASS![/{constants.CLI_COLOR_PASS}] Retrieved registration token from keyring"
                 )
                 data = cloud_sync_status(
-                    dashboard_api_url,
-                    cli_version,
-                    account_name,
-                    registration_token,
-                    conf.get("client_name"),
+                    dashboard_api_url=dashboard_api_url,
+                    cli_version=cli_version,
+                    registration_token=registration_token,
+                    account_name=account_name,
+                    client_name=conf.get("client_name"),
                 )
-                logger.debug(data)
+                logger.debug(f"{registration_token} {conf.get('client_name')} {data}")
                 table.add_row(
                     account_name,
                     conf.get("client_name"),
                     registration_token,
                     f"[{constants.CLI_COLOR_PASS}]Encrypted Keyring[/{constants.CLI_COLOR_PASS}]",
-                    data["registration_result"],
+                    data.get("authorisation_status"),
                     "Validated"
                     if data.get("authorisation_valid")
                     else data.get("authorisation_valid", "Missing") or "Unauthorized",
@@ -136,19 +137,19 @@ def info(dashboard_api_url: str, cli_version: str):
             ):
                 continue
             data = cloud_sync_status(
-                dashboard_api_url,
-                cli_version,
-                account_name,
-                conf.get("token"),
-                conf.get("client_name"),
+                dashboard_api_url=dashboard_api_url,
+                cli_version=cli_version,
+                registration_token=conf.get("token"),
+                account_name=account_name,
+                client_name=conf.get("client_name"),
             )
-            logger.debug(data)
+            logger.debug(f"{conf.get('token')} {conf.get('client_name')} {data}")
             table.add_row(
                 account_name,
                 conf.get("client_name"),
                 conf.get("token"),
                 f"[{constants.CLI_COLOR_FAIL}]Cleartext File[/{constants.CLI_COLOR_FAIL}]",
-                data["registration_result"],
+                data["authorisation_status"],
                 "Validated"
                 if data.get("authorisation_valid")
                 else data.get("authorisation_valid", "Missing") or "Unauthorized",

@@ -1002,6 +1002,7 @@ def sign_request(
     if raw_body:
         bits.append(b64encode(raw_body.encode("utf8")).decode("utf8"))
     canonical_string = "\n".join(bits)
+    logger.debug(f"canonical_string\n{canonical_string}")
     digest = hmac.new(
         secret_key.encode("utf8"), canonical_string.encode("utf8"), hashlib.sha512
     ).hexdigest()

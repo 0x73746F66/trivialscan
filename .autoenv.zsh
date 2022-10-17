@@ -6,10 +6,13 @@ echo -e "\033[1;36m
 if [[ -f .env ]]; then
   source .env
 fi
+if [[ -f .env.local ]]; then
+  source .env.local
+fi
 readonly default_env=Dev
-readonly prod_api_url=$(aws ssm get-parameter --name "/Prod/Deploy/trivialscan-lambda/trivialscan_lambda_url" --output text --with-decryption --query 'Parameter.Value' 2>/dev/null)
 export APP_ENV=${APP_ENV:-${default_env}}
-export API_URL=${APP_URL:-${prod_api_url}}
+readonly stored_api_url=$(aws ssm get-parameter --name "/${APP_ENV}/Deploy/trivialscan-lambda/trivialscan_lambda_url" --output text --with-decryption --query 'Parameter.Value' 2>/dev/null)
+export API_URL=${API_URL:-${stored_api_url}}
 aws sts get-caller-identity
 [ -z "${APP_ENV}" ] && echo -e "${RED}APP_ENV not set${NC}"
 [ -z "${API_URL}" ] && echo -e "${RED}API_URL not set${NC}"

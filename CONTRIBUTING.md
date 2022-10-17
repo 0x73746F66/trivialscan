@@ -36,7 +36,7 @@ Less of a rule, just good advice. If the functionality you want to add is signif
 
 Anything you want, or one of these:
 
-⌛⌛ 3.0.0 Idea List ⌛⌛
+⌛⌛ Idea List ⌛⌛
 
 - jarm fingerprint hash
 - HSTS Preloading

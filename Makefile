@@ -1,9 +1,25 @@
 SHELL := /bin/bash
+.PHONY: help
+primary := '\033[1;36m'
+err := '\033[0;31m'
+bold := '\033[1m'
+clear := '\033[0m'
+
 -include .env
 export $(shell sed 's/=.*//' .env)
-.PHONY: help
+ifndef CI_BUILD_REF
+CI_BUILD_REF=local
+endif
+ifeq ($(CI_BUILD_REF), local)
+-include .env.local
+export $(shell sed 's/=.*//' .env.local)
+endif
+
+help: ## This help.
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .DEFAULT_GOAL := help
+
 ifndef TRIVIALSCAN_VERSION
 TRIVIALSCAN_VERSION=$(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | head -n1 | python3 -c "import sys; exec(sys.stdin.read()); print(__version__)")
 endif
@@ -12,9 +28,6 @@ API_URL="http://127.0.0.1:8000"
 endif
 ifndef APP_ENV
 APP_ENV=development
-endif
-ifndef CI_BUILD_REF
-CI_BUILD_REF=local
 endif
 ifndef RUNNER_NAME
 RUNNER_NAME=$(shell basename $(shell pwd))

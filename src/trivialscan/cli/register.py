@@ -33,42 +33,7 @@ def register(args: dict):
         if not cred_data.get("client_name"):
             cred_data["client_name"] = platform.node()
 
-        if args.get("token"):
-            data = {}
-            request_url = path.join(args["dashboard_api_url"], "check-token")
-            authorization_header = util.sign_request(
-                cred_data["client_name"], args.get("token"), request_url
-            )
-            logger.debug(f"{request_url}\n{authorization_header}")
-            try:
-                resp = requests.get(
-                    request_url,
-                    headers={
-                        "Authorization": authorization_header,
-                        "X-Trivialscan-Account": cred_data["account_name"],
-                        "X-Trivialscan-Version": args["cli_version"],
-                    },
-                )
-                data = resp.json()
-                if data.get("registered"):
-                    return save_local(
-                        account_name=cred_data.get("account_name"),
-                        client_name=cred_data.get("client_name"),
-                        token=args.get("token"),
-                    )
-
-            except requests.exceptions.ConnectionError as err:
-                logger.exception(err)
-                console.print(
-                    f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
-                )
-
-            except requests.exceptions.JSONDecodeError:
-                logger.warning(
-                    f"Bad response from server ({resp.status_code}): {resp.text}"
-                )
-
-        request_url = f"{args['dashboard_api_url']}/register/{cred_data['client_name']}"
+        request_url = f"{args['dashboard_api_url']}/claim/{cred_data['client_name']}"
         raw_body = json.dumps(
             {
                 "operating_system": platform.system(),
@@ -78,29 +43,38 @@ def register(args: dict):
             }
         )
         logger.debug(f"{request_url}\n{raw_body}")
+        authorization_header = util.sign_request(
+            cred_data["account_name"],
+            args.get("api_key"),
+            request_url,
+            request_method="POST",
+            raw_body=raw_body,
+        )
+        logger.debug(f"{request_url}\n{authorization_header}")
         resp = requests.post(
             request_url,
-            json=raw_body,
+            data=raw_body,
             headers={
                 "Content-Type": "application/json",
+                "Authorization": authorization_header,
                 "X-Trivialscan-Account": cred_data["account_name"],
                 "X-Trivialscan-Version": args["cli_version"],
             },
             timeout=10,
         )
-        data = resp.json()
-        cred_data["token"] = data.get("token")
-        if "message" in data:
+        if resp.status_code != 201:
             console.print(
-                f"[{constants.CLI_COLOR_FAIL}]{data['message']}[/{constants.CLI_COLOR_FAIL}]"
+                f"[{constants.CLI_COLOR_FAIL}]Response status {resp.status_code}[/{constants.CLI_COLOR_FAIL}]"
             )
             return
-        if not data.get("token"):
+        data = resp.json()
+        if not data.get("access_token"):
             console.print(
                 f"[{constants.CLI_COLOR_FAIL}]Response status {resp.status_code}[/{constants.CLI_COLOR_FAIL}]"
             )
             return
 
+        cred_data["token"] = data.get("access_token")
         save_local(
             account_name=cred_data["account_name"],
             client_name=cred_data["client_name"],
