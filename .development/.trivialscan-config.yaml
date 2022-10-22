@@ -1,7 +1,7 @@
 ---
-account_name: trivialsec-test
-client_name: jager
-project_name: appsec_program_2022
+account_name: jorge
+client_name: stofcli
+project_name: UpWork
 
 defaults:
   checkpoint: True

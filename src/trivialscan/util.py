@@ -1085,15 +1085,16 @@ def split_report(results: dict, results_uri: str) -> list[tuple[str, bytes]]:
                     "value": BytesIO(json.dumps(certcopy, default=str).encode("utf8")),
                 }
             )
-
+        data = {
+            "transport": _query.get("transport"),
+            "evaluations": _query.get("evaluations"),
+        }
         files.append(
             {
                 "format": "json",
                 "type": "evaluations",
                 "filename": f"{results_uri.split('/')[-2]}.json",
-                "value": BytesIO(
-                    json.dumps(_query.get("evaluations"), default=str).encode("utf8")
-                ),
+                "value": BytesIO(json.dumps(data, default=str).encode("utf8")),
             }
         )
         query_result["tls"]["certificates"] = sorted(list(certificates))
@@ -1150,6 +1151,7 @@ def upload_cloud(
                 client_id=kwargs.get("client_name"),
                 secret_key=kwargs.get("registration_token"),
                 request_url=request_url,
+                request_method="POST",
                 raw_body=result["value"].read().decode("utf8"),
             )
             logger.debug(f"{request_url}\n{authorization_header}")
@@ -1178,7 +1180,7 @@ def upload_cloud(
                         f"[{constants.CLI_COLOR_FAIL}]Missing or bad client Registration Token provided; Hint: run 'trivial register'[/{constants.CLI_COLOR_FAIL}]"
                     )
                     continue
-                if resp.status_code == 200:
+                if resp.status_code == 201:
                     logger.debug(resp.text)
                     try:
                         data = json.loads(resp.text)

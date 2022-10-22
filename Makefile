@@ -23,8 +23,8 @@ help: ## This help.
 ifndef TRIVIALSCAN_VERSION
 TRIVIALSCAN_VERSION=$(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | head -n1 | python3 -c "import sys; exec(sys.stdin.read()); print(__version__)")
 endif
-ifndef API_URL
-API_URL="http://127.0.0.1:8000"
+ifndef TRIVIALSCAN_API_URL
+TRIVIALSCAN_API_URL=http://localhost:8080
 endif
 ifndef APP_ENV
 APP_ENV=development
@@ -116,22 +116,22 @@ local-runner: ## local setup for a gitlab runner
 		--executor shell
 
 run-stdin: ## pipe targets from stdin
-	cat .$(APP_ENV)/targets.txt | xargs trivial scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --project-name badssl --targets
+	cat .$(APP_ENV)/targets.txt | xargs trivial scan -D $(TRIVIALSCAN_API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --project-name badssl --targets
 
 run-stdin-upload: ## re-upload the piped targets from stdin make target
-	trivial scan-upload -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --results-file .$(APP_ENV)/results/badssl/all.json
+	trivial scan-upload -D $(TRIVIALSCAN_API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --results-file .$(APP_ENV)/results/badssl/all.json
 
 run-as-module: ## Using CLI as a python module directly (dev purposes)
-	python3 -m trivialscan.cli scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml -t ssllabs.com --project-name qualys
+	python3 -m trivialscan.cli scan -D $(TRIVIALSCAN_API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml -t ssllabs.com --project-name qualys
 
 run-cli-parallel: ## Leverage defaults using all CPU cores
-	trivial scan -D $(API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml
+	trivial scan -D $(TRIVIALSCAN_API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml
 
 run-cli-sequential: ## Just use normal python (for clean debugging outputs)
-	trivial scan -D $(API_URL) --no-multiprocessing --config-path .$(APP_ENV)/.trivialscan-config.yaml
+	trivial scan -D $(TRIVIALSCAN_API_URL) --no-multiprocessing --config-path .$(APP_ENV)/.trivialscan-config.yaml
 
 run-info: ## check client details and registration token status
-	trivial info -D $(API_URL)
+	trivial info -D $(TRIVIALSCAN_API_URL)
 
 run-register: ## registers a new client to retrieve a registration token
-	trivial register -D $(API_URL)
+	trivial register -D $(TRIVIALSCAN_API_URL)
