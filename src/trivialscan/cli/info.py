@@ -1,5 +1,6 @@
 import logging
 from os import path
+from typing import Union
 
 import requests
 from rich.console import Console
@@ -25,7 +26,7 @@ def cloud_sync_status(
     account_name: str,
     registration_token: str,
     client_name: str = None,
-) -> str:
+) -> Union[dict, None]:
     registration_status = (
         f"[{constants.CLI_COLOR_WARN}]Unregistered[/{constants.CLI_COLOR_WARN}]"
     )
@@ -61,6 +62,8 @@ def cloud_sync_status(
         registration_status = (
             f"[{constants.CLI_COLOR_FAIL}]Offline[/{constants.CLI_COLOR_FAIL}]"
         )
+    if not data:
+        data = {}
     data["authorisation_status"] = (
         f"[{constants.CLI_COLOR_PASS}]Registered[/{constants.CLI_COLOR_PASS}]"
         if data.get("authorisation_valid")
