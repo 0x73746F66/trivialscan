@@ -102,11 +102,11 @@ anotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration
-    score: 200
+    score: 150
   - result_value: True
     result_level: fail
     display_as: Vulnerable
-    score: -500
+    score: -200
 substitutions:
   - public_key_type
   - public_key_size

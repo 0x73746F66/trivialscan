@@ -52,8 +52,8 @@ anotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration
-    score: 100
+    score: 150
   - result_value: True
     result_level: fail
     display_as: Vulnerable
-    score: -150
+    score: -100

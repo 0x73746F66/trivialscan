@@ -72,4 +72,4 @@ anotate_results:
   - result_value: False
     result_level: warn
     display_as: Misconfigured
-    score: -150
+    score: -200

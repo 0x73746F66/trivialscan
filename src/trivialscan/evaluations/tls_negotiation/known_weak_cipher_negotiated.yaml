@@ -75,7 +75,7 @@ anotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration
-    score: 120
+    score: 75
   - result_value: True
     result_level: fail
     display_as: Misconfigured

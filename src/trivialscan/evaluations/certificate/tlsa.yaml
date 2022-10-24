@@ -58,8 +58,8 @@ anotate_results:
   - result_value: False
     result_level: warn
     display_as: Misconfigured
-    score: -200
+    score: -50
   - result_value: True
     result_level: pass
     display_as: Detected
-    score: 120
+    score: 50

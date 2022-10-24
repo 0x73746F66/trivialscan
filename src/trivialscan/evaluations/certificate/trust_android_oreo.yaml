@@ -62,8 +62,8 @@ anotate_results:
   - result_value: True
     result_level: pass
     display_as: Trusted
-    score: 100
+    score: 35
   - result_value: False
     result_level: fail
     display_as: Not Trusted
-    score: -500
+    score: -50

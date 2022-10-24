@@ -72,4 +72,4 @@ anotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration
-    score: 50
+    score: 75

@@ -58,11 +58,11 @@ anotate_results:
   - result_value: True
     result_level: fail
     display_as: Compromised
-    score: -500
+    score: -200
   - result_value: False
     result_level: pass
     display_as: Not Known Compromised
-    score: 100
+    score: 75
   - result_value: None
     result_level: info
     result_text: SKIP!

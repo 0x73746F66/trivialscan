@@ -18,4 +18,4 @@ anotate_results:
   - result_value: True
     result_level: pass
     display_as: Detected
-    score: 60
+    score: 75

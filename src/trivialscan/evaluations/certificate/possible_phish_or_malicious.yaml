@@ -72,7 +72,7 @@ anotate_results:
   - result_value: False
     result_level: pass
     display_as: Not Known Compromised
-    score: 40
+    score: 75
   - result_value: True
     result_level: fail
     display_as: Compromised {reason}

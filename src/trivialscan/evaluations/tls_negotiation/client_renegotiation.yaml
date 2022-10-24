@@ -64,8 +64,8 @@ anotate_results:
   - result_value: False
     result_level: pass
     display_as: Not Detected
-    score: 60
+    score: 75
   - result_value: True
     result_level: fail
     display_as: Misconfigured
-    score: -120
+    score: -200

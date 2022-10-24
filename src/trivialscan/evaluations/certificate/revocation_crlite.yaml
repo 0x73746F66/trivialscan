@@ -66,16 +66,16 @@ anotate_results:
   - result_value: Expired
     result_level: warn
     display_as: Expired
-    score: 0
+    score: 150
   - result_value: Good
     result_level: pass
     display_as: Not Revoked
-    score: 80
+    score: 75
   - result_value: NotCovered
     result_level: warn
-    display_as: NotCovered
-    score: -100
+    display_as: Not Covered
+    score: -120
   - result_value: NotEnrolled
     result_level: warn
-    display_as: NotEnrolled
-    score: -100
+    display_as: Not Enrolled
+    score: -120

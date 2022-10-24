@@ -44,7 +44,7 @@ anotate_results:
   - result_value: True
     result_level: pass
     display_as: Not Revoked
-    score: 80
+    score: 75
   - result_value: False
     result_level: fail
     display_as: Revoked
