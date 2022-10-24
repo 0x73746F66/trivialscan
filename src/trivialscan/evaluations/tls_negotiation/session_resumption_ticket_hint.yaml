@@ -5,7 +5,9 @@ group_id: 1.0
 group: tls_negotiation
 label_as: Session resumption ticket hints
 issue: >
-  TODO
+  Depending on your specific application, and how important the history of your network interaction may be, you may want to forego TLS session resumption altogether.
+  Long session gaps can give bad actors time to hack into a session and cause trouble. This is why session IDs and session tickets both have security timeout settings that are dictated by the server. When an ID or a ticket expires, the server intentionally flushes cached session data and forces a complete new session handshake when the client initiates the next contact.
+  Leaking any information for attackers to derive ways to weaken TLS results in ineffective data protection or broken integrity of communications.
 threats:
   "MITRE ATT&CK":
     - version: 11.2
@@ -51,6 +53,10 @@ compliance:
         - 6.4.1
         - 6.4.2
 references:
+  - name: Networking 101 Published by O'Reilly Media
+    url: https://hpbn.co/transport-layer-security-tls/#tls-session-resumption
+  - name: Measuring the Security Harm of TLS Crypto Shortcuts
+    url: https://dl.acm.org/doi/10.1145/2987443.2987480
 anotate_results:
   - result_value: False
     result_level: pass
