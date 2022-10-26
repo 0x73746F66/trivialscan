@@ -194,27 +194,24 @@ class TLSState:
             "cipher": {
                 "forward_anonymity": self.forward_anonymity,
                 "offered": sorted(list(set(self.offered_ciphers))),
-                "negotiated": self.negotiated_cipher,
-                "negotiated_bits": self.negotiated_cipher_bits,
-            },
-            "protocol": {
-                "negotiated": self.negotiated_protocol,
-                "negotiated_rfc": OPENSSL_MAP_TO_RFC.get(
-                    self.negotiated_protocol, self.negotiated_protocol
-                ),
-                "preferred": self.preferred_protocol,
-                "preferred_rfc": OPENSSL_MAP_TO_RFC.get(
-                    self.preferred_protocol, self.preferred_protocol
-                ),
-                "offered": sorted(list(set(self.offered_tls_versions))),
                 "offered_rfc": sorted(
                     list(
                         set(
                             OPENSSL_MAP_TO_RFC.get(cipher, cipher)
-                            for cipher in self.offered_tls_versions
+                            for cipher in self.offered_ciphers
                         )
                     )
                 ),
+                "negotiated": self.negotiated_cipher,
+                "negotiated_bits": self.negotiated_cipher_bits,
+                "negotiated_rfc": OPENSSL_MAP_TO_RFC.get(
+                    self.negotiated_cipher_bits, self.negotiated_cipher_bits
+                ),
+            },
+            "protocol": {
+                "negotiated": self.negotiated_protocol,
+                "preferred": self.preferred_protocol,
+                "offered": sorted(list(set(self.offered_tls_versions))),
             },
             "session_resumption": {
                 "cache_mode": self.session_resumption_cache_mode,

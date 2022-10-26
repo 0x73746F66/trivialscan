@@ -14,4 +14,4 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self, certificate: BaseCertificate) -> Union[bool, None]:
         self.substitution_metadata["expiry_status"] = certificate.expiry_status
         risk = datetime.utcnow() + timedelta(days=3)
-        return certificate.not_after < risk
+        return datetime.fromisoformat(certificate.not_after) < risk

@@ -15,6 +15,7 @@ from . import outputln
 from .register import register
 from .generate import generate
 from .info import info
+from .auth import auth
 from .scan import scan
 from .upload import upload
 from .. import constants
@@ -166,6 +167,22 @@ def main():
         dest="api_key",
         help="Requires registration at https://www.trivialsec.com",
     )
+    auth_parser = sub_parsers.add_parser(
+        "auth",
+        prog="trivial auth",
+        description=cli.description,
+        add_help=False,
+        help="Authenticate a client access token for advanced features",
+        parents=[cli],
+    )
+    auth_parser.set_defaults(subcommand="auth")
+    auth_parser.add_argument("-h", "--help", action=_HelpAction)
+    auth_parser.add_argument(
+        "--token",
+        "--access-token",
+        dest="access_token",
+        help="Requires registration at https://www.trivialsec.com",
+    )
     scan_parser = sub_parsers.add_parser(
         "scan",
         prog="trivial scan",
@@ -296,10 +313,28 @@ def main():
     logger.info(f"subcommand {args.subcommand}")
     if args.subcommand == "generate":
         return generate({**vars(args)})
+
+    if not args.dashboard_api_url or validators.url(args.dashboard_api_url) is not True:
+        console.print(
+            f"[{constants.CLI_COLOR_FAIL}]Missing or invalid value supplied for argument[/{constants.CLI_COLOR_FAIL}] -D|--api-url"
+        )
+        return
+
     if args.subcommand == "info":
         return info(
             dashboard_api_url=args.dashboard_api_url.strip("/"),
             cli_version=__version__,
+        )
+    if args.subcommand == "auth":
+        return auth(
+            {
+                "account_name": args.account_name,
+                "client_name": args.client_name,
+                "access_token": args.access_token,
+                "log_level": log_level,
+                "dashboard_api_url": args.dashboard_api_url.strip("/"),
+                "cli_version": __version__,
+            }
         )
     if args.subcommand == "register":
         return register(

@@ -1,7 +1,7 @@
 ---
-account_name: jorge
-client_name: stofcli
-project_name: UpWork
+account_name: trivialsecuritytest
+client_name: ownerpond
+project_name: Testing
 
 defaults:
   checkpoint: True
