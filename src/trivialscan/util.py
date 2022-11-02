@@ -1085,9 +1085,41 @@ def split_report(results: dict, results_uri: str) -> list[tuple[str, bytes]]:
                     "value": BytesIO(json.dumps(certcopy, default=str).encode("utf8")),
                 }
             )
+        evaluations = []
+        groups = set(
+            [
+                (data["compliance"], data["version"])
+                for evaluation in _query["evaluations"]
+                for data in evaluation["compliance"]
+                if isinstance(data, dict)
+            ]
+        )
+        for evaluation in _query["evaluations"]:
+            for uniq_group in groups:
+                name, ver = uniq_group
+                group = {"compliance": name, "version": ver, "items": []}
+                compliance_results = []
+                for compliance_data in evaluation["compliance"]:
+                    if (
+                        compliance_data["compliance"] != name
+                        or compliance_data["version"] != ver
+                    ):
+                        continue
+                    group["items"].append(
+                        {
+                            "requirement": compliance_data.get("requirement"),
+                            "title": compliance_data.get("title"),
+                            "description": compliance_data.get("description"),
+                        }
+                    )
+                compliance_results.append(group)
+
+            evaluation["compliance"] = compliance_results
+            evaluations.append(evaluation)
+
         data = {
             "transport": _query.get("transport"),
-            "evaluations": _query.get("evaluations"),
+            "evaluations": evaluations,
         }
         files.append(
             {
