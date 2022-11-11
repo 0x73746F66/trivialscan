@@ -18,7 +18,7 @@ from .info import info
 from .auth import auth
 from .scan import scan
 from .upload import upload
-from .. import constants
+from .. import constants, util
 from ..config import load_config, get_config, DEFAULT_CONFIG
 from .credentials import load_local
 
@@ -28,8 +28,15 @@ __version__ = "0.3.0rc1"
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
 APP_BANNER = text2art("trivialscan", font="tarty4")
 APP_ENV = getenv("APP_ENV", "development")
-DASHBOARD_API_URL = getenv("TRIVIALSCAN_API_URL", "https://prod-api.trivialsec.com")
-
+DASHBOARD_API_URL = getenv(
+    "TRIVIALSCAN_API_URL",
+    str(
+        util.get_cname("dev-api.trivialsec.com")
+        if APP_ENV == "development"
+        else util.get_cname("prod-api.trivialsec.com")
+    ),
+)
+print(DASHBOARD_API_URL.strip("."))
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 console = Console()
 logger = logging.getLogger(__name__)

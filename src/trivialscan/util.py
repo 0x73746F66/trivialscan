@@ -1299,3 +1299,19 @@ def update_cloud(config: dict, flags: dict, results: dict) -> Union[str, None]:
         pass
 
     return results_url
+
+
+def get_cname(domain_name: str):
+    try:
+        answers = resolver.query(domain_name, "CNAME")
+        return answers[0].target
+    except (
+        resolver.NoAnswer,
+        resolver.NXDOMAIN,
+        DNSTimeoutError,
+        DNSException,
+        ConnectionResetError,
+        ConnectionError,
+    ) as ex:
+        logger.warning(ex, exc_info=True)
+    return None
