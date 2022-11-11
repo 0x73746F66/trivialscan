@@ -35,8 +35,8 @@ DASHBOARD_API_URL = getenv(
         if APP_ENV == "development"
         else util.get_cname("prod-api.trivialsec.com")
     ),
-)
-print(DASHBOARD_API_URL.strip("."))
+).strip(".")
+
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 console = Console()
 logger = logging.getLogger(__name__)
