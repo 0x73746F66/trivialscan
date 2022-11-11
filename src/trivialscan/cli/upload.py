@@ -1,6 +1,6 @@
-import sys
-import logging
 import json
+import logging
+import sys
 from pathlib import Path
 
 from rich.console import Console
@@ -25,8 +25,10 @@ def upload(config: dict, results_file: str):
             con=console,
         )
         results_url = update_cloud(config, {}, data)
+        from .__main__ import DASHBOARD_URL  # pylint: disable=import-outside-toplevel
+
         cli.outputln(
-            f"View results online: {results_url}"
+            f"View results online: {DASHBOARD_URL}{results_url}"
             if results_url
             else "Unable to reach the Trivial Security servers",
             aside="core",

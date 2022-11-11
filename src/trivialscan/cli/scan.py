@@ -398,8 +398,10 @@ def scan(config: dict, **flags):
             use_icons=use_icons,
         )
         results_url = update_cloud(config, flags, data)
+        from .__main__ import DASHBOARD_URL  # pylint: disable=import-outside-toplevel
+
         cli.outputln(
-            f"View results online: {results_url}"
+            f"View results online: {DASHBOARD_URL}{results_url}"
             if results_url
             else "Unable to reach the Trivial Security servers",
             aside="core",

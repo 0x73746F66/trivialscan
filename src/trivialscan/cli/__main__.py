@@ -36,6 +36,10 @@ DASHBOARD_API_URL = getenv(
         else util.get_cname("prod-api.trivialsec.com")
     ),
 ).strip(".")
+DASHBOARD_URL = getenv(
+    "TRIVIALSCAN_DASHBOARD_URL",
+    str("dev.trivialsec.com" if APP_ENV == "development" else "www.trivialsec.com"),
+)
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
 console = Console()
