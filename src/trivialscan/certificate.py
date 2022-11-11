@@ -120,8 +120,24 @@ class BaseCertificate:
         return self.x509.to_cryptography().subject.rfc4514_string()
 
     @property
+    def subject_common_name(self) -> str:
+        for fields in self.x509.to_cryptography().subject:
+            current = str(fields.oid)
+            if "commonName" in current:
+                return fields.value
+        return None
+
+    @property
     def issuer(self) -> str:
         return self.x509.to_cryptography().issuer.rfc4514_string()
+
+    @property
+    def issuer_common_name(self) -> str:
+        for fields in self.x509.to_cryptography().issuer:
+            current = str(fields.oid)
+            if "commonName" in current:
+                return fields.value
+        return None
 
     @property
     def signature_algorithm(self) -> Union[str, None]:
