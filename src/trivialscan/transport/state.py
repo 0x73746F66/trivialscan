@@ -258,12 +258,12 @@ class TransportStore:
                 "info": 0,
                 "warn": 0,
                 "fail": 0,
-            }
+            },
         }
         if self.error:
             data["error"] = self.error
             return data
-        
+
         data["evaluations"] = [asdict(e) for e in self.evaluations]
         for evaluation in data["evaluations"]:
             for res in ["pass", "info", "warn", "fail"]:

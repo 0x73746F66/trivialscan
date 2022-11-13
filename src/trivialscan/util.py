@@ -1036,7 +1036,7 @@ def make_summary(config: dict, flags: dict, results: dict) -> str:
     for _query in results["queries"]:
         if "error" in _query:
             errors.append(_query["error"])
-    data["error"] = '. '.join(errors)
+    data["error"] = ". ".join(errors)
     return json.dumps(data, default=str)
 
 
@@ -1101,13 +1101,13 @@ def split_report(results: dict, results_uri: str) -> list[tuple[str, bytes]]:
 
             threats = []
             for threat in data.get("threats", []) or []:
-                if threat.get('description'):
-                    del threat['description']
-                if threat.get('technique_description'):
-                    del threat['technique_description']
-                if threat.get('sub_technique_description'):
-                    del threat['sub_technique_description']
-            evaluation['threats'] = threats
+                if threat.get("description"):
+                    del threat["description"]
+                if threat.get("technique_description"):
+                    del threat["technique_description"]
+                if threat.get("sub_technique_description"):
+                    del threat["sub_technique_description"]
+            evaluation["threats"] = threats
 
             evaluations.append(evaluation)
 
