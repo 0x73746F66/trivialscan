@@ -23,11 +23,11 @@ from ..config import load_config, get_config, DEFAULT_CONFIG
 from .credentials import load_local
 
 __module__ = "trivialscan.cli"
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 
-REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/-/tree/devel"
+REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/"
 APP_BANNER = text2art("trivialscan", font="tarty4")
-APP_ENV = getenv("APP_ENV", "development")
+APP_ENV = getenv("APP_ENV", "production")
 DASHBOARD_API_URL = getenv(
     "TRIVIALSCAN_API_URL",
     str(

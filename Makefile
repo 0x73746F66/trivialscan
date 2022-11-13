@@ -84,7 +84,7 @@ tag: ## tag release and push
 	git tag -f $(TRIVIALSCAN_VERSION)
 	git push -u origin --tags -f
 
-publish: check upload tag ## upload to pypi.org and push git tags
+publish: check pypi tag ## upload to pypi.org and push git tags
 
 crlite:
 	(cd rust-query-crlite && cargo build)
