@@ -1,0 +1,3 @@
+include src/trivialscan/config/*.yaml
+include src/trivialscan/evaluations/**/*.yaml
+include src/trivialscan/vendor/rust-query-crlite

@@ -11,13 +11,9 @@ Follow SemVer:
 ## Merge Checklist
 
 - Version bump in `cli/__main__.py`
-- Coverage `make test` remains same or better, never reduce coverage percentage
-- All tests pass
 - Check dependencies; ensure all are latest (with compatibility to other dependencies as the only exception)
-- Run SAST `make test-local` and address all findings, exceptions will be part of the code review so be descriptive
+- All `make test` tests pass
 - Update the README and `pyproject.toml` features lists
-- Update the docs
-- Complete a change log entry
 
 ## Project non-goals
 
@@ -76,7 +72,7 @@ Anything you want, or one of these:
 - EMS: Extended Master Secret extension provides additional security to SSL sessions and prevents certain MitM attacks
 - EC_POINT_FORMAT TLS extension, RFC 8422 5.1.2: uncompressed point format is obsolete so it is perfectly fine for a client to not include this extension, if included it must have exactly the value 0 (Uncompressed) Point Format for NIST Curves
 
-### Cert validations:
+### Cert validation levels:
 
 1. common validation
 

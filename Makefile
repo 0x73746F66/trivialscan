@@ -63,9 +63,6 @@ install-dev: ## Install the package
 	python3 -m pip install -U -r requirements-dev.txt
 	python3 -m pip install --force-reinstall --no-cache-dir -e .
 
-check: ## check build
-	python3 -m twine check dist/*
-
 pytest: ## run unit tests with coverage
 	coverage run -m pytest --nf
 	coverage report -m

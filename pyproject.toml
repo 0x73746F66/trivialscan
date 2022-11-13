@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=46.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -46,28 +46,13 @@ dependencies = [
 ]
 dynamic = ["version", "readme"]
 
+[project.urls]
+"Homepage" = "https://trivialsec.com"
+"Bug Tracker" = "https://gitlab.com/trivialsec/trivialscan/-/issues"
 
 [tool.setuptools.dynamic]
 version = {attr = "trivialscan.cli.__main__.__version__"}
 readme = {file = ["README.rst"]}
-
-[project.optional-dependencies]
-dev = [
-    "setuptools",
-    "wheel",
-    "bandit",
-    "autopep8",
-    "pylint",
-    "pytest",
-    "build",
-    "twine",
-    "coverage",
-    "typed-ast",
-    "black",
-    "pre-commit",
-    "detect-secrets",
-    "pip-audit",
-]
 
 [project.scripts]
 trivial = "trivialscan.cli.__main__:main"
@@ -82,7 +67,7 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-"*" = ["src/trivialscan/vendor/rust-query-crlite", "src/trivialscan/config/*.yaml"]
+"*" = ["src/trivialscan/vendor/rust-query-crlite", "src/trivialscan/config/*.yaml", "src/trivialscan/evaluations/**/*.yaml"]
 
 [tool.coverage.run]
 source = ["src"]
