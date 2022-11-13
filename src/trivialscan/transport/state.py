@@ -89,7 +89,9 @@ class HTTPState:
 
         return data
 
-    def header_exists(self, name: str, includes_value: str) -> bool:
+    def header_exists(self, name: str, includes_value: str = None) -> bool:
+        if includes_value is None:
+            return name in self._response.headers
         return (
             name in self._response.headers
             and includes_value in self._response.headers[name]
