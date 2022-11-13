@@ -9,15 +9,15 @@ class EvaluationTask(BaseEvaluationTask):
         super().__init__(transport, metadata, config)
 
     def evaluate(self) -> Union[bool, None]:
-        missing = []
+        issues = []
         results = []
         for state in self.transport.store.http_states:
-            exists = state.header_exists(
-                name="x-xss-protection", includes_value="1; mode=block"
-            )
-            if not exists:
-                missing.append(state.request_url)
-            results.append(exists)
-        if missing:
-            self.substitution_metadata["missing_paths"] = missing
-        return all(results)
+            misconfiguration = state.header_exists(
+                name="x-xss-protection"
+            ) and not state.header_exists(name="x-xss-protection", includes_value="0")
+            if misconfiguration:
+                issues.append(state.request_url)
+            results.append(misconfiguration)
+        if issues:
+            self.substitution_metadata["misconfigured_paths"] = issues
+        return any(results)

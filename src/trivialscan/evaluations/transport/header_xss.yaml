@@ -37,12 +37,14 @@ compliance:
 references:
   - name: MDN Web Docs
     url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection
+  - name: OWASP Security Headers Project | X-XSS-Protection
+    url: https://owasp.org/www-project-secure-headers/#x-xss-protection
 anotate_results:
   - result_value: True
-    result_level: pass
-    display_as: Good Configuration
-    score: 20
-  - result_value: False
     result_level: fail
     display_as: Misconfigured
     score: -20
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 20
