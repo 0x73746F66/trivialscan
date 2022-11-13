@@ -252,12 +252,32 @@ class TransportStore:
                 "peer_address": self.tls_state.peer_address,
                 "certificate_mtls_expected": self.tls_state.certificate_mtls_expected,
             },
+            "score": 0,
+            "results": {
+                "pass": 0,
+                "info": 0,
+                "warn": 0,
+                "fail": 0,
+            }
         }
         if self.error:
             data["error"] = self.error
             return data
-        data["tls"] = self.tls_state.to_dict()
-        data["http"] = [http.to_dict() for http in self.http_states]
+        
         data["evaluations"] = [asdict(e) for e in self.evaluations]
+        for evaluation in data["evaluations"]:
+            for res in ["pass", "info", "warn", "fail"]:
+                if evaluation["result_level"] == res:
+                    data["results"][res] += 1
+            if "score" in evaluation:
+                data["score"] += evaluation["score"]
+
+        data["tls"] = self.tls_state.to_dict()
+        certificates = set()
+        for certdata in data["tls"]["certificates"]:
+            certificates.add(certdata["sha1_fingerprint"])
+
+        data["certificates"] = sorted(list(certificates))
+        data["http"] = [http.to_dict() for http in self.http_states]
 
         return data

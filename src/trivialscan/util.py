@@ -1031,29 +1031,12 @@ def make_summary(config: dict, flags: dict, results: dict) -> str:
     data = deepcopy(results)
     data["config"] = config
     data["flags"] = flags
-    data["score"] = 0
-    data["results"] = {
-        "pass": 0,
-        "info": 0,
-        "warn": 0,
-        "fail": 0,
-    }
     del data["queries"]
-    certificates = set()
+    errors = []
     for _query in results["queries"]:
-        for evaluation in _query.get("evaluations", []):
-            for res in ["pass", "info", "warn", "fail"]:
-                if evaluation["result_level"] == res:
-                    data["results"][res] += 1
-            if "score" in evaluation:
-                data["score"] += evaluation["score"]
         if "error" in _query:
-            data["error"] = _query["error"]
-
-        for certdata in _query.get("tls", {}).get("certificates", []):
-            certificates.add(certdata["sha1_fingerprint"])
-
-    data["certificates"] = sorted(list(certificates))
+            errors.append(_query["error"])
+    data["error"] = '. '.join(errors)
     return json.dumps(data, default=str)
 
 
@@ -1109,12 +1092,23 @@ def split_report(results: dict, results_uri: str) -> list[tuple[str, bytes]]:
                         {
                             "requirement": compliance_data.get("requirement"),
                             "title": compliance_data.get("title"),
-                            "description": compliance_data.get("description"),
+                            # "description": compliance_data.get("description"),
                         }
                     )
                 compliance_results.append(group)
 
             evaluation["compliance"] = compliance_results
+
+            threats = []
+            for threat in data.get("threats", []) or []:
+                if threat.get('description'):
+                    del threat['description']
+                if threat.get('technique_description'):
+                    del threat['technique_description']
+                if threat.get('sub_technique_description'):
+                    del threat['sub_technique_description']
+            evaluation['threats'] = threats
+
             evaluations.append(evaluation)
 
         data = {
