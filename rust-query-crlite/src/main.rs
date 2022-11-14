@@ -467,14 +467,14 @@ impl Enrollment {
             _ => return Err(CRLiteDBError::from("unknown CRLite enrollment version")),
         }
         if (bytes.len() - 1) % ENROLLMENT_V1_ENTRY_BYTES != 0 {
-            return Err(CRLiteDBError::from("truncted CRLite enrollment file"));
+            return Err(CRLiteDBError::from("truncated CRLite enrollment file"));
         }
         let enrollment_count = (bytes.len() - 1) / ENROLLMENT_V1_ENTRY_BYTES;
         for _ in 0..enrollment_count {
             let mut enrollment_entry = [0u8; ENROLLMENT_V1_ENTRY_BYTES];
             match reader.read_exact(&mut enrollment_entry) {
                 Ok(()) => (),
-                _ => return Err(CRLiteDBError::from("truncted CRLite enrollment file")),
+                _ => return Err(CRLiteDBError::from("truncated CRLite enrollment file")),
             };
             enrollment.insert(enrollment_entry.to_vec());
         }
