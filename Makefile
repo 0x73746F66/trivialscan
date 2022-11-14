@@ -33,10 +33,6 @@ ifndef RUNNER_NAME
 RUNNER_NAME=$(shell basename $(shell pwd))
 endif
 
-
-help: ## This help.
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-
 clean: ## cleans python for wheel
 	find src -type f -name '*.pyc' -delete 2>/dev/null
 	find src -type d -name '__pycache__' -delete 2>/dev/null
@@ -86,9 +82,11 @@ tag: ## tag release and push
 
 publish: check pypi tag ## upload to pypi.org and push git tags
 
-crlite:
-	(cd rust-query-crlite && cargo build)
-	cp rust-query-crlite/target/debug/rust-query-crlite src/trivialscan/vendor/rust-query-crlite
+# rustup target add x86_64-unknown-linux-musl
+# (cd rust-query-crlite && cargo build --release --target=x86_64-unknown-linux-musl)
+crlite:  ## Build crlite
+	(cd rust-query-crlite && cargo build --release)
+	cp rust-query-crlite/target/release/rust-query-crlite src/trivialscan/vendor/rust-query-crlite
 	chmod a+x src/trivialscan/vendor/rust-query-crlite
 	./src/trivialscan/vendor/rust-query-crlite -vvv --db /tmp/.crlite_db/ --update prod x509
 	./src/trivialscan/vendor/rust-query-crlite -vvv --db /tmp/.crlite_db/ https ssllabs.com
