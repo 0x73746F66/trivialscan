@@ -86,6 +86,7 @@ publish: check pypi tag ## upload to pypi.org and push git tags
 # (cd rust-query-crlite && cargo build --release --target=x86_64-unknown-linux-musl)
 crlite:  ## Build crlite
 	(cd rust-query-crlite && cargo build --release)
+	rm -f src/trivialscan/vendor/rust-query-crlite
 	cp rust-query-crlite/target/release/rust-query-crlite src/trivialscan/vendor/rust-query-crlite
 	chmod a+x src/trivialscan/vendor/rust-query-crlite
 	./src/trivialscan/vendor/rust-query-crlite -vvv --db /tmp/.crlite_db/ --update prod x509
