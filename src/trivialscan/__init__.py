@@ -230,11 +230,11 @@ class Trivialscan:
         self, result_value: Union[bool, str, None], task: BaseEvaluationTask, **kwargs
     ) -> EvaluationResult:
         data = {
-            "rule_id": task.metadata["rule_id"],
+            "rule_id": '%.3f' % task.metadata["rule_id"],
+            "group_id": '%.3f' % task.metadata["group_id"],
             "name": task.metadata["label_as"],
             "key": task.metadata["key"],
             "group": task.metadata["group"],
-            "group_id": task.metadata["group_id"],
             "cve": task.metadata.get("cve", []),
             "cvss2": task.metadata.get("cvss2", []),
             "cvss3": task.metadata.get("cvss3", []),
