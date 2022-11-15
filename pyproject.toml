@@ -67,7 +67,12 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-"*" = ["src/trivialscan/vendor/*", "src/trivialscan/config/*.yaml", "src/trivialscan/evaluations/**/*.yaml"]
+"*" = [
+    "src/trivialscan/vendor/crlite-linux-musl",
+    "src/trivialscan/vendor/crlite-linux",
+    "src/trivialscan/config/*.yaml",
+    "src/trivialscan/evaluations/**/*.yaml"
+]
 
 [tool.coverage.run]
 source = ["src"]
