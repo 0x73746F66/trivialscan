@@ -1,7 +1,7 @@
 ---
-rule_id: 4.11
+rule_id: 11
 key: header_hsts
-group_id: 4.0
+group_id: 4
 group: transport
 label_as: HTTP Strict-Transport-Security
 issue: >

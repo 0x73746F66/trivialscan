@@ -1,7 +1,7 @@
 ---
-rule_id: 4.6
+rule_id: 6
 key: header_coep
-group_id: 4.0
+group_id: 4
 group: transport
 label_as: Require Cross-Origin-Embedder-Policy
 issue: >

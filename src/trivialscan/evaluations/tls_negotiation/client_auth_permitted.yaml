@@ -1,7 +1,7 @@
 ---
-rule_id: 1.4
+rule_id: 4
 key: client_auth_permitted
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Certificate was issued for the prupose of client Authentication
 issue: >

@@ -1,7 +1,7 @@
 ---
-rule_id: 1.20
+rule_id: 20
 key: session_resumption_ticket_hint
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Session resumption ticket hints
 issue: >

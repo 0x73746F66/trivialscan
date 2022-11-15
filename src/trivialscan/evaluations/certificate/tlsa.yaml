@@ -1,7 +1,7 @@
 ---
-rule_id: 2.21
+group_id: 2
+rule_id: 21
 key: tlsa
-group_id: 2.0
 group: certificate
 label_as: TLS/A
 issue: >

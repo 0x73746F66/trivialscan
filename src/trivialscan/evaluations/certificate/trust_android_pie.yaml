@@ -1,7 +1,7 @@
 ---
-rule_id: 2.31
+rule_id: 31
 key: trust_android_pie
-group_id: 2.0
+group_id: 2
 group: certificate
 label_as: Trust Store - Android 9 Pie
 issue: >

@@ -1,7 +1,7 @@
 ---
-rule_id: 1.25
+rule_id: 25
 key: valid_certificate_chain
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Valid Certificate Chain
 issue: >

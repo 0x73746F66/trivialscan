@@ -1,7 +1,7 @@
 ---
-rule_id: 3.3
+rule_id: 3
 key: nist_transition
-group_id: 3.0
+group_id: 3
 group: compliance
 label_as: FIPS 140-2 (NIST SP800-131A transition mode)
 issue: >

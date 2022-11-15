@@ -1,7 +1,7 @@
 ---
-rule_id: 2.12
+group_id: 2
+rule_id: 12
 key: private_key_known_compromised
-group_id: 2.0
 group: certificate
 label_as: Known Compromised Private Key
 issue: >

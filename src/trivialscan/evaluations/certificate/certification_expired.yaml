@@ -1,7 +1,7 @@
 ---
-rule_id: 2.3
+group_id: 2
+rule_id: 3
 key: certification_expired
-group_id: 2.0
 group: certificate
 label_as: Certificate is not expired
 issue: >

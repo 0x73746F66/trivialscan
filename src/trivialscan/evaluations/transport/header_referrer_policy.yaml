@@ -1,7 +1,7 @@
 ---
-rule_id: 4.14
+rule_id: 14
 key: header_referrer_policy
-group_id: 4.0
+group_id: 4
 group: transport
 label_as: unsafe URL Referrer-Policy
 issue: >

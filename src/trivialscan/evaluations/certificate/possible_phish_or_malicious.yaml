@@ -1,7 +1,7 @@
 ---
-rule_id: 2.11
+group_id: 2
+rule_id: 11
 key: possible_phish_or_malicious
-group_id: 2.0
 group: certificate
 label_as: Malicious Certificate
 issue: >

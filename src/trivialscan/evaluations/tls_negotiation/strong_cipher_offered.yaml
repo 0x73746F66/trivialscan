@@ -1,7 +1,7 @@
 ---
-rule_id: 1.23
+rule_id: 23
 key: strong_cipher_offered
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Strong ciphers offered
 issue: >

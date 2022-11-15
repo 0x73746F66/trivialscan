@@ -1,7 +1,7 @@
 ---
-rule_id: 2.5
+group_id: 2
+rule_id: 5
 key: dnssec_present
-group_id: 2.0
 group: certificate
 label_as: DNSSEC Present
 issue: >

@@ -1,7 +1,7 @@
 ---
-rule_id: 2.38
+rule_id: 38
 key: trust_certifi
-group_id: 2.0
+group_id: 2
 group: certificate
 label_as: Trust Store - certifi (Python module)
 issue: >

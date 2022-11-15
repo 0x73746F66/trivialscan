@@ -1,7 +1,7 @@
 ---
-rule_id: 2.7
+group_id: 2
+rule_id: 7
 key: is_self_signed
-group_id: 2.0
 group: certificate
 label_as: Certificate self-signed
 issue: >

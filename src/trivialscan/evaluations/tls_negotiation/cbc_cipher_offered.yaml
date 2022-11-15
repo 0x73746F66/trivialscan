@@ -1,7 +1,7 @@
 ---
-rule_id: 1.2
+rule_id: 2
 key: cbc_cipher_offered
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Known exploited and deprecated CBC ciphers offered
 issue: >

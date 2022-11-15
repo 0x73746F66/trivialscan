@@ -1,7 +1,7 @@
 ---
-rule_id: 2.51
+group_id: 2
+rule_id: 51
 key: certification_expiring
-group_id: 2.0
 group: certificate
 label_as: Certificate is about to expire
 issue: >

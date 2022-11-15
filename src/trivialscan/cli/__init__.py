@@ -24,8 +24,7 @@ def outputln(message: str, con: Union[Console, None] = None, **kwargs):
         "result_text",
         constants.DEFAULT_MAP.get(result_level, constants.RESULT_LEVEL_INFO_DEFAULT),
     )
-    if kwargs.get("result_label"):
-        result_text = f"{result_text} {kwargs.get('result_label')}"
+    result_label = kwargs.get("result_label", "")
 
     use_icons = kwargs.get("use_icons", False)
     result_icon = ""
@@ -49,7 +48,9 @@ def outputln(message: str, con: Union[Console, None] = None, **kwargs):
     table = Table.grid(expand=True)
     table.add_column()
     table.add_column(justify="right", style="dim", no_wrap=True, overflow=None)
-    table.add_row(f"{open_tag}{result_text}{close_tag} {message}", aside)
+    table.add_row(
+        f"{open_tag}{result_text} {message}{close_tag}", f"{result_label} {aside}"
+    )
     con.print(table)
 
 

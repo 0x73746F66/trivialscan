@@ -1,7 +1,7 @@
 ---
-rule_id: 1.26
+rule_id: 26
 key: version_interference
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: TLS Version Interference
 issue: >

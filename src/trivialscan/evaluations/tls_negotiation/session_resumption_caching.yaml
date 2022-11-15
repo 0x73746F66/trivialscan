@@ -1,7 +1,7 @@
 ---
-rule_id: 1.19
+rule_id: 19
 key: session_resumption_caching
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Session resumption caching
 issue: >

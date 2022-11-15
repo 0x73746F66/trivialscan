@@ -1,7 +1,7 @@
 ---
-rule_id: 2.27
+rule_id: 27
 key: trust_android_ice_cream_sandwich
-group_id: 2.0
+group_id: 2
 group: certificate
 label_as: Trust Store - Android 4 Ice Cream Sandwich
 issue: >

@@ -1,7 +1,7 @@
 ---
-rule_id: 4.15
+rule_id: 15
 key: header_upgrade_insecure
-group_id: 4.0
+group_id: 4
 group: transport
 label_as: Upgrade Insecure Requests
 issue: >

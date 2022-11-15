@@ -1,7 +1,7 @@
 ---
-rule_id: 1.6
+rule_id: 6
 key: client_auth_valid_subject
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Server accepted Client Certificate
 issue: >

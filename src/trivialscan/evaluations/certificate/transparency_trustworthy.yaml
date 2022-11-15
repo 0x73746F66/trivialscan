@@ -1,7 +1,7 @@
 ---
-rule_id: 2.23
+group_id: 2
+rule_id: 23
 key: transparency_trustworthy
-group_id: 2.0
 group: certificate
 label_as: Trustworthy Certificate Transparency
 issue: >

@@ -1,7 +1,7 @@
 ---
-rule_id: 1.12
+rule_id: 12
 key: forward_anonymity
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Negotiated cipher applies Forward Anonymity (aka PFS)
 issue: >

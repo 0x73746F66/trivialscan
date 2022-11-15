@@ -35,10 +35,10 @@ class BaseEvaluationTask:
 
 @dataclass
 class EvaluationResult:
-    rule_id: str
+    rule_id: int
     name: str
     key: str
-    group_id: str
+    group_id: int
     group: str
     result_value: Union[str, None, bool]
     result_label: str

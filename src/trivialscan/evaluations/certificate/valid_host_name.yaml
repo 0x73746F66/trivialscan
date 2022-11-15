@@ -1,7 +1,7 @@
 ---
-rule_id: 2.45
+rule_id: 45
 key: valid_host_name
-group_id: 2.0
+group_id: 2
 group: certificate
 label_as: Hostname matches Certificate
 issue: >

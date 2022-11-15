@@ -1,7 +1,7 @@
 ---
-rule_id: 1.17
+rule_id: 17
 key: rc4_cipher_offered
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Known exploited and deprecated RC4 ciphers offered
 issue: >

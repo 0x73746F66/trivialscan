@@ -1,7 +1,7 @@
 ---
-rule_id: 2.19
+group_id: 2
+rule_id: 19
 key: rsa_public_key_issue
-group_id: 2.0
 group: certificate
 label_as: RSA public key exponent {public_key_exponent} has known issues
 issue: >

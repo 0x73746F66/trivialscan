@@ -1,7 +1,7 @@
 ---
-rule_id: 1.8
+rule_id: 8
 key: client_renegotiation
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Client initiated TLS renegotiation
 issue: >

@@ -1,7 +1,7 @@
 ---
-rule_id: 2.29
+rule_id: 29
 key: trust_android_nougat
-group_id: 2.0
+group_id: 2
 group: certificate
 label_as: Trust Store - Android 7 Nougat
 issue: >

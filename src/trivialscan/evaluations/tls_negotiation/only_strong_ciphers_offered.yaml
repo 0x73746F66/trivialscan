@@ -1,7 +1,7 @@
 ---
-rule_id: 1.16
+rule_id: 16
 key: only_strong_ciphers_offered
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Only strong ciphers offered
 issue: >

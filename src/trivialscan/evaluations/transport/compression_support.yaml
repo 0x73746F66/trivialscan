@@ -1,7 +1,7 @@
 ---
-rule_id: 4.1
+rule_id: 1
 key: compression_support
-group_id: 4.0
+group_id: 4
 group: transport
 label_as: HTTPS transport compression
 issue: >

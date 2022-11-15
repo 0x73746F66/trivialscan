@@ -1,7 +1,7 @@
 ---
-rule_id: 2.28
+rule_id: 28
 key: trust_android_kitkat
-group_id: 2.0
+group_id: 2
 group: certificate
 label_as: Trust Store - Android 4.4 KitKat
 issue: >

@@ -1,7 +1,7 @@
 ---
-rule_id: 3.2
+rule_id: 2
 key: pci_dss_4_0
-group_id: 3.0
+group_id: 3
 group: compliance
 label_as: PCI DSS 4.0
 issue: >

@@ -1,7 +1,7 @@
 ---
-rule_id: 2.50
+group_id: 2
+rule_id: 50
 key: certification_version
-group_id: 2.0
 group: certificate
 label_as: X.509 Certificates are in version 3
 issue: >

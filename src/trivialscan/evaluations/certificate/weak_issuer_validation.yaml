@@ -1,7 +1,7 @@
 ---
-rule_id: 2.48
+rule_id: 48
 key: weak_issuer_validation
-group_id: 2.0
+group_id: 2
 group: certificate
 label_as: Weak Issuer Validation
 issue: >

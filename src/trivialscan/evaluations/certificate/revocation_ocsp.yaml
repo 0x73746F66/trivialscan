@@ -1,7 +1,7 @@
 ---
-rule_id: 2.18
+group_id: 2
+rule_id: 18
 key: revocation_ocsp
-group_id: 2.0
 group: certificate
 label_as: OCSP Revocation
 issue: >

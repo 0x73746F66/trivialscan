@@ -1,7 +1,7 @@
 ---
-rule_id: 2.46
+rule_id: 46
 key: valid_issued_date
-group_id: 2.0
+group_id: 2
 group: certificate
 label_as: Valid NotBefore date
 issue: >

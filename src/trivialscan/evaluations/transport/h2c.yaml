@@ -1,7 +1,7 @@
 ---
-rule_id: 4.3
+rule_id: 3
 key: h2c
-group_id: 4.0
+group_id: 4
 group: transport
 label_as: HTTP/2 cleartext
 issue: >

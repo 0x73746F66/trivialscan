@@ -1,7 +1,7 @@
 ---
-rule_id: 2.13
+group_id: 2
+rule_id: 13
 key: revocation_crlite
-group_id: 2.0
 group: certificate
 label_as: Intermediate Certificate Revocation (crlite)
 issue: Certificate Revocation only occurs if the Certificate is no longer intended to be used for it's designed purpose, and offers no security at best, or represents a known compormise

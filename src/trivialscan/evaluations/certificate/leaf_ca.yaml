@@ -1,7 +1,7 @@
 ---
-rule_id: 2.10
+group_id: 2
+rule_id: 10
 key: leaf_ca
-group_id: 2.0
 group: certificate
 label_as: Leaf Certificate allows impersonation
 issue: >

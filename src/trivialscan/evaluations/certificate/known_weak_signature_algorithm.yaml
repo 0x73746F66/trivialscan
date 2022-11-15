@@ -1,7 +1,7 @@
 ---
-rule_id: 2.9
+group_id: 2
+rule_id: 9
 key: known_weak_signature_algorithm
-group_id: 2.0
 group: certificate
 label_as: Deprecated or known weak signature algorithm
 issue: >

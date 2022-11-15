@@ -1,7 +1,7 @@
 ---
-rule_id: 2.1
+group_id: 2
+rule_id: 1
 key: caa_present
-group_id: 2.0
 group: certificate
 label_as: Certification Authority Authorization (CAA) Present
 issue: >

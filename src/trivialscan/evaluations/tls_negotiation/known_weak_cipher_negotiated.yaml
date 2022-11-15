@@ -1,7 +1,7 @@
 ---
-rule_id: 1.13
+rule_id: 13
 key: known_weak_cipher_negotiated
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Known weak ciphers negotiated {negotiated_cipher} ({negotiated_cipher_bits} bits)
 issue: >

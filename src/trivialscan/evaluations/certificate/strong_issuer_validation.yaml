@@ -1,7 +1,7 @@
 ---
-rule_id: 2.20
+group_id: 2
+rule_id: 20
 key: strong_issuer_validation
-group_id: 2.0
 group: certificate
 label_as: Strong Issuer Validation
 issue: >

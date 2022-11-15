@@ -1,7 +1,7 @@
 ---
-rule_id: 2.24
+group_id: 2
+rule_id: 24
 key: trust_android_froyo
-group_id: 2.0
 group: certificate
 label_as: Trust Store - Android 2.2 Froyo
 issue: >

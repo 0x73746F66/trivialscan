@@ -1,7 +1,7 @@
 ---
-rule_id: 2.47
+rule_id: 47
 key: valid_key_usage_leaf
-group_id: 2.0
+group_id: 2
 group: certificate
 label_as: Leaf Certificate valid for TLS usage
 issue: >

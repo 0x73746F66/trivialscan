@@ -1,7 +1,7 @@
 ---
-rule_id: 1.11
+rule_id: 11
 key: fallback_scsv
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Downgrade attack prevention (SCSV)
 issue: The TLS Signaling Cipher Suite Value (SCSV) protects against TLS/SSL downgrade attacks. If enabled, the server makes sure that the strongest protocol that both client and server understand is used. Attackers can make a client attempt weaker TLS connections and exploit all the vulnerabilities associated with a given protocol

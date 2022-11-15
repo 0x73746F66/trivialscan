@@ -1,7 +1,7 @@
 ---
-rule_id: 3.5
+rule_id: 5
 key: fips_annex_a
-group_id: 3.0
+group_id: 3
 group: compliance
 label_as: FIPS 140-2 Annex A
 issue: >

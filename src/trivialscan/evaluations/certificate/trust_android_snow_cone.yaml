@@ -1,7 +1,7 @@
 ---
-rule_id: 2.34
+rule_id: 34
 key: trust_android_snow_cone
-group_id: 2.0
+group_id: 2
 group: certificate
 label_as: Trust Store - Android 12 Snow Cone
 issue: >

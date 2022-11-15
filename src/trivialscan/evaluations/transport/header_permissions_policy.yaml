@@ -1,7 +1,7 @@
 ---
-rule_id: 4.13
+rule_id: 13
 key: header_permissions_policy
-group_id: 4.0
+group_id: 4
 group: transport
 label_as: Policy-controlled browser features
 issue: >

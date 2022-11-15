@@ -1,7 +1,7 @@
 ---
-rule_id: 2.15
+group_id: 2
+rule_id: 15
 key: revocation_ocsp_deprecated_sig
-group_id: 2.0
 group: certificate
 label_as: Deprecated OCSP Signature Algorithm
 issue: >

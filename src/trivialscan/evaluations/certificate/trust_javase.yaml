@@ -1,7 +1,7 @@
 ---
-rule_id: 2.40
+rule_id: 40
 key: trust_javase
-group_id: 2.0
+group_id: 2
 group: certificate
 label_as: Trust Store - Java SE
 issue: >

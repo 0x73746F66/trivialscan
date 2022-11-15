@@ -1,7 +1,7 @@
 ---
-rule_id: 4.7
+rule_id: 7
 key: header_coop
-group_id: 4.0
+group_id: 4
 group: transport
 label_as: Same-Origin Cross-Origin-Opener-Policy
 issue: >

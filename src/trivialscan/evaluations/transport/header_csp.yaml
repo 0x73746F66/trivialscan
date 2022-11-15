@@ -1,7 +1,7 @@
 ---
-rule_id: 4.9
+rule_id: 9
 key: header_csp
-group_id: 4.0
+group_id: 4
 group: transport
 label_as: Content-Security-Policy
 issue: >

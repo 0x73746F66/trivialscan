@@ -230,8 +230,8 @@ class Trivialscan:
         self, result_value: Union[bool, str, None], task: BaseEvaluationTask, **kwargs
     ) -> EvaluationResult:
         data = {
-            "rule_id": '%.3f' % task.metadata["rule_id"],
-            "group_id": '%.3f' % task.metadata["group_id"],
+            "rule_id": task.metadata["rule_id"],
+            "group_id": task.metadata["group_id"],
             "name": task.metadata["label_as"],
             "key": task.metadata["key"],
             "group": task.metadata["group"],
@@ -493,7 +493,7 @@ class Trivialscan:
                     continue
                 self._transport.store.evaluations.append(evaluation_result)
                 cli.outputln(
-                    evaluation_result.name,
+                    f"{evaluation_result.group_id}.{evaluation_result.rule_id} {evaluation_result.name}",
                     bold_result=True,
                     aside=f"SHA1:{cert.sha1_fingerprint} {self._transport.store.tls_state.hostname}:{self._transport.store.tls_state.port}",
                     con=self._console,
@@ -559,7 +559,7 @@ class Trivialscan:
                     continue
                 self._transport.store.evaluations.append(evaluation_result)
                 cli.outputln(
-                    evaluation_result.name,
+                    f"{evaluation_result.group_id}.{evaluation_result.rule_id} {evaluation_result.name}",
                     bold_result=True,
                     hostname=self._transport.store.tls_state.hostname,
                     port=self._transport.store.tls_state.port,
@@ -626,7 +626,7 @@ class Trivialscan:
                 continue
             self._transport.store.evaluations.append(evaluation_result)
             cli.outputln(
-                evaluation_result.name,
+                f"{evaluation_result.group_id}.{evaluation_result.rule_id} {evaluation_result.name}",
                 bold_result=True,
                 hostname=self._transport.store.tls_state.hostname,
                 port=self._transport.store.tls_state.port,

@@ -1,7 +1,7 @@
 ---
-rule_id: 2.2
+group_id: 2
+rule_id: 2
 key: caa_valid
-group_id: 2.0
 group: certificate
 label_as: Certification Authority Authorization (CAA) Valid
 issue: >

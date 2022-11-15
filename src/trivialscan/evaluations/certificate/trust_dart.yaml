@@ -1,7 +1,7 @@
 ---
-rule_id: 2.39
+rule_id: 39
 key: trust_dart
-group_id: 2.0
+group_id: 2
 group: certificate
 label_as: Trust Store - Dart Native
 issue: >

@@ -1,7 +1,7 @@
 ---
-rule_id: 1.1
+rule_id: 1
 key: basic_constraints_path_length
-group_id: 1.0
+group_id: 1
 group: tls_negotiation
 label_as: Basic Constraints Extension valid path length
 issue: >

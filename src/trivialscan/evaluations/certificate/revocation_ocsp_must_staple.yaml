@@ -1,7 +1,7 @@
 ---
-rule_id: 2.16
+group_id: 2
+rule_id: 16
 key: revocation_ocsp_must_staple
-group_id: 2.0
 group: certificate
 label_as: OCSP Must Staple Extension
 issue: >

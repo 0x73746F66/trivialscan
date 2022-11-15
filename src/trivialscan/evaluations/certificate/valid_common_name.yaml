@@ -1,7 +1,7 @@
 ---
-rule_id: 2.44
+rule_id: 44
 key: valid_common_name
-group_id: 2.0
+group_id: 2
 group: certificate
 label_as: Valid Certificate Common Name
 issue: >

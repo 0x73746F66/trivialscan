@@ -1,7 +1,7 @@
 ---
-rule_id: 4.4
+rule_id: 4
 key: header_block_clipboard
-group_id: 4.0
+group_id: 4
 group: transport
 label_as: Block reading clipboard contents
 issue: >
