@@ -45,7 +45,7 @@ def query_crlite(pem_path: str, db_path: str) -> str:
     try:
         stdout_string = subprocess.check_output(
             [
-                "./rust-query-crlite",
+                "./crlite-linux-musl",
                 "-vvv",
                 "--db",
                 db_path,
@@ -58,7 +58,34 @@ def query_crlite(pem_path: str, db_path: str) -> str:
         )
         logger.debug(stdout_string)
         result = subprocess.check_output(
-            ["./rust-query-crlite", "-vv", "--db", db_path, "x509", pem_path],
+            ["./crlite-linux-musl", "-vv", "--db", db_path, "x509", pem_path],
+            stderr=subprocess.STDOUT,
+            cwd=str(Path(__file__).parent.parent.with_name("vendor")),
+        )
+        if result:
+            return result.decode().split(pem_path)[1].strip()
+    except subprocess.CalledProcessError as cpe:
+        print(cpe.returncode)
+        print(cpe.output)
+    except OSError as err:
+        print(err)
+    try:
+        stdout_string = subprocess.check_output(
+            [
+                "./crlite-linux",
+                "-vvv",
+                "--db",
+                db_path,
+                "--update",
+                "prod",
+                "x509",
+            ],
+            stderr=subprocess.STDOUT,
+            cwd=str(Path(__file__).parent.parent.with_name("vendor")),
+        )
+        logger.debug(stdout_string)
+        result = subprocess.check_output(
+            ["./crlite-linux", "-vv", "--db", db_path, "x509", pem_path],
             stderr=subprocess.STDOUT,
             cwd=str(Path(__file__).parent.parent.with_name("vendor")),
         )

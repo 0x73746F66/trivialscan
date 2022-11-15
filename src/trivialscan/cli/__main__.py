@@ -23,7 +23,7 @@ from ..config import load_config, get_config, DEFAULT_CONFIG
 from .credentials import load_local
 
 __module__ = "trivialscan.cli"
-__version__ = "0.3.7"
+__version__ = "0.3.8"
 
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/"
 APP_BANNER = text2art("trivialscan", font="tarty4")
@@ -38,7 +38,7 @@ DASHBOARD_API_URL = getenv(
 ).strip(".")
 DASHBOARD_URL = getenv(
     "TRIVIALSCAN_DASHBOARD_URL",
-    str("dev.trivialsec.com" if APP_ENV == "development" else "www.trivialsec.com"),
+    "dev.trivialsec.com" if APP_ENV == "development" else "www.trivialsec.com",
 )
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"

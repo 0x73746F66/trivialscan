@@ -1100,7 +1100,7 @@ def split_report(results: dict, results_uri: str) -> list[tuple[str, bytes]]:
             evaluation["compliance"] = compliance_results
 
             threats = []
-            for threat in data.get("threats", []) or []:
+            for threat in evaluation.get("threats", []) or []:
                 if threat.get("description"):
                     del threat["description"]
                 if threat.get("technique_description"):

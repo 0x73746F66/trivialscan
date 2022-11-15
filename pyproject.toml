@@ -67,7 +67,7 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-"*" = ["src/trivialscan/vendor/rust-query-crlite", "src/trivialscan/config/*.yaml", "src/trivialscan/evaluations/**/*.yaml"]
+"*" = ["src/trivialscan/vendor/*", "src/trivialscan/config/*.yaml", "src/trivialscan/evaluations/**/*.yaml"]
 
 [tool.coverage.run]
 source = ["src"]

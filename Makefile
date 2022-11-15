@@ -82,15 +82,20 @@ tag: ## tag release and push
 
 publish: check pypi tag ## upload to pypi.org and push git tags
 
-# rustup target add x86_64-unknown-linux-musl
-# (cd rust-query-crlite && cargo build --release --target=x86_64-unknown-linux-musl)
+crlite-musl:  ## Build crlite with musl for AWS Lambda
+	rustup target add x86_64-unknown-linux-musl
+	(cd rust-query-crlite && cargo build --release --target=x86_64-unknown-linux-musl)
+	rm -f rust-query-crlite/target/x86_64-unknown-linux-musl/release/rust-query-crlite
+	cp rust-query-crlite/target/x86_64-unknown-linux-musl/release/rust-query-crlite src/trivialscan/vendor/crlite-linux-musl
+	chmod a+x src/trivialscan/vendor/crlite-linux-musl
+
 crlite:  ## Build crlite
 	(cd rust-query-crlite && cargo build --release)
-	rm -f src/trivialscan/vendor/rust-query-crlite
-	cp rust-query-crlite/target/release/rust-query-crlite src/trivialscan/vendor/rust-query-crlite
-	chmod a+x src/trivialscan/vendor/rust-query-crlite
-	./src/trivialscan/vendor/rust-query-crlite -vvv --db /tmp/.crlite_db/ --update prod x509
-	./src/trivialscan/vendor/rust-query-crlite -vvv --db /tmp/.crlite_db/ https ssllabs.com
+	rm -f src/trivialscan/vendor/crlite-linux
+	cp rust-query-crlite/target/release/rust-query-crlite src/trivialscan/vendor/crlite-linux
+	chmod a+x src/trivialscan/vendor/crlite-linux
+	./src/trivialscan/vendor/crlite-linux -vvv --db /tmp/.crlite_db/ --update prod x509
+	./src/trivialscan/vendor/crlite-linux -vvv --db /tmp/.crlite_db/ https ssllabs.com
 
 local-runner: ## local setup for a gitlab runner
 	@docker volume create --name=gitlab-cache 2>/dev/null || true

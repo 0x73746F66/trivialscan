@@ -401,7 +401,7 @@ def scan(config: dict, **flags):
         from .__main__ import DASHBOARD_URL  # pylint: disable=import-outside-toplevel
 
         cli.outputln(
-            f"View results online: {DASHBOARD_URL}{results_url}"
+            f"View results online: https://{DASHBOARD_URL}{results_url}"
             if results_url
             else "Unable to reach the Trivial Security servers",
             aside="core",
