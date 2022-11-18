@@ -4,7 +4,7 @@ key: header_xss
 group_id: 4
 group: transport
 label_as: Block mode XSS-Protection
-issue: >
+issue: |-
   The server sent a response header to inform supporting browsers to stop pages from loading when they detect reflected cross-site scripting (XSS) attacks. These protections are largely unnecessary in modern browsers when sites implement a strong Content-Security-Policy that disables the use of inline JavaScript ('unsafe-inline').
 threats:
   "MITRE ATT&CK":

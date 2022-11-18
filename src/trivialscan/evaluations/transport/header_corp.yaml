@@ -4,7 +4,7 @@ key: header_corp
 group_id: 4
 group: transport
 label_as: Same-Origin Cross-Origin-Resource-Policy
-issue: >
+issue: |-
   The server sent a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (CORS).
   The default configuration when this is not sent allows the document to fetch cross-origin resources which leaves users' vulnerable to cross-site scripting (XSS) attacks.
 threats:

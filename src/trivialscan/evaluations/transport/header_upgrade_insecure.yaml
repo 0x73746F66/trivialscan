@@ -4,7 +4,7 @@ key: header_upgrade_insecure
 group_id: 4
 group: transport
 label_as: Upgrade Insecure Requests
-issue: >
+issue: |-
   The server sent a response header to inform supporting browsers to ensure TLS is used even when misconfigured scripts attempt insecure connections.
 threats:
   "MITRE ATT&CK":

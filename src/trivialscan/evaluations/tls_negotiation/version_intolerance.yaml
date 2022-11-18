@@ -4,7 +4,7 @@ key: version_intolerance
 group_id: 1
 group: tls_negotiation
 label_as: TLS Version Intolerance
-issue: >
+issue: |-
   Many web servers are not fully compliant with TLS and may not properly negotiate a TLS version that both the client (web browser) and server support.
   E.g. when a client advertises support for "TLS 1.3" the web server may drop the connection (not respond correctly with the TLS version it supports).
   This is a common web server coding error/bug; The symptom is presented to the user in a web browser by an error message related to "we can not reach this website" (or similar).
@@ -25,5 +25,5 @@ anotate_results:
     score: 35
   - result_value: True
     result_level: fail
-    display_as: Vulnerable
+    display_as: Misconfigured
     score: -50

@@ -4,7 +4,7 @@ key: basic_constraints_path_length
 group_id: 1
 group: tls_negotiation
 label_as: Basic Constraints Extension valid path length
-issue: >
+issue: |-
   Path length gives the maximum number of intermediate certificates that may follow the root CA certificate typically (or certificate otherwise specifying the constraint) in a valid certification path.
 threats:
   "MITRE ATT&CK":

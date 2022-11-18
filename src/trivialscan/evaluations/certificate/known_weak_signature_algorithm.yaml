@@ -4,7 +4,7 @@ rule_id: 9
 key: known_weak_signature_algorithm
 group: certificate
 label_as: Deprecated or known weak signature algorithm
-issue: >
+issue: |-
   Using the SHA-1 chosen-prefix collision the X.509 Certificate can be forged, other attacks leverage predictable serial numbers and compromise Certificate Authorities issued Certificates
 cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
 cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N

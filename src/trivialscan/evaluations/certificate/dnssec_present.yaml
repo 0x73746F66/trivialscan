@@ -4,7 +4,7 @@ rule_id: 5
 key: dnssec_present
 group: certificate
 label_as: DNSSEC Present
-issue: >
+issue: |-
   DNS by itself is not secure, without DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
 threats:
   "MITRE ATT&CK":

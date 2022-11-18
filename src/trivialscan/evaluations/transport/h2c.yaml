@@ -4,7 +4,7 @@ key: h2c
 group_id: 4
 group: transport
 label_as: HTTP/2 cleartext
-issue: >
+issue: |-
   This will lead to a communication channel establised over an insecure network connection
 threats:
   "MITRE ATT&CK":

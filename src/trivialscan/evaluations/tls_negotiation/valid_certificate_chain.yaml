@@ -4,7 +4,7 @@ key: valid_certificate_chain
 group_id: 1
 group: tls_negotiation
 label_as: Valid Certificate Chain
-issue: >
+issue: |-
   The chain terminates with a Root CA Certificate. The Root CA Certificate is always signed by the CA itself. The signatures of all certificates in the chain must be verified up to the Root CA Certificate.
   Each certificate in the chain is checked to ensure it is not expired and the chain path is complete.
   When the root certificates are available in trust-store, this script will use its public key to verify the root certificate, once it verifies it will verify trust the intermediate certificate and eventually the server (leaf) certificate to complete the chain.

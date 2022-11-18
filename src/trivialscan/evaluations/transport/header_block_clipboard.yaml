@@ -4,7 +4,7 @@ key: header_block_clipboard
 group_id: 4
 group: transport
 label_as: Block reading clipboard contents
-issue: >
+issue: |-
   Websites are not expected to read contents of the users' clipboard, which commonly contains private or sensitive information.
   A webserver can instruct web browsers to block this feature so that any malicious scripts cannot leverage the API.
 threats:

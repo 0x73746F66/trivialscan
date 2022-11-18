@@ -4,7 +4,7 @@ key: header_coop
 group_id: 4
 group: transport
 label_as: Same-Origin Cross-Origin-Opener-Policy
-issue: >
+issue: |-
   The server sent a response header allows you to ensure a top-level document does not share a browsing context group with cross-origin documents.
   COOP will process-isolate your document and potential attackers can't access your global object if they were to open it in a popup, preventing a set of cross-origin attacks dubbed XS-Leaks.
 threats:

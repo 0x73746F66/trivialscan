@@ -4,7 +4,7 @@ key: deprecated_protocol_negotiated
 group_id: 1
 group: tls_negotiation
 label_as: Deprecated TLS protocol negotiated
-issue: >
+issue: |-
   When information is sent between the client and the server, it must be encrypted and protected in order to prevent an attacker from being able to read or modify it
   This is most commonly done using HTTPS, which uses the Transport Layer Security (TLS) protocol, a replacement for the deprecated Secure Socket Layer (SSL) protocol
   By default, most servers still support outdated and known vulnerable protocols, typically for backwards compatibility with equally outdated web browser software

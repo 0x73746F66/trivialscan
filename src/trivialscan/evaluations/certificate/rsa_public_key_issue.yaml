@@ -4,7 +4,7 @@ rule_id: 19
 key: rsa_public_key_issue
 group: certificate
 label_as: RSA public key exponent {public_key_exponent} has known issues
-issue: >
+issue: |-
   Using anything other than 65537 as the public exponent would effect compatibility with most hardware and software.
   Any higher exponent would make the public RSA operation, used for encryption or signature verification, unusably slower.
   Using a larger exponent will not decrease security, but will be more time / power consuming.

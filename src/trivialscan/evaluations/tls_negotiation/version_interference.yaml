@@ -4,7 +4,7 @@ key: version_interference
 group_id: 1
 group: tls_negotiation
 label_as: TLS Version Interference
-issue: >
+issue: |-
   When a web browser reports an error that describes Version Interference (e.g. Chrome ERR_SSL_VERSION_INTERFERENCE), this indicates that the we browser on the user's system has attempted to negotiate a TLS connection with the web server using a TLS version which is not known by the web server.
   This is typically seen when new TLS versions are in draft status, recently released, or an attacker in-the-middle is present and altering the TLS negotiation.
   This error is widely misunderstood to be an issue with the web browser, but it is merely a symptom that appears in the web browser when the root cause of this problem exists with the web server (or introduced by an attacker).
@@ -26,5 +26,5 @@ anotate_results:
     score: 40
   - result_value: True
     result_level: fail
-    display_as: Vulnerable
+    display_as: Misconfigured
     score: -80

@@ -4,7 +4,7 @@ rule_id: 20
 key: strong_issuer_validation
 group: certificate
 label_as: Strong Issuer Validation
-issue: >
+issue: |-
   Domain Validated (DV) Certificates may be growing in popularity since the browsers ceased showing the organisation name along with a green padlock, but the visual change is not material to the security characteristic associated with Extended Validation (EV) Certificates. When the visual changes occurred the mainstream non-technical or the uneducated in cybersecurity masses all declared that EV Certificates are dead, but the reality and truth of the matter is EV Certificates have never been more important.
   Let's consider some facts:
   1. DV Certificates are extensively (almost solely) used by malicious actors of all types; targeted, watering hole, spray-and-pray, any type leverage DV Certificates because they are free, trusted, and easily to obtain anonymously

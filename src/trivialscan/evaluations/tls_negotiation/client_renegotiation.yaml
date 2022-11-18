@@ -4,7 +4,7 @@ key: client_renegotiation
 group_id: 1
 group: tls_negotiation
 label_as: Client initiated TLS renegotiation
-issue: >
+issue: |-
   Server accepts client-initiated insecure renegotiation, numerous exploits exists and many have been assigned CVE
 cvss2: AV:N/AC:M/Au:N/C:N/I:N/A:C
 cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H

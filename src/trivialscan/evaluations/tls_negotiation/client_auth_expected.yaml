@@ -4,7 +4,7 @@ key: client_auth_expected
 group_id: 1
 group: tls_negotiation
 label_as: Client Certificate (MTLS) expected
-issue: >
+issue: |-
   The server indivated client certificate subject's it will accept, or the client presented a Certificate to initiate an MTLS connection with this server.
 threats:
   "MITRE ATT&CK":

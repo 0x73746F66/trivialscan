@@ -4,7 +4,7 @@ key: crime_vuln
 group_id: 4
 group: transport
 label_as: CRIME/BEAST Vulnerability
-issue: >
+issue: |-
   Server supports TLS compression which may allow CRIME/BEAST attacks
 cvss2: AV:N/AC:H/Au:N/C:P/I:N/A:N
 cvss3: AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N
@@ -66,5 +66,5 @@ anotate_results:
     score: 80
   - result_value: True
     result_level: fail
-    display_as: Vulnerable
+    display_as: Detected
     score: -180

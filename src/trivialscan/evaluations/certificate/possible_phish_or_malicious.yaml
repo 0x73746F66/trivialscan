@@ -4,7 +4,7 @@ rule_id: 11
 key: possible_phish_or_malicious
 group: certificate
 label_as: Malicious Certificate
-issue: >
+issue: |-
   Malicious certificates are most commonly signed by trusted certificate authority roots, to evade detection
   by blending in with legitimate traffic and making use of encryption to help hide their payloads.
   Both commodity and targeted attack malware make heavy use of encrypted command-and-control (C&C) that is

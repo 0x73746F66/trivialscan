@@ -4,7 +4,7 @@ key: header_block_deprecated
 group_id: 4
 group: transport
 label_as: Block the use of deprecated APIs
-issue: >
+issue: |-
   Websites that are maintained should not be utilising deprecated features, that commonly exhibit insecure functionality or vulnerable to abuse.
   A webserver can instruct web browsers to block these features so that any malicious scripts cannot leverage the API.
 threats:

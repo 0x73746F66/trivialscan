@@ -12,17 +12,9 @@ class EvaluationTask(BaseEvaluationTask):
         missing = []
         results = []
         for state in self.transport.store.http_states:
-            exists = (
-                "content-security-policy" in state.response_headers
-                and state.header_exists(
-                    name="content-security-policy",
-                    includes_value="upgrade-insecure-requests",
-                )
-                and "upgrade-insecure-requests" in state.response_headers
-                and state.header_exists(
-                    name="upgrade-insecure-requests",
-                    includes_value="1",
-                )
+            exists = state.header_exists(
+                name="content-security-policy",
+                includes_value="upgrade-insecure-requests",
             )
             if not exists:
                 missing.append(state.request_url)

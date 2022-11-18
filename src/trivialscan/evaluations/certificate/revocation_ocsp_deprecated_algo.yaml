@@ -4,7 +4,7 @@ rule_id: 14
 key: revocation_ocsp_deprecated_algo
 group: certificate
 label_as: Deprecated OCSP Hash Algorithm
-issue: >
+issue: |-
   Using the SHA-1 chosen-prefix collision the OCSP Assertion can be forged
 cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
 cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N

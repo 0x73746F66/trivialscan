@@ -4,7 +4,7 @@ key: valid_key_usage_leaf
 group_id: 2
 group: certificate
 label_as: Leaf Certificate valid for TLS usage
-issue: >
+issue: |-
   If the server (leaf) certificate was issued to serve the purpose of providing a TLS connection from the server-side.
   Any failure to include the correct signed (by the issuer) values would indicate a forged certificate and compromised connection.
 threats:

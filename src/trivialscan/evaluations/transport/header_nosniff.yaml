@@ -4,7 +4,7 @@ key: header_nosniff
 group_id: 4
 group: transport
 label_as: nosniff X-Content-Type-Options
-issue: >
+issue: |-
   The server sent a response header to inform supporting browsers that the MIME types advertised in the Content-Type headers should be followed and not be changed. The header allows you to avoid MIME type sniffing by saying that the MIME types are deliberately configured.
 threats:
   "MITRE ATT&CK":

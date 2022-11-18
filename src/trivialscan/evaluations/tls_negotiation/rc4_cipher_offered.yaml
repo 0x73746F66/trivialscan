@@ -4,7 +4,7 @@ key: rc4_cipher_offered
 group_id: 1
 group: tls_negotiation
 label_as: Known exploited and deprecated RC4 ciphers offered
-issue: >
+issue: |-
   See ROBOT vulnerability
 cvss2: AV:N/AC:H/Au:N/C:P/I:N/A:N
 cvss3: AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N

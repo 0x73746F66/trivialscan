@@ -4,7 +4,7 @@ key: header_xfo
 group_id: 4
 group: transport
 label_as: Safe HTML iframe options
-issue: >
+issue: |-
   The server sent a response header to inform supporting browsers whether or not a browser should be allowed to render a page in a <frame>, <iframe>, <embed> or <object>. Sites can use this to avoid click-jacking attacks, by ensuring that their content is not embedded into other sites.
   The added security is provided only if the user accessing the document is using a browser that supports X-Frame-Options.
 threats:

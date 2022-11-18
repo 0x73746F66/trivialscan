@@ -4,7 +4,7 @@ key: header_permissions_policy
 group_id: 4
 group: transport
 label_as: Policy-controlled browser features
-issue: >
+issue: |-
   A webserver can instruct web browsers to allowlist on the features the site owner intends to utilise, blocking all unused features so that any malicious scripts cannot leverage the unused features or API.
 threats:
   "MITRE ATT&CK":

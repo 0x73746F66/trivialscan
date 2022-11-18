@@ -4,7 +4,7 @@ key: weak_issuer_validation
 group_id: 2
 group: certificate
 label_as: Weak Issuer Validation
-issue: >
+issue: |-
   You can get issued a DV Certificate without actually validating the domain, Until 2018 the ACME protocol of Let's Encrypt did just this, relying on only SNI for the so-called DV Certificate issuance - not their fault, ACME was designed that way.
   June 2022 there are hundreds of ACME protocol Certificate Authorities issuing DV certificates and few would have learned from the 2018 disclosure and turned off the vulnerable design feature of SNI.
   There are a total of 10 methods of verification defined by ACME, few actually offer any security characteristics that can be said to 'Verify' Domain Ownership, in fact some are designed on purpose to offer DV certificates to customers of website hosting providors that can only modify the HTTP header responses, or less control and can only add a HTML tag! Neitehr of these are verifying control of a domain, let alone Validate domain control! What is a DV certificate if domain validation never occurred?

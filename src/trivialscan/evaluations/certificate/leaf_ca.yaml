@@ -4,7 +4,7 @@ rule_id: 10
 key: leaf_ca
 group: certificate
 label_as: Leaf Certificate allows impersonation
-issue: >
+issue: |-
   Server (leaf) certificates should not be a CA, it could enable impersonation attacks
 cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
 cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H

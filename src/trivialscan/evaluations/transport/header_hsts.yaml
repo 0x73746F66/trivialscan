@@ -4,7 +4,7 @@ key: header_hsts
 group_id: 4
 group: transport
 label_as: HTTP Strict-Transport-Security
-issue: >
+issue: |-
   The server sent a response header to inform supporting browsers that the site should only be accessed using HTTPS, and that any future attempts to access it using HTTP should automatically be converted to HTTPS.
 threats:
   "MITRE ATT&CK":

@@ -4,7 +4,7 @@ rule_id: 8
 key: known_weak_keys
 group: certificate
 label_as: Known Weak key usage {public_key_type}-{public_key_size}
-issue: >
+issue: |-
   Continued use of weak keys in certificates puts your sensitive data at risk. Exhaustive key searches or brute force attacks against certificates with weak keys are dangerous to network security.
   As computational power increases, so does the need for stronger keys.
   If this is not the leaf certificate it is a root or intermediate which signs other digital certificates with its private key, if the private key is weak it may be compromised and all the rest of the issued certificates become useless.

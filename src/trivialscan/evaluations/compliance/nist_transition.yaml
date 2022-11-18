@@ -4,7 +4,7 @@ key: nist_transition
 group_id: 3
 group: compliance
 label_as: FIPS 140-2 (NIST SP800-131A transition mode)
-issue: >
+issue: |-
   The transition period closed at the end of 2013.
   The transitioning of cryptographic algorithms and key lengths to stronger cryptographic keys and more robust algorithms as recommended in NIST SP800-131A.
   A product or implementation does not meet the FIPS 140-2 applicability requirements by simply implementing an Approved security function and acquiring validations for each of the implemented algorithms (check references for the list)
