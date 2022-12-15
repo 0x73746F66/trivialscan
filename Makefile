@@ -80,7 +80,7 @@ tag: ## tag release and push
 	git tag -f $(TRIVIALSCAN_VERSION)
 	git push -u origin --tags -f
 
-publish: check pypi tag ## upload to pypi.org and push git tags
+publish: pypi tag ## upload to pypi.org and push git tags
 
 crlite-musl:  ## Build crlite with musl for AWS Lambda
 	rustup target add x86_64-unknown-linux-musl

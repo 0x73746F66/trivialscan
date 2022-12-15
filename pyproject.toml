@@ -21,7 +21,7 @@ dependencies = [
     "validators",
     "pydantic",
     "idna",
-    "tlstrust >= 2.6.4",
+    "tlstrust >= 2.6.5",
     "certvalidator",
     "dnspython",
     "h2 >= 4.1.0",
