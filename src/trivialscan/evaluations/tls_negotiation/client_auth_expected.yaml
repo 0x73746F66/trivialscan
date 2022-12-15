@@ -1,0 +1,45 @@
+---
+rule_id: 3
+key: client_auth_expected
+group_id: 1
+group: tls_negotiation
+label_as: Client Certificate (MTLS) expected
+issue: |-
+  The server indivated client certificate subject's it will accept, or the client presented a Certificate to initiate an MTLS connection with this server.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+      techniques:
+        - T1189
+        - T1190
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1565
+          id: "002"
+      mitigations:
+        - M1013
+        - M1054
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 3.5
+        - 6.5.3
+    - version: "4.0"
+      requirements:
+        - 4.2.1
+        - 6.2.4
+references:
+anotate_results:
+  - result_value: True
+    result_level: info
+    display_as: Client Certificate Expected
+    score: 0

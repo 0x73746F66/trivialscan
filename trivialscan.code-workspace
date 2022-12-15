@@ -1,0 +1,78 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "launch": {
+        "configurations": [
+        ],
+        "version": "0.3.0"
+    },
+    "settings": {
+        "editor.quickSuggestionsDelay": 200,
+        "editor.inlineSuggest.enabled": true,
+        "files.exclude": {
+            "**/.venv/*/**": true,
+            "**/.git": true
+        },
+        "files.watcherExclude": {
+            "**/.venv/*/**": true,
+            "**/.git/*/**": true
+        },
+        "yaml.format.enable": true,
+        "yaml.customTags": [
+            "!And",
+            "!If",
+            "!Not",
+            "!Equals",
+            "!Or",
+            "!FindInMap sequence",
+            "!Base64",
+            "!Cidr",
+            "!Ref",
+            "!Sub",
+            "!GetAtt",
+            "!GetAZs",
+            "!ImportValue",
+            "!Select",
+            "!Select sequence",
+            "!Split",
+            "!Join sequence"
+        ],
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "explorer.confirmDragAndDrop": false,
+        "git.enableSmartCommit": true,
+        "git.autofetch": true,
+        "git.confirmSync": false,
+        "files.autoSave": "afterDelay",
+        "explorer.confirmDelete": false,
+        "editor.largeFileOptimizations": false,
+        "sonarlint.output.showAnalyzerLogs": true,
+        "sonarlint.disableTelemetry": true,
+        "window.autoDetectColorScheme": true,
+        "cSpell.words": [
+            "cachier",
+            "crlite",
+            "fastapi",
+            "NOSONAR",
+            "pydantic",
+            "sendgrid",
+            "starlette",
+            "trivialscan"
+        ]
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "redhat.vscode-yaml",
+            "usernamehw.errorlens",
+            "hashicorp.terraform",
+            "Boto3typed.boto3-ide",
+            "SonarSource.sonarlint-vscode",
+            "eamodio.gitlens",
+            "streetsidesoftware.code-spell-checker"
+        ]
+    }
+}

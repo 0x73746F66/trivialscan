@@ -1,0 +1,51 @@
+---
+group_id: 2
+rule_id: 17
+key: revocation_ocsp_staple
+group: certificate
+label_as: OCSP Stapling Extension
+issue: |-
+  When an OCSP assertion is not included 'stapled' with the certificate, an weakness in the clients ability to obtain a remote assertion, when the client attempts to establish a connection with the OCSP responder an additional MITM attack vector is available and forged OCSP assertions may be provided allowing an attacker to sppof the revocation status of a certificate to cause a denial of service or establish trust where otherwise a compromise would have been detected.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+      techniques:
+        - T1189
+        - T1190
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1565
+          id: "002"
+      mitigations:
+        - M1013
+        - M1054
+compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 3.5
+        - 6.5.3
+    - version: "4.0"
+      requirements:
+        - 4.2.1
+        - 6.2.4
+references:
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 75
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: -50

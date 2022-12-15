@@ -1,0 +1,49 @@
+---
+rule_id: 7
+key: header_coop
+group_id: 4
+group: transport
+label_as: Same-Origin Cross-Origin-Opener-Policy
+issue: |-
+  The server sent a response header allows you to ensure a top-level document does not share a browsing context group with cross-origin documents.
+  COOP will process-isolate your document and potential attackers can't access your global object if they were to open it in a popup, preventing a set of cross-origin attacks dubbed XS-Leaks.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0002
+        - TA0006
+      data_sources:
+        - DS0012
+      techniques:
+        - T1203
+      sub_techniques:
+        - parent: T1592
+          id: "004"
+        - parent: T1071
+          id: "001"
+      mitigations:
+        - M1013
+        - M1021
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.4
+        - 6.6
+    - version: "4.0"
+      requirements:
+        - 6.4.1
+        - 6.4.2
+references:
+  - name: MDN Web Docs
+    url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cross-Origin-Opener-Policy
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 80
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: -180

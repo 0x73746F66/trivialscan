@@ -1,0 +1,100 @@
+---
+rule_id: 24
+key: tls_robot
+group_id: 1
+group: tls_negotiation
+label_as: ROBOT Vulnerability
+issue: |-
+  Timing attack causing padding errors using RSA with PKCS#1 v1.5 session keys allowing any attacker to passively record traffic and later decrypt it
+cvss2: AV:N/AC:H/Au:N/C:C/I:N/A:N
+cvss3: AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:H/E:P/RL:W/RC:C
+cve:
+  - CVE-2012-5081
+  - CVE-2016-6883
+  - CVE-2017-6168
+  - CVE-2017-17382
+  - CVE-2017-17427
+  - CVE-2017-17428
+  - CVE-2017-12373
+  - CVE-2017-13098
+  - CVE-2017-1000385
+  - CVE-2017-13099
+  - CVE-2017-17841
+  - CVE-2018-1388
+  - CVE-2018-5762
+  - CVE-2017-18268
+  - CVE-2017-15533
+  - CVE-2018-9192
+  - CVE-2018-9194
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0007
+        - TA0009
+      data_sources:
+        - DS0035
+        - DS0028
+        - DS0006
+      techniques:
+        - T1119
+        - T1185
+        - T1189
+        - T1190
+      sub_techniques:
+        - parent: T1134
+          id: "001"
+        - parent: T1087
+          id: "002"
+        - parent: T1595
+          id: "002"
+        - parent: T1071
+          id: "001"
+        - parent: T1584
+          id: "006"
+        - parent: T1556
+          id: "005"
+        - parent: T1550
+          id: "001"
+      mitigations:
+        - M0942
+        - M0937
+        - M0913
+        - M0916
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.4
+        - 6.6
+    - version: "4.0"
+      requirements:
+        - 6.4.1
+        - 6.4.2
+references:
+  - name: CERT/CC
+    url: https://www.kb.cert.org/vuls/id/144389
+  - name: Proof of Concept
+    url: https://github.com/robotattackorg/robot-detect
+  - name: Disclosure Paper
+    url: https://www.robotattack.org/
+  - name: Disclosure Paper
+    url: http://archiv.infsec.ethz.ch/education/fs08/secsem/bleichenbacher98.pdf
+  - name: Disclosure Paper
+    url: https://eprint.iacr.org/2003/052
+  - name: Disclosure Paper
+    url: https://www.nds.rub.de/media/nds/veroeffentlichungen/2015/08/21/Tls13QuicAttacks.pdf
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 120
+  - result_value: True
+    result_level: fail
+    display_as: Misconfigured
+    score: -180
+  - result_value: None
+    result_level: info
+    display_as: Incomplete evaluation (check log with -vvv)
+    score: 0

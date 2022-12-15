@@ -1,5 +1,6 @@
 setuptools
 wheel
+bandit
 autopep8
 pylint
 pytest

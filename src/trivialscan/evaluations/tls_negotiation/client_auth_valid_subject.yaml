@@ -1,0 +1,52 @@
+---
+rule_id: 6
+key: client_auth_valid_subject
+group_id: 1
+group: tls_negotiation
+label_as: Server accepted Client Certificate
+issue: |-
+  If the Certificate being used for client Authentication (MTLS) was not matched to a subject sent by the server to indicate accepted client Certificates then most properly configured servers will drop the connection.
+  If a connection is established and the TLS server was misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+      techniques:
+        - T1189
+        - T1190
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1565
+          id: "002"
+      mitigations:
+        - M1013
+        - M1054
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 3.5
+        - 6.5.3
+    - version: "4.0"
+      requirements:
+        - 4.2.1
+        - 6.2.4
+references:
+  - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+    url: https://datatracker.ietf.org/doc/html/rfc5280
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 75
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: -50

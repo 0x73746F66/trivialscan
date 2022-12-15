@@ -1,0 +1,49 @@
+---
+rule_id: 14
+key: header_referrer_policy
+group_id: 4
+group: transport
+label_as: unsafe URL Referrer-Policy
+issue: |-
+  The Referrer-Policy HTTP header controls how much referrer information (sent with the Referer header) should be included with requests.
+  This policy will leak potentially-private information from HTTPS resource URLs to insecure origins. Carefully consider the impact of this setting.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0002
+        - TA0006
+      data_sources:
+        - DS0012
+      techniques:
+        - T1203
+      sub_techniques:
+        - parent: T1592
+          id: "004"
+        - parent: T1071
+          id: "001"
+      mitigations:
+        - M1013
+        - M1021
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.4
+        - 6.6
+    - version: "4.0"
+      requirements:
+        - 6.4.1
+        - 6.4.2
+references:
+  - name: MDN Web Docs
+    url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 50
+  - result_value: True
+    result_level: fail
+    display_as: Misconfigured
+    score: -50

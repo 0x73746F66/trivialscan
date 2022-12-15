@@ -1,0 +1,75 @@
+---
+group_id: 2
+rule_id: 7
+key: is_self_signed
+group: certificate
+label_as: Certificate self-signed
+issue: |-
+  Any self-signed Certificate should be untrusted as it offers no security characteristics of TLS that is based on a system that all Certificates have a Root Certificate Authority Trust Anchor.
+  When visiting a website that uses a self-signed Certificate it is likely the TLS connection is not secure.
+cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+cve:
+  - CVE-2014-3522
+  - CVE-2014-3603
+  - CVE-2016-1280
+  - CVE-2017-2911
+  - CVE-2017-2912
+  - CVE-2018-10936
+  - CVE-2020-14387
+  - CVE-2020-15260
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0035
+        - DS0028
+        - DS0029
+      techniques:
+        - T1189
+        - T1190
+        - T1212
+        - T1556
+        - T1528
+        - T1539
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1595
+          id: "002"
+        - parent: T1565
+          id: "002"
+        - parent: T1590
+          id: "001"
+      mitigations:
+        - M1013
+        - M1054
+        - M1020
+compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 3.5
+        - 6.5.3
+    - version: "4.0"
+      requirements:
+        - 4.2.1
+        - 6.2.4
+references:
+anotate_results:
+  - result_value: True
+    result_level: fail
+    display_as: Compromised
+    score: -200
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 75

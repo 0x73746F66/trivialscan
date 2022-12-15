@@ -1,0 +1,29 @@
+---
+rule_id: 7
+key: client_authentication
+group_id: 1
+group: tls_negotiation
+label_as: Client Authentication Established
+issue: |-
+  A client Certificate was presented and Mutual Authentication (MTLS) expected, if the presented client Certificate did not match the server sent subjects or the Certificate was not issued by a trusted Root Certificate Authority this connection attempt should not be considered secure.
+  If a connection is established and the TLS server was misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 3.5
+        - 6.5.3
+    - version: "4.0"
+      requirements:
+        - 4.2.1
+        - 6.2.4
+references:
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 150
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: -200

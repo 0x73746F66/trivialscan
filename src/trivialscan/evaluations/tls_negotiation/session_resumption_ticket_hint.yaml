@@ -1,0 +1,68 @@
+---
+rule_id: 20
+key: session_resumption_ticket_hint
+group_id: 1
+group: tls_negotiation
+label_as: Session resumption ticket hints
+issue: |-
+  Depending on your specific application, and how important the history of your network interaction may be, you may want to forego TLS session resumption altogether.
+  Long session gaps can give bad actors time to hack into a session and cause trouble. This is why session IDs and session tickets both have security timeout settings that are dictated by the server. When an ID or a ticket expires, the server intentionally flushes cached session data and forces a complete new session handshake when the client initiates the next contact.
+  Leaking any information for attackers to derive ways to weaken TLS results in ineffective data protection or broken integrity of communications.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0035
+        - DS0028
+        - DS0029
+      techniques:
+        - T1189
+        - T1190
+        - T1212
+        - T1008
+        - T1556
+        - T1528
+        - T1539
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1595
+          id: "002"
+        - parent: T1565
+          id: "002"
+        - parent: T1590
+          id: "001"
+      mitigations:
+        - M1013
+        - M1054
+        - M1020
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.4
+        - 6.6
+    - version: "4.0"
+      requirements:
+        - 6.4.1
+        - 6.4.2
+references:
+  - name: Networking 101 Published by O'Reilly Media
+    url: https://hpbn.co/transport-layer-security-tls/#tls-session-resumption
+  - name: Measuring the Security Harm of TLS Crypto Shortcuts
+    url: https://dl.acm.org/doi/10.1145/2987443.2987480
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 60
+  - result_value: True
+    result_level: warn
+    display_as: Misconfigured
+    score: -100

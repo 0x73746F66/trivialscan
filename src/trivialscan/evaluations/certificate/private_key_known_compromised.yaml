@@ -1,0 +1,70 @@
+---
+group_id: 2
+rule_id: 12
+key: private_key_known_compromised
+group: certificate
+label_as: Known Compromised Private Key
+issue: |-
+  DSA keys, and RSA keys smaller than 1024 bits offer no security and should not be used at all, whether they are known to be compromised or not. The pwnedkeys database keeps records of compromised 1024 bit and larger RSA/DSA keys, as well as elliptic-curve keys on the P-256, P-384, and P-521 curves. If your private key is ever compromised, it should be considered an emergency, and your priority should be resolving the issue immediately. If an unauthorized person gains access to your private key, they can assume the identity that your certificate is intended to protect (e.g. you, your company, and/or your website)
+cvss2: AV:L/AC:H/Au:N/C:P/I:N/A:N
+cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N
+cve:
+  - CVE-2007-3108
+  - CVE-2008-0166
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0042
+      data_sources:
+        - DS0037
+      techniques:
+        - T1573
+        - T1534
+        - T1566
+        - T1598
+      sub_techniques:
+        - parent: T1552
+          id: "004"
+        - parent: T1587
+          id: "003"
+        - parent: T1588
+          id: "004"
+        - parent: T1596
+          id: "003"
+        - parent: T1608
+          id: "003"
+        - parent: T1608
+          id: "005"
+      mitigations:
+        - M0913
+        - M0813
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.4
+        - 6.6
+    - version: "4.0"
+      requirements:
+        - 6.4.1
+        - 6.4.2
+references:
+  - name: Security Advisory
+    url: https://www.debian.org/security/2008/dsa-1571
+  - name: OSINT
+    url: https://pwnedkeys.com/faq.html
+anotate_results:
+  - result_value: True
+    result_level: fail
+    display_as: Compromised
+    score: -200
+  - result_value: False
+    result_level: pass
+    display_as: Not Known Compromised
+    score: 75
+  - result_value: None
+    result_level: info
+    result_text: SKIP!
+    display_as: Not an valid pwnedkeys.com response
+    score: 0

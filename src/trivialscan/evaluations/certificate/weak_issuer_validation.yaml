@@ -1,0 +1,68 @@
+---
+rule_id: 48
+key: weak_issuer_validation
+group_id: 2
+group: certificate
+label_as: Weak Issuer Validation
+issue: |-
+  You can get issued a DV Certificate without actually validating the domain, Until 2018 the ACME protocol of Let's Encrypt did just this, relying on only SNI for the so-called DV Certificate issuance - not their fault, ACME was designed that way.
+  June 2022 there are hundreds of ACME protocol Certificate Authorities issuing DV certificates and few would have learned from the 2018 disclosure and turned off the vulnerable design feature of SNI.
+  There are a total of 10 methods of verification defined by ACME, few actually offer any security characteristics that can be said to 'Verify' Domain Ownership, in fact some are designed on purpose to offer DV certificates to customers of website hosting providors that can only modify the HTTP header responses, or less control and can only add a HTML tag! Neitehr of these are verifying control of a domain, let alone Validate domain control! What is a DV certificate if domain validation never occurred?
+  Beyond validation itself; The ACME protocol DV Certificate Issuers generally don't offer any additional features, therefore even if you attempt to use certain features like ssl_stapling it will simply be ignored. These Issuers, (pick on Let's Encrypt for this one) simply prefer low-barrier and ease-of-use over any and all security characteristics - so if they don't care, why would you put any trust in their DV Certificates to secure your TLS connections?
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0035
+        - DS0028
+        - DS0029
+      techniques:
+        - T1189
+        - T1190
+        - T1212
+        - T1556
+        - T1528
+        - T1539
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1595
+          id: "002"
+        - parent: T1565
+          id: "002"
+        - parent: T1590
+          id: "001"
+      mitigations:
+        - M1013
+        - M1054
+        - M1020
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.4
+        - 6.6
+    - version: "4.0"
+      requirements:
+        - 6.4.1
+        - 6.4.2
+references:
+  - name: RFC 8555 - Automatic Certificate Management Environment (ACME)
+    url: https://datatracker.ietf.org/doc/html/rfc8555
+  - name: Detectify - How I exploited ACME TLS-SNI-01 issuing Let's Encrypt SSL-certs for any domain using shared hosting
+    url: https://labs.detectify.com/2018/01/12/how-i-exploited-acme-tls-sni-01-issuing-lets-encrypt-ssl-certs-for-any-domain-using-shared-hosting/
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 100
+  - result_value: True
+    result_level: fail
+    display_as: Misconfigured
+    score: -200

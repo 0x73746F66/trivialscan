@@ -1,0 +1,59 @@
+---
+rule_id: 12
+key: forward_anonymity
+group_id: 1
+group: tls_negotiation
+label_as: Negotiated cipher applies Forward Anonymity (aka PFS)
+issue: |-
+  Forward Anonymity, frequently and mistakenly described as Perfect Forward Secrecy (PFS), is where the TLS connection applies technical mechanisms intentionally that will not expose any unique client identifier that might be used by a server (TLS termination endpoint) for the purposes of user profiling and tracking.
+  This is not the same as applying 'secrecy' or privacy to the contents of your TLS connection, the mechanism is designed only for identity protection a.k.a Anonymity - which is an entirely distinct concept from secrecy.
+  If the TLS connection does not use a cipher that offer the Forward Anonymity anonymity characteristic, the client identity can be tracked for any purpose the server (or Attacker in-the-middle) might choose, with no possibility of the client protecting themselves.
+cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
+cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N
+cve:
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0009
+      data_sources:
+        - DS0037
+        - DS0035
+      techniques:
+        - T1189
+        - T1190
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1595
+          id: "002"
+        - parent: T1590
+          id: "001"
+      mitigations:
+        - M1013
+        - M1054
+        - M1020
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 4.1
+    - version: "4.0"
+      requirements:
+        - 1.2.6
+        - 2.2.5
+        - 4.2.1
+        - 6.2.4
+        - 12.3.3
+references:
+  - name: Eyal Ronen and Adi Shamir - Critical Review of Imperfect Forward Secrecy
+    url: http://www.wisdom.weizmann.ac.il/~eyalro/RonenShamirDhReview.pdf
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 150
+  - result_value: True
+    result_level: fail
+    display_as: Misconfigured
+    score: -100

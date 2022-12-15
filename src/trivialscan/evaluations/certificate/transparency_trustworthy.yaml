@@ -1,0 +1,56 @@
+---
+group_id: 2
+rule_id: 23
+key: transparency_trustworthy
+group: certificate
+label_as: Trustworthy Certificate Transparency
+issue: |-
+  Certificate Transparency (CT) is a mechanism which helps domain owners and industry watch dogs detect misissuance.
+  Misissuance occurs when a Certificate Authority (CA) issues an SSL certificate improperly. This may mean that the CA included incorrect information in the certificate, issued the certificate to someone who did not represent the organization or domain, or was even compromised.
+  Some browsers require certificates to have proof of being logged with certificate transparency, Safari requires up to 3 SCTs and Chrome requires between 3 and 5. The policies are far more complex than this so the generalised best practice is using at least 3 distinct SCTs per certificate.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0042
+        - TA0001
+      data_sources:
+        - DS0037
+      techniques:
+        - T1534
+      sub_techniques:
+        - parent: T1587
+          id: "003"
+        - parent: T1484
+          id: "002"
+        - parent: T1588
+          id: "004"
+        - parent: T1608
+          id: "003"
+      mitigations:
+        - M0913
+        - M0813
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 3.5
+        - 6.5.3
+    - version: "4.0"
+      requirements:
+        - 4.2.1
+        - 6.2.4
+references:
+  - name: Chrome Google Group - Certificate Transparency Policy
+    url: https://groups.google.com/a/chromium.org/g/ct-policy/c/fCt4Bm03GsI
+  - name: Apple - Certificate Transparency policy
+    url: https://support.apple.com/en-ca/HT205280
+anotate_results:
+  - result_value: False
+    result_level: warn
+    display_as: Misconfigured
+    score: -100
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 150

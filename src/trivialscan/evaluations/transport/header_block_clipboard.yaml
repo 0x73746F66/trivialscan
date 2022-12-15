@@ -1,0 +1,50 @@
+---
+rule_id: 4
+key: header_block_clipboard
+group_id: 4
+group: transport
+label_as: Block reading clipboard contents
+issue: |-
+  Websites are not expected to read contents of the users' clipboard, which commonly contains private or sensitive information.
+  A webserver can instruct web browsers to block this feature so that any malicious scripts cannot leverage the API.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0002
+        - TA0006
+      data_sources:
+        - DS0012
+      techniques:
+        - T1115
+        - T1203
+      sub_techniques:
+        - parent: T1592
+          id: "004"
+        - parent: T1071
+          id: "001"
+      mitigations:
+        - M1013
+        - M1021
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.4
+        - 6.6
+    - version: "4.0"
+      requirements:
+        - 6.4.1
+        - 6.4.2
+references:
+  - name: MDN Web Docs
+    url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 80
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: -180

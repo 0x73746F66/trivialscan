@@ -1,0 +1,67 @@
+---
+group_id: 2
+rule_id: 4
+key: deprecated_dnssec_algorithm
+group: certificate
+label_as: Avoid deprecated DNSSEC algorithm
+issue: |-
+  Whenever a DNS zone is signed with a SHA-1 DNSKEY algorithm it is vulnerable to chosen prefix collision attacks. This is a problem when a zone accepts updates from multiple parties, such as; TLDs, enterprises, hosting providers. It is also a problem when a key is re-used by multiple zones
+cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
+cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+cve:
+  - CVE-2019-14855
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0004
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0038
+      techniques:
+        - T1557
+        - T1556
+      sub_techniques:
+        - parent: T1087
+          id: "002"
+        - parent: T1583
+          id: "002"
+        - parent: T1071
+          id: "004"
+        - parent: T1584
+          id: "002"
+        - parent: T1484
+          id: "002"
+      mitigations:
+        - M0913
+        - M0947
+        - M0800
+        - M0926
+        - M0954
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.8
+        - 6.5.10
+        - 8.6
+    - version: "4.0"
+      requirements:
+        - 6.2.1
+        - 6.2.4
+        - 11.6.1
+references:
+  - name: Cambridge University Information Services
+    url: https://www.dns.cam.ac.uk/news/2020-01-09-sha-mbles.html
+  - name: Disclosure Paper
+    url: https://sha-mbles.github.io/
+anotate_results:
+  - result_value: True
+    result_level: fail
+    display_as: Misconfigured
+    score: -100
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 75

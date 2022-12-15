@@ -1,0 +1,102 @@
+---
+group_id: 2
+rule_id: 19
+key: rsa_public_key_issue
+group: certificate
+label_as: RSA public key exponent {public_key_exponent} has known issues
+issue: |-
+  Using anything other than 65537 as the public exponent would effect compatibility with most hardware and software.
+  Any higher exponent would make the public RSA operation, used for encryption or signature verification, unusably slower.
+  Using a larger exponent will not decrease security, but will be more time / power consuming.
+cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+cve:
+  - CVE-2013-7287
+  - CVE-2014-9975
+  - CVE-2015-0575
+  - CVE-2018-15124
+  - CVE-2019-9863
+  - CVE-2020-6966
+  - CVE-2013-0764
+  - CVE-2017-14262
+  - CVE-2020-5763
+  - CVE-2021-26726
+  - CVE-2017-14797
+  - CVE-2017-8076
+  - CVE-2011-4121
+  - CVE-2013-2166
+  - CVE-2017-11317
+  - CVE-2017-1000486
+  - CVE-2018-0448
+  - CVE-2018-20810
+  - CVE-2019-15805
+  - CVE-2019-15806
+  - CVE-2020-9761
+  - CVE-2020-10275
+  - CVE-2020-27998
+  - CVE-2020-29658
+  - CVE-2021-24020
+  - CVE-2021-27200
+  - CVE-2021-45512
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0035
+        - DS0028
+        - DS0029
+      techniques:
+        - T1189
+        - T1190
+        - T1212
+        - T1556
+        - T1528
+        - T1539
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1595
+          id: "002"
+        - parent: T1565
+          id: "002"
+        - parent: T1590
+          id: "001"
+      mitigations:
+        - M1013
+        - M1054
+        - M1020
+compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 4.1
+    - version: "4.0"
+      requirements:
+        - 1.2.6
+        - 2.2.4
+        - 2.2.5
+        - 4.2.1
+        - 6.2.4
+        - 12.3.3
+references:
+  - name: Twenty Years of Attacks on the RSA Cryptosystem - Dan Boneh, Stanford University
+    url: https://www.researchgate.net/publication/2538368_Twenty_Years_of_Attacks_on_the_RSA_Cryptosystem
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 75
+  - result_value: True
+    result_level: warn
+    display_as: Problematic
+    score: -180
+substitutions:
+  - public_key_exponent

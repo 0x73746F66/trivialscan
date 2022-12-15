@@ -1,0 +1,23 @@
+---
+rule_id: 4
+key: nist_strict
+group_id: 3
+group: compliance
+label_as: NIST SP800-131A (strict mode)
+issue: |-
+  SP 800-131A provides specific guidance for transitions to the use of stronger cryptographic keys and more robust algorithms.
+  This strengthens security by defining stronger cryptographic keys and more robust algorithms. The standard defines a period to allow customers time to make the transition to the new requirements. The transition period closed at the end of 2013.
+references:
+  - name: SP 800-131A Rev. 2 - Transitioning the Use of Cryptographic Algorithms and Key Lengths
+    url: https://csrc.nist.gov/publications/detail/sp/800-131a/rev-2/final
+  - name: FIPS 186-4 - Digital Signature Standard (DSS)
+    url: http://dx.doi.org/10.6028/NIST.FIPS.186-4
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 0
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: 0

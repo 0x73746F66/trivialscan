@@ -1,0 +1,21 @@
+---
+rule_id: 2
+key: pci_dss_4_0
+group_id: 3
+group: compliance
+label_as: PCI DSS 4.0
+issue: |-
+  In the prior versions the standard indicated that an organization had to use the latest version of SSL, or at least TLS 1.2. In the new standard that specific language has been removed in favor of general industry standards that change over time.
+  Each evaluation that reports on PCI DSS 4.0 compliance includes references to publications and evidense to support the idea of general industry standardisation, for which is a term that is defined by these existinstance of these publications over time.
+references:
+  - name: PCI DSS 4.0 standard - Report on Compliance
+    url: https://docs-prv.pcisecuritystandards.org/PCI%20DSS/Reporting%20Template%20or%20Form/PCI-DSS-v4_0-ROC-Template.pdf
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 0
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: 0

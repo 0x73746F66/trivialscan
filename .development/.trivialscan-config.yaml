@@ -1,0 +1,82 @@
+---
+account_name: testing
+client_name: surfaceeye
+project_name: Testing
+
+defaults:
+  checkpoint: True
+  use_sni: True
+  cafiles:
+  tmp_path_prefix: /tmp
+  http_request_path: /
+  # skip_evaluations:
+  #   - revocation_crlite
+  #   - tls_robot
+  #   - dnssec
+  #   - deprecated_dnssec_algorithm
+  #   - private_key_known_compromised
+
+outputs:
+  - type: console
+    use_icons: True
+  - type: json
+    path: .development/results/{project_name}/{hostname}_{port}.json
+    when: per_host
+  # - type: json
+  #   path: .development/results/{project_name}/{hostname}_{port}_{sha1_fingerprint}.json
+  #   when: per_certificate
+  # - type: json
+  #   path: .development/results/{date_iso8601}.json
+  # - type: json
+  #   path: .development/results/{date_year}-{date_month}-{date_day}.json
+  - type: json
+    path: .development/results/{project_name}/all.json
+    when: final
+
+"PCI DSS 3.2.1":
+  "6.5.4": Insecure communications
+
+targets:
+  - hostname: client.badssl.com
+    client_certificate: .development/badssl.com-client.pem
+  - hostname: expired.badssl.com
+    skip_evaluations:
+      - client_renegotiation
+    skip_evaluation_groups:
+      - dns_configuration
+  - hostname: tls-v1-1.badssl.com
+    port: 1011
+  - hostname: wrong.host.badssl.com
+  - hostname: untrusted.root.badssl.com
+  - hostname: no-subject.badssl.com
+  - hostname: revoked.badssl.com
+  - hostname: incomplete-chain.badssl.com
+  - hostname: no-sct.badssl.com
+  - hostname: cbc.badssl.com
+  - hostname: superfish.badssl.com
+  - hostname: www.ssllabs.com
+    http_request_paths:
+      - /
+      - /ssltest
+      - /ssltest/analyze
+    # robots.txt forbids /ssltest/analyze
+
+# Customise outputs, or really anything
+evaluations:
+  # reverse the result, so a trusted russian root is a FAIL instead of a PASS
+  - key: trust_russian
+    anotate_results:
+      - result_value: True
+        result_level: fail
+        display_as: Trusted
+        score: -100
+      - result_value: False
+        result_level: pass
+        display_as: Not Trusted
+        score: 100
+
+  # substitute a value into the output label
+  - key: secure_renegotiation
+    label_as: Client initiated TLS secure renegotiation {preferred_protocol}
+    substitutions:
+      - preferred_protocol

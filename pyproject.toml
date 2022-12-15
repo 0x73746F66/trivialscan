@@ -1,0 +1,92 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trivialscan"
+description = "Validate the security of your TLS connections so that they deserve your trust."
+authors = [
+    {name = "Christopher Langton", email = "chris@trivialsec.com"},
+]
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "cryptography >= 2.0",
+    "certifi",
+    "asn1crypto",
+    "pyOpenSSL",
+    "rich",
+    "validators",
+    "pydantic",
+    "idna",
+    "tlstrust >= 2.6.5",
+    "certvalidator",
+    "dnspython",
+    "h2 >= 4.1.0",
+    "hpack >= 4.0.0",
+    "oscrypto",
+    "requests >= 2.27.1",
+    "urllib3 >= 1.26.9",
+    "appdirs >= 1.4.4",
+    "attrs >= 21.4.0",
+    "cattrs >= 1.10.0",
+    "requests-cache >= 0.9.4",
+    "url-normalize >= 1.4.3",
+    "retry",
+    "tldextract",
+    "pyyaml",
+    "art",
+    "keyring >= 23.6.0",
+    "deepdiff",
+    "pycryptodome >= 3.15.0",
+    "beautifulsoup4 >= 4.11.1",
+    "requests-toolbelt >= 0.9.1",
+]
+dynamic = ["version", "readme"]
+
+[project.urls]
+"Homepage" = "https://trivialsec.com"
+"Bug Tracker" = "https://gitlab.com/trivialsec/trivialscan/-/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "trivialscan.cli.__main__.__version__"}
+readme = {file = ["README.rst"]}
+
+[project.scripts]
+trivial = "trivialscan.cli.__main__:main"
+
+[project.license]
+file = "LICENSE"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = [
+    "src/trivialscan/vendor/crlite-linux-musl",
+    "src/trivialscan/vendor/crlite-linux",
+    "src/trivialscan/config/*.yaml",
+    "src/trivialscan/evaluations/**/*.yaml"
+]
+
+[tool.coverage.run]
+source = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "--cov --cov-report html --cov-report term-missing --cov-fail-under 95"
+
+[tool.pylint]
+max-line-length = 88
+disable = [
+    "C0114", # (missing-module-docstring)
+    "C0115", # (missing-class-docstring)
+    "C0116", # (missing-function-docstring)
+    "R0903", # (too-few-public-methods)
+    "R0913", # (too-many-arguments)
+    "W0105", # (pointless-string-statement)
+]

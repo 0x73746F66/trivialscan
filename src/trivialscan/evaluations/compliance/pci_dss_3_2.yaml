@@ -1,0 +1,22 @@
+---
+rule_id: 1
+key: pci_dss_3_2
+group_id: 3
+group: compliance
+label_as: PCI DSS 3.2.1
+issue: |-
+  While some requirements specify the correct evaluation in the Report on Compliance (ROC), regarding the proper configuration of TLS more broadly PCI DSS has the following guidance:
+  > "Refer to industry standards and best practices for information on strong cryptography and secure protocols (e.g. NIST SP 800-52 and SP 800-57, OWASP, etc.)"
+  Each evaluation that reports on PCI DSS 3.2.1 compliance includes references to publications and evidense to support the idea of general industry standardisation, for which is a term that is defined by these existinstance of these publications over time.
+references:
+  - name: PCI DSS 3.2.1 standard
+    url: https://docs-prv.pcisecuritystandards.org/PCI%20DSS/Standard/PCI_DSS_v3-2-1.pdf
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 0
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: 0

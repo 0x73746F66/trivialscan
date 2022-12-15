@@ -1,0 +1,69 @@
+---
+group_id: 2
+rule_id: 6
+key: dnssec_valid
+group: certificate
+label_as: DNSSEC Valid
+issue: |-
+  DNS by itself is not secure, without DNSSEC ICANN states any attacker can easily redirect a user to any malicious actor controlled server without the user or authentic server realising it
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0004
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0038
+      techniques:
+        - T1557
+        - T1556
+      sub_techniques:
+        - parent: T1087
+          id: "002"
+        - parent: T1583
+          id: "002"
+        - parent: T1071
+          id: "004"
+        - parent: T1584
+          id: "002"
+        - parent: T1484
+          id: "002"
+      mitigations:
+        - M0913
+        - M0947
+        - M0800
+        - M0926
+        - M0954
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.8
+        - 6.5.10
+        - 8.6
+    - version: "4.0"
+      requirements:
+        - 6.2.1
+        - 6.2.4
+        - 11.6.1
+references:
+  - name: ICANN
+    url: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
+  - name: RFC 6014 - Cryptographic Algorithm Identifier Allocation for DNSSEC
+    url: https://datatracker.ietf.org/doc/html/rfc6014
+  - name: RFC 6840 - Clarifications and Implementation Notes for DNS Security
+    url: https://datatracker.ietf.org/doc/html/rfc6840
+  - name: RFC 4956 - DNS Security (DNSSEC) Opt-In
+    url: https://datatracker.ietf.org/doc/html/rfc4956
+  - name: RFC 4033 - DNS Security Introduction and Requirements
+    url: https://datatracker.ietf.org/doc/html/rfc4033
+anotate_results:
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: -50
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 35

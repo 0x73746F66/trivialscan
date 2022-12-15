@@ -1,32 +1,109 @@
 import logging
 import string
 import random
-import sqlite3
-from io import BytesIO
-from datetime import datetime, timedelta
+import signal
+import json
+import hmac
+import hashlib
+from base64 import b64encode
+from datetime import datetime, date, time
 from urllib.request import urlretrieve
 from urllib.parse import urlparse
 from binascii import hexlify
 from pathlib import Path
+from decimal import Decimal
+from functools import wraps
+from typing import Union, Any
+from copy import deepcopy
+from io import BytesIO
+from os import path
+
 import requests
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
+from rich.progress import (
+    Task,
+    Progress,
+    DownloadColumn,
+    BarColumn,
+    TimeRemainingColumn,
+    TransferSpeedColumn,
+)
 import validators
 from cryptography import x509
-from cryptography.x509 import Certificate, extensions, SubjectAlternativeName, DNSName
+from cryptography.x509 import (
+    Certificate,
+    extensions,
+    SubjectAlternativeName,
+    DNSName,
+    Name,
+)
 from OpenSSL import SSL
 from OpenSSL.crypto import X509, FILETYPE_PEM, dump_certificate
 from retry.api import retry
+from bs4 import BeautifulSoup as bs
+from asn1crypto.x509 import Certificate as asn1Certificate
 from certvalidator import CertificateValidator, ValidationContext
-from rich.style import Style
-from rich.console import Console
 from dns import resolver, dnssec, rdatatype, message, query, name as dns_name
 from dns.exception import DNSException, Timeout as DNSTimeoutError
 from dns.resolver import NoAnswer
 from tldextract import TLDExtract
-from . import constants
+from tlstrust import util as tlstrust_util
+from tlstrust.context import STORES
+
+from . import constants, models
+from .certificate import (
+    BaseCertificate,
+    RootCertificate,
+    IntermediateCertificate,
+    LeafCertificate,
+)
 
 __module__ = "trivialscan.util"
 
 logger = logging.getLogger(__name__)
+MAX_DEPTH = 8
+
+
+def timeout(seconds, error_message="Function call timed out"):
+    def decorated(func):
+        def _handle_timeout(signum, frame):
+            raise TimeoutError(error_message)
+
+        def wrapper(*args, **kwargs):
+            signal.signal(signal.SIGALRM, _handle_timeout)
+            signal.alarm(seconds)
+            try:
+                result = func(*args, **kwargs)
+            finally:
+                signal.alarm(0)
+            return result
+
+        return wraps(func)(wrapper)
+
+    return decorated
+
+
+def force_str(s, encoding="utf-8", strings_only=False, errors="strict"):
+    if issubclass(type(s), str):
+        return s
+    if strings_only and isinstance(
+        s,
+        (
+            type(None),
+            int,
+            float,
+            Decimal,
+            datetime,
+            date,
+            time,
+        ),
+    ):
+        return s
+    if isinstance(s, bytes):
+        s = str(s, encoding, errors)
+    else:
+        s = str(s)
+    return s
 
 
 def filter_valid_files_urls(inputs: list[str], tmp_path_prefix: str = "/tmp"):
@@ -48,7 +125,7 @@ def filter_valid_files_urls(inputs: list[str], tmp_path_prefix: str = "/tmp"):
             try:
                 urlretrieve(test, local_path)
             except Exception as ex:
-                logger.error(ex, stack_info=True)
+                logger.error(ex, exc_info=True)
             file_path = Path(local_path)
             if not file_path.is_file():
                 return False
@@ -75,7 +152,7 @@ def is_self_signed(cert: Certificate) -> bool:
             ).value.key_identifier
         ).decode("utf-8")
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
+        logger.debug(ex, exc_info=True)
         certificate_is_self_signed = True
     try:
         subject_key_identifier = hexlify(
@@ -84,7 +161,7 @@ def is_self_signed(cert: Certificate) -> bool:
             ).value.digest
         ).decode("utf-8")
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
+        logger.debug(ex, exc_info=True)
         certificate_is_self_signed = True
     if subject_key_identifier == authority_key_identifier:
         certificate_is_self_signed = True
@@ -98,8 +175,8 @@ def get_san(cert: Certificate) -> list:
             SubjectAlternativeName
         ).value.get_values_for_type(DNSName)
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
-    return san
+        logger.debug(ex, exc_info=True)
+    return sorted(san)
 
 
 def get_basic_constraints(cert: Certificate) -> tuple[bool, int]:
@@ -109,7 +186,7 @@ def get_basic_constraints(cert: Certificate) -> tuple[bool, int]:
             extensions.BasicConstraints
         ).value
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
+        logger.debug(ex, exc_info=True)
     if not isinstance(basic_constraints, extensions.BasicConstraints):
         return None, None
     return basic_constraints.ca, basic_constraints.path_length
@@ -121,13 +198,13 @@ def key_usage_exists(cert: Certificate, key: str) -> bool:
     try:
         key_usage = cert.extensions.get_extension_for_class(extensions.KeyUsage).value
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
+        logger.debug(ex, exc_info=True)
     try:
         ext_key_usage = cert.extensions.get_extension_for_class(
             extensions.ExtendedKeyUsage
         ).value
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
+        logger.debug(ex, exc_info=True)
     if key_usage is None and ext_key_usage is None:
         logger.warning("no key usages could not be found")
         return False
@@ -167,7 +244,7 @@ def get_certificate_extensions(cert: Certificate) -> list[dict]:
             "name": ext.oid._name,  # pylint: disable=protected-access
         }
         if isinstance(ext.value, extensions.UnrecognizedExtension):
-            continue
+            data = {**data, **vars(ext.value)}
         if isinstance(ext.value, extensions.CRLNumber):
             data[data["name"]] = ext.value.crl_number
         if isinstance(ext.value, extensions.AuthorityKeyIdentifier):
@@ -349,7 +426,7 @@ def gather_key_usages(cert: Certificate) -> tuple[list, list]:
     return validator_key_usage, validator_extended_key_usage
 
 
-def _extract_key_usage(ext):
+def _extract_key_usage(ext: extensions.Extension):
     validator_key_usage = []
     if ext.digital_signature:
         validator_key_usage.append("digital_signature")
@@ -384,7 +461,9 @@ def get_ski_aki(cert: Certificate) -> tuple[str, str]:
     return ski, aki
 
 
-def extract_from_subject(cert: Certificate, name: str = "commonName"):
+def extract_from_subject(
+    cert: Certificate, name: str = "commonName"
+) -> Union[str, None]:
     for fields in cert.subject:
         current = str(fields.oid)
         if name in current:
@@ -403,8 +482,24 @@ def validate_common_name(common_name: str, host: str) -> bool:
         common_name_suffix = common_name.replace("*.", "")
         if validators.domain(common_name_suffix) is not True:
             return False
-        return common_name_suffix == host or host.endswith(common_name_suffix)
+        if common_name_suffix == host:
+            return True
+        if not host.endswith(common_name_suffix):
+            return False
+        # remove suffix, only subdomain remains
+        subdomain = host.replace(common_name_suffix, "").strip(".")
+        return (
+            "." not in subdomain
+        )  # further subdomains cause Chrome NET::ERR_CERT_COMMON_NAME_INVALID
     return validators.domain(common_name) is True
+
+
+def from_subject(subject: Name, field: str = "commonName") -> Union[str, None]:
+    for fields in subject:
+        current = str(fields.oid)
+        if field in current:
+            return fields.value
+    return None
 
 
 def match_hostname(host: str, cert: Certificate) -> bool:
@@ -420,14 +515,13 @@ def match_hostname(host: str, cert: Certificate) -> bool:
             x509.SubjectAlternativeName
         ).value.get_values_for_type(x509.DNSName)
     except extensions.ExtensionNotFound as ex:
-        logger.debug(ex, stack_info=True)
+        logger.debug(ex, exc_info=True)
     valid_common_name = False
     wildcard_hosts = set()
     domains = set()
-    for fields in cert.subject:
-        current = str(fields.oid)
-        if "commonName" in current:
-            valid_common_name = validate_common_name(fields.value, host)
+    common_name = from_subject(cert.subject)
+    if common_name:
+        valid_common_name = validate_common_name(common_name, host)
     for san in certificate_san:
         if san.startswith("*."):
             wildcard_hosts.add(san)
@@ -444,7 +538,7 @@ def match_hostname(host: str, cert: Certificate) -> bool:
 
 
 def validate_certificate_chain(
-    der: bytes,
+    cert: Union[bytes, asn1Certificate],
     pem_certificate_chain: list,
     validator_key_usage: list,
     validator_extended_key_usage: list,
@@ -456,7 +550,7 @@ def validate_certificate_chain(
         weak_hash_algos={"md2", "md5", "sha1"},
     )
     validator = CertificateValidator(
-        der, validation_context=ctx, intermediate_certs=pem_certificate_chain
+        cert, validation_context=ctx, intermediate_certs=pem_certificate_chain
     )
     return validator.validate_usage(
         key_usage=set(validator_key_usage),
@@ -464,17 +558,20 @@ def validate_certificate_chain(
     )
 
 
-def issuer_from_chain(certificate: X509, chain: list[X509]) -> Certificate:
+def issuer_from_chain(certificate: X509, chain: list[X509]) -> X509:
     issuer = None
-    issuer_name = certificate.get_issuer().CN
-    if issuer_name:
-        for peer in chain:
-            peer_name = peer.get_subject().CN
-            if not peer_name:
-                continue
-            if peer_name.strip() == issuer_name.strip():
-                issuer = peer
-                break
+    try:
+        issuer_name = certificate.get_issuer().CN
+        if issuer_name:
+            for peer in chain:
+                peer_name = peer.get_subject().CN
+                if not peer_name:
+                    continue
+                if peer_name.strip() == issuer_name.strip():
+                    issuer = peer
+                    break
+    except AttributeError:
+        pass
     return issuer
 
 
@@ -513,114 +610,6 @@ def date_diff(comparer: datetime) -> str:
         )
     if interval.days > 1:
         return f"Expires in {interval.days} days"
-
-
-def styled_boolean(
-    value: bool,
-    represent_as: tuple[str, str] = ("True", "False"),
-    colors: tuple[str, str] = ("dark_sea_green2", "light_coral"),
-) -> str:
-    console = Console()
-    if value is None:
-        value = False
-    if not isinstance(value, bool):
-        raise TypeError(f"{type(value)} provided")
-    val = represent_as[0] if value else represent_as[1]
-    color = colors[0] if value else colors[1]
-    with console.capture() as capture:
-        console.print(val, style=Style(color=color))
-    return capture.get().strip()
-
-
-def styled_value(value: str, color: str = "white") -> str:
-    if value.startswith("http"):
-        return value
-    if len(value) > 70:
-        return value
-    console = Console()
-    with console.capture() as capture:
-        console.print(value, style=Style(color=color), no_wrap=True)
-    return capture.get().strip()
-
-
-def styled_list(
-    values: list, delimiter: str = "\n", color: str = "bright_white"
-) -> str:
-    styled_values = []
-    for value in values:
-        if value is None:
-            styled_values.append(styled_value("Unknown", "cornflower_blue"))
-            continue
-        if isinstance(value, bool):
-            styled_values.append(styled_boolean(value, colors=(color, color)))
-            continue
-        if isinstance(value, list):
-            styled_values.append(styled_list(value, delimiter, color))
-            continue
-        if isinstance(value, dict):
-            styled_values.append(styled_dict(value, delimiter, colors=(color, color)))
-            continue
-        if isinstance(value, bytes):
-            value = value.decode()
-        if isinstance(value, datetime):
-            value = value.isoformat()
-        styled_values.append(styled_value(str(value), color=color))
-
-    return delimiter.join(styled_values)
-
-
-def styled_dict(
-    values: dict,
-    delimiter: str = "=",
-    colors: tuple[str, str] = ("bright_white", "bright_white"),
-) -> str:
-    pairs = []
-    for key, v in values.items():
-        if isinstance(v, bool):
-            pairs.append(f"{key}{delimiter}{styled_boolean(v)}")
-            continue
-        if v is None:
-            pairs.append(f'{key}{delimiter}{styled_value("null", color=colors[1])}')
-            continue
-        if isinstance(v, list):
-            pairs.append(f"{key}{delimiter}{styled_list(v, color=colors[1])}")
-            continue
-        if isinstance(v, dict):
-            pairs.append(
-                f"{key}{delimiter}{styled_dict(v, delimiter=delimiter, colors=colors)}"
-            )
-            continue
-        if isinstance(v, (int, float)):
-            v = str(v)
-        if isinstance(v, bytes):
-            v = v.decode()
-        if isinstance(v, datetime):
-            v = v.isoformat()
-        if isinstance(v, str):
-            pairs.append(f"{key}{delimiter}{styled_value(v, color=colors[1])}")
-    return "\n".join(pairs)
-
-
-def styled_any(
-    value, dict_delimiter="=", list_delimiter="\n", color: str = "bright_white"
-) -> str:
-    if isinstance(value, list) and len(value) == 1:
-        value = value[0]
-    if isinstance(value, (str, int)):
-        return str(value)
-    if value is None:
-        return styled_value("None", color=color)
-    if isinstance(value, bool):
-        return styled_boolean(value)
-    if isinstance(value, dict):
-        return styled_dict(value, delimiter=dict_delimiter)
-    if isinstance(value, list):
-        return styled_list(value, delimiter=list_delimiter, color=color)
-    if isinstance(value, bytes):
-        return styled_value(value.decode(), color=color)
-    if isinstance(value, datetime):
-        return styled_value(value.isoformat(), color=color)
-    return styled_value(value, color=color)
 
 
 def get_txt_answer(domain_name: str) -> resolver.Answer:
@@ -676,6 +665,7 @@ def get_tlsa_answer(domain_name: str) -> resolver.Answer:
 def get_dnssec_answer(domain_name: str):
     logger.info(f"Trying to resolve DNSSEC for {domain_name}")
     dns_resolver = resolver.Resolver(configure=False)
+    dns_resolver.nameservers = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
     dns_resolver.lifetime = 5
     tldext = TLDExtract(cache_dir="/tmp")(f"http://{domain_name}")
     answers = []
@@ -699,7 +689,6 @@ def get_dnssec_answer(domain_name: str):
     except ConnectionError:
         logger.warning("Name or service not known")
         return None
-    dns_resolver.nameservers = ["1.1.1.1", "8.8.8.8", "9.9.9.9"]
     nameservers = []
     for ns in [i.to_text() for i in response.rrset]:
         logger.info(f"Checking A for {ns}")
@@ -882,59 +871,460 @@ def caa_valid(domain_name: str, cert: X509, certificate_chain: list[X509]) -> bo
     return False
 
 
-def crlite_revoked(db_path: str, pem: bytes):
-    sqlite3.sqlite_version_info = (3, 24)
-    from crlite_query import CRLiteDB, CRLiteQuery, IntermediatesDB
-
-    def find_attachments_base_url():
-        url = urlparse(constants.CRLITE_URL)
-        base_rsp = requests.get(f"{url.scheme}://{url.netloc}/v1/")
-        return base_rsp.json()["capabilities"]["attachments"]["base_url"]
-
-    db_dir = Path(db_path)
-    if not db_dir.is_dir():
-        db_dir.mkdir()
-
-    last_updated = None
-    last_updated_file = db_dir / ".last_updated"
-    if last_updated_file.is_file():
-        last_updated = datetime.fromtimestamp(last_updated_file.stat().st_mtime)
-    grace_time = datetime.utcnow() - timedelta(hours=6)
-    update = True
-    if last_updated is not None and last_updated > grace_time:
-        logger.info(f"Database was updated at {last_updated}, skipping.")
-        update = False
-    crlite_db = CRLiteDB(db_path=db_path)
-    if update:
-        crlite_db.update(
-            collection_url=constants.CRLITE_URL,
-            attachments_base_url=find_attachments_base_url(),
-        )
-        crlite_db.cleanup()
-        last_updated_file.touch()
-        logger.info(f"Status: {crlite_db}")
-
-    crlite_query = CRLiteQuery(
-        crlite_db=crlite_db,
-        intermediates_db=IntermediatesDB(db_path=db_path, download_pems=True),
-    )
-    results = []
-    for result in crlite_query.query(
-        name="peer", generator=crlite_query.gen_from_pem(BytesIO(pem))
-    ):
-        logger.info(result.print_query_result(verbose=1))
-        logger.debug(result.print_query_result(verbose=3))
-        results.append(result.is_revoked())
-    return any(results)
-
-
-@retry(SSL.WantReadError, tries=5, delay=0.5)
+@retry(SSL.WantReadError, tries=3, delay=0.5)
 def do_handshake(conn):
     try:
         conn.do_handshake()
+    except KeyboardInterrupt:
+        return
     except SSL.SysCallError:
         pass
 
 
 def average(values: list):
     return sum(values) / len(values)
+
+
+def get_certificates(leaf: X509, certificates: list[X509]) -> list[BaseCertificate]:
+    roots: list[X509] = []
+    ret_certs = [LeafCertificate(leaf)]
+    leaf_aki = tlstrust_util.get_key_identifier_hex(
+        leaf.to_cryptography(),
+        extension=extensions.AuthorityKeyIdentifier,
+        key="key_identifier",
+    )
+    leaf_ski = tlstrust_util.get_key_identifier_hex(
+        leaf.to_cryptography(), extension=extensions.SubjectKeyIdentifier, key="digest"
+    )
+    aki_lookup = {leaf_aki: [leaf]}
+    for cert in certificates:
+        aki = tlstrust_util.get_key_identifier_hex(
+            cert.to_cryptography(),
+            extension=extensions.AuthorityKeyIdentifier,
+            key="key_identifier",
+        )
+        if not aki:
+            ret_certs.append(RootCertificate(cert))
+            continue
+        aki_lookup.setdefault(aki, [])
+        aki_lookup[aki].append(cert)
+        for _, context_type in STORES.items():
+            try:
+                ret = tlstrust_util.get_certificate_from_store(aki, context_type)
+            except FileExistsError:
+                continue
+            root_ski = tlstrust_util.get_key_identifier_hex(
+                ret.to_cryptography(),
+                extension=extensions.SubjectKeyIdentifier,
+                key="digest",
+            )
+            if root_ski not in [
+                tlstrust_util.get_key_identifier_hex(
+                    c.to_cryptography(),
+                    extension=extensions.SubjectKeyIdentifier,
+                    key="digest",
+                )
+                for c in roots
+            ]:
+                roots.append(ret)
+
+    def next_chain(ski: str, lookup: dict, depth: int = 0):
+        for next_cert in lookup[ski]:
+            next_ski = tlstrust_util.get_key_identifier_hex(
+                next_cert.to_cryptography(),
+                extension=extensions.SubjectKeyIdentifier,
+                key="digest",
+            )
+            ret_certs.append(
+                IntermediateCertificate(next_cert)
+                if next_ski != leaf_ski
+                else LeafCertificate(next_cert)
+            )
+            if next_ski in lookup and depth < MAX_DEPTH:
+                depth += 1
+                next_chain(next_ski, lookup, depth)
+
+    for cert in roots:
+        ski = tlstrust_util.get_key_identifier_hex(
+            cert.to_cryptography(),
+            extension=extensions.SubjectKeyIdentifier,
+            key="digest",
+        )
+        ret_certs.append(RootCertificate(cert))
+        if ski in aki_lookup:
+            next_chain(ski, aki_lookup)
+
+    return list({v.sha1_fingerprint: v for v in ret_certs}.values())
+
+
+def html_find_match(content: str, find: str) -> Union[str, None]:
+    results = None
+    soup = bs(content, "html.parser")
+    something = soup.find(find)
+    if something and isinstance(something.string, str):
+        results = something.string.strip()
+
+    return results
+
+
+def camel_to_snake(s):
+    return "".join(["_" + c.lower() if c.isupper() else c for c in s]).lstrip("_")
+
+
+def sign_request(
+    client_id: str,
+    secret_key: str,
+    request_url: str,
+    request_method: str = "GET",
+    raw_body: str = None,
+) -> str:
+    """Generates and returns the Authorization HTTP header value for Trivial Scanner API
+    :param client_id: Registered client name as this machine ID for Trivial Scanner API
+    :type client_id: str
+    :param secret_key: Registration Token for the provided client
+    :type secret_key: str
+    :param request_url: The canonical URL of the request being signed
+    :type request_url: str
+    :param method: HTTP method being used (default GET)
+    :type method: str
+    :returns: a string representing the header value for Authorization
+    :rtype: str
+    """
+    epochtime = int(datetime.now().timestamp())
+    parsed_url = urlparse(request_url)
+    port = 443 if parsed_url.port is None else parsed_url.port
+    bits = []
+    bits.append(request_method.upper())
+    bits.append(parsed_url.hostname.lower())
+    bits.append(str(port))
+    bits.append(parsed_url.path)
+    bits.append(str(epochtime))
+    if raw_body:
+        bits.append(b64encode(raw_body.encode("utf8")).decode("utf8"))
+    canonical_string = "\n".join(bits)
+    logger.debug(f"canonical_string\n{canonical_string}")
+    digest = hmac.new(
+        secret_key.encode("utf8"), canonical_string.encode("utf8"), hashlib.sha512
+    ).hexdigest()
+    return f'HMAC id="{client_id}", mac="{digest}", ts="{epochtime}"'
+
+
+def make_data(
+    config: dict,
+    queries: list[dict],
+) -> dict:
+    return {
+        "generator": "trivialscan",
+        "account_name": config.get("account_name"),
+        "client_name": config.get("client_name"),
+        "project_name": config.get("project_name"),
+        "targets": [
+            f"{target.get('hostname')}:{target.get('port')}"
+            for target in config.get("targets")
+        ],
+        "date": datetime.utcnow().replace(microsecond=0).isoformat(),
+        "queries": queries,
+    }
+
+
+def upload_cloud(
+    result: dict,
+    dashboard_api_url: str,
+    hide_progress_bars: bool = False,
+    **kwargs,
+) -> dict:
+    with Progress(
+        "{task.description} [progress.percentage]{task.percentage:>3.0f}%",
+        BarColumn(),
+        DownloadColumn(),
+        "•",
+        TimeRemainingColumn(
+            compact=True,
+            elapsed_when_finished=True,
+        ),
+        "•",
+        TransferSpeedColumn(),
+        disable=hide_progress_bars,
+    ) as upload_progress:
+        upload_tasks: dict[str:int] = {}
+
+        def callback(monitor: MultipartEncoderMonitor):
+            task_id: Task = upload_tasks[monitor.encoder.fields[0][1][0]]
+            if monitor.encoder.finished:
+                upload_progress.update(
+                    task_id,
+                    completed=monitor.encoder.len,
+                )
+                return
+            upload_progress.update(
+                task_id,
+                completed=monitor.bytes_read,
+            )
+
+        request_url = path.join(dashboard_api_url, "store", result["type"])
+        authorization_header = sign_request(
+            client_id=kwargs.get("client_name"),
+            secret_key=kwargs.get("registration_token"),
+            request_url=request_url,
+            request_method="POST",
+            raw_body=result["value"].read().decode("utf8"),
+        )
+        logger.debug(f"{request_url}\n{authorization_header}")
+        encoder = MultipartEncoder([("files", (result["filename"], result["value"]))])
+        upload_task_id = upload_progress.add_task(
+            f"Uploading {result['filename']}", total=encoder.len
+        )
+        upload_tasks[result["filename"]] = upload_task_id
+        monitor = MultipartEncoderMonitor(encoder, callback)
+        try:
+            resp = requests.post(
+                request_url,
+                data=monitor,
+                headers={
+                    "Content-Type": monitor.content_type,
+                    "Authorization": authorization_header,
+                    "X-Trivialscan-Account": kwargs.get("account_name"),
+                    "X-Trivialscan-Version": kwargs.get("cli_version"),
+                },
+                timeout=300,
+            )
+            if resp.status_code == 403:
+                upload_progress.console.print(
+                    f"[{constants.CLI_COLOR_FAIL}]Missing or bad client Registration Token provided; Hint: run 'trivial auth'[/{constants.CLI_COLOR_FAIL}]"
+                )
+                return
+            if resp.status_code == 201:
+                logger.debug(resp.text)
+                try:
+                    data = json.loads(resp.text)
+                except json.JSONDecodeError:
+                    data = resp.text
+                if not data:
+                    upload_progress.console.print(
+                        f"[{constants.CLI_COLOR_FAIL}]Bad response from Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+                    )
+                    return
+                return data
+
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout,
+        ) as err:
+            logger.warning(err, exc_info=True)
+        upload_progress.console.print(
+            f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+        )
+
+
+def _send_files(queries: list, config: dict, flags: dict, duration: int):
+    upload_args = {
+        "dashboard_api_url": config["dashboard_api_url"],
+        "cli_version": config.get("cli_version"),
+        "hide_progress_bars": (
+            True
+            if flags.get("quiet", False)
+            else flags.get("hide_progress_bars", False)
+        ),
+        "registration_token": config.get("token"),
+        "account_name": config.get("account_name"),
+        "client_name": config.get("client_name"),
+    }
+    reports = []
+    certificates: dict[str, tuple[models.Certificate, str]] = {}
+    for data in queries:
+        if not data.get("tls"):
+            logger.info(
+                f'No response from target: {data["transport"]["hostname"]}:{data["transport"]["port"]}'
+            )
+            return
+
+        logger.info(
+            f'Negotiated {data["tls"]["protocol"]["negotiated"]} {data["transport"]["peer_address"]}'
+        )
+        certs: dict[str, models.Certificate] = {}
+        if "certificates" in data:
+            del data["certificates"]
+        for cert_data in data["tls"].get("certificates", []):
+            cert = models.Certificate(**cert_data)  # type: ignore
+            certificates[cert.sha1_fingerprint] = (cert, cert_data["pem"])
+            certs[cert.sha1_fingerprint] = cert
+
+        if "targets" in data:
+            del data["targets"]
+        host_data = deepcopy(data)
+        host_data["tls"]["certificates"] = list(certs.keys())
+        host = models.Host(**host_data)  # type: ignore
+        # upload_cloud(
+        #     result={
+        #         "format": "json",
+        #         "type": models.ReportType.HOST,
+        #         "filename": f'{data["transport"]["hostname"]}.json',
+        #         "value": BytesIO(
+        #             json.dumps(host.dict(), default=str).encode("utf8")
+        #         ),
+        #     },
+        #     **upload_args
+        # )
+        report = models.ReportSummary(
+            generator="trivialscan",
+            version=config.get("cli_version"),
+            date=datetime.utcnow().replace(microsecond=0).isoformat(),
+            execution_duration_seconds=duration,
+            account_name=config.get("account_name"),
+            targets=[host],
+            flags=models.Flags(**flags),
+            config=models.Config(**config),
+            certificates=list(certs.values()),
+            **data,
+        )
+        ret = upload_cloud(
+            result={
+                "format": "json",
+                "type": models.ReportType.REPORT,
+                "filename": "summary.json",
+                "value": BytesIO(json.dumps(report.dict(), default=str).encode("utf8")),
+            },
+            **upload_args,
+        )
+        if "results_uri" not in ret:
+            logger.warning(
+                f"[{constants.CLI_COLOR_FAIL}]Failed to upload report to Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+            )
+            return
+
+        report.results_uri = ret["results_uri"]
+        reports.append(path.join(config["dashboard_api_url"], report.results_uri))
+        report.report_id = report.results_uri.split("/")[-2]
+        groups = {
+            (data["compliance"], data["version"])
+            for evaluation in data["evaluations"]
+            for data in evaluation["compliance"]
+            if isinstance(data, dict)
+        }
+        full_report = models.FullReport(**report.dict())  # type: ignore
+        for evaluation in data["evaluations"]:
+            if evaluation.get("description"):
+                del evaluation["description"]
+
+            compliance_results = []
+            for uniq_group in groups:
+                name, ver = uniq_group
+                group = models.ComplianceGroup(compliance=name, version=ver, items=[])
+                for compliance_data in evaluation["compliance"]:
+                    if (
+                        compliance_data["compliance"] != name
+                        or compliance_data["version"] != ver
+                    ):
+                        continue
+                    group.items.append(
+                        models.ComplianceItem(
+                            requirement=compliance_data.get("requirement"),
+                            title=compliance_data.get("title"),
+                        )
+                    )
+                if len(group.items) > 0:
+                    compliance_results.append(group)
+
+            evaluation["compliance"] = compliance_results
+
+            threats = []
+            for threat in evaluation.get("threats", []) or []:
+                if threat.get("description"):
+                    del threat["description"]
+                if threat.get("technique_description"):
+                    del threat["technique_description"]
+                if threat.get("sub_technique_description"):
+                    del threat["sub_technique_description"]
+                threats.append(models.ThreatItem(**threat))
+            evaluation["threats"] = threats
+            references = evaluation.get("references", []) or []
+            del evaluation["references"]
+            item = models.EvaluationItem(
+                generator=full_report.generator,
+                version=full_report.version,
+                account_name=config.get("account_name"),  # type: ignore
+                client_name=full_report.client_name,
+                report_id=report.report_id,
+                observed_at=full_report.date,
+                transport=host.transport,
+                references=[
+                    models.ReferenceItem(name=ref["name"], url=ref["url"])
+                    for ref in references
+                ],
+                **evaluation,
+            )
+            if item.group == "certificate" and item.metadata.get("sha1_fingerprint"):
+                item.certificate = certs[item.metadata.get("sha1_fingerprint")]
+            full_report.evaluations.append(item)
+
+        upload_cloud(
+            result={
+                "format": "json",
+                "type": models.ReportType.EVALUATIONS,
+                "filename": "evaluations.json",
+                "value": BytesIO(
+                    json.dumps(full_report.dict(), default=str).encode("utf8")
+                ),
+            },
+            **upload_args,
+        )
+
+    for sha1_fingerprint, cert_data in certificates.items():
+        cert, pem = cert_data
+        # upload_cloud(
+        #     result={
+        #         "format": "json",
+        #         "type": models.ReportType.CERTIFICATE,
+        #         "filename": f'{sha1_fingerprint}.json',
+        #         "value": BytesIO(
+        #             json.dumps(cert.dict(), default=str).encode("utf8")
+        #         ),
+        #     },
+        #     **upload_args
+        # )
+        upload_cloud(
+            result={
+                "format": "pem",
+                "type": models.ReportType.CERTIFICATE,
+                "filename": f"{sha1_fingerprint}.pem",
+                "value": BytesIO(pem.encode("utf8")),
+            },
+            **upload_args,
+        )
+    return reports
+
+
+def update_cloud(
+    config: dict, flags: dict, results: dict, duration: int
+) -> Union[str, None]:
+    try:
+        conf = deepcopy(config)
+        for item in [
+            "evaluations",
+            "PCI DSS 4.0",
+            "PCI DSS 3.2.1",
+            "MITRE ATT&CK 11.2",
+        ]:
+            if item in conf:
+                del conf[item]
+
+        return _send_files(results, conf, flags, duration)
+
+    except KeyboardInterrupt:
+        pass
+
+
+def get_cname(domain_name: str):
+    try:
+        answers = resolver.query(domain_name, "CNAME")
+        return answers[0].target
+    except (
+        resolver.NoAnswer,
+        resolver.NXDOMAIN,
+        DNSTimeoutError,
+        DNSException,
+        ConnectionResetError,
+        ConnectionError,
+    ) as ex:
+        logger.warning(ex, exc_info=True)
+    return None

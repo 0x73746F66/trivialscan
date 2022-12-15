@@ -1,0 +1,73 @@
+---
+rule_id: 1
+key: compression_support
+group_id: 4
+group: transport
+label_as: HTTPS transport compression
+issue: |-
+  Multiple compression vulnerabilities exist across all SS/TLS versions when HTTPS transport naively utilises compression without taking proper care to mitigate all known attacks.
+  Due to the nature and trivial complexity of most compression related attacks, and mitigated both known and inknown threats may be a futile effort, it is best practice to avoid compression and instead rely on minimising the data being transmitted to only what is needed.
+cve:
+  - CVE-2022-32206
+  - CVE-2022-1271
+  - CVE-2020-5933
+  - CVE-2018-25032
+  - CVE-2013-3587
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0007
+        - TA0009
+      data_sources:
+        - DS0035
+        - DS0028
+        - DS0006
+      techniques:
+        - T1119
+        - T1185
+        - T1189
+        - T1190
+      sub_techniques:
+        - parent: T1134
+          id: "001"
+        - parent: T1087
+          id: "002"
+        - parent: T1595
+          id: "002"
+        - parent: T1071
+          id: "001"
+        - parent: T1584
+          id: "006"
+        - parent: T1556
+          id: "005"
+        - parent: T1550
+          id: "001"
+      mitigations:
+        - M0942
+        - M0937
+        - M0913
+        - M0916
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.4
+        - 6.6
+    - version: "4.0"
+      requirements:
+        - 6.4.1
+        - 6.4.2
+references:
+  - name: Compression and information leakage of plaintext - John Kelsey
+    url: https://www.sjoerdlangkemper.nl/2016/08/23/compression-side-channel-attacks/
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 75
+  - result_value: True
+    result_level: warn
+    display_as: Misconfigured
+    score: -120

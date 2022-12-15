@@ -1,0 +1,71 @@
+---
+rule_id: 19
+key: session_resumption_caching
+group_id: 1
+group: tls_negotiation
+label_as: Session resumption caching
+issue: |-
+  The TLS session cache fails to reliably prevent resumption of an unauthenticated session, which allows remote attackers (such as malicious 802.1X supplicants) to bypass authentication for various software depending on their implementation configurations.
+  Other issues arise when TLS session resumption is enabled and a client certificate is used, subsequent connection attempts to the same server get a previously authenticated session 'resumed' without actually Authenticating with their own client Certificate.
+cve:
+  - CVE-2017-9148
+  - CVE-2016-5419
+  - CVE-2017-7468
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0035
+        - DS0028
+        - DS0029
+      techniques:
+        - T1189
+        - T1190
+        - T1212
+        - T1008
+        - T1556
+        - T1528
+        - T1539
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1595
+          id: "002"
+        - parent: T1565
+          id: "002"
+        - parent: T1590
+          id: "001"
+      mitigations:
+        - M1013
+        - M1054
+        - M1020
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.4
+        - 6.6
+    - version: "4.0"
+      requirements:
+        - 6.4.1
+        - 6.4.2
+references:
+  - name: Measuring the Security Harm of TLS Crypto Shortcuts
+    url: https://dl.acm.org/doi/10.1145/2987443.2987480
+  - name: Session Resumption Protocols and Efficient Forward Security for TLS 1.3 0-RTT
+    url: https://link.springer.com/article/10.1007/s00145-021-09385-0
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 60
+  - result_value: True
+    result_level: warn
+    display_as: Misconfigured
+    score: -100

@@ -1,0 +1,81 @@
+---
+group_id: 2
+rule_id: 11
+key: possible_phish_or_malicious
+group: certificate
+label_as: Malicious Certificate
+issue: |-
+  Malicious certificates are most commonly signed by trusted certificate authority roots, to evade detection
+  by blending in with legitimate traffic and making use of encryption to help hide their payloads.
+  Both commodity and targeted attack malware make heavy use of encrypted command-and-control (C&C) that is
+  indistinguishable from regular traffic, and ethical actors (with permission granted) will leverage tools
+  called intrusion frameworks like; Cobalt Strike, Metasploit, and Core Impact that should be identified
+  as though these were unauthorised because bad actors will attempt to emulate a penetration tester in
+  order to take advantage of a trust relationship and infect you regardless.
+  Phishing websites will use these malicious certificates that are identical to legitimate certificates which
+  gives a false sense of security to victims who observe the strong encryption being used in their browser
+cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+cve:
+  - CVE-2022-21836
+  - CVE-2022-22946
+  - CVE-2020-0601
+  - CVE-2013-1493
+  - CVE-2009-3455
+  - CVE-2004-2761
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0042
+      data_sources:
+        - DS0037
+      techniques:
+        - T1573
+        - T1534
+        - T1566
+        - T1598
+      sub_techniques:
+        - parent: T1552
+          id: "004"
+        - parent: T1587
+          id: "003"
+        - parent: T1588
+          id: "004"
+        - parent: T1596
+          id: "003"
+        - parent: T1608
+          id: "003"
+        - parent: T1608
+          id: "005"
+      mitigations:
+        - M0913
+        - M0813
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 5.2
+        - 6.5.4
+        - 6.6
+    - version: "4.0"
+      requirements:
+        - 3.7.5
+        - 5.2.2
+        - 6.4.1
+        - 6.4.2
+        - A2.1
+references:
+  - name: Analyzing SSL/TLS Certificates Used by Malware (Trend Micro)
+    url: https://webcache.googleusercontent.com/search?q=cache:lXyCnKFb3acJ:https://www.trendmicro.com/en_us/research/21/i/analyzing-ssl-tls-certificates-used-by-malware.html+&cd=1&hl=en&ct=clnk&gl=au
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Not Known Compromised
+    score: 75
+  - result_value: True
+    result_level: fail
+    display_as: Compromised {reason}
+    score: -200
+substitutions:
+  - sha1_fingerprint

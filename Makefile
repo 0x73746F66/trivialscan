@@ -1,88 +1,139 @@
 SHELL := /bin/bash
+.PHONY: help
+primary := '\033[1;36m'
+err := '\033[0;31m'
+bold := '\033[1m'
+clear := '\033[0m'
+
 -include .env
 export $(shell sed 's/=.*//' .env)
-.PHONY: help
+ifndef CI_BUILD_REF
+CI_BUILD_REF=local
+endif
+ifeq ($(CI_BUILD_REF), local)
+-include .env.local
+export $(shell sed 's/=.*//' .env.local)
+endif
 
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .DEFAULT_GOAL := help
 
+ifndef TRIVIALSCAN_VERSION
+TRIVIALSCAN_VERSION=$(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | head -n1 | python -c "import sys; exec(sys.stdin.read()); print(__version__)")
+endif
+ifndef TRIVIALSCAN_API_URL
+TRIVIALSCAN_API_URL=http://localhost:8080
+endif
+ifndef APP_ENV
+APP_ENV=development
+endif
+ifndef RUNNER_NAME
+RUNNER_NAME=$(shell basename $(shell pwd))
+endif
+
+clean: ## cleans python for wheel
+	find src -type f -name '*.pyc' -delete 2>/dev/null
+	find src -type d -name '__pycache__' -delete 2>/dev/null
+	rm -rf build dist **/*.egg-info .pytest_cache rust-query-crlite/target
+	rm -f **/*.zip **/*.tgz **/*.gz .coverage
+
 deps: ## install dependancies for development of this project
-	pip install -U pip
-	pip install -U -r requirements-dev.txt
-	pip install -e .
+	python -m pip install --disable-pip-version-check -U pip
+	python -m pip install .
 
 setup: deps ## setup for development of this project
-	pre-commit install --hook-type pre-push --hook-type pre-commit
+	pre-commit install --hook-type commit-msg --hook-type pre-push --hook-type pre-commit
 	@ [ -f .secrets.baseline ] || ( detect-secrets scan > .secrets.baseline )
-	detect-secrets audit .secrets.baseline
+	yes | detect-secrets audit .secrets.baseline
 
 install: ## Install the package
-	pip install -U dist/trivialscan-$(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')-py2.py3-none-any.whl
+	python -m pip install -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
 
-check: ## check build
-	python setup.py egg_info
-	python setup.py check
+reinstall: ## Force install the package
+	python -m pip install --force-reinstall -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
 
-test: ## run unit tests with coverage
+install-dev: ## Install the package
+	python -m pip install --disable-pip-version-check -U pip
+	python -m pip install -U -r requirements-dev.txt
+	python -m pip install --force-reinstall --no-cache-dir -e .
+
+pytest: ## run unit tests with coverage
 	coverage run -m pytest --nf
 	coverage report -m
 
-build: check ## build wheel file
+test: ## all tests
+	pre-commit run --all-files
+	coverage report -m
+
+build: ## build wheel file
 	rm -f dist/*
 	python -m build -nxsw
 
-publish: ## upload to pypi.org
-	git tag -f $(shell cat ./setup.py | grep 'version=' | sed 's/[version=", ]//g')
-	git push -u origin --tags
+pypi: ## upload to pypi.org
+	git tag -f $(TRIVIALSCAN_VERSION)
+	git push -u origin --tags -f
 	python -m twine upload dist/*
 
-test-local: ## Prettier test outputs
-	pre-commit run --all-files
-	semgrep -q --strict --timeout=0 --config=p/r2c-ci --lang=py src/**/*.py
+tag: ## tag release and push
+	git tag -f $(TRIVIALSCAN_VERSION)
+	git push -u origin --tags -f
 
-semgrep-sast-ci: ## run core semgrep rules for CI
-	semgrep --disable-version-check -q --strict --error -o semgrep-ci.json --json --timeout=0 --config=p/r2c-ci --lang=py src/**/*.py
+publish: pypi tag ## upload to pypi.org and push git tags
 
-run-json: ## www.trivialsec.com
-	@python src/trivialscan/cli/__init__.py www.trivialsec.com -O trivialscan_www.trivialsec.com.json
+crlite-musl:  ## Build crlite with musl for AWS Lambda
+	rustup target add x86_64-unknown-linux-musl
+	(cd rust-query-crlite && cargo build --release --target=x86_64-unknown-linux-musl)
+	rm -f rust-query-crlite/target/x86_64-unknown-linux-musl/release/rust-query-crlite
+	cp rust-query-crlite/target/x86_64-unknown-linux-musl/release/rust-query-crlite src/trivialscan/vendor/crlite-linux-musl
+	chmod a+x src/trivialscan/vendor/crlite-linux-musl
 
-run-valid: ## google.com
-	@python src/trivialscan/cli/__init__.py ssllabs.com
+crlite:  ## Build crlite
+	rustup default stable
+	(cd rust-query-crlite && cargo build --release)
+	rm -f src/trivialscan/vendor/crlite-linux
+	cp rust-query-crlite/target/release/rust-query-crlite src/trivialscan/vendor/crlite-linux
+	chmod a+x src/trivialscan/vendor/crlite-linux
+	./src/trivialscan/vendor/crlite-linux -vvv --db /tmp/.crlite_db/ --update prod x509
+	./src/trivialscan/vendor/crlite-linux -vvv --db /tmp/.crlite_db/ https ssllabs.com
 
-run-expired: ## expired.badssl.com
-	@python src/trivialscan/cli/__init__.py expired.badssl.com
+local-runner: ## local setup for a gitlab runner
+	@docker volume create --name=gitlab-cache 2>/dev/null || true
+	docker pull -q docker.io/gitlab/gitlab-runner:latest
+	docker build -t $(RUNNER_NAME)/runner:${CI_BUILD_REF} .
+	@echo $(shell [ -z "${RUNNER_TOKEN}" ] && echo "RUNNER_TOKEN missing" )
+	@docker run -d --rm \
+		--name $(RUNNER_NAME) \
+		-v "gitlab-cache:/cache:rw" \
+		-e RUNNER_TOKEN=${RUNNER_TOKEN} \
+		$(RUNNER_NAME)/runner:${CI_BUILD_REF}
+	@docker exec -ti $(RUNNER_NAME) gitlab-runner register --non-interactive \
+		--tag-list 'jager' \
+		--name $(RUNNER_NAME) \
+		--request-concurrency 10 \
+		--url https://gitlab.com/ \
+		--registration-token '$(RUNNER_TOKEN)' \
+		--cache-dir '/cache' \
+		--executor shell
 
-run-selfsigned: ## self-signed.badssl.com
-	@python src/trivialscan/cli/__init__.py self-signed.badssl.com
+run-stdin: ## pipe targets from stdin
+	cat .$(APP_ENV)/targets.txt | xargs trivial scan -D $(TRIVIALSCAN_API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --project-name badssl --targets
 
-run-invalid-hostname: ## wrong.host.badssl.com no-common-name.badssl.com
-	@python src/trivialscan/cli/__init__.py wrong.host.badssl.com no-common-name.badssl.com
+run-stdin-upload: ## re-upload the piped targets from stdin make target
+	trivial scan-upload -D $(TRIVIALSCAN_API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --results-file .$(APP_ENV)/results/badssl/all.json
 
-run-untrusted: ## untrusted.root.badssl.com
-	@python src/trivialscan/cli/__init__.py untrusted.root.badssl.com
+run-as-module: ## Using CLI as a python module directly (dev purposes)
+	python -m trivialscan.cli scan -D $(TRIVIALSCAN_API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml -t ssllabs.com --project-name qualys
 
-run-revoked: ## no-subject.badssl.com
-	@python src/trivialscan/cli/__init__.py no-subject.badssl.com
+run-cli-parallel: ## Leverage defaults using all CPU cores
+	trivial scan -D $(TRIVIALSCAN_API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml
 
-run-broken: ## revoked.badssl.com
-	@python src/trivialscan/cli/__init__.py revoked.badssl.com
+run-cli-sequential: ## Just use normal python (for clean debugging outputs)
+	trivial scan -D $(TRIVIALSCAN_API_URL) --no-multiprocessing --config-path .$(APP_ENV)/.trivialscan-config.yaml
 
-run-invalid-hpkp: ## pinning-test.badssl.com
-	@python src/trivialscan/cli/__init__.py pinning-test.badssl.com
+run-info: ## check client details and registration token status
+	trivial info -D $(TRIVIALSCAN_API_URL)
 
-run-incomplete-chain: ## incomplete-chain.badssl.com sha1-intermediate.badssl.com
-	@python src/trivialscan/cli/__init__.py incomplete-chain.badssl.com sha1-intermediate.badssl.com
-
-run-missing-ct: ## no-sct.badssl.com invalid-expected-sct.badssl.com
-	@python src/trivialscan/cli/__init__.py no-sct.badssl.com invalid-expected-sct.badssl.com
-
-run-weak: ## null.badssl.com cbc.badssl.com rc4-md5.badssl.com rc4.badssl.com 3des.badssl.com static-rsa.badssl.com sha1-2016.badssl.com
-	@python src/trivialscan/cli/__init__.py null.badssl.com cbc.badssl.com rc4-md5.badssl.com rc4.badssl.com 3des.badssl.com -H static-rsa.badssl.com -H sha1-2016.badssl.com
-
-run-deprecated-tls: ## tls-v1-0.badssl.com tls-v1-1.badssl.com
-	@python src/trivialscan/cli/__init__.py -H tls-v1-0.badssl.com -p 1010 -H tls-v1-1.badssl.com -p 1011
-
-run-known-pwnd: ## superfish.badssl.com edellroot.badssl.com dsdtestprovider.badssl.com preact-cli.badssl.com webpack-dev-server.badssl.com
-	@python src/trivialscan/cli/__init__.py -H superfish.badssl.com -H edellroot.badssl.com -H dsdtestprovider.badssl.com -H preact-cli.badssl.com -H webpack-dev-server.badssl.com
+run-register: ## registers a new client to retrieve a registration token
+	trivial register -D $(TRIVIALSCAN_API_URL)

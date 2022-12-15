@@ -1,0 +1,68 @@
+---
+group_id: 2
+rule_id: 2
+key: caa_valid
+group: certificate
+label_as: Certification Authority Authorization (CAA) Valid
+issue: |-
+  Certificate authorities implementing CAA perform a DNS lookup for CAA resource records, and if any are found, ensure that they are listed as an authorized party before issuing a digital certificate.
+  Third parties monitoring certificate authority behavior might check newly issued certificates against the domain's CAA records. RFC 8659 states; CAA records MAY be used by Certificate Evaluators as a possible indicator of a security policy violation. Such use SHOULD take into account the possibility that published CAA records changed between the time a certificate was issued and the time at which the certificate was observed by the Certificate Evaluator.
+  The CAA records can help with the enforcement of your corporate policies on approved CAs. By aligning the CAA records with the list of corporate approved CAs, the risk of non-compliance to the policy is minimized.
+  If CAA records exist but do not include an approved or preferred CA for a specific domain, the issuance of certificates by that CA to the domain cannot proceed until the creation of the appropriate CAA record is completed.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0004
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0038
+      techniques:
+        - T1557
+        - T1556
+      sub_techniques:
+        - parent: T1087
+          id: "002"
+        - parent: T1583
+          id: "002"
+        - parent: T1071
+          id: "004"
+        - parent: T1584
+          id: "002"
+        - parent: T1484
+          id: "002"
+      mitigations:
+        - M0913
+        - M0947
+        - M0800
+        - M0926
+        - M0954
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.8
+        - 6.5.10
+        - 8.6
+    - version: "4.0"
+      requirements:
+        - 6.2.1
+        - 6.2.4
+        - 11.6.1
+references:
+  - name: RFC 8659 - DNS Certification Authority Authorization (CAA) Resource Record
+    url: https://datatracker.ietf.org/doc/html/rfc8659
+  - name: Ignoring CAA based on another CA's Certificate Transparency disclosure
+    url: https://wiki.mozilla.org/CA/Camerfirma_Issues#Issue_F:_Ignoring_CAA_based_on_another_CA.27s_Certificate_Transparency_disclosure_.28Nov._2017.29
+  - name: Let's Encrypt? Let's revoke 3 million HTTPS certificates
+    url: https://www.theregister.com/2020/03/03/lets_encrypt_cert_revocation/
+anotate_results:
+  - result_value: False
+    result_level: warn
+    display_as: Misconfigured
+    score: -120
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 150

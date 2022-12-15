@@ -1,0 +1,26 @@
+---
+group_id: 2
+rule_id: 50
+key: certification_version
+group: certificate
+label_as: X.509 Certificates are in version 3
+issue: |-
+  HIPAA, Security Rule (Ref. NIST SP 800-52: Guidelines for the Selection and Use of TLS Implementations)
+  Require all the X509 certificates provided by the server are in version 3.
+references:
+  - name: NIST SP 800-52 - Guidelines for the Selection and Use of TLS Implementations
+    url: https://www.hhs.gov/hipaa/for-professionals/security/guidance/index.html
+  - name: HIPAA / HITECH
+    url: https://www.hhs.gov/hipaa/index.html
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Compliant
+    score: 20
+  - result_value: False
+    result_level: warn
+    display_as: Non-compliant
+    score: -50
+compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"

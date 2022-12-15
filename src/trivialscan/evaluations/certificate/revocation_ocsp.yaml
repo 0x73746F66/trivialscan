@@ -1,0 +1,51 @@
+---
+group_id: 2
+rule_id: 18
+key: revocation_ocsp
+group: certificate
+label_as: OCSP Revocation
+issue: |-
+  A revoked certificate that remains in use is an indication of misconfiuguration, misuse, or abuse.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+      techniques:
+        - T1189
+        - T1190
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1565
+          id: "002"
+      mitigations:
+        - M1013
+        - M1054
+compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 3.5
+        - 6.5.3
+    - version: "4.0"
+      requirements:
+        - 4.2.1
+        - 6.2.4
+references:
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Not Revoked
+    score: 75
+  - result_value: False
+    result_level: fail
+    display_as: Revoked
+    score: -200

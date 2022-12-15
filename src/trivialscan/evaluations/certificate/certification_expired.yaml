@@ -1,0 +1,63 @@
+---
+group_id: 2
+rule_id: 3
+key: certification_expired
+group: certificate
+label_as: Certificate is not expired
+issue: |-
+  When visiting a website that uses an expired Certificate it is likely the TLS connection is not secure.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0035
+        - DS0028
+        - DS0029
+      techniques:
+        - T1189
+        - T1190
+        - T1212
+        - T1556
+        - T1528
+        - T1539
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1595
+          id: "002"
+        - parent: T1565
+          id: "002"
+        - parent: T1590
+          id: "001"
+      mitigations:
+        - M1013
+        - M1054
+        - M1020
+compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 3.5
+        - 6.5.3
+    - version: "4.0"
+      requirements:
+        - 4.2.1
+        - 6.2.4
+references:
+anotate_results:
+  - result_value: True
+    result_level: fail
+    display_as: Misconfigured
+    score: -200
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 75

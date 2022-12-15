@@ -1,70 +1,152 @@
-before_script:
-  - pylint --version
-  - echo semgrep $(semgrep --version)
-
 stages:
   - tests
-  - build
+  - pre-deploy
   - deploy
+  - post-deploy
 
-test:sast:
-  tags:
-    - linode
+sast black:
   stage: tests
-  script:
-    - make semgrep-sast-ci
-  only:
-    refs:
-      - merge_request
-      - main
-  artifacts:
-    name: sast-results
-    paths:
-      - semgrep-ci.json
-
-test:lint:
   tags:
-    - linode
-  stage: tests
+    - jager
+  allow_failure: true
   script:
-    - make pylint-ci
-  only:
-    refs:
-      - merge_request
-      - main
-  artifacts:
-    name: lint-results
-    paths:
-      - pylint.json
-
-test:wheel:
-  tags:
-    - linode
-  stage: tests
-  script:
-    - make check
+    - pre-commit run black --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
   only:
     refs:
       - merge_request
       - main
 
-build:wheel:
+sca pip-audit:
+  stage: tests
   tags:
-    - linode
-  stage: build
+    - jager
+  allow_failure: true
+  script:
+    - pre-commit run pip-audit --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
+  only:
+    refs:
+      - merge_request
+      - main
+
+secrets scanning:
+  stage: tests
+  tags:
+    - jager
+  allow_failure: true
+  script:
+    - |+
+      TOOLS="detect-private-key detect-secrets"
+      for i in $TOOLS
+      do
+        pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
+      done
+  only:
+    refs:
+      - merge_request
+      - main
+
+repo checks:
+  stage: tests
+  tags:
+    - jager
+  script:
+    - echo $CI_COMMIT_MESSAGE > commit-msg.txt
+    - pre-commit run conventional-pre-commit --hook-stage commit-msg --commit-msg-filename commit-msg.txt --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
+    - |+
+      TOOLS="no-commit-to-branch mixed-line-ending check-merge-conflict"
+      for i in $TOOLS
+      do
+        pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
+      done
+  only:
+    refs:
+      - merge_request
+      - main
+
+python syntax:
+  stage: tests
+  tags:
+    - jager
+  allow_failure: true
+  script:
+    - |+
+      TOOLS="check-ast debug-statements check-builtin-literals"
+      for i in $TOOLS
+      do
+        pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
+      done
+  only:
+    refs:
+      - merge_request
+      - main
+
+whitespace:
+  stage: tests
+  tags:
+    - jager
+  allow_failure: true
+  script:
+    - |+
+      TOOLS="remove-tabs trailing-whitespace"
+      for i in $TOOLS
+      do
+        pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
+      done
+  only:
+    refs:
+      - merge_request
+      - main
+
+yaml json py linting:
+  stage: tests
+  tags:
+    - jager
+  allow_failure: true
+  script:
+    - |+
+      TOOLS="prettier typos pretty-format-json check-json check-yaml"
+      for i in $TOOLS
+      do
+        pre-commit run $i --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
+      done
+  only:
+    refs:
+      - merge_request
+      - main
+
+build wheel:
+  stage: pre-deploy
+  tags:
+    - jager
   script:
     - make build
   only:
     refs:
       - merge_request
       - main
+  artifacts:
+    name: wheel
+    paths:
+      - dist
 
-publish:pypi:
-  tags:
-    - linode
+publish pypi:
   stage: deploy
+  tags:
+    - jager
   script:
-    - make publish
+    - make pypi
+  only:
+    refs:
+      - main
+  dependencies:
+    - build wheel
+
+git tag:
+  stage: post-deploy
+  tags:
+    - jager
+  script:
+    - make tag
   only:
     refs:
       - main

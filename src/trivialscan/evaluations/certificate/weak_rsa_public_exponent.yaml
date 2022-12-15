@@ -1,0 +1,88 @@
+---
+rule_id: 49
+key: weak_rsa_public_exponent
+group_id: 2
+group: certificate
+label_as: Known Weak RSA public key exponent {public_key_exponent}
+issue: |-
+  Using anything other than 65537 as the public exponent would effect compatibility with most hardware and software.
+  Lower isn't vulnerable with proper padding however RSA implementations are widely flawed and did not consider this security characteristic therefore in practice any low exponent could indicate weakness known to be exploited by many heavily scrutinised researchers publications.
+  Using exatly 65537 is an industry standard prescribed by certification authorities and compliance such as PCI DSS, Annex B.3 of FIP186-4, NIST Special Publication on Computer Security (SP 800-78 Rev. 1 of August 2007) does not allow public exponents e smaller than 65537.
+cvss2: AV:N/AC:L/Au:N/C:P/I:P/A:P
+cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H
+cve:
+  - CVE-2021-33560
+  - CVE-2018-16150
+  - CVE-2018-16253
+  - CVE-2018-16149
+  - CVE-2011-4121
+  - CVE-2006-7140
+  - CVE-2006-4339
+  - CVE-2006-2940
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0035
+        - DS0028
+        - DS0029
+      techniques:
+        - T1189
+        - T1190
+        - T1212
+        - T1556
+        - T1528
+        - T1539
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1595
+          id: "002"
+        - parent: T1565
+          id: "002"
+        - parent: T1590
+          id: "001"
+      mitigations:
+        - M1013
+        - M1054
+        - M1020
+compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 3.5
+        - 6.5.3
+    - version: "4.0"
+      requirements:
+        - 2.2.7
+        - 3.3.2
+        - 3.3.3
+        - 3.5.1
+        - 3.6.1
+        - 4.2.1
+        - 4.2.2
+        - 6.2.4
+        - 8.3.2
+        - A2
+references:
+  - name: Twenty Years of Attacks on the RSA Cryptosystem - Dan Boneh, Stanford University
+    url: https://www.researchgate.net/publication/2538368_Twenty_Years_of_Attacks_on_the_RSA_Cryptosystem
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 100
+  - result_value: True
+    result_level: fail
+    display_as: Vulnerable
+    score: -150
+substitutions:
+  - public_key_exponent

@@ -1,0 +1,21 @@
+---
+group_id: 2
+rule_id: 22
+key: transparency_present
+group: certificate
+label_as: Certificate Transparency present
+issue: |-
+  CT brings transparency to the SSL/TLS certificate system that supports the web. SSL/TLS protocols underpin HTTPS and Web PKI. A lack of transparency weakens the reliability and effectiveness of encrypted connections, which can compromise critical TLS/SSL mechanisms. As a result, they can enable a wide range of security attacks, such as website spoofing, server impersonation, and man-in-the-middle attacks.
+  Web PKI depends on CAs acting as trustworthy gatekeepers by issuing certificates only to the right parties and by avoiding giving additional permissions accidentally to those parties. An important part of how CAs meet these obligations is to design their systems so they are resilient to failure.
+references:
+  - name: Certificate Transparency step by step
+    url: https://certificate.transparency.dev/howctworks/
+anotate_results:
+  - result_value: False
+    result_level: warn
+    display_as: Misconfigured
+    score: -100
+  - result_value: True
+    result_level: pass
+    display_as: Detected
+    score: 75

@@ -1,0 +1,62 @@
+---
+group_id: 2
+rule_id: 1
+key: caa_present
+group: certificate
+label_as: Certification Authority Authorization (CAA) Present
+issue: |-
+  The lack of any CAA records authorizes normal unrestricted issuance.
+  It is recommended that you create CAA records for your approved CAs to minimize business impact. With CAA, you can minimize the risk of certificate issuance by unauthorized CAs and help create a more secure and transparent online ecosystem.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0004
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0038
+      techniques:
+        - T1557
+        - T1556
+      sub_techniques:
+        - parent: T1087
+          id: "002"
+        - parent: T1583
+          id: "002"
+        - parent: T1071
+          id: "004"
+        - parent: T1584
+          id: "002"
+        - parent: T1484
+          id: "002"
+      mitigations:
+        - M0913
+        - M0947
+        - M0800
+        - M0926
+        - M0954
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.8
+        - 6.5.10
+        - 8.6
+    - version: "4.0"
+      requirements:
+        - 6.2.1
+        - 6.2.4
+        - 11.6.1
+references:
+  - name: RFC 8659 - DNS Certification Authority Authorization (CAA) Resource Record
+    url: https://datatracker.ietf.org/doc/html/rfc8659
+anotate_results:
+  - result_value: False
+    result_level: warn
+    display_as: Misconfigured
+    score: -40
+  - result_value: True
+    result_level: pass
+    display_as: Detected
+    score: 30

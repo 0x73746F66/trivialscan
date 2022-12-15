@@ -1,0 +1,77 @@
+---
+rule_id: 9
+key: deprecated_protocol_negotiated
+group_id: 1
+group: tls_negotiation
+label_as: Deprecated TLS protocol negotiated
+issue: |-
+  When information is sent between the client and the server, it must be encrypted and protected in order to prevent an attacker from being able to read or modify it
+  This is most commonly done using HTTPS, which uses the Transport Layer Security (TLS) protocol, a replacement for the deprecated Secure Socket Layer (SSL) protocol
+  By default, most servers still support outdated and known vulnerable protocols, typically for backwards compatibility with equally outdated web browser software
+  This is known as an insecure default and could lead to trivial attacks against default or misconfigured servers
+cvss2: AV:N/AC:H/Au:N/C:C/I:C/A:N
+cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N
+cve:
+  - CVE-2014-8730
+  - CVE-2014-0160
+  - CVE-2009-3555
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0035
+        - DS0028
+        - DS0029
+      techniques:
+        - T1189
+        - T1190
+        - T1212
+        - T1008
+        - T1556
+        - T1528
+        - T1539
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1595
+          id: "002"
+        - parent: T1565
+          id: "002"
+      mitigations:
+        - M1013
+        - M1054
+compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"
+  "FIPS 140-2":
+    - version: "Annex A"
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 4.1
+    - version: "4.0"
+      requirements:
+        - 1.2.6
+        - 2.2.4
+        - 2.2.5
+        - 4.2.1
+        - 6.2.4
+        - 12.3.3
+references:
+  - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
+    url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 75
+  - result_value: True
+    result_level: fail
+    display_as: Misconfigured
+    score: -200

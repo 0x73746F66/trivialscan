@@ -1,0 +1,54 @@
+---
+group_id: 2
+rule_id: 16
+key: revocation_ocsp_must_staple
+group: certificate
+label_as: OCSP Must Staple Extension
+issue: |-
+  The security benefit characteristics of OCSP can only be enforced when the 'Must Staple' flag is present.
+  Failing to include the must staple extension in a Domain Validated (DV) or Organisation Validated (OV) Certificate will allow most web browsers and HTTP clients to 'soft-fail' the OCSP check and continue with TLS without an OCSP assertion or knowledge of revocation status.
+  In some web browsers and HTTP clients an Extended Validation (EV) certificate will hard-fail when an OCSP assertion is not obtained, but this functionality should not be relied upon as there have been many changes made by web browsers that are divergent from standards and break assumed security guarantees suddenly become a vulnerability.
+  Everywhere the OCSP Must Staple Extension is accepted, it will be enforced for all certificates regardless of validation semantics.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+      techniques:
+        - T1189
+        - T1190
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1565
+          id: "002"
+      mitigations:
+        - M1013
+        - M1054
+compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 3.5
+        - 6.5.3
+    - version: "4.0"
+      requirements:
+        - 4.2.1
+        - 6.2.4
+references:
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 150
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: -100

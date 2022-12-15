@@ -1,0 +1,68 @@
+---
+rule_id: 11
+key: fallback_scsv
+group_id: 1
+group: tls_negotiation
+label_as: Downgrade attack prevention (SCSV)
+issue: The TLS Signaling Cipher Suite Value (SCSV) protects against TLS/SSL downgrade attacks. If enabled, the server makes sure that the strongest protocol that both client and server understand is used. Attackers can make a client attempt weaker TLS connections and exploit all the vulnerabilities associated with a given protocol
+cvss2: AV:N/AC:M/Au:N/C:P/I:N/A:N
+cvss3: AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:N/A:N
+cve:
+  - CVE-2014-3566
+  - CVE-2014-8730
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0035
+        - DS0028
+        - DS0029
+      techniques:
+        - T1189
+        - T1190
+        - T1212
+        - T1008
+        - T1556
+        - T1528
+        - T1539
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1595
+          id: "002"
+        - parent: T1565
+          id: "002"
+        - parent: T1590
+          id: "001"
+      mitigations:
+        - M1013
+        - M1054
+        - M1020
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.4
+        - 6.6
+    - version: "4.0"
+      requirements:
+        - 6.4.1
+        - 6.4.2
+references:
+  - name: RFC 7507 - TLS Fallback Signaling Cipher Suite Value (SCSV) for Preventing Protocol Downgrade Attacks
+    url: https://datatracker.ietf.org/doc/html/rfc7507
+anotate_results:
+  - result_value: False
+    result_level: warn
+    display_as: Misconfigured
+    score: -100
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 150

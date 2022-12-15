@@ -1,0 +1,81 @@
+---
+group_id: 2
+rule_id: 13
+key: revocation_crlite
+group: certificate
+label_as: Intermediate Certificate Revocation (crlite)
+issue: Certificate Revocation only occurs if the Certificate is no longer intended to be used for it's designed purpose, and offers no security at best, or represents a known compormise
+cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+cve:
+  - CVE-2020-8987
+  - CVE-2020-0601
+  - CVE-2020-14154
+  - CVE-2016-7075
+  - CVE-2021-23028
+  - CVE-2015-4680
+  - CVE-2015-1793
+  - CVE-2002-0828
+  - CVE-2002-0970
+  - CVE-2002-1183
+  - CVE-2002-0862
+  - CVE-2002-1407
+  - CVE-2009-0653
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0042
+        - TA0001
+      data_sources:
+        - DS0037
+      techniques:
+        - T1534
+      sub_techniques:
+        - parent: T1587
+          id: "003"
+        - parent: T1484
+          id: "002"
+        - parent: T1588
+          id: "004"
+        - parent: T1608
+          id: "003"
+        - parent: T1553
+          id: "004"
+      mitigations:
+        - M0913
+        - M0813
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 3.5
+        - 6.5.3
+    - version: "4.0"
+      requirements:
+        - 4.2.1
+        - 6.2.4
+references:
+  - name: Security Advisory
+    url: https://blog.mozilla.org/security/tag/crlite/
+anotate_results:
+  - result_value: Revoked
+    result_level: fail
+    display_as: Revoked
+    score: -200
+  - result_value: Expired
+    result_level: warn
+    display_as: Expired
+    score: 150
+  - result_value: Good
+    result_level: pass
+    display_as: Not Revoked
+    score: 75
+  - result_value: NotCovered
+    result_level: warn
+    display_as: Not Covered
+    score: -120
+  - result_value: NotEnrolled
+    result_level: warn
+    display_as: Not Enrolled
+    score: -120

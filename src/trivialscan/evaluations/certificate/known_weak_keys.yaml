@@ -1,0 +1,112 @@
+---
+group_id: 2
+rule_id: 8
+key: known_weak_keys
+group: certificate
+label_as: Known Weak key usage {public_key_type}-{public_key_size}
+issue: |-
+  Continued use of weak keys in certificates puts your sensitive data at risk. Exhaustive key searches or brute force attacks against certificates with weak keys are dangerous to network security.
+  As computational power increases, so does the need for stronger keys.
+  If this is not the leaf certificate it is a root or intermediate which signs other digital certificates with its private key, if the private key is weak it may be compromised and all the rest of the issued certificates become useless.
+  Diffie-Hellman key exchange depends for its security on the presumed difficulty of solving the discrete logarithm problem.
+  By design, many Diffie-Hellman implementations use the same pre-generated prime for their field, because of the reuse of primes generating precomputation for just one prime would expose millions of implementations. This vulnerability was known as early as 1992.
+  Claims on the practical implications of the attack at the time were however disputed by security researchers but over the years it is expected that many primes were and still are being calculated practically making all primes of 2048 bit or less considered weak or vulnerable.
+cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+cve:
+  - CVE-2013-7287
+  - CVE-2014-9975
+  - CVE-2015-0575
+  - CVE-2018-15124
+  - CVE-2019-9863
+  - CVE-2020-6966
+  - CVE-2013-0764
+  - CVE-2017-14262
+  - CVE-2020-5763
+  - CVE-2021-26726
+  - CVE-2017-14797
+  - CVE-2017-8076
+  - CVE-2011-4121
+  - CVE-2013-2166
+  - CVE-2017-11317
+  - CVE-2017-1000486
+  - CVE-2018-0448
+  - CVE-2018-20810
+  - CVE-2019-15805
+  - CVE-2019-15806
+  - CVE-2020-9761
+  - CVE-2020-10275
+  - CVE-2020-27998
+  - CVE-2020-29658
+  - CVE-2021-24020
+  - CVE-2021-27200
+  - CVE-2021-45512
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0035
+        - DS0028
+        - DS0029
+      techniques:
+        - T1189
+        - T1190
+        - T1212
+        - T1556
+        - T1528
+        - T1539
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1595
+          id: "002"
+        - parent: T1565
+          id: "002"
+        - parent: T1590
+          id: "001"
+      mitigations:
+        - M1013
+        - M1054
+        - M1020
+compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 4.1
+    - version: "4.0"
+      requirements:
+        - 1.2.6
+        - 2.2.4
+        - 2.2.5
+        - 4.2.1
+        - 6.2.4
+        - 12.3.3
+references:
+  - name: RFC 8270 - Increase the Secure Shell Minimum Recommended Diffie-Hellman Modulus Size to 2048 Bits
+    url: https://datatracker.ietf.org/doc/html/rfc8270
+  - name: Eyal Ronen and Adi Shamir - Critical Review of Imperfect Forward Secrecy
+    url: http://www.wisdom.weizmann.ac.il/~eyalro/RonenShamirDhReview.pdf
+  - name: Logjam Attack - Imperfect Forward Secrecy, How Diffie-Hellman Fails in Practice
+    url: https://weakdh.org/imperfect-forward-secrecy-ccs15.pdf
+  - name: TLS/SSL certificate weak key vulnerability - DigiCert
+    url: https://docs.digicert.com/certificate-tools/discovery-user-guide/tlsssl-certificate-vulnerabilities/weak-keys/
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 150
+  - result_value: True
+    result_level: fail
+    display_as: Vulnerable
+    score: -200
+substitutions:
+  - public_key_type
+  - public_key_size

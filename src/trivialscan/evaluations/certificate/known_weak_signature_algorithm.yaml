@@ -1,0 +1,80 @@
+---
+group_id: 2
+rule_id: 9
+key: known_weak_signature_algorithm
+group: certificate
+label_as: Deprecated or known weak signature algorithm
+issue: |-
+  Using the SHA-1 chosen-prefix collision the X.509 Certificate can be forged, other attacks leverage predictable serial numbers and compromise Certificate Authorities issued Certificates
+cvss2: AV:N/AC:L/Au:N/C:P/I:N/A:N
+cvss3: AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N
+cve:
+  - CVE-2005-4900
+  - CVE-2019-14855
+  - CVE-2004-2761
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0035
+        - DS0028
+        - DS0029
+      techniques:
+        - T1189
+        - T1190
+        - T1212
+        - T1556
+        - T1528
+        - T1539
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1595
+          id: "002"
+        - parent: T1565
+          id: "002"
+        - parent: T1590
+          id: "001"
+      mitigations:
+        - M1013
+        - M1054
+        - M1020
+compliance:
+  "NIST SP800-131A":
+    - version: "strict mode"
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 4.1
+    - version: "4.0"
+      requirements:
+        - 1.2.6
+        - 2.2.4
+        - 2.2.5
+        - 4.2.1
+        - 6.2.4
+        - 12.3.3
+references:
+  - name: Disclosure Paper
+    url: https://shattered.io/
+  - name: CA/Browser Forum
+    url: https://cabforum.org/2014/10/16/ballot-118-sha-1-sunset/
+  - name: Cambridge University Information Services
+    url: https://www.dns.cam.ac.uk/news/2020-01-09-sha-mbles.html
+  - name: Disclosure Paper
+    url: https://sha-mbles.github.io/
+anotate_results:
+  - result_value: True
+    result_level: warn
+    display_as: Misconfigured
+    score: -120
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 150

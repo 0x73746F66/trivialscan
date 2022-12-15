@@ -1,0 +1,55 @@
+---
+rule_id: 5
+key: client_auth_trusted
+group_id: 1
+group: tls_negotiation
+label_as: Client Certificate (MTLS) Trusted
+issue: |-
+  Certificates should be treated as suspicious when they do not have a trusted Root Certificate Authority, as it offers no security characteristics of TLS built on Trust Anchor system.
+  When visiting a website that uses an untrusted Certificate it is likely the TLS connection is not secure.
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0042
+        - TA0001
+      data_sources:
+        - DS0037
+      techniques:
+        - T1534
+      sub_techniques:
+        - parent: T1587
+          id: "003"
+        - parent: T1484
+          id: "002"
+        - parent: T1588
+          id: "004"
+        - parent: T1608
+          id: "003"
+        - parent: T1553
+          id: "004"
+      mitigations:
+        - M0913
+        - M0813
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 3.5
+        - 6.5.3
+    - version: "4.0"
+      requirements:
+        - 4.2.1
+        - 6.2.4
+references:
+  - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+    url: https://datatracker.ietf.org/doc/html/rfc5280
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 75
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: -50

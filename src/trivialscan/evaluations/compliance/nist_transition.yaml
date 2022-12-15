@@ -1,0 +1,24 @@
+---
+rule_id: 3
+key: nist_transition
+group_id: 3
+group: compliance
+label_as: FIPS 140-2 (NIST SP800-131A transition mode)
+issue: |-
+  The transition period closed at the end of 2013.
+  The transitioning of cryptographic algorithms and key lengths to stronger cryptographic keys and more robust algorithms as recommended in NIST SP800-131A.
+  A product or implementation does not meet the FIPS 140-2 applicability requirements by simply implementing an Approved security function and acquiring validations for each of the implemented algorithms (check references for the list)
+references:
+  - name: NIST maintained FIPS 140-2 Algorithm Validation lists - Cryptographic Algorithm Validation Program (CAVP)
+    url: https://csrc.nist.rip/groups/STM/cavp/validation.html
+  - name: SP 800-131A Rev. 2 - Transitioning the Use of Cryptographic Algorithms and Key Lengths
+    url: https://csrc.nist.gov/publications/detail/sp/800-131a/rev-2/final
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 0
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: 0

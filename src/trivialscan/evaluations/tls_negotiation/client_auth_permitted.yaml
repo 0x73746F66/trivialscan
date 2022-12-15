@@ -1,0 +1,31 @@
+---
+rule_id: 4
+key: client_auth_permitted
+group_id: 1
+group: tls_negotiation
+label_as: Certificate was issued for the prupose of client Authentication
+issue: |-
+  If the Certificate being used for client Authentication (MTLS) was not issued for that purpose then most properly configured servers will drop the connection.
+  If either the client Certificate or TLS server is misconfigred the TLS connection should be distrusted as it may be compromised, ineffetive at providing the intended security characteristics, or simply not meet the requirements for TLS which is designed to have a chain of trust that relies on Certificate issuers to follow the specification when issuing Certificates and also TLS servers configured per the specification.
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 3.5
+        - 6.5.3
+    - version: "4.0"
+      requirements:
+        - 4.2.1
+        - 6.2.4
+references:
+  - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
+    url: https://datatracker.ietf.org/doc/html/rfc5280
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 35
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: -100

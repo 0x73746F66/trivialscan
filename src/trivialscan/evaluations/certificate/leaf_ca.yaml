@@ -1,0 +1,77 @@
+---
+group_id: 2
+rule_id: 10
+key: leaf_ca
+group: certificate
+label_as: Leaf Certificate allows impersonation
+issue: |-
+  Server (leaf) certificates should not be a CA, it could enable impersonation attacks
+cvss2: AV:N/AC:M/Au:N/C:P/I:P/A:P
+cvss3: AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H
+cve:
+  - CVE-2020-8987
+  - CVE-2020-0601
+  - CVE-2020-14154
+  - CVE-2016-7075
+  - CVE-2021-23028
+  - CVE-2015-4680
+  - CVE-2015-1793
+  - CVE-2002-0828
+  - CVE-2002-0970
+  - CVE-2002-1183
+  - CVE-2002-0862
+  - CVE-2002-1407
+  - CVE-2009-0653
+threats:
+  "MITRE ATT&CK":
+    - version: 11.2
+      tactics:
+        - TA0043
+        - TA0009
+        - TA0006
+      data_sources:
+        - DS0037
+        - DS0035
+        - DS0028
+        - DS0029
+      techniques:
+        - T1189
+        - T1190
+        - T1212
+        - T1556
+        - T1528
+        - T1539
+        - T1600
+      sub_techniques:
+        - parent: T1071
+          id: "001"
+        - parent: T1595
+          id: "002"
+        - parent: T1565
+          id: "002"
+        - parent: T1590
+          id: "001"
+      mitigations:
+        - M1013
+        - M1054
+        - M1020
+compliance:
+  "PCI DSS":
+    - version: "3.2.1"
+      requirements:
+        - 6.5.4
+        - 6.6
+    - version: "4.0"
+      requirements:
+        - 6.4.1
+        - 6.4.2
+references:
+anotate_results:
+  - result_value: False
+    result_level: pass
+    display_as: Good Configuration
+    score: 75
+  - result_value: True
+    result_level: fail
+    display_as: Misconfigured
+    score: -200

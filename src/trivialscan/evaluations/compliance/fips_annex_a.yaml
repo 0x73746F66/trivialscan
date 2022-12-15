@@ -1,0 +1,23 @@
+---
+rule_id: 5
+key: fips_annex_a
+group_id: 3
+group: compliance
+label_as: FIPS 140-2 Annex A
+issue: |-
+  This is specifically for evaluating if the TLS connection only offers allowed cipher suites.
+  The FIPS 140-2 states that approved security function is either specified in the list of approved functions (which is Annex A), or specified in a Federal Information Processing Standard (FIPS).
+  FIPS 140-2 Implementation Guide states that DES (formally DEA) is not approved since May 19, 2007, however note the list of FIPS-140 validated modules I can see that DES is listed only in other algorithms section.
+  Triple-DES or 3DES (formally TDEA, not single DES or DEA) was reissued as a special publication (SP800-67) and that SP is referenced by 140-2 IG and 140-2 Annex A.
+references:
+  - name: Annex A - Approved Security Functions for FIPS PUB 140-2, Security Requirements for Cryptographic Modules
+    url: https://csrc.nist.gov/publications/detail/fips/140/2/final
+anotate_results:
+  - result_value: True
+    result_level: pass
+    display_as: Good Configuration
+    score: 0
+  - result_value: False
+    result_level: fail
+    display_as: Misconfigured
+    score: 0
