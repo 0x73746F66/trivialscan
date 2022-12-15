@@ -50,57 +50,36 @@ class Trivialscan:
         port: int = 443,
         client_certificate: str = None,
     ) -> bool:
-        checkpoint1 = f"resume{hostname}{port}".encode("utf-8")
-        checkpoint2 = f"resumedata{hostname}{port}".encode("utf-8")
         try:
-            if self._resume_cp and checkpoint.unfinished(checkpoint1):
+            if self._show_probe:
                 cli.outputln(
-                    "Attempting to resume last scan from saved TLS probe checkpoint",
+                    "Protocol SSL/TLS",
                     hostname=hostname,
                     port=port,
+                    result_text="PROBE",
+                    result_icon=":globe_with_meridians:",
                     con=self._console,
                     use_icons=self._use_icons,
                 )
-                self._transport = checkpoint.resume(checkpoint1)
-                self._transport.store.tls_state.from_dict(
-                    checkpoint.resume(checkpoint2)
+            self._transport = InsecureTransport(hostname, port)
+            if isinstance(client_certificate, str):
+                self._transport.pre_client_authentication_check(
+                    client_pem_path=client_certificate,
+                    tmp_path_prefix=self.config["defaults"].get(
+                        "tmp_path_prefix", "/tmp"
+                    ),
                 )
-                self._checkpoints.add(checkpoint1)
-                self._checkpoints.add(checkpoint2)
-            else:
-                if self._show_probe:
-                    cli.outputln(
-                        "Protocol SSL/TLS",
-                        hostname=hostname,
-                        port=port,
-                        result_text="PROBE",
-                        result_icon=":globe_with_meridians:",
-                        con=self._console,
-                        use_icons=self._use_icons,
-                    )
-                self._transport = InsecureTransport(hostname, port)
-                if isinstance(client_certificate, str):
-                    self._transport.pre_client_authentication_check(
-                        client_pem_path=client_certificate,
-                        tmp_path_prefix=self.config["defaults"].get(
-                            "tmp_path_prefix", "/tmp"
-                        ),
-                    )
-                self._transport.connect_insecure(
-                    cafiles=self.config["defaults"].get("cafiles"),
-                    use_sni=self.config["defaults"].get("use_sni"),
-                )
-                if self._use_cp:
-                    checkpoint.mark(checkpoint1, self._transport)
-                    certs = []
-                    for cert in self._transport.store.tls_state.certificates:
-                        if isinstance(cert, LeafCertificate):
-                            cert.set_transport(self._transport)
-                        certs.append(cert)
-                    self._transport.store.tls_state.certificates = certs
-                    checkpoint.mark(checkpoint2, self._transport.store.to_dict())
-                    self._checkpoints.add(checkpoint1)
-                    self._checkpoints.add(checkpoint2)
+            self._transport.connect_insecure(
+                cafiles=self.config["defaults"].get("cafiles"),
+                use_sni=self.config["defaults"].get("use_sni"),
+            )
+            if self._use_cp:
+                certs = []
+                for cert in self._transport.store.tls_state.certificates:
+                    if isinstance(cert, LeafCertificate):
+                        cert.set_transport(self._transport)
+                    certs.append(cert)
+                self._transport.store.tls_state.certificates = certs
         except TransportError as err:
             self._transport.store.error = (type(err).__name__, str(err))
             cli.failln(
@@ -489,6 +468,7 @@ class Trivialscan:
                     evaluation_result.result_label = "Timeout"
                 except NoLogEvaluation:
                     evaluation_result = self._result_data(result, task, **cert_data)
+                    evaluation_result.result_label = "No evaluation result"
                     self._transport.store.evaluations.append(evaluation_result)
                     continue
                 self._transport.store.evaluations.append(evaluation_result)

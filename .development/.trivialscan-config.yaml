@@ -1,6 +1,6 @@
 ---
-account_name: trivialsecuritytest
-client_name: ownerpond
+account_name: testing
+client_name: surfaceeye
 project_name: Testing
 
 defaults:

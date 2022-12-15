@@ -1,3 +1,4 @@
 include src/trivialscan/config/*.yaml
 include src/trivialscan/evaluations/**/*.yaml
-include src/trivialscan/vendor/rust-query-crlite
+include src/trivialscan/vendor/crlite-linux
+include src/trivialscan/vendor/crlite-linux-musl

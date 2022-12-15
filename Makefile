@@ -21,7 +21,7 @@ help: ## This help.
 .DEFAULT_GOAL := help
 
 ifndef TRIVIALSCAN_VERSION
-TRIVIALSCAN_VERSION=$(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | head -n1 | python3 -c "import sys; exec(sys.stdin.read()); print(__version__)")
+TRIVIALSCAN_VERSION=$(shell cat ./src/trivialscan/cli/__main__.py | grep '__version__' | head -n1 | python -c "import sys; exec(sys.stdin.read()); print(__version__)")
 endif
 ifndef TRIVIALSCAN_API_URL
 TRIVIALSCAN_API_URL=http://localhost:8080
@@ -40,8 +40,8 @@ clean: ## cleans python for wheel
 	rm -f **/*.zip **/*.tgz **/*.gz .coverage
 
 deps: ## install dependancies for development of this project
-	python3 -m pip install --disable-pip-version-check -U pip
-	python3 -m pip install .
+	python -m pip install --disable-pip-version-check -U pip
+	python -m pip install .
 
 setup: deps ## setup for development of this project
 	pre-commit install --hook-type commit-msg --hook-type pre-push --hook-type pre-commit
@@ -49,15 +49,15 @@ setup: deps ## setup for development of this project
 	yes | detect-secrets audit .secrets.baseline
 
 install: ## Install the package
-	python3 -m pip install -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
+	python -m pip install -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
 
 reinstall: ## Force install the package
-	python3 -m pip install --force-reinstall -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
+	python -m pip install --force-reinstall -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
 
 install-dev: ## Install the package
-	python3 -m pip install --disable-pip-version-check -U pip
-	python3 -m pip install -U -r requirements-dev.txt
-	python3 -m pip install --force-reinstall --no-cache-dir -e .
+	python -m pip install --disable-pip-version-check -U pip
+	python -m pip install -U -r requirements-dev.txt
+	python -m pip install --force-reinstall --no-cache-dir -e .
 
 pytest: ## run unit tests with coverage
 	coverage run -m pytest --nf
@@ -69,12 +69,12 @@ test: ## all tests
 
 build: ## build wheel file
 	rm -f dist/*
-	python3 -m build -nxsw
+	python -m build -nxsw
 
 pypi: ## upload to pypi.org
 	git tag -f $(TRIVIALSCAN_VERSION)
 	git push -u origin --tags -f
-	python3 -m twine upload dist/*
+	python -m twine upload dist/*
 
 tag: ## tag release and push
 	git tag -f $(TRIVIALSCAN_VERSION)
@@ -90,6 +90,7 @@ crlite-musl:  ## Build crlite with musl for AWS Lambda
 	chmod a+x src/trivialscan/vendor/crlite-linux-musl
 
 crlite:  ## Build crlite
+	rustup default stable
 	(cd rust-query-crlite && cargo build --release)
 	rm -f src/trivialscan/vendor/crlite-linux
 	cp rust-query-crlite/target/release/rust-query-crlite src/trivialscan/vendor/crlite-linux
@@ -123,7 +124,7 @@ run-stdin-upload: ## re-upload the piped targets from stdin make target
 	trivial scan-upload -D $(TRIVIALSCAN_API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml --results-file .$(APP_ENV)/results/badssl/all.json
 
 run-as-module: ## Using CLI as a python module directly (dev purposes)
-	python3 -m trivialscan.cli scan -D $(TRIVIALSCAN_API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml -t ssllabs.com --project-name qualys
+	python -m trivialscan.cli scan -D $(TRIVIALSCAN_API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml -t ssllabs.com --project-name qualys
 
 run-cli-parallel: ## Leverage defaults using all CPU cores
 	trivial scan -D $(TRIVIALSCAN_API_URL) --config-path .$(APP_ENV)/.trivialscan-config.yaml

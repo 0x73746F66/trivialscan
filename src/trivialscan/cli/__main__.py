@@ -23,14 +23,15 @@ from ..config import load_config, get_config, DEFAULT_CONFIG
 from .credentials import load_local
 
 __module__ = "trivialscan.cli"
-__version__ = "0.3.10"
+__version__ = "0.4.0"
 
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/"
 APP_BANNER = text2art("trivialscan", font="tarty4")
 APP_ENV = getenv("APP_ENV", "production")
 DASHBOARD_API_URL = getenv(
     "TRIVIALSCAN_API_URL",
-    str(
+    "https://"
+    + str(
         util.get_cname("dev-api.trivialsec.com")
         if APP_ENV == "development"
         else util.get_cname("prod-api.trivialsec.com")
@@ -38,7 +39,9 @@ DASHBOARD_API_URL = getenv(
 ).strip(".")
 DASHBOARD_URL = getenv(
     "TRIVIALSCAN_DASHBOARD_URL",
-    "dev.trivialsec.com" if APP_ENV == "development" else "www.trivialsec.com",
+    "https://dev.trivialsec.com"
+    if APP_ENV == "development"
+    else "https://www.trivialsec.com",
 )
 
 assert sys.version_info >= (3, 9), "Requires Python 3.9 or newer"
@@ -54,7 +57,6 @@ cli = argparse.ArgumentParser(
 class _HelpAction(argparse._HelpAction):
     def __call__(self, parser, namespace, values, option_string=None):
         parser.print_help()
-        print("\n".join(cli.format_help().splitlines()[12:]))
         parser.exit()
 
 
@@ -305,6 +307,12 @@ def main():
             )
         sys.exit(0)
 
+    try:
+        logger.info(f"subcommand {args.subcommand}")
+    except AttributeError:
+        cli.print_help()
+        sys.exit(0)
+
     log_level = logging.CRITICAL
     if args.log_level_error:
         log_level = logging.ERROR
@@ -321,7 +329,7 @@ def main():
         log_format = "%(message)s"
         handlers.append(RichHandler(rich_tracebacks=True))
     logging.basicConfig(format=log_format, level=log_level, handlers=handlers)
-    logger.info(f"subcommand {args.subcommand}")
+
     if args.subcommand == "generate":
         return generate({**vars(args)})
 

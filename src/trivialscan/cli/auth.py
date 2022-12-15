@@ -55,9 +55,9 @@ def auth(args: dict):
         )
         logger.debug(f"{request_url}\n{raw_body}")
         authorization_header = util.sign_request(
-            cred_data["client_name"],
-            args.get("access_token"),
-            request_url,
+            client_id=cred_data["client_name"],
+            secret_key=cred_data.get("access_token"),
+            request_url=request_url,
             request_method="POST",
             raw_body=raw_body,
         )
@@ -85,11 +85,10 @@ def auth(args: dict):
             )
             return
 
-        cred_data["token"] = args.get("access_token")
         save_local(
             account_name=cred_data["account_name"],
             client_name=cred_data["client_name"],
-            token=cred_data["token"],
+            token=cred_data["access_token"],
         )
         console.print(
             f"[{constants.CLI_COLOR_PRIMARY}]Authenticated![/{constants.CLI_COLOR_PRIMARY}]"

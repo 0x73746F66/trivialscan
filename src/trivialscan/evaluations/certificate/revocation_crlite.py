@@ -3,6 +3,8 @@ import subprocess
 import tempfile
 from os import path, unlink
 from pathlib import Path
+from typing import Union
+
 from ...exceptions import EvaluationNotRelevant
 from ...transport import TLSTransport
 from ...certificate import BaseCertificate, IntermediateCertificate
@@ -41,11 +43,14 @@ class EvaluationTask(BaseEvaluationTask):
         return status
 
 
-def query_crlite(pem_path: str, db_path: str) -> str:
+def query_crlite(
+    pem_path: str, db_path: str, with_musl: bool = True
+) -> Union[str, None]:
     try:
+        exe_cmd = "crlite-linux-musl" if with_musl else "crlite-linux"
         stdout_string = subprocess.check_output(
             [
-                "./crlite-linux-musl",
+                f"./{exe_cmd}",
                 "-vvv",
                 "--db",
                 db_path,
@@ -56,44 +61,20 @@ def query_crlite(pem_path: str, db_path: str) -> str:
             stderr=subprocess.STDOUT,
             cwd=str(Path(__file__).parent.parent.with_name("vendor")),
         )
-        logger.debug(stdout_string)
+        logger.debug(stdout_string.decode())
         result = subprocess.check_output(
-            ["./crlite-linux-musl", "-vv", "--db", db_path, "x509", pem_path],
+            [f"./{exe_cmd}", "-vv", "--db", db_path, "x509", pem_path],
             stderr=subprocess.STDOUT,
             cwd=str(Path(__file__).parent.parent.with_name("vendor")),
         )
         if result:
-            return result.decode().split(pem_path)[1].strip()
+            logger.debug(result.decode())
+            return result.decode().strip().split(" ")[-1]
     except subprocess.CalledProcessError as cpe:
-        print(cpe.returncode)
-        print(cpe.output)
+        logger.warning(cpe.returncode)
+        logger.warning(cpe.output)
     except OSError as err:
-        print(err)
-    try:
-        stdout_string = subprocess.check_output(
-            [
-                "./crlite-linux",
-                "-vvv",
-                "--db",
-                db_path,
-                "--update",
-                "prod",
-                "x509",
-            ],
-            stderr=subprocess.STDOUT,
-            cwd=str(Path(__file__).parent.parent.with_name("vendor")),
-        )
-        logger.debug(stdout_string)
-        result = subprocess.check_output(
-            ["./crlite-linux", "-vv", "--db", db_path, "x509", pem_path],
-            stderr=subprocess.STDOUT,
-            cwd=str(Path(__file__).parent.parent.with_name("vendor")),
-        )
-        if result:
-            return result.decode().split(pem_path)[1].strip()
-    except subprocess.CalledProcessError as cpe:
-        print(cpe.returncode)
-        print(cpe.output)
-    except OSError as err:
-        print(err)
+        logger.warning(err, exc_info=True)
+    if with_musl:
+        return query_crlite(pem_path, db_path, False)
     return None

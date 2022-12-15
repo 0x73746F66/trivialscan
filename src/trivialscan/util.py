@@ -13,7 +13,7 @@ from binascii import hexlify
 from pathlib import Path
 from decimal import Decimal
 from functools import wraps
-from typing import Union
+from typing import Union, Any
 from copy import deepcopy
 from io import BytesIO
 from os import path
@@ -50,7 +50,7 @@ from tldextract import TLDExtract
 from tlstrust import util as tlstrust_util
 from tlstrust.context import STORES
 
-from . import constants
+from . import constants, models
 from .certificate import (
     BaseCertificate,
     RootCertificate,
@@ -1027,122 +1027,12 @@ def make_data(
     }
 
 
-def make_summary(config: dict, flags: dict, results: dict) -> str:
-    data = deepcopy(results)
-    data["config"] = config
-    data["flags"] = flags
-    del data["queries"]
-    errors = []
-    for _query in results["queries"]:
-        if "error" in _query:
-            errors.append(_query["error"])
-    data["error"] = ". ".join(errors)
-    return json.dumps(data, default=str)
-
-
-def split_report(results: dict, results_uri: str) -> list[tuple[str, bytes]]:
-    files = []
-    for _query in results["queries"]:
-        query_result = deepcopy(_query)
-        if "error" in query_result:
-            continue
-        certificates = set()
-        del query_result["evaluations"]
-        for certdata in _query.get("tls", {}).get("certificates", []):
-            certificates.add(certdata["sha1_fingerprint"])
-            files.append(
-                {
-                    "format": "pem",
-                    "type": "certificate",
-                    "filename": f"{certdata['sha1_fingerprint']}.pem",
-                    "value": BytesIO(certdata["pem"].encode("utf8")),
-                }
-            )
-            certcopy = deepcopy(certdata)
-            del certcopy["pem"]
-            files.append(
-                {
-                    "format": "json",
-                    "type": "certificate",
-                    "filename": f"{certdata['sha1_fingerprint']}.json",
-                    "value": BytesIO(json.dumps(certcopy, default=str).encode("utf8")),
-                }
-            )
-        evaluations = []
-        groups = set(
-            [
-                (data["compliance"], data["version"])
-                for evaluation in _query["evaluations"]
-                for data in evaluation["compliance"]
-                if isinstance(data, dict)
-            ]
-        )
-        for evaluation in _query["evaluations"]:
-            for uniq_group in groups:
-                name, ver = uniq_group
-                group = {"compliance": name, "version": ver, "items": []}
-                compliance_results = []
-                for compliance_data in evaluation["compliance"]:
-                    if (
-                        compliance_data["compliance"] != name
-                        or compliance_data["version"] != ver
-                    ):
-                        continue
-                    group["items"].append(
-                        {
-                            "requirement": compliance_data.get("requirement"),
-                            "title": compliance_data.get("title"),
-                            # "description": compliance_data.get("description"),
-                        }
-                    )
-                compliance_results.append(group)
-
-            evaluation["compliance"] = compliance_results
-
-            threats = []
-            for threat in evaluation.get("threats", []) or []:
-                if threat.get("description"):
-                    del threat["description"]
-                if threat.get("technique_description"):
-                    del threat["technique_description"]
-                if threat.get("sub_technique_description"):
-                    del threat["sub_technique_description"]
-            evaluation["threats"] = threats
-
-            evaluations.append(evaluation)
-
-        data = {
-            "transport": _query.get("transport"),
-            "evaluations": evaluations,
-        }
-        files.append(
-            {
-                "format": "json",
-                "type": "evaluations",
-                "filename": f"{results_uri.split('/')[-2]}.json",
-                "value": BytesIO(json.dumps(data, default=str).encode("utf8")),
-            }
-        )
-        query_result["tls"]["certificates"] = sorted(list(certificates))
-        files.append(
-            {
-                "format": "json",
-                "type": "host",
-                "filename": f"{query_result['transport']['hostname']}.json",
-                "value": BytesIO(json.dumps(query_result, default=str).encode("utf8")),
-            }
-        )
-
-    return files
-
-
 def upload_cloud(
-    result_files: list[tuple[str, bytes]],
+    result: dict,
     dashboard_api_url: str,
     hide_progress_bars: bool = False,
     **kwargs,
-) -> list:
-    responses = []
+) -> dict:
     with Progress(
         "{task.description} [progress.percentage]{task.percentage:>3.0f}%",
         BarColumn(),
@@ -1171,81 +1061,243 @@ def upload_cloud(
                 completed=monitor.bytes_read,
             )
 
-        for result in result_files:
-            request_url = path.join(dashboard_api_url, "store", result["type"])
-            authorization_header = sign_request(
-                client_id=kwargs.get("client_name"),
-                secret_key=kwargs.get("registration_token"),
-                request_url=request_url,
-                request_method="POST",
-                raw_body=result["value"].read().decode("utf8"),
+        request_url = path.join(dashboard_api_url, "store", result["type"])
+        authorization_header = sign_request(
+            client_id=kwargs.get("client_name"),
+            secret_key=kwargs.get("registration_token"),
+            request_url=request_url,
+            request_method="POST",
+            raw_body=result["value"].read().decode("utf8"),
+        )
+        logger.debug(f"{request_url}\n{authorization_header}")
+        encoder = MultipartEncoder([("files", (result["filename"], result["value"]))])
+        upload_task_id = upload_progress.add_task(
+            f"Uploading {result['filename']}", total=encoder.len
+        )
+        upload_tasks[result["filename"]] = upload_task_id
+        monitor = MultipartEncoderMonitor(encoder, callback)
+        try:
+            resp = requests.post(
+                request_url,
+                data=monitor,
+                headers={
+                    "Content-Type": monitor.content_type,
+                    "Authorization": authorization_header,
+                    "X-Trivialscan-Account": kwargs.get("account_name"),
+                    "X-Trivialscan-Version": kwargs.get("cli_version"),
+                },
+                timeout=300,
             )
-            logger.debug(f"{request_url}\n{authorization_header}")
-            encoder = MultipartEncoder(
-                [("files", (result["filename"], result["value"]))]
-            )
-            upload_task_id = upload_progress.add_task(
-                f"Uploading {result['filename']}", total=encoder.len
-            )
-            upload_tasks[result["filename"]] = upload_task_id
-            monitor = MultipartEncoderMonitor(encoder, callback)
-            try:
-                resp = requests.post(
-                    request_url,
-                    data=monitor,
-                    headers={
-                        "Content-Type": monitor.content_type,
-                        "Authorization": authorization_header,
-                        "X-Trivialscan-Account": kwargs.get("account_name"),
-                        "X-Trivialscan-Version": kwargs.get("cli_version"),
-                    },
-                    timeout=300,
-                )
-                if resp.status_code == 403:
-                    upload_progress.console.print(
-                        f"[{constants.CLI_COLOR_FAIL}]Missing or bad client Registration Token provided; Hint: run 'trivial register'[/{constants.CLI_COLOR_FAIL}]"
-                    )
-                    continue
-                if resp.status_code == 201:
-                    logger.debug(resp.text)
-                    try:
-                        data = json.loads(resp.text)
-                    except json.JSONDecodeError:
-                        data = resp.text
-                    if not data:
-                        upload_progress.console.print(
-                            f"[{constants.CLI_COLOR_FAIL}]Bad response from Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
-                        )
-                        continue
-                    responses.append(data)
-
-            except (
-                requests.exceptions.ConnectionError,
-                requests.exceptions.ReadTimeout,
-            ) as err:
-                logger.warning(err, exc_info=True)
+            if resp.status_code == 403:
                 upload_progress.console.print(
-                    f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+                    f"[{constants.CLI_COLOR_FAIL}]Missing or bad client Registration Token provided; Hint: run 'trivial auth'[/{constants.CLI_COLOR_FAIL}]"
                 )
+                return
+            if resp.status_code == 201:
+                logger.debug(resp.text)
+                try:
+                    data = json.loads(resp.text)
+                except json.JSONDecodeError:
+                    data = resp.text
+                if not data:
+                    upload_progress.console.print(
+                        f"[{constants.CLI_COLOR_FAIL}]Bad response from Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+                    )
+                    return
+                return data
 
-            except requests.exceptions.JSONDecodeError:
-                logger.warning(
-                    f"Bad response from server ({resp.status_code}): {resp.text}"
-                )
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout,
+        ) as err:
+            logger.warning(err, exc_info=True)
+        upload_progress.console.print(
+            f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+        )
 
-    return responses
 
-
-def update_cloud(config: dict, flags: dict, results: dict) -> Union[str, None]:
-    results_url = None
-    try:
-        url = f"{config['dashboard_api_url']}/store"
-        logger.info(url)
-        hide_progress_bars = (
+def _send_files(queries: list, config: dict, flags: dict, duration: int):
+    upload_args = {
+        "dashboard_api_url": config["dashboard_api_url"],
+        "cli_version": config.get("cli_version"),
+        "hide_progress_bars": (
             True
             if flags.get("quiet", False)
             else flags.get("hide_progress_bars", False)
+        ),
+        "registration_token": config.get("token"),
+        "account_name": config.get("account_name"),
+        "client_name": config.get("client_name"),
+    }
+    reports = []
+    certificates: dict[str, tuple[models.Certificate, str]] = {}
+    for data in queries:
+        if not data.get("tls"):
+            logger.info(
+                f'No response from target: {data["transport"]["hostname"]}:{data["transport"]["port"]}'
+            )
+            return
+
+        logger.info(
+            f'Negotiated {data["tls"]["protocol"]["negotiated"]} {data["transport"]["peer_address"]}'
         )
+        certs: dict[str, models.Certificate] = {}
+        if "certificates" in data:
+            del data["certificates"]
+        for cert_data in data["tls"].get("certificates", []):
+            cert = models.Certificate(**cert_data)  # type: ignore
+            certificates[cert.sha1_fingerprint] = (cert, cert_data["pem"])
+            certs[cert.sha1_fingerprint] = cert
+
+        if "targets" in data:
+            del data["targets"]
+        host_data = deepcopy(data)
+        host_data["tls"]["certificates"] = list(certs.keys())
+        host = models.Host(**host_data)  # type: ignore
+        # upload_cloud(
+        #     result={
+        #         "format": "json",
+        #         "type": models.ReportType.HOST,
+        #         "filename": f'{data["transport"]["hostname"]}.json',
+        #         "value": BytesIO(
+        #             json.dumps(host.dict(), default=str).encode("utf8")
+        #         ),
+        #     },
+        #     **upload_args
+        # )
+        report = models.ReportSummary(
+            generator="trivialscan",
+            version=config.get("cli_version"),
+            date=datetime.utcnow().replace(microsecond=0).isoformat(),
+            execution_duration_seconds=duration,
+            account_name=config.get("account_name"),
+            targets=[host],
+            flags=models.Flags(**flags),
+            config=models.Config(**config),
+            certificates=list(certs.values()),
+            **data,
+        )
+        ret = upload_cloud(
+            result={
+                "format": "json",
+                "type": models.ReportType.REPORT,
+                "filename": "summary.json",
+                "value": BytesIO(json.dumps(report.dict(), default=str).encode("utf8")),
+            },
+            **upload_args,
+        )
+        if "results_uri" not in ret:
+            logger.warning(
+                f"[{constants.CLI_COLOR_FAIL}]Failed to upload report to Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+            )
+            return
+
+        report.results_uri = ret["results_uri"]
+        reports.append(path.join(config["dashboard_api_url"], report.results_uri))
+        report.report_id = report.results_uri.split("/")[-2]
+        groups = {
+            (data["compliance"], data["version"])
+            for evaluation in data["evaluations"]
+            for data in evaluation["compliance"]
+            if isinstance(data, dict)
+        }
+        full_report = models.FullReport(**report.dict())  # type: ignore
+        for evaluation in data["evaluations"]:
+            if evaluation.get("description"):
+                del evaluation["description"]
+
+            compliance_results = []
+            for uniq_group in groups:
+                name, ver = uniq_group
+                group = models.ComplianceGroup(compliance=name, version=ver, items=[])
+                for compliance_data in evaluation["compliance"]:
+                    if (
+                        compliance_data["compliance"] != name
+                        or compliance_data["version"] != ver
+                    ):
+                        continue
+                    group.items.append(
+                        models.ComplianceItem(
+                            requirement=compliance_data.get("requirement"),
+                            title=compliance_data.get("title"),
+                        )
+                    )
+                if len(group.items) > 0:
+                    compliance_results.append(group)
+
+            evaluation["compliance"] = compliance_results
+
+            threats = []
+            for threat in evaluation.get("threats", []) or []:
+                if threat.get("description"):
+                    del threat["description"]
+                if threat.get("technique_description"):
+                    del threat["technique_description"]
+                if threat.get("sub_technique_description"):
+                    del threat["sub_technique_description"]
+                threats.append(models.ThreatItem(**threat))
+            evaluation["threats"] = threats
+            references = evaluation.get("references", []) or []
+            del evaluation["references"]
+            item = models.EvaluationItem(
+                generator=full_report.generator,
+                version=full_report.version,
+                account_name=config.get("account_name"),  # type: ignore
+                client_name=full_report.client_name,
+                report_id=report.report_id,
+                observed_at=full_report.date,
+                transport=host.transport,
+                references=[
+                    models.ReferenceItem(name=ref["name"], url=ref["url"])
+                    for ref in references
+                ],
+                **evaluation,
+            )
+            if item.group == "certificate" and item.metadata.get("sha1_fingerprint"):
+                item.certificate = certs[item.metadata.get("sha1_fingerprint")]
+            full_report.evaluations.append(item)
+
+        upload_cloud(
+            result={
+                "format": "json",
+                "type": models.ReportType.EVALUATIONS,
+                "filename": "evaluations.json",
+                "value": BytesIO(
+                    json.dumps(full_report.dict(), default=str).encode("utf8")
+                ),
+            },
+            **upload_args,
+        )
+
+    for sha1_fingerprint, cert_data in certificates.items():
+        cert, pem = cert_data
+        # upload_cloud(
+        #     result={
+        #         "format": "json",
+        #         "type": models.ReportType.CERTIFICATE,
+        #         "filename": f'{sha1_fingerprint}.json',
+        #         "value": BytesIO(
+        #             json.dumps(cert.dict(), default=str).encode("utf8")
+        #         ),
+        #     },
+        #     **upload_args
+        # )
+        upload_cloud(
+            result={
+                "format": "pem",
+                "type": models.ReportType.CERTIFICATE,
+                "filename": f"{sha1_fingerprint}.pem",
+                "value": BytesIO(pem.encode("utf8")),
+            },
+            **upload_args,
+        )
+    return reports
+
+
+def update_cloud(
+    config: dict, flags: dict, results: dict, duration: int
+) -> Union[str, None]:
+    try:
         conf = deepcopy(config)
         for item in [
             "evaluations",
@@ -1256,43 +1308,10 @@ def update_cloud(config: dict, flags: dict, results: dict) -> Union[str, None]:
             if item in conf:
                 del conf[item]
 
-        ret = upload_cloud(
-            result_files=[
-                {
-                    "format": "json",
-                    "type": "report",
-                    "filename": "summary.json",
-                    "value": BytesIO(
-                        make_summary(config=conf, flags=flags, results=results).encode(
-                            "utf8"
-                        )
-                    ),
-                }
-            ],
-            dashboard_api_url=config["dashboard_api_url"],
-            cli_version=config["cli_version"],
-            hide_progress_bars=hide_progress_bars,
-            registration_token=config.get("token"),
-            account_name=config.get("account_name"),
-            client_name=config.get("client_name"),
-        )
-        if len(ret) == 1 and "results_uri" in ret[0]:
-            results_uri = ret[0]["results_uri"]
-            results_url = path.join(config["dashboard_api_url"], results_uri)
-            upload_cloud(
-                result_files=split_report(results=results, results_uri=results_uri),
-                dashboard_api_url=config["dashboard_api_url"],
-                cli_version=config["cli_version"],
-                hide_progress_bars=hide_progress_bars,
-                registration_token=config.get("token"),
-                account_name=config.get("account_name"),
-                client_name=config.get("client_name"),
-            )
+        return _send_files(results, conf, flags, duration)
 
     except KeyboardInterrupt:
         pass
-
-    return results_url
 
 
 def get_cname(domain_name: str):

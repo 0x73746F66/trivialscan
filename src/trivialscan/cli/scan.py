@@ -389,7 +389,7 @@ def scan(config: dict, **flags):
         queries = run_parra(config, not hide_progress_bars, use_console)
 
     execution_duration_seconds = (datetime.utcnow() - run_start).total_seconds()
-    data = save_final(config, flags, queries, execution_duration_seconds, use_console)
+    save_final(config, flags, queries, execution_duration_seconds, use_console)
     if config.get("account_name") and config.get("client_name") and config.get("token"):
         cli.outputln(
             "Storing results to the cloud",
@@ -397,20 +397,22 @@ def scan(config: dict, **flags):
             con=console if use_console else None,
             use_icons=use_icons,
         )
-        results_url = update_cloud(config, flags, data)
+        results_urls = update_cloud(config, flags, queries, execution_duration_seconds)
         from .__main__ import DASHBOARD_URL  # pylint: disable=import-outside-toplevel
 
         cli.outputln(
-            f"View results online: https://{DASHBOARD_URL}{results_url}"
-            if results_url
+            f"View results online: {DASHBOARD_URL}/reports"
+            if results_urls
             else "Unable to reach the Trivial Security servers",
             aside="core",
             result_level=constants.RESULT_LEVEL_INFO
-            if results_url
+            if results_urls
             else constants.RESULT_LEVEL_WARN,
-            result_text="SAVED" if results_url else constants.RESULT_LEVEL_WARN_DEFAULT,
+            result_text="SAVED"
+            if results_urls
+            else constants.RESULT_LEVEL_WARN_DEFAULT,
             result_icon=":floppy_disk:"
-            if results_url
+            if results_urls
             else constants.CLI_ICON_MAP.get(constants.RESULT_LEVEL_WARN),
             con=console if use_console else None,
             use_icons=use_icons,
