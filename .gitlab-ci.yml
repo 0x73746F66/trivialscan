@@ -7,7 +7,7 @@ stages:
 sast black:
   stage: tests
   tags:
-    - trivialscan
+    - jager
   allow_failure: true
   script:
     - pre-commit run black --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
@@ -19,7 +19,7 @@ sast black:
 sca pip-audit:
   stage: tests
   tags:
-    - trivialscan
+    - jager
   allow_failure: true
   script:
     - pre-commit run pip-audit --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
@@ -31,7 +31,7 @@ sca pip-audit:
 secrets scanning:
   stage: tests
   tags:
-    - trivialscan
+    - jager
   allow_failure: true
   script:
     - |+
@@ -48,7 +48,7 @@ secrets scanning:
 repo checks:
   stage: tests
   tags:
-    - trivialscan
+    - jager
   script:
     - echo $CI_COMMIT_MESSAGE > commit-msg.txt
     - pre-commit run conventional-pre-commit --hook-stage commit-msg --commit-msg-filename commit-msg.txt --local-branch ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME:-$CI_COMMIT_BRANCH}
@@ -66,7 +66,7 @@ repo checks:
 python syntax:
   stage: tests
   tags:
-    - trivialscan
+    - jager
   allow_failure: true
   script:
     - |+
@@ -83,7 +83,7 @@ python syntax:
 whitespace:
   stage: tests
   tags:
-    - trivialscan
+    - jager
   allow_failure: true
   script:
     - |+
@@ -100,7 +100,7 @@ whitespace:
 yaml json py linting:
   stage: tests
   tags:
-    - trivialscan
+    - jager
   allow_failure: true
   script:
     - |+
@@ -114,31 +114,37 @@ yaml json py linting:
       - merge_request
       - main
 
-twine check:
+build wheel:
   stage: pre-deploy
   tags:
-    - trivialscan
+    - jager
   script:
-    - make build check
+    - make build
   only:
     refs:
       - merge_request
       - main
+  artifacts:
+    name: wheel
+    paths:
+      - dist
 
 publish pypi:
   stage: deploy
   tags:
-    - trivialscan
+    - jager
   script:
-    - make build check pypi
+    - make pypi
   only:
     refs:
       - main
+  dependencies:
+    - build wheel
 
 git tag:
   stage: post-deploy
   tags:
-    - trivialscan
+    - jager
   script:
     - make tag
   only:

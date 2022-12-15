@@ -109,7 +109,7 @@ local-runner: ## local setup for a gitlab runner
 		-e RUNNER_TOKEN=${RUNNER_TOKEN} \
 		$(RUNNER_NAME)/runner:${CI_BUILD_REF}
 	@docker exec -ti $(RUNNER_NAME) gitlab-runner register --non-interactive \
-		--tag-list 'trivialscan' \
+		--tag-list 'jager' \
 		--name $(RUNNER_NAME) \
 		--request-concurrency 10 \
 		--url https://gitlab.com/ \
