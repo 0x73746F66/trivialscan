@@ -1154,17 +1154,6 @@ def _send_files(queries: list, config: dict, flags: dict, duration: int):
         host_data = deepcopy(data)
         host_data["tls"]["certificates"] = list(certs.keys())
         host = models.Host(**host_data)  # type: ignore
-        # upload_cloud(
-        #     result={
-        #         "format": "json",
-        #         "type": models.ReportType.HOST,
-        #         "filename": f'{data["transport"]["hostname"]}.json',
-        #         "value": BytesIO(
-        #             json.dumps(host.dict(), default=str).encode("utf8")
-        #         ),
-        #     },
-        #     **upload_args
-        # )
         report = models.ReportSummary(
             generator="trivialscan",
             version=config.get("cli_version"),
@@ -1175,6 +1164,7 @@ def _send_files(queries: list, config: dict, flags: dict, duration: int):
             flags=models.Flags(**flags),
             config=models.Config(**config),
             certificates=list(certs.values()),
+            client_name=config.get("client_name"),
             **data,
         )
         ret = upload_cloud(
@@ -1186,7 +1176,7 @@ def _send_files(queries: list, config: dict, flags: dict, duration: int):
             },
             **upload_args,
         )
-        if "results_uri" not in ret:
+        if not ret or "results_uri" not in ret:
             logger.warning(
                 f"[{constants.CLI_COLOR_FAIL}]Failed to upload report to Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
             )
@@ -1271,17 +1261,6 @@ def _send_files(queries: list, config: dict, flags: dict, duration: int):
 
     for sha1_fingerprint, cert_data in certificates.items():
         cert, pem = cert_data
-        # upload_cloud(
-        #     result={
-        #         "format": "json",
-        #         "type": models.ReportType.CERTIFICATE,
-        #         "filename": f'{sha1_fingerprint}.json',
-        #         "value": BytesIO(
-        #             json.dumps(cert.dict(), default=str).encode("utf8")
-        #         ),
-        #     },
-        #     **upload_args
-        # )
         upload_cloud(
             result={
                 "format": "pem",
