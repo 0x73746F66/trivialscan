@@ -1009,6 +1009,19 @@ def sign_request(
     return f'HMAC id="{client_id}", mac="{digest}", ts="{epochtime}"'
 
 
+def clean_nones(value):
+    """
+    Recursively remove all None values from dictionaries and lists, and returns
+    the result as a new dictionary or list.
+    """
+    if isinstance(value, list):
+        return [clean_nones(x) for x in value if x is not None]
+    elif isinstance(value, dict):
+        return {key: clean_nones(val) for key, val in value.items() if val is not None}
+    else:
+        return value
+
+
 def make_data(
     config: dict,
     queries: list[dict],
@@ -1172,7 +1185,9 @@ def _send_files(queries: list, config: dict, flags: dict, duration: int):
                 "format": "json",
                 "type": models.ReportType.REPORT,
                 "filename": "summary.json",
-                "value": BytesIO(json.dumps(report.dict(), default=str).encode("utf8")),
+                "value": BytesIO(
+                    json.dumps(clean_nones(report.dict()), default=str).encode("utf8")
+                ),
             },
             **upload_args,
         )
@@ -1253,7 +1268,9 @@ def _send_files(queries: list, config: dict, flags: dict, duration: int):
                 "type": models.ReportType.EVALUATIONS,
                 "filename": "evaluations.json",
                 "value": BytesIO(
-                    json.dumps(full_report.dict(), default=str).encode("utf8")
+                    json.dumps(clean_nones(full_report.dict()), default=str).encode(
+                        "utf8"
+                    )
                 ),
             },
             **upload_args,
@@ -1274,7 +1291,7 @@ def _send_files(queries: list, config: dict, flags: dict, duration: int):
 
 
 def update_cloud(
-    config: dict, flags: dict, results: dict, duration: int
+    queries: list, config: dict, flags: dict, duration: int
 ) -> Union[str, None]:
     try:
         conf = deepcopy(config)
@@ -1287,7 +1304,7 @@ def update_cloud(
             if item in conf:
                 del conf[item]
 
-        return _send_files(results, conf, flags, duration)
+        return _send_files(queries, conf, flags, duration)
 
     except KeyboardInterrupt:
         pass

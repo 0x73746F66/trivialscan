@@ -17,21 +17,19 @@ from .generate import generate
 from .info import info
 from .auth import auth
 from .scan import scan
-from .upload import upload
 from .. import constants, util
 from ..config import load_config, get_config, DEFAULT_CONFIG
 from .credentials import load_local
 
 __module__ = "trivialscan.cli"
-__version__ = "0.4.2"
+__version__ = "0.5.0"
 
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/"
 APP_BANNER = text2art("trivialscan", font="tarty4")
 APP_ENV = getenv("APP_ENV", "production")
 DASHBOARD_API_URL = getenv(
     "TRIVIALSCAN_API_URL",
-    "https://"
-    + str(
+    str(
         util.get_cname("dev-api.trivialsec.com")
         if APP_ENV == "development"
         else util.get_cname("prod-api.trivialsec.com")
@@ -141,30 +139,6 @@ def main():
     )
     info_parser.set_defaults(subcommand="info")
     info_parser.add_argument("-h", "--help", action=_HelpAction)
-    upload_parser = sub_parsers.add_parser(
-        "scan-upload",
-        prog="trivial scan-upload",
-        description=cli.description,
-        add_help=False,
-        help="Retry an upload for a previous scan",
-        parents=[cli],
-    )
-    upload_parser.set_defaults(subcommand="scan-upload")
-    upload_parser.add_argument("-h", "--help", action=_HelpAction)
-    upload_parser.add_argument(
-        "-R",
-        "--results-file",
-        help="File of a previous scan to retry upload",
-        dest="results_file",
-        required=True,
-    )
-    upload_parser.add_argument(
-        "-p",
-        "--config-path",
-        help=f"Provide the path to a configuration file (Default: {DEFAULT_CONFIG})",
-        dest="config_file",
-        default=DEFAULT_CONFIG,
-    )
     register_parser = sub_parsers.add_parser(
         "register",
         prog="trivial register",
@@ -335,7 +309,7 @@ def main():
 
     if not args.dashboard_api_url or validators.url(args.dashboard_api_url) is not True:
         console.print(
-            f"[{constants.CLI_COLOR_FAIL}]Missing or invalid value supplied for argument[/{constants.CLI_COLOR_FAIL}] -D|--api-url"
+            f"[{constants.CLI_COLOR_FAIL}]Missing or invalid value supplied for argument[/{constants.CLI_COLOR_FAIL}] -D|--api-url {args.dashboard_api_url}"
         )
         return
 
@@ -367,8 +341,6 @@ def main():
             }
         )
     config = _scan_config(vars(args), args.config_file)
-    if args.subcommand == "scan-upload":
-        return upload(config, args.results_file)
     if args.subcommand == "scan":
         if not config.get("targets"):
             raise RuntimeError("No targets defined")

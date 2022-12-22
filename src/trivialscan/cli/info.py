@@ -49,6 +49,7 @@ def cloud_sync_status(
             timeout=300,
         )
         data = resp.json()
+        logger.info(data)
     except requests.exceptions.ConnectionError as err:
         logger.exception(err)
         console.print(
@@ -60,13 +61,13 @@ def cloud_sync_status(
     except requests.exceptions.JSONDecodeError:
         logger.warning(f"Bad response from server ({resp.status_code}): {resp.text}")
         registration_status = (
-            f"[{constants.CLI_COLOR_FAIL}]Offline[/{constants.CLI_COLOR_FAIL}]"
+            f"[{constants.CLI_COLOR_FAIL}]Invalid Response[/{constants.CLI_COLOR_FAIL}]"
         )
     if not data:
         data = {}
     data["authorisation_status"] = (
         f"[{constants.CLI_COLOR_PASS}]Registered[/{constants.CLI_COLOR_PASS}]"
-        if data.get("authorisation_valid")
+        if data.get("client", {}).get("name", {}) == client_name
         else registration_status
     )
     return data
@@ -123,15 +124,19 @@ def info(dashboard_api_url: str, cli_version: str):
                     client_name=conf.get("client_name"),
                 )
                 logger.debug(f"{registration_token} {conf.get('client_name')} {data}")
+                if data.get("authorisation_valid"):
+                    authz_result = "Validated"
+                elif data.get("client", {}).get("active") is False:
+                    authz_result = "Deactivated"
+                elif not data.get("authorisation_valid"):
+                    authz_result = "Unauthorized"
                 table.add_row(
                     account_name,
                     conf.get("client_name"),
                     registration_token,
                     f"[{constants.CLI_COLOR_PASS}]Encrypted Keyring[/{constants.CLI_COLOR_PASS}]",
                     data.get("authorisation_status"),
-                    "Validated"
-                    if data.get("authorisation_valid")
-                    else data.get("authorisation_valid", "Missing") or "Unauthorized",
+                    authz_result,
                 )
             if (
                 account_name == "DEFAULT"
@@ -147,15 +152,19 @@ def info(dashboard_api_url: str, cli_version: str):
                 client_name=conf.get("client_name"),
             )
             logger.debug(f"{conf.get('token')} {conf.get('client_name')} {data}")
+            if data.get("authorisation_valid"):
+                authz_result = "Validated"
+            elif data.get("client", {}).get("active") is False:
+                authz_result = "Deactivated"
+            elif not data.get("authorisation_valid"):
+                authz_result = "Unauthorized"
             table.add_row(
                 account_name,
                 conf.get("client_name"),
                 conf.get("token"),
                 f"[{constants.CLI_COLOR_FAIL}]Cleartext File[/{constants.CLI_COLOR_FAIL}]",
                 data["authorisation_status"],
-                "Validated"
-                if data.get("authorisation_valid")
-                else data.get("authorisation_valid", "Missing") or "Unauthorized",
+                authz_result,
             )
 
         console.print(table)

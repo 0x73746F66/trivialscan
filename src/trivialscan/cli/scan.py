@@ -209,76 +209,17 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                 )
                 data = transport.store.to_dict()
 
-        except KeyboardInterrupt:
-            if use_console:
-                progress.console.print(
-                    "[cyan]Operation cancelled ([bold]Ctrl+C[/bold])[/cyan]"
-                )
-            progress.stop()
-            return queries
-        except Exception as ex:  # pylint: disable=broad-except
-            logger.error(ex, exc_info=True)
-            data["error"] = (type(ex).__name__, ex)
-        finally:
-            progress.stop()
-        queries.append(data)
-        if not transport:
-            continue
-        log_files = save_partial(
-            config=config,
-            when="per_host",
-            data_type=f"{transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
-            data=data,
-            hostname=transport.store.tls_state.hostname,
-            port=transport.store.tls_state.port,
-            peer_address=transport.store.tls_state.peer_address,
-            negotiated_protocol=transport.store.tls_state.negotiated_protocol,
-            negotiated_cipher=transport.store.tls_state.negotiated_cipher,
-            account_name=config.get("account_name"),
-            client_name=config.get("client_name"),
-            project_name=config.get("project_name"),
-        )
-        for log_file in log_files:
-            cli.outputln(
-                log_file,
-                aside="core",
-                result_text="SAVED",
-                result_icon=":floppy_disk:",
-                con=console if use_console else None,
-                use_icons=use_icons,
-            )
-        for cert in transport.store.tls_state.certificates:
+            queries.append(data)
             log_files = save_partial(
                 config=config,
-                when="per_certificate",
-                data_type=cert.subject,
-                data={
-                    **cert.to_dict(),
-                    **{
-                        "evaluations": [
-                            e
-                            for e in transport.store.evaluations
-                            if e.group == "certificate"
-                            and e.metadata.get("sha1_fingerprint")
-                            == cert.sha1_fingerprint
-                        ]
-                    },
-                },
+                when="per_host",
+                data_type=f"{transport.store.tls_state.hostname}:{transport.store.tls_state.port}",
+                data=data,
                 hostname=transport.store.tls_state.hostname,
                 port=transport.store.tls_state.port,
-                certificate_type=camel_to_snake(type(cert).__name__),
-                sha1_fingerprint=cert.sha1_fingerprint,
-                md5_fingerprint=cert.md5_fingerprint,
-                sha256_fingerprint=cert.sha256_fingerprint,
-                serial_number_hex=cert.serial_number_hex,
-                public_key_type=cert.public_key_type,
-                public_key_size=cert.public_key_size,
-                subject_key_identifier=cert.subject_key_identifier,
-                spki_fingerprint=cert.spki_fingerprint,
-                version=cert.version,
-                validation_level=cert.validation_level,
-                not_before=cert.not_before,
-                not_after=cert.not_after,
+                peer_address=transport.store.tls_state.peer_address,
+                negotiated_protocol=transport.store.tls_state.negotiated_protocol,
+                negotiated_cipher=transport.store.tls_state.negotiated_cipher,
                 account_name=config.get("account_name"),
                 client_name=config.get("client_name"),
                 project_name=config.get("project_name"),
@@ -292,6 +233,61 @@ def run_seq(config: dict, show_progress: bool, use_console: bool = False) -> lis
                     con=console if use_console else None,
                     use_icons=use_icons,
                 )
+            for cert in transport.store.tls_state.certificates:
+                log_files = save_partial(
+                    config=config,
+                    when="per_certificate",
+                    data_type=cert.subject,
+                    data={
+                        **cert.to_dict(),
+                        **{
+                            "evaluations": [
+                                e
+                                for e in transport.store.evaluations
+                                if e.group == "certificate"
+                                and e.metadata.get("sha1_fingerprint")
+                                == cert.sha1_fingerprint
+                            ]
+                        },
+                    },
+                    hostname=transport.store.tls_state.hostname,
+                    port=transport.store.tls_state.port,
+                    certificate_type=camel_to_snake(type(cert).__name__),
+                    sha1_fingerprint=cert.sha1_fingerprint,
+                    md5_fingerprint=cert.md5_fingerprint,
+                    sha256_fingerprint=cert.sha256_fingerprint,
+                    serial_number_hex=cert.serial_number_hex,
+                    public_key_type=cert.public_key_type,
+                    public_key_size=cert.public_key_size,
+                    subject_key_identifier=cert.subject_key_identifier,
+                    spki_fingerprint=cert.spki_fingerprint,
+                    version=cert.version,
+                    validation_level=cert.validation_level,
+                    not_before=cert.not_before,
+                    not_after=cert.not_after,
+                    account_name=config.get("account_name"),
+                    client_name=config.get("client_name"),
+                    project_name=config.get("project_name"),
+                )
+                for log_file in log_files:
+                    cli.outputln(
+                        log_file,
+                        aside="core",
+                        result_text="SAVED",
+                        result_icon=":floppy_disk:",
+                        con=console if use_console else None,
+                        use_icons=use_icons,
+                    )
+
+        except KeyboardInterrupt:
+            if use_console:
+                progress.console.print(
+                    "[cyan]Operation cancelled ([bold]Ctrl+C[/bold])[/cyan]"
+                )
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.error(ex, exc_info=True)
+        finally:
+            progress.stop()
 
     return queries
 
@@ -349,15 +345,13 @@ def run_parra(config: dict, show_progress: bool, use_console: bool = False) -> l
         the_pool.close()
     except KeyboardInterrupt:
         if use_console:
-            if isinstance(progress, Progress):
-                progress.console.print(
-                    "[cyan]Operation cancelled ([bold]Ctrl+C[/bold]), terminating workers[/cyan]"
-                )
-            else:
-                console.print(
-                    "[cyan]Operation cancelled ([bold]Ctrl+C[/bold]), terminating workers[/cyan]"
-                )
+            console.print(
+                "[cyan]Operation cancelled ([bold]Ctrl+C[/bold]), terminating workers[/cyan]"
+            )
+    finally:
         the_pool.terminate()
+        if isinstance(progress, Progress):
+            progress.stop()
 
     return queries
 
@@ -397,7 +391,7 @@ def scan(config: dict, **flags):
             con=console if use_console else None,
             use_icons=use_icons,
         )
-        results_urls = update_cloud(config, flags, queries, execution_duration_seconds)
+        results_urls = update_cloud(queries, config, flags, execution_duration_seconds)
         from .__main__ import DASHBOARD_URL  # pylint: disable=import-outside-toplevel
 
         cli.outputln(
