@@ -22,7 +22,7 @@ from ..config import load_config, get_config, DEFAULT_CONFIG
 from .credentials import load_local
 
 __module__ = "trivialscan.cli"
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 
 REMOTE_URL = "https://gitlab.com/trivialsec/trivialscan/"
 APP_BANNER = text2art("trivialscan", font="tarty4")
@@ -139,6 +139,13 @@ def main():
     )
     info_parser.set_defaults(subcommand="info")
     info_parser.add_argument("-h", "--help", action=_HelpAction)
+    info_parser.add_argument(
+        "-E",
+        "--expose-secrets",
+        dest="expose_secrets",
+        help="The outputs will reveal the whole secret, default will show only masked outputs",
+        action="store_true",
+    )
     register_parser = sub_parsers.add_parser(
         "register",
         prog="trivial register",
@@ -317,6 +324,7 @@ def main():
         return info(
             dashboard_api_url=args.dashboard_api_url.strip("/"),
             cli_version=__version__,
+            expose_secrets=args.expose_secrets,
         )
     if args.subcommand == "auth":
         return auth(

@@ -73,7 +73,13 @@ def cloud_sync_status(
     return data
 
 
-def info(dashboard_api_url: str, cli_version: str):
+def mask(token: str) -> str:
+    if not isinstance(token, str):
+        return ""
+    return token[:4] + "*" * 35 + token[-4:]
+
+
+def info(dashboard_api_url: str, cli_version: str, expose_secrets: bool = False):
     logger.info(f"dashboard_api_url {dashboard_api_url}")
     try:
         if KEYRING_SUPPORT:
@@ -102,7 +108,11 @@ def info(dashboard_api_url: str, cli_version: str):
         table.add_column(
             "Client", justify="right", style=constants.CLI_COLOR_INFO, no_wrap=True
         )
-        table.add_column("Registration Token", style="bold", no_wrap=True)
+        table.add_column(
+            f"Registration Token [{constants.CLI_COLOR_INFO}](-E to reveal)[/{constants.CLI_COLOR_INFO}]",
+            style="bold",
+            no_wrap=True,
+        )
         table.add_column("Credential Storage", no_wrap=True)
         table.add_column("Cloud Status", no_wrap=True)
         table.add_column("Authorization Result", no_wrap=True)
@@ -133,7 +143,7 @@ def info(dashboard_api_url: str, cli_version: str):
                 table.add_row(
                     account_name,
                     conf.get("client_name"),
-                    registration_token,
+                    registration_token if expose_secrets else mask(registration_token),
                     f"[{constants.CLI_COLOR_PASS}]Encrypted Keyring[/{constants.CLI_COLOR_PASS}]",
                     data.get("authorisation_status"),
                     authz_result,
@@ -161,7 +171,7 @@ def info(dashboard_api_url: str, cli_version: str):
             table.add_row(
                 account_name,
                 conf.get("client_name"),
-                conf.get("token"),
+                conf.get("token") if expose_secrets else mask(conf.get("token")),
                 f"[{constants.CLI_COLOR_FAIL}]Cleartext File[/{constants.CLI_COLOR_FAIL}]",
                 data["authorisation_status"],
                 authz_result,
