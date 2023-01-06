@@ -1,6 +1,6 @@
 ---
-account_name: trivialsecurity
-client_name: sweptwhich
+account_name: testing
+client_name: surfaceeye
 project_name: Testing
 
 defaults:
@@ -18,7 +18,7 @@ defaults:
 
 outputs:
   - type: console
-    use_icons: True
+    use_icons: False
   - type: json
     path: .development/results/{project_name}/{hostname}_{port}.json
     when: per_host
@@ -37,6 +37,12 @@ outputs:
   "6.5.4": Insecure communications
 
 targets:
+  - hostname: www.ssllabs.com
+    http_request_paths:
+      - /
+      - /ssltest
+      - /ssltest/analyze
+    # robots.txt forbids /ssltest/analyze
   - hostname: client.badssl.com
     client_certificate: .development/badssl.com-client.pem
   - hostname: expired.badssl.com
@@ -54,12 +60,6 @@ targets:
   - hostname: no-sct.badssl.com
   - hostname: cbc.badssl.com
   - hostname: superfish.badssl.com
-  - hostname: www.ssllabs.com
-    http_request_paths:
-      - /
-      - /ssltest
-      - /ssltest/analyze
-    # robots.txt forbids /ssltest/analyze
 
 # Customise outputs, or really anything
 evaluations:

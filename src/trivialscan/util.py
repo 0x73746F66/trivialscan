@@ -1101,6 +1101,16 @@ def upload_cloud(
                 },
                 timeout=300,
             )
+
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout,
+        ) as err:
+            logger.warning(err, exc_info=True)
+            upload_progress.console.print(
+                f"[{constants.CLI_COLOR_FAIL}]Failed to contact the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+            )
+        try:
             if resp.status_code == 403:
                 upload_progress.console.print(
                     f"[{constants.CLI_COLOR_FAIL}]Missing or bad client Registration Token provided; Hint: run 'trivial auth'[/{constants.CLI_COLOR_FAIL}]"
@@ -1110,22 +1120,16 @@ def upload_cloud(
                 logger.debug(resp.text)
                 try:
                     data = json.loads(resp.text)
+                    return data
                 except json.JSONDecodeError:
-                    data = resp.text
-                if not data:
                     upload_progress.console.print(
                         f"[{constants.CLI_COLOR_FAIL}]Bad response from Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
                     )
-                    return
-                return data
 
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.ReadTimeout,
-        ) as err:
+        except Exception as err:
             logger.warning(err, exc_info=True)
         upload_progress.console.print(
-            f"[{constants.CLI_COLOR_FAIL}]Unable to reach the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
+            f"[{constants.CLI_COLOR_FAIL}]Upload to Trivial Security servers failed[/{constants.CLI_COLOR_FAIL}]"
         )
 
 
@@ -1147,9 +1151,9 @@ def _send_files(queries: list, config: dict, flags: dict, duration: int):
     for data in queries:
         if not data.get("tls"):
             logger.info(
-                f'No response from target: {data["transport"]["hostname"]}:{data["transport"]["port"]}'
+                f'Skipping upload, no response from target: {data["transport"]["hostname"]}:{data["transport"]["port"]}'
             )
-            return
+            continue
 
         logger.info(
             f'Negotiated {data["tls"]["protocol"]["negotiated"]} {data["transport"]["peer_address"]}'
