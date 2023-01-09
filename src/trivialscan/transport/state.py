@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from typing import Union
 
 from requests import Response
+from requests.exceptions import JSONDecodeError
 from OpenSSL.crypto import (
     load_certificate,
     FILETYPE_PEM,
@@ -71,8 +72,11 @@ class HTTPState:
         return sha1(self.response_text.encode()).hexdigest()
 
     @property
-    def response_json(self) -> Union[dict, list]:
-        return self._response.json()
+    def response_json(self) -> Union[dict, list, None]:
+        try:
+            return self._response.json()
+        except JSONDecodeError:
+            return None
 
     def to_dict(self, include_transport: bool = False):
         data = {
@@ -80,6 +84,7 @@ class HTTPState:
             "status_code": self.response_status,
             "headers": self.response_headers,
             "body_hash": self.response_body_hash,
+            "request_url": self.request_url,
         }
         if include_transport:
             data["_transport"] = {

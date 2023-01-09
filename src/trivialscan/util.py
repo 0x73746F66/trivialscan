@@ -231,7 +231,7 @@ def get_valid_certificate_extensions(cert: Certificate) -> list[extensions.Exten
 
 def get_extensions_by_oid(cert: Certificate, oid: str) -> extensions.Extension:
     for ext in cert.extensions:
-        if ext.oid._dotted_string == oid:
+        if ext.oid.dotted_string == oid:
             return ext
     return None
 

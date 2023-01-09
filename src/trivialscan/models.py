@@ -152,6 +152,7 @@ class HostHTTP(BaseModel):
     status_code: conint(ge=100, le=599)  # type: ignore
     headers: dict[str, str]
     body_hash: str
+    request_url: str
 
 
 class HostTransport(BaseModel):

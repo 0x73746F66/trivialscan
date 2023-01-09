@@ -1,4 +1,5 @@
 ---
+fail_fast: true
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.1.0
@@ -19,6 +20,7 @@ repos:
         args: ["--no-allow-dict-kwargs"]
       - id: debug-statements
       - id: no-commit-to-branch
+        stages: [commit]
         args: [--branch, main]
       - id: pretty-format-json
         args: [--autofix, --no-sort-keys]

@@ -168,6 +168,7 @@ class EvaluationTask(BaseEvaluationTask):
 
         return True
 
+    @timeout(10)
     def _oracle(self, pms, messageflow=False):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

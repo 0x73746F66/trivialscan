@@ -220,11 +220,11 @@ class BaseCertificate:
             if not isinstance(policy, PolicyInformation):
                 continue
             if (
-                policy.policy_identifier._dotted_string  # pylint: disable=protected-access
+                policy.policy_identifier.dotted_string
                 in constants.VALIDATION_OID.keys()  # pylint: disable=consider-iterating-dictionary
             ):
                 return (
-                    policy.policy_identifier._dotted_string  # pylint: disable=protected-access
+                    policy.policy_identifier.dotted_string
                 )
         return None
 
