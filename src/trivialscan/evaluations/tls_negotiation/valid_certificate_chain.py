@@ -9,6 +9,7 @@ from certvalidator.errors import (
     PathBuildingError,
 )
 
+from ...exceptions import EvaluationNotRelevant
 from ...util import validate_certificate_chain, gather_key_usages
 from ...certificate import LeafCertificate
 from ...transport import TLSTransport
@@ -26,24 +27,24 @@ class EvaluationTask(BaseEvaluationTask):
     ) -> None:
         super().__init__(transport, metadata, config)
 
-    def evaluate(self) -> Union[bool, None]:
+    def evaluate(self) -> Union[bool, None]:  # pylint: disable=arguments-differ
         leaf = None
         for cert in self.transport.store.tls_state.certificates:
             if isinstance(cert, LeafCertificate):
                 leaf = cert
                 break
         if not leaf:
-            return None
+            raise EvaluationNotRelevant
 
         validator_key_usage, validator_extended_key_usage = gather_key_usages(
-            cert.x509.to_cryptography()
+            leaf.x509.to_cryptography()
         )
         self.substitution_metadata["key_usage"] = validator_key_usage
         self.substitution_metadata["extended_key_usage"] = validator_extended_key_usage
         try:
             validate_certificate_chain(
-                dump_certificate(FILETYPE_PEM, cert.x509),
-                [pem for pem in self.transport._certificate_chain],
+                dump_certificate(FILETYPE_PEM, leaf.x509),
+                self.transport._certificate_chain,  # pylint: disable=protected-access
                 validator_key_usage,
                 validator_extended_key_usage,
             )
@@ -58,6 +59,7 @@ class EvaluationTask(BaseEvaluationTask):
         except Exception as ex:
             logger.warning(ex, exc_info=True)
             self.substitution_metadata[RESULT_KEY] = str(ex)
+            self.substitution_metadata["reason"] = "An unexpected exception ocurred during chain verification"
             return False
 
         self.substitution_metadata[

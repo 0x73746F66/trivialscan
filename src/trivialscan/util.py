@@ -534,7 +534,10 @@ def match_hostname(host: str, cert: Certificate) -> bool:
             matched_wildcard = True
             break
 
-    return valid_common_name is True and (matched_wildcard is True or host in domains)
+    if not valid_common_name:
+        raise ValueError(f"Invalid match to common name {common_name}")
+
+    return matched_wildcard is True or host in domains
 
 
 def validate_certificate_chain(

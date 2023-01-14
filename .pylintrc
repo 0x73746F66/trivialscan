@@ -3,7 +3,7 @@ output-format=parseable
 reports=no
 
 [MESSAGES CONTROL]
-disable=logging-fstring-interpolation,missing-function-docstring,missing-module-docstring,missing-class-docstring
+disable=logging-fstring-interpolation,missing-function-docstring,missing-module-docstring,missing-class-docstring,broad-except
 
 [LOGGING]
 logging-format-style=new

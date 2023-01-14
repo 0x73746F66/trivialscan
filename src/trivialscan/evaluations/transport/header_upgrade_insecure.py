@@ -15,6 +15,9 @@ class EvaluationTask(BaseEvaluationTask):
             exists = state.header_exists(
                 name="content-security-policy",
                 includes_value="upgrade-insecure-requests",
+            ) or state.header_exists(
+                name="content-security-policy",
+                includes_value="block-all-mixed-content",
             )
             if not exists:
                 missing.append(state.request_url)

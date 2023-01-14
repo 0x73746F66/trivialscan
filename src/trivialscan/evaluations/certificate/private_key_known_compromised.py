@@ -32,6 +32,7 @@ class EvaluationTask(BaseEvaluationTask):
             return None
         logger.info(f"{url} from cache {resp.from_cache}")
         logger.debug(resp.text)
+        self.substitution_metadata["pwnedkeys.com"] = resp.text
         if "That key does not appear to be pwned" in resp.text:
             return False
         if resp.status_code == 200:

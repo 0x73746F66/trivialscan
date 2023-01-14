@@ -6,6 +6,7 @@ import socket
 import os
 from typing import Union
 
+from ...exceptions import EvaluationNotRelevant
 from ...util import timeout
 from ...transport import TLSTransport
 from ...certificate import LeafCertificate
@@ -58,13 +59,11 @@ class EvaluationTask(BaseEvaluationTask):
                 self._leaf = cert
                 break
         if self._leaf is None:
-            self.substitution_metadata["tls_robot"] = "missing Leaf Cedrtificate"
-            return None
+            self.substitution_metadata["reason"] = "missing Leaf Certificate"
+            raise EvaluationNotRelevant
         if self._leaf.public_key_type not in ["RSA", "DSA"]:
-            self.substitution_metadata[
-                "tls_robot"
-            ] = f"{self._leaf.public_key_type} not subject to TLS ROBOT attacks"
-            return False
+            self.substitution_metadata["reason"] = f"{self._leaf.public_key_type} not subject to TLS ROBOT attacks"
+            raise EvaluationNotRelevant
         if self._leaf.public_key_modulus is None:
             logger.info("tls_robot: No public key modulus available")
             self.substitution_metadata["tls_robot"] = "No public key modulus available"
@@ -125,9 +124,8 @@ class EvaluationTask(BaseEvaluationTask):
             oracle_bad3 = self._oracle(pms_bad3, messageflow=True)
             oracle_bad4 = self._oracle(pms_bad4, messageflow=True)
             if oracle_good == oracle_bad1 == oracle_bad2 == oracle_bad3 == oracle_bad4:
-                self.substitution_metadata[
-                    "tls_robot"
-                ] = f"Identical results ({oracle_good}), no working oracle found"
+                self.substitution_metadata["reason"] = f"Identical results ({oracle_good}), no working oracle found"
+                self.substitution_metadata["tls_robot"] = oracle_good
                 return False
             else:
                 flow = True
@@ -148,9 +146,7 @@ class EvaluationTask(BaseEvaluationTask):
             or oracle_bad3 != oracle_bad_verify3
             or oracle_bad4 != oracle_bad_verify4
         ):
-            self.substitution_metadata[
-                "tls_robot"
-            ] = "aborted with inconsistent results"
+            self.substitution_metadata["reason"] = "aborted with inconsistent results"
             return None
         # If the response to the invalid PKCS#1 request (oracle_bad1) is equal to both
         # requests starting with 0002, we have a weak oracle. This is because the only
@@ -158,13 +154,11 @@ class EvaluationTask(BaseEvaluationTask):
         # correctly formatted PKCS#1 message with 0x00 on a correct position. This
         # makes our oracle weak
         if oracle_bad1 == oracle_bad2 == oracle_bad3:
-            self.substitution_metadata[
-                "tls_robot"
-            ] = "The oracle is weak, the attack could take too long"
+            self.substitution_metadata["tls_robot"] = oracle_bad1
+            self.substitution_metadata["reason"] = "The oracle is weak, the attack could take too long"
         else:
-            self.substitution_metadata[
-                "tls_robot"
-            ] = "The oracle is strong, real attack is possible"
+            self.substitution_metadata["reason"] = "The oracle is strong, real attack is possible"
+            self.substitution_metadata["tls_robot"] = ", ".join([oracle_bad1, oracle_bad2, oracle_bad3])
 
         return True
 

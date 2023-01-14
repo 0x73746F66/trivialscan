@@ -148,11 +148,11 @@ class HostTLS(BaseModel):
 
 
 class HostHTTP(BaseModel):
-    title: str
-    status_code: conint(ge=100, le=599)  # type: ignore
-    headers: dict[str, str]
-    body_hash: str
-    request_url: str
+    title: Optional[str]
+    status_code: Optional[conint(ge=100, le=599)]  # type: ignore
+    headers: Optional[dict[str, str]]
+    body_hash: Optional[str]
+    request_url: Optional[str]
 
 
 class HostTransport(BaseModel):

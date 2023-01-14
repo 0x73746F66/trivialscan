@@ -53,6 +53,7 @@
             "fastapi",
             "NOSONAR",
             "pydantic",
+            "scsv",
             "sendgrid",
             "starlette",
             "trivialscan"

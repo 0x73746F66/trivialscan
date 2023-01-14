@@ -13,8 +13,11 @@ class EvaluationTask(BaseEvaluationTask):
         compression = ["gzip", "bz", "deflate", "compress"]
         for state in self.transport.store.http_states:
             for method in compression:
-                results.append(
-                    state.header_exists(name="content-encoding", includes_value=method)
-                )
+                if state.header_exists(name="content-encoding", includes_value=method):
+                    self.substitution_metadata["content_encoding"] = state.response_headers.get('content-encoding')
+                    results.append(method)
 
-        return any(results)
+        if len(results) > 0:
+            self.substitution_metadata["reason"] = ", ".join(results) + " compression present"
+            return True
+        return False

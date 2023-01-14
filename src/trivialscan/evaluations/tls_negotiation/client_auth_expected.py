@@ -16,5 +16,6 @@ class EvaluationTask(BaseEvaluationTask):
             self.transport.store.tls_state.certificate_mtls_expected
             or len(self.transport.store.tls_state.expected_client_subjects) > 0
         ):
+            self.substitution_metadata["expected_client_subjects"] = " ".join(self.transport.store.tls_state.expected_client_subjects)
             return True
         raise EvaluationNotRelevant

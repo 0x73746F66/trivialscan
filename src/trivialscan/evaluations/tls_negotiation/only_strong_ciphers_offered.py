@@ -16,4 +16,4 @@ class EvaluationTask(BaseEvaluationTask):
                 results.add(offered_cipher)
 
         self.substitution_metadata["offered_strong_ciphers"] = " ".join(results)
-        return len(results) > 0
+        return len(results) == len(self.transport.store.tls_state.offered_ciphers)

@@ -1,7 +1,7 @@
 from ...transport import TLSTransport
 from .. import BaseEvaluationTask
 
-PFS_PROTOCOLS = ["ECDHE-RSA", "ECDHE-ECDSA", "DHE-RSA" "DHE-DSA"]
+PFS_PROTOCOLS = ["ECDHE-RSA", "ECDHE-ECDSA", "DHE-RSA", "DHE-DSA"]
 
 
 class EvaluationTask(BaseEvaluationTask):
@@ -13,5 +13,11 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self):
         results = []
         for proto in PFS_PROTOCOLS:
-            results.append(proto in self.transport.store.tls_state.negotiated_cipher)
-        return any(results)
+            if proto in self.transport.store.tls_state.negotiated_cipher:
+                results.append(proto)
+        if len(results) > 0:
+            self.substitution_metadata["reason"] = " ".join(results)
+            return True
+
+        self.substitution_metadata["reason"] = f"{self.transport.store.tls_state.negotiated_cipher} does not provide forward anonymity"
+        return False

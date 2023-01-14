@@ -12,6 +12,8 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self):
         results = []
         for offered_cipher in self.transport.store.tls_state.offered_ciphers:
-            results.append(offered_cipher in NOT_KNOWN_WEAK_CIPHERS)
+            if offered_cipher in NOT_KNOWN_WEAK_CIPHERS:
+                results.append(offered_cipher)
 
-        return any(results)
+        self.substitution_metadata["offered_strong_ciphers"] = " ".join(results)
+        return len(results) > 0

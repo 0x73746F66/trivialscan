@@ -56,9 +56,9 @@ references:
     url: https://datatracker.ietf.org/doc/html/rfc4033
 anotate_results:
   - result_value: False
-    result_level: warn
-    display_as: Misconfigured
-    score: -50
+    result_level: info
+    display_as: Not Present
+    score: 0
   - result_value: True
     result_level: pass
     display_as: Detected

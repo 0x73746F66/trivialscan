@@ -38,6 +38,7 @@ class EvaluationTask(BaseEvaluationTask):
             pass
         finally:
             conn.close()
+        self.substitution_metadata["reason"] = f"Total renegotiations: {conn.total_renegotiations()}"
         return self.client_renegotiation
 
     def renegotiate(self, conn: SSL.Connection):

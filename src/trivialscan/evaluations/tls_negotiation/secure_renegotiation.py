@@ -14,6 +14,8 @@ class EvaluationTask(BaseEvaluationTask):
             "TLS_EMPTY_RENEGOTIATION_INFO_SCSV"
             in self.transport.store.tls_state.offered_ciphers
         )
+        if not self._renegotiation_info_scsv:
+            self.substitution_metadata["reason"] = "Missing pseudo cipher TLS_EMPTY_RENEGOTIATION_INFO_SCSV"
         # no downgrade possible using TLS 1.3
         if not self._renegotiation_info_scsv and all(
             [
@@ -23,6 +25,7 @@ class EvaluationTask(BaseEvaluationTask):
                 == OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION],
             ]
         ):
+            self.substitution_metadata["reason"] = "Downgrade not possible after successful negotiation of TLS 1.3"
             self._renegotiation_info_scsv = True
 
         return self._renegotiation_info_scsv

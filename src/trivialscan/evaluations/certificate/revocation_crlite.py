@@ -39,7 +39,8 @@ class EvaluationTask(BaseEvaluationTask):
         status = query_crlite(tmp.name, db_path)
         unlink(tmp.name)
         if status not in STATUS:
-            logger.error(f"Unknown CRLite response {status}")
+            self.substitution_metadata["reason"] = f"Unknown CRLite response {status}"
+            logger.error(self.substitution_metadata["reason"])
         return status
 
 

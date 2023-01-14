@@ -15,6 +15,7 @@ class EvaluationTask(BaseEvaluationTask):
     def evaluate(self, certificate: BaseCertificate) -> Union[bool, None]:
         if not isinstance(certificate, LeafCertificate) or not certificate.dnssec:
             raise EvaluationNotRelevant
+        self.substitution_metadata["dnssec_algorithm"] = certificate.dnssec_algorithm
         return (  # pylint: disable=consider-iterating-dictionary
             certificate.dnssec_algorithm in WEAK_DNSSEC_ALGORITHMS.keys()
         )

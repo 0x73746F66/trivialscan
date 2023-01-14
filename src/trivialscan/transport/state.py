@@ -57,7 +57,7 @@ class HTTPState:
 
     @property
     def response_headers(self) -> dict[str, str]:
-        return {k: v for k, v in self._response.headers.items()}
+        return {k.lower(): v for k, v in self._response.headers.items()}
 
     @property
     def response_title(self) -> str:
