@@ -44,7 +44,7 @@ compliance:
 references:
   - name: RFC 5280 - Internet X.509 Public Key Infrastructure Certificate and Certificate Revocation List (CRL) Profile
     url: https://datatracker.ietf.org/doc/html/rfc5280
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: pass
     display_as: Good Configuration

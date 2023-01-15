@@ -57,7 +57,7 @@ compliance:
 references:
   - name: RFC 7507 - TLS Fallback Signaling Cipher Suite Value (SCSV) for Preventing Protocol Downgrade Attacks
     url: https://datatracker.ietf.org/doc/html/rfc7507
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: warn
     display_as: Misconfigured

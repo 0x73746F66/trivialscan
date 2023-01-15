@@ -58,7 +58,7 @@ references:
     url: https://datatracker.ietf.org/doc/html/rfc4956
   - name: RFC 4033 - DNS Security Introduction and Requirements
     url: https://datatracker.ietf.org/doc/html/rfc4033
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: fail
     display_as: Misconfigured

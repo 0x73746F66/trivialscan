@@ -98,7 +98,7 @@ references:
     url: https://weakdh.org/imperfect-forward-secrecy-ccs15.pdf
   - name: TLS/SSL certificate weak key vulnerability - DigiCert
     url: https://docs.digicert.com/certificate-tools/discovery-user-guide/tlsssl-certificate-vulnerabilities/weak-keys/
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration

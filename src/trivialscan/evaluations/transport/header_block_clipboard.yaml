@@ -39,7 +39,7 @@ compliance:
 references:
   - name: MDN Web Docs
     url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: pass
     display_as: Good Configuration

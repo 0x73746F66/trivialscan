@@ -51,7 +51,7 @@ compliance:
 references:
   - name: RFC 8659 - DNS Certification Authority Authorization (CAA) Resource Record
     url: https://datatracker.ietf.org/doc/html/rfc8659
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: warn
     display_as: Misconfigured

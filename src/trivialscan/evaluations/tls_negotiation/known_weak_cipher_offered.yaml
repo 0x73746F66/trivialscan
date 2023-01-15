@@ -71,7 +71,7 @@ compliance:
 references:
   - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
     url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration

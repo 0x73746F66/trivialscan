@@ -10,7 +10,7 @@ issue: |-
 references:
   - name: PCI DSS 4.0 standard - Report on Compliance
     url: https://docs-prv.pcisecuritystandards.org/PCI%20DSS/Reporting%20Template%20or%20Form/PCI-DSS-v4_0-ROC-Template.pdf
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: pass
     display_as: Good Configuration

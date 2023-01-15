@@ -65,7 +65,7 @@ targets:
 evaluations:
   # reverse the result, so a trusted russian root is a FAIL instead of a PASS
   - key: trust_russian
-    anotate_results:
+    annotate_results:
       - result_value: True
         result_level: fail
         display_as: Trusted

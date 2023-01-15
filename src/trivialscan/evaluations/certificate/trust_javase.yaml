@@ -60,7 +60,7 @@ compliance:
         - 4.2.1
         - 6.2.4
 references:
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: pass
     display_as: Trusted

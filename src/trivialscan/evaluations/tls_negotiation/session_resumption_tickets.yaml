@@ -56,7 +56,7 @@ references:
     url: https://svs.informatik.uni-hamburg.de/publications/2018/2018-12-06-Sy-ACSAC-Tracking_Users_across_the_Web_via_TLS_Session_Resumption.pdf
   - name: Measuring the Security Harm of TLS Crypto Shortcuts
     url: https://dl.acm.org/doi/10.1145/2987443.2987480
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration

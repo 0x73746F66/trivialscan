@@ -71,7 +71,7 @@ references:
     url: https://ssl-config.mozilla.org/
   - name: Measuring the Security Harm of TLS Crypto Shortcuts
     url: https://dl.acm.org/doi/10.1145/2987443.2987480
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: pass
     display_as: Good Configuration

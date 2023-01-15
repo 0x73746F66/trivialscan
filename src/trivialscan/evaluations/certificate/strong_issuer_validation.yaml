@@ -62,7 +62,7 @@ references:
     url: https://webcache.googleusercontent.com/search?q=cache:s_bQ24QvDcQJ:https://par.nsf.gov/servlets/purl/10047386+&cd=6&hl=en&ct=clnk&gl=au
   - name: Cloud Strife - Mitigating the Security Risks ofDomain-Validated Certificates
     url: https://webcache.googleusercontent.com/search?q=cache:dQ4atOcEvWEJ:https://kevin.borgolte.me/files/pdf/ndss2018-cloud-strife.pdf+&cd=13&hl=en&ct=clnk&gl=au
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: pass
     display_as: Good Configuration

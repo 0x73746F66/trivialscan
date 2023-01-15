@@ -48,7 +48,7 @@ compliance:
 references:
   - name: Eyal Ronen and Adi Shamir - Critical Review of Imperfect Forward Secrecy
     url: http://www.wisdom.weizmann.ac.il/~eyalro/RonenShamirDhReview.pdf
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration

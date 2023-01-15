@@ -66,7 +66,7 @@ compliance:
         - 6.4.1
         - 6.4.2
 references:
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration

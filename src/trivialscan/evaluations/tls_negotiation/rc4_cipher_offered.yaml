@@ -64,7 +64,7 @@ references:
     url: https://www.kb.cert.org/vuls/id/144389
   - name: ROBOT Proof of Concept
     url: https://github.com/robotattackorg/robot-detect
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration

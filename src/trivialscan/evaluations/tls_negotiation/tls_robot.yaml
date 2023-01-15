@@ -85,7 +85,7 @@ references:
     url: https://eprint.iacr.org/2003/052
   - name: Disclosure Paper
     url: https://www.nds.rub.de/media/nds/veroeffentlichungen/2015/08/21/Tls13QuicAttacks.pdf
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration

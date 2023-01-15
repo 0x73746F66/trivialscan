@@ -1,7 +1,7 @@
 import logging
 from typing import Union
 
-from tlstrust import TrustStore, context
+from tlstrust import TrustStore, context, stores
 from ...exceptions import EvaluationNotRelevant, NoLogEvaluation
 from ...transport import TLSTransport
 from ...certificate import BaseCertificate, RootCertificate
@@ -24,7 +24,16 @@ class EvaluationTask(BaseEvaluationTask):
             logger.warning(reason)
             self.substitution_metadata["reason"] = reason
             raise NoLogEvaluation
-
-        return TrustStore(certificate.subject_key_identifier).check_trust(
+        store = TrustStore(certificate.subject_key_identifier)
+        self.substitution_metadata["root_store_name"] = context.ANDROID_FROYO
+        self.substitution_metadata["store_version"] = stores.android_2_2.__version__
+        self.substitution_metadata["store_description"] = stores.android_2_2.__description__
+        self.substitution_metadata["short_name"] = context.SHORT_LOOKUP.get(context.ANDROID_FROYO, context.ANDROID_FROYO)
+        try:
+            self.substitution_metadata["exists_in_store"] = store.exists(context_type=context.PLATFORM_ANDROID2_2)
+            self.substitution_metadata["expired_in_store"] = store.expired_in_store(context_type=context.PLATFORM_ANDROID2_2)
+        except FileExistsError:
+            self.substitution_metadata["exists_in_store"] = False
+        return store.check_trust(
             context_type=context.PLATFORM_ANDROID2_2
         )

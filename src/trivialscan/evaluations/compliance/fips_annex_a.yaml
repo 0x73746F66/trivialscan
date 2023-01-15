@@ -12,7 +12,7 @@ issue: |-
 references:
   - name: Annex A - Approved Security Functions for FIPS PUB 140-2, Security Requirements for Cryptographic Modules
     url: https://csrc.nist.gov/publications/detail/fips/140/2/final
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: pass
     display_as: Good Configuration

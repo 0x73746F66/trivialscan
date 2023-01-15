@@ -68,7 +68,7 @@ compliance:
 references:
   - name: Analyzing SSL/TLS Certificates Used by Malware (Trend Micro)
     url: https://webcache.googleusercontent.com/search?q=cache:lXyCnKFb3acJ:https://www.trendmicro.com/en_us/research/21/i/analyzing-ssl-tls-certificates-used-by-malware.html+&cd=1&hl=en&ct=clnk&gl=au
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: pass
     display_as: Not Known Compromised

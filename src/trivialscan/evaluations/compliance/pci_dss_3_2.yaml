@@ -11,7 +11,7 @@ issue: |-
 references:
   - name: PCI DSS 3.2.1 standard
     url: https://docs-prv.pcisecuritystandards.org/PCI%20DSS/Standard/PCI_DSS_v3-2-1.pdf
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: pass
     display_as: Good Configuration

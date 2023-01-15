@@ -70,10 +70,10 @@ def _evaluation_merge(key: str, item1: dict, item2: dict) -> dict:
         return_dict["references"] = _merge_2_lists_of_dicts(
             item1.get("references", []), item2.get("references", []), unique_key="name"
         )
-    if item2.get("anotate_results"):
-        return_dict["anotate_results"] = _merge_2_lists_of_dicts(
-            item1.get("anotate_results", []),
-            item2.get("anotate_results", []),
+    if item2.get("annotate_results"):
+        return_dict["annotate_results"] = _merge_2_lists_of_dicts(
+            item1.get("annotate_results", []),
+            item2.get("annotate_results", []),
             unique_key="value",
         )
     update_props = ["group", "label_as", "issue", "cvss2", "cvss3"]
@@ -285,6 +285,6 @@ def default_config() -> dict:
 def load_config(filename: str = DEFAULT_CONFIG) -> dict:
     config_path = Path(filename)
     if config_path.is_file():
-        logger.debug(config_path.absolute())
+        logger.info(f"Loaded config {config_path.absolute()}")
         return yaml.safe_load(config_path.read_text(encoding="utf8"))
     return {}

@@ -49,13 +49,18 @@
         "window.autoDetectColorScheme": true,
         "cSpell.words": [
             "cachier",
+            "CCADB",
+            "CERTIFI",
             "crlite",
             "fastapi",
+            "mintsifry",
             "NOSONAR",
             "pydantic",
+            "rossii",
             "scsv",
             "sendgrid",
             "starlette",
+            "tlstrust",
             "trivialscan"
         ],
         "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python"

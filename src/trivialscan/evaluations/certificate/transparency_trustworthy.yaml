@@ -45,7 +45,7 @@ references:
     url: https://groups.google.com/a/chromium.org/g/ct-policy/c/fCt4Bm03GsI
   - name: Apple - Certificate Transparency policy
     url: https://support.apple.com/en-ca/HT205280
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: warn
     display_as: Misconfigured

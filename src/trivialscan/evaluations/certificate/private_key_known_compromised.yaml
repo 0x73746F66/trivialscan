@@ -54,7 +54,7 @@ references:
     url: https://www.debian.org/security/2008/dsa-1571
   - name: OSINT
     url: https://pwnedkeys.com/faq.html
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: fail
     display_as: Compromised

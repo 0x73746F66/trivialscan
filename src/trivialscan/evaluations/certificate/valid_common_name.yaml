@@ -66,7 +66,7 @@ references:
     url: https://datatracker.ietf.org/doc/html/rfc9110
   - name: DNSimple - What is the Certificate Common Name
     url: https://support.dnsimple.com/articles/what-is-common-name/
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: pass
     display_as: Good Configuration

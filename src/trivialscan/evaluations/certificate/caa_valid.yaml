@@ -57,7 +57,7 @@ references:
     url: https://wiki.mozilla.org/CA/Camerfirma_Issues#Issue_F:_Ignoring_CAA_based_on_another_CA.27s_Certificate_Transparency_disclosure_.28Nov._2017.29
   - name: Let's Encrypt? Let's revoke 3 million HTTPS certificates
     url: https://www.theregister.com/2020/03/03/lets_encrypt_cert_revocation/
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: warn
     display_as: Misconfigured

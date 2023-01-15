@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel", "twine"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -21,7 +21,7 @@ dependencies = [
     "validators",
     "pydantic",
     "idna",
-    "tlstrust >= 2.6.7",
+    "tlstrust >= 2.7.0",
     "certvalidator",
     "dnspython",
     "h2 >= 4.1.0",
@@ -47,7 +47,7 @@ dependencies = [
 dynamic = ["version", "readme"]
 
 [project.urls]
-"Homepage" = "https://trivialsec.com"
+"Homepage" = "https://www.trivialsec.com"
 "Bug Tracker" = "https://gitlab.com/trivialsec/trivialscan/-/issues"
 
 [tool.setuptools.dynamic]

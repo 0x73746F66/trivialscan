@@ -75,7 +75,7 @@ compliance:
 references:
   - name: Twenty Years of Attacks on the RSA Cryptosystem - Dan Boneh, Stanford University
     url: https://www.researchgate.net/publication/2538368_Twenty_Years_of_Attacks_on_the_RSA_Cryptosystem
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration

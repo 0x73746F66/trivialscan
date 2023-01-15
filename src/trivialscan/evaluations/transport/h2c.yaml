@@ -36,7 +36,7 @@ compliance:
 references:
   - name: RFC 7540 - Hypertext Transfer Protocol Version 2 (HTTP/2)
     url: https://datatracker.ietf.org/doc/html/rfc7540
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration

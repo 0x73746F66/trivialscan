@@ -10,7 +10,7 @@ issue: |-
 references:
   - name: Certificate Transparency step by step
     url: https://certificate.transparency.dev/howctworks/
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: warn
     display_as: Misconfigured

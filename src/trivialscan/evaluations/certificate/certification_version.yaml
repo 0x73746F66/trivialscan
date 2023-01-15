@@ -12,7 +12,7 @@ references:
     url: https://www.hhs.gov/hipaa/for-professionals/security/guidance/index.html
   - name: HIPAA / HITECH
     url: https://www.hhs.gov/hipaa/index.html
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: pass
     display_as: Compliant

@@ -12,7 +12,7 @@ references:
     url: https://csrc.nist.gov/publications/detail/sp/800-131a/rev-2/final
   - name: FIPS 186-4 - Digital Signature Standard (DSS)
     url: http://dx.doi.org/10.6028/NIST.FIPS.186-4
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: pass
     display_as: Good Configuration

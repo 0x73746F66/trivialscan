@@ -64,7 +64,7 @@ compliance:
 references:
   - name: RFC 9110 - HTTP Semantics
     url: https://datatracker.ietf.org/doc/html/rfc9110
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: pass
     display_as: Good Configuration

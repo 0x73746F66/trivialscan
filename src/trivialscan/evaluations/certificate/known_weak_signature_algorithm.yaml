@@ -69,7 +69,7 @@ references:
     url: https://www.dns.cam.ac.uk/news/2020-01-09-sha-mbles.html
   - name: Disclosure Paper
     url: https://sha-mbles.github.io/
-anotate_results:
+annotate_results:
   - result_value: True
     result_level: warn
     display_as: Misconfigured

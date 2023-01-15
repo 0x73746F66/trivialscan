@@ -38,7 +38,7 @@ compliance:
 references:
   - name: MDN Web Docs
     url: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration

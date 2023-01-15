@@ -62,7 +62,7 @@ compliance:
 references:
   - name: Compression and information leakage of plaintext - John Kelsey
     url: https://www.sjoerdlangkemper.nl/2016/08/23/compression-side-channel-attacks/
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: pass
     display_as: Good Configuration

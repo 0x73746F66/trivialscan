@@ -59,7 +59,7 @@ compliance:
 references:
   - name: RFC 5746 - Transport Layer Security Renegotiation Indication Extension
     url: https://datatracker.ietf.org/doc/html/rfc5746
-anotate_results:
+annotate_results:
   - result_value: False
     result_level: warn
     display_as: Misconfigured

@@ -228,27 +228,27 @@ class Trivialscan:
             "compliance": self._compliance_detail(task.metadata.get("compliance", {})),
             "threats": self._threats_detail(task.metadata.get("threats", {})),
         }
-        for anotatation in task.metadata.get("anotate_results", []):
+        for annotation in task.metadata.get("annotate_results", []):
             if (
-                isinstance(anotatation["result_value"], str)
-                and anotatation["result_value"] == "None"
+                isinstance(annotation["result_value"], str)
+                and annotation["result_value"] == "None"
             ):
-                anotatation["result_value"] = None
+                annotation["result_value"] = None
             if (
-                anotatation["result_value"] is result_value
-                or anotatation["result_value"] == result_value
+                annotation["result_value"] is result_value
+                or annotation["result_value"] == result_value
             ):
-                data["result_level"] = anotatation.get(
+                data["result_level"] = annotation.get(
                     "result_level", constants.RESULT_LEVEL_INFO
                 )
-                data["result_text"] = anotatation.get(
+                data["result_text"] = annotation.get(
                     "result_text",
                     constants.DEFAULT_MAP.get(
                         data["result_level"], constants.RESULT_LEVEL_INFO_DEFAULT
                     ),
                 )
-                data["result_label"] = anotatation["display_as"]
-                data["score"] = anotatation["score"]
+                data["result_label"] = annotation["display_as"]
+                data["score"] = annotation["score"]
                 break
 
         substitutions = deepcopy(task.substitution_metadata)
