@@ -16,8 +16,6 @@ RUN apt-get update -q \
         software-properties-common \
         gnupg \
         gnupg2 \
-    && curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - \
-    && apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com focal main" \
     && apt-get install -qy --no-install-recommends \
         python3 \
         python3-distutils \
@@ -27,7 +25,6 @@ RUN apt-get update -q \
         gzip \
         tar \
         jq \
-        terraform \
     && apt-get autoremove -y \
     && apt-get clean \
     && rm -rf /tmp/* /var/lib/apt/lists/* \

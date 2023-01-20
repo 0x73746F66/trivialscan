@@ -40,8 +40,8 @@ clean: ## cleans python for wheel
 	rm -f **/*.zip **/*.tgz **/*.gz .coverage
 
 deps: ## install dependancies for development of this project
-	python -m pip install --disable-pip-version-check -U pip
-	python -m pip install .
+	pip install --disable-pip-version-check -U pip
+	pip install .
 
 setup: deps ## setup for development of this project
 	pre-commit install --hook-type commit-msg --hook-type pre-push --hook-type pre-commit
@@ -49,15 +49,15 @@ setup: deps ## setup for development of this project
 	yes | detect-secrets audit .secrets.baseline
 
 install: ## Install the package
-	python -m pip install -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
+	pip install -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
 
 reinstall: ## Force install the package
-	python -m pip install --force-reinstall -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
+	pip install --force-reinstall -U dist/trivialscan-$(TRIVIALSCAN_VERSION)-py3-none-any.whl
 
 install-dev: ## Install the package
-	python -m pip install --disable-pip-version-check -U pip
-	python -m pip install -U -r requirements-dev.txt
-	python -m pip install --force-reinstall --no-cache-dir -e .
+	pip install --disable-pip-version-check -U pip
+	pip install -U -r requirements-dev.txt
+	pip install --force-reinstall --no-cache-dir -e .
 
 pytest: ## run unit tests with coverage
 	coverage run -m pytest --nf
