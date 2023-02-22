@@ -27,7 +27,7 @@ class EvaluationTask(BaseEvaluationTask):
                 )
                 connection.settimeout(3)
             except Exception as ex:
-                logger.warning(ex, exc_info=True)
+                logger.debug(ex, exc_info=True)
                 continue
             try:
                 connection.connect(
@@ -62,7 +62,7 @@ class EvaluationTask(BaseEvaluationTask):
                 results.append(success)
 
             except Exception as ex:
-                logger.warning(ex, exc_info=True)
+                logger.debug(ex, exc_info=True)
                 continue
             finally:
                 try:

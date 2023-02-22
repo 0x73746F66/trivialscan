@@ -209,7 +209,7 @@ class TLSTransport:
                 )
 
             except Exception as ex:
-                logger.warning(ex, exc_info=True)
+                logger.debug(ex, exc_info=True)
 
         if (
             ocsp_response
@@ -384,9 +384,9 @@ class TLSTransport:
                     "invalid status response",
                 ]
             ):
-                logger.warning(err, exc_info=True)
+                logger.debug(err, exc_info=True)
         except Exception as ex:
-            logger.warning(ex, exc_info=True)
+            logger.debug(ex, exc_info=True)
         finally:
             conn.close()
 
@@ -422,7 +422,7 @@ class TLSTransport:
                 )
                 ctx.set_max_proto_version(max_tls_version)
         except SSL.Error as ex:
-            logger.warning(ex, exc_info=True)
+            logger.debug(ex, exc_info=True)
             return protocol
         conn = self.prepare_connection(
             context=ctx,
@@ -446,7 +446,7 @@ class TLSTransport:
                     "invalid status response",
                 ]
             ):
-                logger.warning(err, exc_info=True)
+                logger.debug(err, exc_info=True)
         finally:
             conn.close()
         return protocol

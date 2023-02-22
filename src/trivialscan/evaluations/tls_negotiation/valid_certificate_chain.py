@@ -57,9 +57,11 @@ class EvaluationTask(BaseEvaluationTask):
             self.substitution_metadata[RESULT_KEY] = str(ex)
             return False
         except Exception as ex:
-            logger.warning(ex, exc_info=True)
+            logger.debug(ex, exc_info=True)
             self.substitution_metadata[RESULT_KEY] = str(ex)
-            self.substitution_metadata["reason"] = "An unexpected exception ocurred during chain verification"
+            self.substitution_metadata[
+                "reason"
+            ] = "An unexpected exception occurred during chain verification"
             return False
 
         self.substitution_metadata[

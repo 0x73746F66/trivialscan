@@ -66,6 +66,7 @@ def auth(args: dict):
             request_url,
             data=raw_body,
             headers={
+                "User-Agent": f"Trivial Scanner v{args.get('cli_version')}",
                 "Content-Type": "application/json",
                 "Authorization": authorization_header,
                 "X-Trivialscan-Account": cred_data["account_name"],

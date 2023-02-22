@@ -212,7 +212,7 @@ class TLSState:
                 "negotiated": self.negotiated_cipher,
                 "negotiated_bits": self.negotiated_cipher_bits,
                 "negotiated_rfc": OPENSSL_MAP_TO_RFC.get(
-                    self.negotiated_cipher_bits, self.negotiated_cipher_bits
+                    self.negotiated_cipher, self.negotiated_cipher
                 ),
             },
             "protocol": {

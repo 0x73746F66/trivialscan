@@ -42,6 +42,7 @@ def cloud_sync_status(
         resp = requests.get(
             request_url,
             headers={
+                "User-Agent": f"Trivial Scanner v{cli_version}",
                 "Authorization": authorization_header,
                 "X-Trivialscan-Account": account_name,
                 "X-Trivialscan-Version": cli_version,

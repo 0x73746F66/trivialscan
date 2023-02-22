@@ -125,7 +125,7 @@ def filter_valid_files_urls(inputs: list[str], tmp_path_prefix: str = "/tmp"):
             try:
                 urlretrieve(test, local_path)
             except Exception as ex:
-                logger.error(ex, exc_info=True)
+                logger.debug(ex, exc_info=True)
             file_path = Path(local_path)
             if not file_path.is_file():
                 return False
@@ -628,7 +628,7 @@ def get_txt_answer(domain_name: str) -> resolver.Answer:
         logger.warning("DNS Timeout")
         return None
     except DNSException as ex:
-        logger.warning(ex, exc_info=True)
+        logger.debug(ex, exc_info=True)
         return None
     except ConnectionResetError:
         logger.warning("Connection reset by peer")
@@ -653,7 +653,7 @@ def get_tlsa_answer(domain_name: str) -> resolver.Answer:
         logger.warning("DNS Timeout")
         return None
     except DNSException as ex:
-        logger.warning(ex, exc_info=True)
+        logger.debug(ex, exc_info=True)
         return None
     except ConnectionResetError:
         logger.warning("Connection reset by peer")
@@ -684,7 +684,7 @@ def get_dnssec_answer(domain_name: str):
         logger.warning("DNS Timeout")
         return None
     except DNSException as ex:
-        logger.warning(ex, exc_info=True)
+        logger.debug(ex, exc_info=True)
         return None
     except ConnectionResetError:
         logger.warning("Connection reset by peer")
@@ -701,7 +701,7 @@ def get_dnssec_answer(domain_name: str):
             logger.warning(f"DNS Timeout {ns} A")
             continue
         except DNSException as ex:
-            logger.warning(ex, exc_info=True)
+            logger.debug(ex, exc_info=True)
             continue
         except ConnectionResetError:
             logger.warning(f"Connection reset by peer {ns} A")
@@ -718,7 +718,7 @@ def get_dnssec_answer(domain_name: str):
             logger.warning(f"DNS Timeout {ns} AAAA")
             continue
         except DNSException as ex:
-            logger.warning(ex, exc_info=True)
+            logger.debug(ex, exc_info=True)
             continue
         except ConnectionResetError:
             logger.warning(f"Connection reset by peer {ns} AAAA")
@@ -741,7 +741,7 @@ def get_dnssec_answer(domain_name: str):
             logger.warning("DNSKEY DNS Timeout")
             continue
         except DNSException as ex:
-            logger.warning(ex, exc_info=True)
+            logger.debug(ex, exc_info=True)
             continue
         except ConnectionResetError:
             logger.warning("DNSKEY Connection reset by peer")
@@ -778,10 +778,10 @@ def dnssec_valid(domain_name) -> bool:
     try:
         dnssec.validate(answer[0], answer[1], {name: answer[0]})
     except dnssec.ValidationFailure as err:
-        logger.warning(err, exc_info=True)
+        logger.debug(err, exc_info=True)
         return False
     except AttributeError as err:
-        logger.warning(err, exc_info=True)
+        logger.debug(err, exc_info=True)
         return False
     return True
 
@@ -797,7 +797,7 @@ def get_caa(domain_name: str):
     except DNSTimeoutError:
         logger.warning("DNS Timeout")
     except DNSException as ex:
-        logger.warning(ex, exc_info=True)
+        logger.debug(ex, exc_info=True)
     except ConnectionResetError:
         logger.warning("Connection reset by peer")
     except ConnectionError:
@@ -1097,6 +1097,7 @@ def upload_cloud(
                 request_url,
                 data=monitor,
                 headers={
+                    "User-Agent": f"Trivial Scanner v{kwargs.get('cli_version')}",
                     "Content-Type": monitor.content_type,
                     "Authorization": authorization_header,
                     "X-Trivialscan-Account": kwargs.get("account_name"),
@@ -1109,7 +1110,7 @@ def upload_cloud(
             requests.exceptions.ConnectionError,
             requests.exceptions.ReadTimeout,
         ) as err:
-            logger.warning(err, exc_info=True)
+            logger.debug(err, exc_info=True)
             upload_progress.console.print(
                 f"[{constants.CLI_COLOR_FAIL}]Failed to contact the Trivial Security servers[/{constants.CLI_COLOR_FAIL}]"
             )
@@ -1130,7 +1131,7 @@ def upload_cloud(
                     )
 
         except Exception as err:
-            logger.warning(err, exc_info=True)
+            logger.debug(err, exc_info=True)
         upload_progress.console.print(
             f"[{constants.CLI_COLOR_FAIL}]Upload to Trivial Security servers failed[/{constants.CLI_COLOR_FAIL}]"
         )
@@ -1329,5 +1330,5 @@ def get_cname(domain_name: str):
         ConnectionResetError,
         ConnectionError,
     ) as ex:
-        logger.warning(ex, exc_info=True)
+        logger.debug(ex, exc_info=True)
     return None

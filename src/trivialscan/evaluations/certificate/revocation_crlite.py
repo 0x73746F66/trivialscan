@@ -75,7 +75,7 @@ def query_crlite(
         logger.warning(cpe.returncode)
         logger.warning(cpe.output)
     except OSError as err:
-        logger.warning(err, exc_info=True)
+        logger.debug(err, exc_info=True)
     if with_musl:
         return query_crlite(pem_path, db_path, False)
     return None

@@ -21,7 +21,7 @@ repos:
       - id: debug-statements
       - id: no-commit-to-branch
         stages: [commit]
-        args: [--branch, main]
+        args: [--branch, master]
       - id: pretty-format-json
         args: [--autofix, --no-sort-keys]
 
