@@ -29,12 +29,16 @@ class EvaluationTask(BaseEvaluationTask):
         self.substitution_metadata["root_store_name"] = context.RUSTLS
         self.substitution_metadata["store_version"] = stores.rustls.__version__
         self.substitution_metadata["store_description"] = stores.rustls.__description__
-        self.substitution_metadata["short_name"] = context.SHORT_LOOKUP.get(context.RUSTLS, context.RUSTLS)
+        self.substitution_metadata["short_name"] = context.SHORT_LOOKUP.get(
+            context.RUSTLS, context.RUSTLS
+        )
         try:
-            self.substitution_metadata["exists_in_store"] = store.exists(context_type=context.SOURCE_RUSTLS)
-            self.substitution_metadata["expired_in_store"] = store.expired_in_store(context_type=context.SOURCE_RUSTLS)
+            self.substitution_metadata["exists_in_store"] = store.exists(
+                context_type=context.SOURCE_RUSTLS
+            )
+            self.substitution_metadata["expired_in_store"] = store.expired_in_store(
+                context_type=context.SOURCE_RUSTLS
+            )
         except FileExistsError:
             self.substitution_metadata["exists_in_store"] = False
-        return store.check_trust(
-            context_type=context.SOURCE_RUSTLS
-        )
+        return store.check_trust(context_type=context.SOURCE_RUSTLS)

@@ -14,10 +14,14 @@ class EvaluationTask(BaseEvaluationTask):
         for state in self.transport.store.http_states:
             for method in compression:
                 if state.header_exists(name="content-encoding", includes_value=method):
-                    self.substitution_metadata["content_encoding"] = state.response_headers.get('content-encoding')
+                    self.substitution_metadata[
+                        "content_encoding"
+                    ] = state.response_headers.get("content-encoding")
                     results.append(method)
 
         if len(results) > 0:
-            self.substitution_metadata["reason"] = ", ".join(results) + " compression present"
+            self.substitution_metadata["reason"] = (
+                ", ".join(results) + " compression present"
+            )
             return True
         return False

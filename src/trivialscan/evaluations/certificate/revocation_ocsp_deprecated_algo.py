@@ -18,7 +18,9 @@ class EvaluationTask(BaseEvaluationTask):
             raise EvaluationNotRelevant
         if not certificate.revocation_ocsp_hash_algorithm:
             return None
-        self.substitution_metadata["ocsp_hash_algorithm"] = certificate.revocation_ocsp_hash_algorithm.upper()
+        self.substitution_metadata[
+            "ocsp_hash_algorithm"
+        ] = certificate.revocation_ocsp_hash_algorithm.upper()
         return (
             certificate.revocation_ocsp_hash_algorithm.upper() in DEPRECATED_OCSP_ALGO
         )

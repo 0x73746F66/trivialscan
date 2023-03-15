@@ -15,7 +15,9 @@ class EvaluationTask(BaseEvaluationTask):
         for state in self.transport.store.http_states:
             exists = "content-security-policy" in state.response_headers
             if exists:
-                headers.append(f"{state.request_url} - Header; {state.response_headers['content-security-policy']}")
+                headers.append(
+                    f"{state.request_url} - Header; {state.response_headers['content-security-policy']}"
+                )
             else:
                 missing.append(state.request_url)
             results.append(exists)

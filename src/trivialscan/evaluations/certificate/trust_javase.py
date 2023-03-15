@@ -29,12 +29,16 @@ class EvaluationTask(BaseEvaluationTask):
         self.substitution_metadata["root_store_name"] = context.JAVA_SRE
         self.substitution_metadata["store_version"] = stores.java.__version__
         self.substitution_metadata["store_description"] = stores.java.__description__
-        self.substitution_metadata["short_name"] = context.SHORT_LOOKUP.get(context.JAVA_SRE, context.JAVA_SRE)
+        self.substitution_metadata["short_name"] = context.SHORT_LOOKUP.get(
+            context.JAVA_SRE, context.JAVA_SRE
+        )
         try:
-            self.substitution_metadata["exists_in_store"] = store.exists(context_type=context.SOURCE_JAVA)
-            self.substitution_metadata["expired_in_store"] = store.expired_in_store(context_type=context.SOURCE_JAVA)
+            self.substitution_metadata["exists_in_store"] = store.exists(
+                context_type=context.SOURCE_JAVA
+            )
+            self.substitution_metadata["expired_in_store"] = store.expired_in_store(
+                context_type=context.SOURCE_JAVA
+            )
         except FileExistsError:
             self.substitution_metadata["exists_in_store"] = False
-        return store.check_trust(
-            context_type=context.SOURCE_JAVA
-        )
+        return store.check_trust(context_type=context.SOURCE_JAVA)

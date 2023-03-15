@@ -19,5 +19,7 @@ class EvaluationTask(BaseEvaluationTask):
             self.substitution_metadata["reason"] = " ".join(results)
             return True
 
-        self.substitution_metadata["reason"] = f"{self.transport.store.tls_state.negotiated_cipher} does not provide forward anonymity"
+        self.substitution_metadata[
+            "reason"
+        ] = f"{self.transport.store.tls_state.negotiated_cipher} does not provide forward anonymity"
         return False

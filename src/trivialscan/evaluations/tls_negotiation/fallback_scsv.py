@@ -29,14 +29,18 @@ class EvaluationTask(BaseEvaluationTask):
                 == OPENSSL_VERSION_LOOKUP[SSL.TLS1_3_VERSION],
             ]
         ):
-            self.substitution_metadata["reason"] = "Downgrade not possible after successful negotiation of TLS 1.3"
+            self.substitution_metadata[
+                "reason"
+            ] = "Downgrade not possible after successful negotiation of TLS 1.3"
             return True
         # short circuit if obvious downgrade occurred
         if self.transport.store.tls_state.preferred_protocol not in [
             TLS1_3_LABEL,
             self.transport.store.tls_state.negotiated_protocol,
         ]:
-            self.substitution_metadata["reason"] = f"Downgrade from {self.transport.store.tls_state.preferred_protocol} to {self.transport.store.tls_state.negotiated_protocol} was successfully negotiated"
+            self.substitution_metadata[
+                "reason"
+            ] = f"Downgrade from {self.transport.store.tls_state.preferred_protocol} to {self.transport.store.tls_state.negotiated_protocol} was successfully negotiated"
             return False
         # should only occur if using only SSL3
         if (
@@ -67,15 +71,21 @@ class EvaluationTask(BaseEvaluationTask):
             )
         except SSL.Error as err:
             if "tlsv1 alert inappropriate fallback" in str(err):
-                self.substitution_metadata["reason"] = "SSL library detected SCSV and sent the alert for inappropriate fallback"
+                self.substitution_metadata[
+                    "reason"
+                ] = "SSL library detected SCSV and sent the alert for inappropriate fallback"
                 self._supports_fallback_scsv = True
             else:
                 logger.debug(err, exc_info=True)
         except ConnectionError:  # F5 result, possible false positive
-            self.substitution_metadata["reason"] = "F5 Networks devices result in connection error, but possible false positive of SCSV fallback"
+            self.substitution_metadata[
+                "reason"
+            ] = "F5 Networks devices result in connection error, but possible false positive of SCSV fallback"
             self._supports_fallback_scsv = True
         except TimeoutError:  # good indication
-            self.substitution_metadata["reason"] = "Timeout is a common SCSV fallback indication, but possible false positive"
+            self.substitution_metadata[
+                "reason"
+            ] = "Timeout is a common SCSV fallback indication, but possible false positive"
             self._supports_fallback_scsv = True
         finally:
             conn.close()

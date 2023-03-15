@@ -223,9 +223,7 @@ class BaseCertificate:
                 policy.policy_identifier.dotted_string
                 in constants.VALIDATION_OID.keys()  # pylint: disable=consider-iterating-dictionary
             ):
-                return (
-                    policy.policy_identifier.dotted_string
-                )
+                return policy.policy_identifier.dotted_string
         return None
 
     @property

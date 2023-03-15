@@ -27,14 +27,22 @@ class EvaluationTask(BaseEvaluationTask):
 
         store = TrustStore(certificate.subject_key_identifier)
         self.substitution_metadata["root_store_name"] = context.MINTSIFRY_ROSSII
-        self.substitution_metadata["store_version"] = stores.mintsifry_rossii.__version__
-        self.substitution_metadata["store_description"] = stores.mintsifry_rossii.__description__
-        self.substitution_metadata["short_name"] = context.SHORT_LOOKUP.get(context.MINTSIFRY_ROSSII, context.MINTSIFRY_ROSSII)
+        self.substitution_metadata[
+            "store_version"
+        ] = stores.mintsifry_rossii.__version__
+        self.substitution_metadata[
+            "store_description"
+        ] = stores.mintsifry_rossii.__description__
+        self.substitution_metadata["short_name"] = context.SHORT_LOOKUP.get(
+            context.MINTSIFRY_ROSSII, context.MINTSIFRY_ROSSII
+        )
         try:
-            self.substitution_metadata["exists_in_store"] = store.exists(context_type=context.SOURCE_RUSSIA)
-            self.substitution_metadata["expired_in_store"] = store.expired_in_store(context_type=context.SOURCE_RUSSIA)
+            self.substitution_metadata["exists_in_store"] = store.exists(
+                context_type=context.SOURCE_RUSSIA
+            )
+            self.substitution_metadata["expired_in_store"] = store.expired_in_store(
+                context_type=context.SOURCE_RUSSIA
+            )
         except FileExistsError:
             self.substitution_metadata["exists_in_store"] = False
-        return store.check_trust(
-            context_type=context.SOURCE_RUSSIA
-        )
+        return store.check_trust(context_type=context.SOURCE_RUSSIA)

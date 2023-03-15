@@ -62,7 +62,9 @@ class EvaluationTask(BaseEvaluationTask):
             self.substitution_metadata["reason"] = "missing Leaf Certificate"
             raise EvaluationNotRelevant
         if self._leaf.public_key_type not in ["RSA", "DSA"]:
-            self.substitution_metadata["reason"] = f"{self._leaf.public_key_type} not subject to TLS ROBOT attacks"
+            self.substitution_metadata[
+                "reason"
+            ] = f"{self._leaf.public_key_type} not subject to TLS ROBOT attacks"
             raise EvaluationNotRelevant
         if self._leaf.public_key_modulus is None:
             logger.info("tls_robot: No public key modulus available")
@@ -124,7 +126,9 @@ class EvaluationTask(BaseEvaluationTask):
             oracle_bad3 = self._oracle(pms_bad3, messageflow=True)
             oracle_bad4 = self._oracle(pms_bad4, messageflow=True)
             if oracle_good == oracle_bad1 == oracle_bad2 == oracle_bad3 == oracle_bad4:
-                self.substitution_metadata["reason"] = f"Identical results ({oracle_good}), no working oracle found"
+                self.substitution_metadata[
+                    "reason"
+                ] = f"Identical results ({oracle_good}), no working oracle found"
                 self.substitution_metadata["tls_robot"] = oracle_good
                 return False
             else:
@@ -155,10 +159,16 @@ class EvaluationTask(BaseEvaluationTask):
         # makes our oracle weak
         if oracle_bad1 == oracle_bad2 == oracle_bad3:
             self.substitution_metadata["tls_robot"] = oracle_bad1
-            self.substitution_metadata["reason"] = "The oracle is weak, the attack could take too long"
+            self.substitution_metadata[
+                "reason"
+            ] = "The oracle is weak, the attack could take too long"
         else:
-            self.substitution_metadata["reason"] = "The oracle is strong, real attack is possible"
-            self.substitution_metadata["tls_robot"] = ", ".join([oracle_bad1, oracle_bad2, oracle_bad3])
+            self.substitution_metadata[
+                "reason"
+            ] = "The oracle is strong, real attack is possible"
+            self.substitution_metadata["tls_robot"] = ", ".join(
+                [oracle_bad1, oracle_bad2, oracle_bad3]
+            )
 
         return True
 
