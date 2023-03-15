@@ -69,6 +69,10 @@ compliance:
         - 6.2.4
         - 12.3.3
 references:
+  - name: Breaking the Lattice Barrier for the Hidden Number Problem | Nadia Heninger
+    url: https://ntt-research.com/cis-nadia-heninger-2021summit-summary/
+  - name: LadderLeak - Breaking ECDSA
+    url: https://eprint.iacr.org/2020/615.pdf
   - name: Testing for Weak SSL TLS Ciphers Insufficient Transport Layer Protection (WSTG-CRYP-01)
     url: https://owasp.org/www-project-web-security-testing-guide/stable/4-Web_Application_Security_Testing/09-Testing_for_Weak_Cryptography/01-Testing_for_Weak_Transport_Layer_Security
 annotate_results:

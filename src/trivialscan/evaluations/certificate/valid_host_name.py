@@ -21,15 +21,20 @@ class EvaluationTask(BaseEvaluationTask):
             raise EvaluationNotRelevant
         try:
             if not match_hostname(
-                self.transport.store.tls_state.hostname, certificate.x509.to_cryptography()
+                self.transport.store.tls_state.hostname,
+                certificate.x509.to_cryptography(),
             ):
-                self.substitution_metadata["reason"] = "Hostname is invalid and no match found in Subject Alternative Names"
+                self.substitution_metadata[
+                    "reason"
+                ] = "Hostname is invalid and no match found in Subject Alternative Names"
                 return False
         except ValueError as err:
             self.substitution_metadata["reason"] = str(err)
             return False
         except Exception as ex:
             logger.debug(ex, exc_info=True)
-            self.substitution_metadata["reason"] = "An unhandled exception ocurred reading the leaf Certificate information"
+            self.substitution_metadata[
+                "reason"
+            ] = "An unhandled exception occurred reading the leaf Certificate information"
             return None
         return True
